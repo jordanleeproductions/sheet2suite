@@ -5,21 +5,33 @@
    ========================================== */
 
 /* ------------------------------------------
-   1. Editorial Minimalist (Default)
+   1. Editorial Minimalist (Default - Light)
    ------------------------------------------ */
 :root, [data-style='editorial'] {
   --style-name: 'editorial';
 
-  /* Color Palette (Editorial Minimalist - Light) */
-  --color-bg: #ffffff; /* Stark White Canvas */
-  --color-surface: #ffffff; /* Card Canvas */
-  --color-primary: #0d1b2a; /* Corporate Navy */
-  --color-on-primary: #ffffff; /* Text on primary background */
-  --color-text: #2f3e46; /* Deep Slate (dark readable text) */
-  --color-muted: #708090; /* Soft Slate Gray (borders, secondary text, gridlines) */
-  --color-highlight: #f7e7ce; /* Polished Champagne Gold */
-  --color-gold-dark: #cda250; /* Darker Champagne for readable text/borders */
+  /* Canvas & Base Tokens */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-primary: #0d1b2a;
+  --color-on-primary: #ffffff;
+  --color-text: #2f3e46;
+  --color-muted: #708090;
+  --color-highlight: #FFC72C;
+  --color-gold-dark: #cda250;
   --color-white: #ffffff;
+
+  /* Standard Accent & Status Tokens */
+  --color-green: #10b981;
+  --color-green-muted: #ecfdf5;
+  --color-gold: #FFC72C;
+  --color-gold-muted: #fef3c7;
+  --color-red: #ef4444;
+  --color-red-muted: #fee2e2;
+
+  /* Interactive Button & Header Tokens */
+  --color-btn-selected-bg: #0d1b2a;
+  --color-btn-selected-text: #ffffff;
 
   /* Fonts */
   --font-mono: var(--font-mono-google), 'Roboto Mono', 'JetBrains Mono', 'SFMono-Regular', 'Courier New', monospace;
@@ -37,66 +49,101 @@
   --box-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
 }
 
+/* Editorial Minimalist (Dark) */
 [data-style='editorial'][data-theme='dark'] {
   --color-bg: #121212;
   --color-surface: #1e1e1e;
-  --color-primary: #f5f5f5;
-  --color-on-primary: #121212;
+  --color-primary: #2d3748;
+  --color-on-primary: #ffffff;
   --color-text: #e0e0e0;
   --color-muted: #9ca3af;
-  --color-highlight: #332940;
+  --color-highlight: #FFC72C;
   --color-gold-dark: #ffb74d;
   --color-white: #ffffff;
+
+  /* Standard Accent & Status Tokens */
+  --color-green: #00ED64;
+  --color-green-muted: rgba(0, 237, 100, 0.15);
+  --color-gold: #FFC72C;
+  --color-gold-muted: rgba(255, 199, 44, 0.15);
+  --color-red: #f87171;
+  --color-red-muted: rgba(248, 113, 113, 0.15);
+
+  /* Interactive Button & Header Tokens */
+  --color-btn-selected-bg: #f5f5f5;
+  --color-btn-selected-text: #000000;
+
   --box-shadow-subtle: 0 1px 3px rgba(255, 255, 255, 0.05), 0 1px 2px rgba(255, 255, 255, 0.1);
   --box-shadow-hover: 0 4px 6px -1px rgba(255, 255, 255, 0.05), 0 2px 4px -1px rgba(255, 255, 255, 0.05);
 }
 
 /* ------------------------------------------
-   2. Muted Neo-Brutalism (MongoDB / Gumroad Style)
+   2. Muted Neo-Brutalism (Light)
    ------------------------------------------ */
 [data-style='neo-brutalism'] {
   --style-name: 'neo-brutalism';
 
-  /* Color Palette (Muted Neo-Brutalism - Light) */
-  --color-bg: #F4F4F0; /* Muted Warm Off-White Gray */
-  --color-surface: #ffffff; /* Crisp Stark White Cards */
-  --color-primary: #121824; /* Structural Rich Dark Charcoal / Slate */
-  --color-on-primary: #00ED64; /* Electric Lime text on primary background */
-  --color-text: #121824; /* High-contrast Dark Charcoal */
-  --color-muted: #121824; /* Crisp Dark Charcoal for borders & gridlines */
-  --color-highlight: #00ED64; /* Electric Lime Accent */
-  --color-gold-dark: #13AA52; /* Deep Forest Green Accent */
+  --color-bg: #F4F4F0;
+  --color-surface: #ffffff;
+  --color-primary: #121824;
+  --color-on-primary: #00ED64;
+  --color-text: #121824;
+  --color-muted: #121824;
+  --color-highlight: #00ED64;
+  --color-gold-dark: #13AA52;
   --color-white: #ffffff;
 
-  /* Fonts (Heavy Geometric Sans-Serif Headers + Geist Mono) */
+  /* Standard Accent & Status Tokens */
+  --color-green: #13AA52;
+  --color-green-muted: #e6f7ec;
+  --color-gold: #FFC72C;
+  --color-gold-muted: #fff9db;
+  --color-red: #ef4444;
+  --color-red-muted: #fde8e8;
+
+  /* Interactive Button & Header Tokens */
+  --color-btn-selected-bg: #121824;
+  --color-btn-selected-text: #00ED64;
+
   --font-geist-mono: var(--font-geist-mono-google), "Geist Mono", "Geist Mono Fallback", monospace;
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-sans-google), 'Inter', sans-serif;
   --font-sans: var(--font-sans-google), 'Inter', -apple-system, sans-serif;
   --font-header: var(--font-sans);
 
-  /* UI Styling (Sharp/Micro-rounded corners + Hard zero-blur shadows) */
   --border-radius-sm: 2px;
   --border-radius-md: 4px;
   --border-radius-lg: 6px;
   --border-width: 2px;
   --transition-smooth: all 0.15s cubic-bezier(0, 0, 0.2, 1);
-  --box-shadow-subtle: 3px 3px 0px 0px #121824;
-  --box-shadow-hover: 5px 5px 0px 0px #121824;
+  --box-shadow-subtle: 3px 3px 0px 0px var(--color-primary);
+  --box-shadow-hover: 5px 5px 0px 0px var(--color-primary);
 }
 
+/* Muted Neo-Brutalism (Dark) */
 [data-style='neo-brutalism'][data-theme='dark'] {
-  /* Color Palette (Muted Neo-Brutalism - Dark) */
-  --color-bg: #0B0F19; /* Rich Dark Charcoal Base */
-  --color-surface: #121824; /* Crisp Elevated Slate Cards */
-  --color-primary: #13AA52; /* Deep Forest Green Accent */
-  --color-on-primary: #ffffff; /* White text on primary buttons */
-  --color-text: #F4F4F0; /* Off-White Text */
-  --color-muted: #ffffff; /* High-contrast white text for muted labels & tags */
-  --color-highlight: #00ED64; /* Electric Lime Accent */
+  --color-bg: #0B0F19;
+  --color-surface: #121824;
+  --color-primary: #13AA52;
+  --color-on-primary: #ffffff;
+  --color-text: #F4F4F0;
+  --color-muted: #ffffff;
+  --color-highlight: #00ED64;
   --color-gold-dark: #00ED64;
   --color-white: #121824;
 
-  --box-shadow-subtle: 3px 3px 0px 0px #00ED64;
-  --box-shadow-hover: 5px 5px 0px 0px #00ED64;
+  /* Standard Accent & Status Tokens */
+  --color-green: #00ED64;
+  --color-green-muted: rgba(0, 237, 100, 0.15);
+  --color-gold: #FFC72C;
+  --color-gold-muted: rgba(255, 199, 44, 0.15);
+  --color-red: #f87171;
+  --color-red-muted: rgba(248, 113, 113, 0.15);
+
+  /* Interactive Button & Header Tokens */
+  --color-btn-selected-bg: #00ED64;
+  --color-btn-selected-text: #000000;
+
+  --box-shadow-subtle: 3px 3px 0px 0px var(--color-primary);
+  --box-shadow-hover: 5px 5px 0px 0px var(--color-primary);
 }

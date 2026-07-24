@@ -331,9 +331,9 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       {(isAdding || editingItem) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{isAdding ? 'ADD SONG' : 'EDIT SONG'}</h3>
-              <button style={styles.closeBtn} onClick={closeModal}><X size={20} /></button>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD SONG' : 'EDIT SONG'}</h3>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
               <div style={styles.formGrid}>

@@ -138,9 +138,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'high': return { bg: '#fee2e2', text: '#ef4444' };
-      case 'medium': return { bg: 'var(--color-highlight)', text: '#000000' };
-      default: return { bg: '#f1f1f1', text: 'var(--color-muted)' };
+      case 'high': return { bg: 'var(--color-red-muted)', text: 'var(--color-red)' };
+      case 'medium': return { bg: 'var(--color-gold)', text: '#000000' };
+      case 'low': return { bg: 'var(--color-green-muted)', text: 'var(--color-green)' };
+      default: return { bg: 'var(--color-gold)', text: '#000000' };
     }
   };
 
@@ -198,7 +199,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
             )}
           </div>
 
-          <button style={styles.addButton} className="kanban-add-btn-desktop" onClick={() => startAdd('To Do')} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: '#000000' }} className="kanban-add-btn-desktop" onClick={() => startAdd('To Do')} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD TASK
           </button>
         </div>
@@ -208,11 +209,11 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
       {(isAdding || editingTask) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAdding ? 'ADD TASK' : 'EDIT TASK'}
               </h3>
-              <button style={styles.closeBtn} onClick={() => { setIsAdding(false); setEditingTask(null); }}>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingTask(null); }}>
                 <X size={18} />
               </button>
             </div>
@@ -370,7 +371,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
               <div style={styles.columnHeader}>
                 <h3 style={styles.columnTitle}>
                   {stage.toUpperCase()} 
-                  <span style={styles.columnCount}>{stageTasks.length}</span>
+                  <span className="kanban-column-count" style={{ ...styles.columnCount, color: '#000000' }}>{stageTasks.length}</span>
                 </h3>
               </div>
 
@@ -384,7 +385,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
                     return (
                       <div key={task.taskId} style={styles.taskCard}>
                         <div style={styles.cardHeader}>
-                          <span style={styles.categoryBadge}>{task.category.toUpperCase() || 'GENERAL'}</span>
+                          <span className="kanban-category-badge" style={{ ...styles.categoryBadge, backgroundColor: 'var(--color-muted)', color: '#ffffff' }}>{task.category.toUpperCase() || 'GENERAL'}</span>
                           <span style={{ 
                             ...styles.priorityBadge, 
                             backgroundColor: priColors.bg, 

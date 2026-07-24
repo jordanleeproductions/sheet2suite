@@ -173,14 +173,56 @@ code, pre, .font-mono {
   box-shadow: 5px 5px 0px #ef4444 !important;
 }
 
-/* Kanban column panels in Neo-Brutalism Dark mode (TODO, IN PROGRESS, DONE transparent background) */
-[data-style='neo-brutalism'][data-theme='dark'] .kanban-column,
-[data-style='neo-brutalism'][data-theme='dark'] [class*="kanban-column"] {
+/* Kanban column panels in any Dark mode (TODO, IN PROGRESS, DONE transparent background) */
+[data-theme='dark'] .kanban-column,
+[data-theme='dark'] [class*="kanban-column"] {
   background-color: transparent !important;
   background: transparent !important;
 }
 
-/* Itinerary Timeline Expanded Event Colors in Neo-Brutalism Dark Mode */
+/* Budget Utilization Category Chips Sub-Bars in Dark mode: transparent background */
+[data-theme='dark'] .category-chip,
+[data-theme='dark'] [class*="category-chip"],
+[data-theme='dark'] [class*="categoryChip"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Budget Ledger Totals Card in Dark mode: transparent background & readable white font */
+[data-theme='dark'] .totalCard,
+[data-theme='dark'] [class*="totalCard"] {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: 2px solid var(--color-muted) !important;
+}
+
+[data-theme='dark'] .totalCard h3,
+[data-theme='dark'] .totalCard span,
+[data-theme='dark'] .totalCard div,
+[data-theme='dark'] [class*="totalCard"] h3,
+[data-theme='dark'] [class*="totalCard"] span,
+[data-theme='dark'] [class*="totalCard"] div {
+  color: #ffffff !important;
+}
+
+/* Timeline Expanded Event Content Body in Dark mode: transparent background */
+[data-theme='dark'] .timeline-card-body,
+[data-theme='dark'] [class*="timeline-card-body"],
+[data-theme='dark'] .timeline-card.is-expanded .timeline-card-body {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .timeline-card-body span,
+[data-theme='dark'] .timeline-card-body p,
+[data-theme='dark'] .timeline-card-body div,
+[data-theme='dark'] .timeline-card-body strong,
+[data-theme='dark'] .timeline-card-body svg {
+  color: #ffffff !important;
+}
+
+/* Itinerary Timeline Expanded Event Header in Neo-Brutalism Dark Mode */
 [data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header {
   background-color: var(--color-highlight, #00ED64) !important;
   color: #000000 !important;
@@ -195,17 +237,49 @@ code, pre, .font-mono {
   color: #000000 !important;
 }
 
-[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body {
-  background-color: #121824 !important;
+/* Semantic Badge & Status Chip Utility Classes */
+.badge-green, [class*="badge-green"] {
+  background-color: var(--color-green-muted) !important;
+  color: var(--color-green) !important;
+}
+
+.badge-gold, [class*="badge-gold"] {
+  background-color: var(--color-gold-muted) !important;
+  color: var(--color-gold) !important;
+}
+
+.badge-red, [class*="badge-red"] {
+  background-color: var(--color-red-muted) !important;
+  color: var(--color-red) !important;
+}
+
+/* Save / Submit Button background rule */
+[class*="saveBtn"],
+[class*="submitBtn"],
+button[type="submit"] {
+  background-color: var(--color-primary) !important;
+  color: var(--color-on-primary, #ffffff) !important;
+}
+
+/* In Dark Mode: buttons with var(--color-primary) background have white font */
+[data-theme='dark'] button[style*="backgroundColor: var(--color-primary)"],
+[data-theme='dark'] button[style*="background-color: var(--color-primary)"],
+[data-theme='dark'] button[style*="backgroundColor:var(--color-primary)"],
+[data-theme='dark'] button[style*="background-color:var(--color-primary)"],
+[data-theme='dark'] [class*="saveBtn"],
+[data-theme='dark'] [class*="submitBtn"],
+[data-theme='dark'] button[type="submit"] {
   color: #ffffff !important;
 }
 
-[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body span,
-[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body p,
-[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body div,
-[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body strong,
-[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body svg {
-  color: #ffffff !important;
+/* In Dark Mode: Modal Headers font color (Title + Close X button) is black */
+[data-theme='dark'] [class*="modalHeader"],
+[data-theme='dark'] [class*="modalHeader"] h3,
+[data-theme='dark'] [class*="modalHeader"] button,
+[data-theme='dark'] [class*="modalHeader"] svg,
+[data-theme='dark'] [class*="modalTitle"],
+[data-theme='dark'] [class*="closeBtn"] {
+  color: #000000 !important;
 }
 
 /* Remove background color from Sync / Mock Mode Banner in Dark Mode */

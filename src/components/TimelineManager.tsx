@@ -185,7 +185,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
           <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Day-Of Schedule">
             <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
           </button>
-          <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD EVENT
           </button>
         </div>
@@ -312,11 +312,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
       {(isAdding || editingIndex !== null) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAdding ? 'ADD TIMELINE MOMENT' : 'EDIT TIMELINE MOMENT'}
               </h3>
-              <button style={styles.closeBtn} onClick={() => { setIsAdding(false); setEditingIndex(null); }}>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingIndex(null); }}>
                 <X size={18} />
               </button>
             </div>
@@ -828,7 +828,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '1rem',
   },
   timelineTimeSide: {
-    width: '80px',
+    width: '100px',
     flexShrink: 0,
     textAlign: 'right',
     display: 'flex',
@@ -838,13 +838,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   timeText: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
+    fontSize: '1rem',
     fontWeight: 700,
     color: 'var(--color-primary)',
   },
   endTimeText: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
+    fontSize: '0.75rem',
     color: 'var(--color-muted)',
   },
   lineConnector: {

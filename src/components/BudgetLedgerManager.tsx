@@ -154,21 +154,21 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
         <div style={styles.headerActions}>
           <div style={styles.viewToggle}>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#fff' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#000000' : 'var(--color-muted)' }}
               onClick={() => setViewMode('table')}
               title="Table View"
             >
               <List size={16} />
             </button>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#fff' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#000000' : 'var(--color-muted)' }}
               onClick={() => setViewMode('card')}
               title="Card View"
             >
               <Grid size={16} />
             </button>
           </div>
-          <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD ITEM
           </button>
         </div>
@@ -210,7 +210,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
         {categoryStats.length > 0 && (
           <div style={styles.categoryMeterGrid}>
             {categoryStats.map(stat => (
-              <div key={stat.category} style={{
+              <div key={stat.category} className="category-chip" style={{
                 ...styles.categoryChip,
                 borderColor: stat.isOver ? '#ef4444' : 'var(--color-muted)'
               }}>
@@ -322,17 +322,11 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
                       <span style={styles.monoText}>{item.dueDate || '-'}</span>
                     </td>
                     <td style={styles.td}>
-                      <span style={{
-                        ...styles.statusTag,
-                        backgroundColor:
-                          item.paymentStatus === 'Paid' ? '#eef2f7' :
-                            item.paymentStatus === 'Overdue' ? '#fee2e2' :
-                              'var(--color-highlight)',
-                        color:
-                          item.paymentStatus === 'Paid' ? 'var(--color-primary)' :
-                            item.paymentStatus === 'Overdue' ? '#ef4444' :
-                              '#cda250'
-                      }}>
+                      <span className={
+                        item.paymentStatus === 'Paid' ? 'badge-green' :
+                          item.paymentStatus === 'Overdue' ? 'badge-red' :
+                            'badge-gold'
+                      } style={styles.statusTag}>
                         {item.paymentStatus.toUpperCase()}
                       </span>
                     </td>
@@ -454,17 +448,11 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
 
                 <div style={styles.cardFooter}>
                   <span style={styles.monoText}>{item.dueDate || 'No Date'}</span>
-                  <span style={{
-                    ...styles.statusTag,
-                    backgroundColor:
-                      item.paymentStatus === 'Paid' ? '#eef2f7' :
-                        item.paymentStatus === 'Overdue' ? '#fee2e2' :
-                          'var(--color-highlight)',
-                    color:
-                      item.paymentStatus === 'Paid' ? 'var(--color-primary)' :
-                        item.paymentStatus === 'Overdue' ? '#ef4444' :
-                          '#cda250'
-                  }}>
+                  <span className={
+                    item.paymentStatus === 'Paid' ? 'badge-green' :
+                      item.paymentStatus === 'Overdue' ? 'badge-red' :
+                        'badge-gold'
+                  } style={styles.statusTag}>
                     {item.paymentStatus.toUpperCase()}
                   </span>
                 </div>
@@ -492,9 +480,9 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
       {(isAdding || editingItem) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{isAdding ? 'ADD BUDGET ITEM' : 'EDIT BUDGET ITEM'}</h3>
-              <button style={styles.closeBtn} onClick={closeModal}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD BUDGET ITEM' : 'EDIT BUDGET ITEM'}</h3>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
               </button>
             </div>

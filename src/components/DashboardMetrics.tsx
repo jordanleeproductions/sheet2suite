@@ -92,7 +92,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
           <div className="kpi-card" style={styles.kpiCard}>
             <div style={styles.kpiLabel}>REMAINING BUDGET</div>
-            <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? '#ef4444' : 'var(--color-on-primary, #00ED64)' }}>
+            <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? 'var(--color-red)' : 'var(--color-green)' }}>
               ${remainingBudget.toLocaleString()}
             </div>
             <div style={styles.kpiSub}>Budget Minus Actual Spent</div>
@@ -128,7 +128,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
               <span>Actual Cost (${actualCost.toLocaleString()})</span>
             </div>
             <div style={styles.footerItem}>
-              <div style={{ ...styles.colorDot, backgroundColor: 'var(--color-highlight)', border: '1px solid var(--color-muted)' }} />
+              <div style={{ ...styles.colorDot, backgroundColor: 'var(--color-gold)', border: '1px solid var(--color-muted)' }} />
               <span>Estimated Outlay (${estimatedCost.toLocaleString()})</span>
             </div>
             <div style={styles.footerItem}>
@@ -155,7 +155,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>ACCEPTED</div>
-              <div style={{ ...styles.kpiValue, color: 'var(--color-on-primary, #10b981)' }}>
+              <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
                 {attendingCount}
               </div>
               <div style={styles.kpiSub}>RSVP Attending</div>
@@ -163,7 +163,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>PENDING</div>
-              <div style={{ ...styles.kpiValue, color: pendingCount > 0 ? '#f59e0b' : 'var(--color-muted)' }}>
+              <div style={{ ...styles.kpiValue, color: pendingCount > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>
                 {pendingCount}
               </div>
               <div style={styles.kpiSub}>Awaiting Response</div>
@@ -171,7 +171,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>DECLINED</div>
-              <div style={{ ...styles.kpiValue, color: declinedCount > 0 ? '#ef4444' : 'var(--color-muted)' }}>
+              <div style={{ ...styles.kpiValue, color: declinedCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>
                 {declinedCount}
               </div>
               <div style={styles.kpiSub}>Unable to Attend</div>
@@ -187,7 +187,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           <div className="kpi-grid" style={styles.kpiGrid}>
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>TO DO</div>
-              <div style={{ ...styles.kpiValue, color: toDoCount > 0 ? '#ef4444' : 'var(--color-muted)' }}>
+              <div style={{ ...styles.kpiValue, color: toDoCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>
                 {toDoCount}
               </div>
               <div style={styles.kpiSub}>Pending Tasks</div>
@@ -195,7 +195,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>IN PROGRESS</div>
-              <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>
+              <div style={{ ...styles.kpiValue, color: inProgressCount > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>
                 {inProgressCount}
               </div>
               <div style={styles.kpiSub}>Active Tasks</div>
@@ -203,7 +203,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>COMPLETED</div>
-              <div style={{ ...styles.kpiValue, color: 'var(--color-on-primary, #10b981)' }}>
+              <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
                 {doneCount}
               </div>
               <div style={styles.kpiSub}>Done ({doneCount}/{totalTasksCount})</div>
@@ -230,7 +230,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           <div className="kpi-grid" style={styles.kpiGrid}>
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>PLAYLIST SONGS</div>
-              <div style={{ ...styles.kpiValue, color: 'var(--color-on-primary, #10b981)' }}>
+              <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
                 {playlistSongsCount}
               </div>
               <div style={styles.kpiSub}>Must Play / Ceremony / Reception</div>
@@ -238,7 +238,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
             <div className="kpi-card" style={styles.kpiCard}>
               <div style={styles.kpiLabel}>BANNED SONGS</div>
-              <div style={{ ...styles.kpiValue, color: bannedSongsCount > 0 ? '#ef4444' : 'var(--color-muted)' }}>
+              <div style={{ ...styles.kpiValue, color: bannedSongsCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>
                 {bannedSongsCount}
               </div>
               <div style={styles.kpiSub}>Do Not Play Tracks</div>

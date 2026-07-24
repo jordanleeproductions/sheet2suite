@@ -448,11 +448,11 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
       {(editingGuest || isAdding) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAdding ? 'ADD NEW GUEST' : `EDIT GUEST: ${formState.firstName} ${formState.lastName}`}
               </h3>
-              <button style={styles.closeBtn} onClick={() => { setEditingGuest(null); setIsAdding(false); }}>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setEditingGuest(null); setIsAdding(false); }}>
                 <X size={18} />
               </button>
             </div>

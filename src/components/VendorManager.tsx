@@ -134,21 +134,21 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
         <div style={styles.headerActions}>
           <div style={styles.viewToggle}>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-primary)' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#000000' : 'var(--color-muted)' }}
               onClick={() => setViewMode('table')}
               title="Table View"
             >
               <List size={16} />
             </button>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? 'var(--color-on-primary)' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#000000' : 'var(--color-muted)' }}
               onClick={() => setViewMode('card')}
               title="Card View"
             >
               <Grid size={16} />
             </button>
           </div>
-          <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD VENDOR
           </button>
         </div>
@@ -314,9 +314,9 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
       {(isAdding || editingItem) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{isAdding ? 'ADD VENDOR' : 'EDIT VENDOR'}</h3>
-              <button style={styles.closeBtn} onClick={closeModal}><X size={20} /></button>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD VENDOR' : 'EDIT VENDOR'}</h3>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
               <div style={styles.formGrid}>
