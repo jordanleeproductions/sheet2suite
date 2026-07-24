@@ -44,19 +44,22 @@
 - **External Streaming Buttons:** Spotify and YouTube search buttons fixed at the bottom of each song card.
 - **Smart Sorting:** Automatic grouping of Banned songs at the bottom of the list when viewing "ALL SONGS".
 
+### 9. Modular Feature Toggles (`enabledModules`)
+- **Module Customization Controls:** Users can enable or disable individual modules (*Guest Registry*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*) during Onboarding setup or anytime in Settings.
+- **Dynamic Navigation & Dashboard Filtering:** Disabled modules automatically hide their top navbar tab and corresponding dashboard widgets, keeping the UI minimal and tailored.
+
 ---
 
 ## Roadmap & Next Features
 
 ### Phase 1: Onboarding & Setup Customization (Up Next)
 
-1. **Modular Navigation & Feature Toggles**
-   - **Module On/Off Switches:** Allow users during onboarding (and via Settings) to enable or disable individual modules (e.g., hide **Music Playlist**, **Vendors**, **Kanban**, or **Budget Ledger** if not needed).
-   - **Dynamic Nav Chrome:** Top navbar and dashboard widgets dynamically hide disabled modules to keep the interface minimal and focused.
-
-2. **Custom External Links & Platform Controls**
+1. **Custom External Links & Platform Controls**
    - **Streaming Platform Chooser:** Allow users to choose which streaming platform buttons appear on Music cards (e.g., toggle Spotify, YouTube, Apple Music, Tidal, or Soundcloud).
    - **Custom Tab Naming & Ordering:** Allow users to rename navigation tabs (e.g., rename `[ LEDGER ]` to `[ EXPENSES ]` or `[ GUEST LIST ]` to `[ RSVPs ]`).
+
+2. **Formula Reveal & Spreadsheet Transparency**
+   - **KPI Card Formula Tooltips:** Interactive Info button (`ℹ`) on top-right of summary metric cards that displays the exact Google Sheets / Excel formula used to compute that metric (e.g., `=COUNTIF('Guest List'!E:E, "Attending")`).
 
 3. **Onboarding Preset Packs**
    - Provide ready-to-use template presets during setup (e.g. *Micro Wedding*, *Destination Wedding*, *Traditional Large Wedding*) pre-populating suggested timeline milestones and budget categories.

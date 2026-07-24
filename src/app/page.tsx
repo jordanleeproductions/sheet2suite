@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task } from '@/lib/sheets/types';
-import DashboardMetrics from '@/components/DashboardMetrics';
+import DashboardMetrics, { ModuleConfig } from '@/components/DashboardMetrics';
 import GuestListManager from '@/components/GuestListManager';
 import BudgetLedgerManager from '@/components/BudgetLedgerManager';
 import TimelineManager from '@/components/TimelineManager';
@@ -23,6 +23,19 @@ export default function Sheet2VowDashboard() {
   const [budgetThreshold, setBudgetThreshold] = useState<number>(35000);
   const [driveFolder, setDriveFolder] = useState<string>('My Drive/Wedding Planning');
   const [selectedTasks, setSelectedTasks] = useState<string[]>(ALL_DEFAULT_TASKS.map(t => t.taskName));
+
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  // Active Feature Modules Configuration
+  const [enabledModules, setEnabledModules] = useState<ModuleConfig>({
+    metrics: true,
+    guests: true,
+    budget: true,
+    schedule: true,
+    tasks: true,
+    vendors: true,
+    music: true,
+  });
 
   const toggleTaskSelection = (taskName: string) => {
     setSelectedTasks(prev => 
@@ -59,6 +72,7 @@ export default function Sheet2VowDashboard() {
     const savedTheme = localStorage.getItem('s2v_theme');
     const savedColor = localStorage.getItem('s2v_primary_color');
     const savedFolder = localStorage.getItem('s2v_drive_folder');
+    const savedModules = localStorage.getItem('s2v_enabled_modules');
 
     if (savedSheetId) setSpreadsheetId(savedSheetId);
     if (savedToken) setGoogleToken(savedToken);
@@ -70,7 +84,46 @@ export default function Sheet2VowDashboard() {
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
     if (savedFolder) setDriveFolder(savedFolder);
+    if (savedModules) {
+      try {
+        setEnabledModules(JSON.parse(savedModules));
+      } catch (e) {
+        console.error('Error parsing saved modules', e);
+      }
+    }
   }, []);
+
+  const toggleModule = (moduleKey: keyof ModuleConfig) => {
+    setEnabledModules(prev => {
+      const updated = { ...prev, [moduleKey]: !prev[moduleKey] };
+      localStorage.setItem('s2v_enabled_modules', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Ensure activeTab fallback if current activeTab is disabled
+  useEffect(() => {
+    if (!enabledModules[activeTab]) {
+      const tabsOrder: (keyof ModuleConfig)[] = ['metrics', 'guests', 'budget', 'schedule', 'tasks', 'vendors', 'music'];
+      const firstAvailable = tabsOrder.find(m => enabledModules[m]);
+      setActiveTab((firstAvailable as any) || 'metrics');
+    }
+  }, [enabledModules, activeTab]);
+
+  // Close settings dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+    if (showSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettings]);
 
   // Apply style theme and color mode when they change
   useEffect(() => {
@@ -248,20 +301,29 @@ export default function Sheet2VowDashboard() {
   };
 
   // Disconnect sheet and reset local storage
-  const handleDisconnect = () => {
-    if (confirm('Disconnect from sheet? Local session will be cleared.')) {
+  const handleDisconnect = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (window.confirm('Disconnect from sheet? Local session will be cleared.')) {
       setSpreadsheetId('');
       setGoogleToken('');
       setIsOnboarded(false);
       setWeddingData(null);
-      localStorage.removeItem('s2v_spreadsheet_id');
-      localStorage.removeItem('s2v_google_token');
-      localStorage.removeItem('s2v_is_onboarded');
-      localStorage.removeItem('s2v_is_mock');
-      localStorage.removeItem('s2v_wedding_name');
-      localStorage.removeItem('s2v_wedding_date');
-      localStorage.removeItem('s2v_theme');
-      localStorage.removeItem('s2v_primary_color');
+      setWeddingName('');
+      setWeddingDate('');
+      setShowSettings(false);
+      setIsLoading(false);
+      setSyncError(null);
+      
+      // Clear all s2v_ items from localStorage
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('s2v_')) {
+          localStorage.removeItem(key);
+        }
+      }
     }
   };
 
@@ -288,12 +350,12 @@ export default function Sheet2VowDashboard() {
         </div>
 
         {isOnboarded && (
-          <div style={{ position: 'relative' }}>
+          <div ref={settingsRef} style={{ position: 'relative' }}>
             <button style={styles.iconBtn} onClick={() => setShowSettings(!showSettings)}>
               <Settings size={20} />
             </button>
             {showSettings && (
-              <div style={styles.settingsDropdown}>
+              <div className="settingsDropdown" style={styles.settingsDropdown}>
                 <div style={styles.settingsSection}>
                   <label style={styles.settingsLabel}>DESIGN STYLE</label>
                   <div style={styles.themeToggle}>
@@ -375,12 +437,35 @@ export default function Sheet2VowDashboard() {
                   </div>
                 </div>
                 <div style={styles.settingsSection}>
+                  <label style={styles.settingsLabel}>ACTIVE MODULES</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.35rem' }}>
+                    {[
+                      { key: 'guests', label: 'Guest Registry' },
+                      { key: 'budget', label: 'Budget Ledger' },
+                      { key: 'schedule', label: 'Day-Of Timeline' },
+                      { key: 'vendors', label: 'Vendor Directory' },
+                      { key: 'tasks', label: 'Kanban Checklist' },
+                      { key: 'music', label: 'Music Playlist' },
+                    ].map(mod => (
+                      <label key={mod.key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--color-text)' }}>
+                        <input
+                          type="checkbox"
+                          checked={enabledModules[mod.key as keyof ModuleConfig]}
+                          onChange={() => toggleModule(mod.key as keyof ModuleConfig)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        {mod.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div style={styles.settingsSection}>
                   <label style={styles.settingsLabel}>DATA SOURCE</label>
                   <a href={isMockMode ? '#' : `https://docs.google.com/spreadsheets/d/${spreadsheetId}`} target="_blank" rel="noopener noreferrer" style={styles.sheetLink}>
                     {isMockMode ? 'MOCK DATA (NO SPREADSHEET)' : 'OPEN GOOGLE SHEET'}
                   </a>
                 </div>
-                <button style={{ ...styles.disconnectBtn, width: '100%', marginTop: '0.5rem' }} onClick={handleDisconnect}>
+                <button type="button" style={{ ...styles.disconnectBtn, width: '100%', marginTop: '0.5rem' }} onClick={handleDisconnect}>
                   DISCONNECT
                 </button>
               </div>
@@ -470,6 +555,39 @@ export default function Sheet2VowDashboard() {
               />
             </div>
 
+            {/* Active Modules Onboarding Selector */}
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>ENABLE FEATURE MODULES</label>
+              <div style={styles.tasksChecklist}>
+                {[
+                  { key: 'guests', label: 'Guest Registry & Seating Charts' },
+                  { key: 'budget', label: 'Budget Ledger & Outlays' },
+                  { key: 'schedule', label: 'Day-Of Timeline & Up Next' },
+                  { key: 'vendors', label: 'Vendor Directory' },
+                  { key: 'tasks', label: 'Kanban Checklist' },
+                  { key: 'music', label: 'Wedding Playlist & Music' },
+                ].map((mod) => {
+                  const isChecked = enabledModules[mod.key as keyof ModuleConfig];
+                  return (
+                    <label key={mod.key} style={styles.taskChecklabel}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleModule(mod.key as keyof ModuleConfig)}
+                        style={styles.checkboxInput}
+                      />
+                      <span style={{ fontSize: '0.8rem', color: isChecked ? 'var(--color-text)' : 'var(--color-muted)' }}>
+                        {mod.label}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <span style={styles.fieldInfo}>
+                You can toggle any of these modules on or off anytime in Settings.
+              </span>
+            </div>
+
             {/* Task Prepopulation Section */}
             <div style={styles.fieldGroup}>
               <label style={styles.label}>PREPOPULATE CHECKLIST (IMPORT DEFAULT TASKS)</label>
@@ -518,7 +636,7 @@ export default function Sheet2VowDashboard() {
         /* Logged In Dashboard View */
         <div>
           {/* Status Sub-Banner */}
-          <div style={styles.syncBanner}>
+          <div className="sync-banner" style={styles.syncBanner}>
             <div style={styles.syncStatus}>
               {isMockMode ? (
                 <>
@@ -564,20 +682,22 @@ export default function Sheet2VowDashboard() {
               { id: 'vendors', label: '[ VENDORS ]' },
               { id: 'tasks', label: '[ KANBAN CHECKLIST ]' },
               { id: 'music', label: '[ MUSIC ]' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                style={{
-                  ...styles.navTabBtn,
-                  color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-muted)',
-                  fontWeight: activeTab === tab.id ? 700 : 400,
-                  borderBottomColor: activeTab === tab.id ? 'var(--color-primary)' : 'transparent'
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ]
+              .filter(tab => enabledModules[tab.id as keyof ModuleConfig])
+              .map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  style={{
+                    ...styles.navTabBtn,
+                    color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-muted)',
+                    fontWeight: activeTab === tab.id ? 700 : 400,
+                    borderBottomColor: activeTab === tab.id ? 'var(--color-primary)' : 'transparent'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
           </nav>
 
           {/* View Router */}
@@ -589,7 +709,13 @@ export default function Sheet2VowDashboard() {
           ) : (
             <div style={styles.tabContent}>
               {activeTab === 'metrics' && weddingData && (
-                <DashboardMetrics metrics={weddingData.dashboard} />
+                <DashboardMetrics
+                  metrics={weddingData.dashboard}
+                  guests={weddingData.guests}
+                  tasks={weddingData.tasks}
+                  music={weddingData.music}
+                  enabledModules={enabledModules}
+                />
               )}
 
               {activeTab === 'guests' && weddingData && (
@@ -965,13 +1091,12 @@ const styles: Record<string, React.CSSProperties> = {
     top: '100%',
     right: 0,
     marginTop: '0.5rem',
-    backgroundColor: 'var(--color-bg)',
-    border: '1px solid var(--color-muted)',
+    border: '2px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-md)',
     boxShadow: 'var(--box-shadow-hover)',
     padding: '1rem',
-    minWidth: '220px',
-    zIndex: 10,
+    minWidth: '240px',
+    zIndex: 1000,
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',

@@ -175,7 +175,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
       </div>
 
       {/* Budget Progress & Health Banner */}
-      <div style={styles.meterCard}>
+      <div className={`budget-meter-card ${isOverallOverBudget ? 'is-over-budget' : ''}`} style={styles.meterCard}>
         <div style={styles.meterHeader}>
           <div>
             <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
@@ -402,11 +402,16 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
 
           {filteredBudget.map(item => {
             const owing = item.actualCost - item.amountPaid;
+            const isOver = item.actualCost > item.estimatedCost;
             return (
-              <div key={item.itemId} style={{
-                ...styles.card,
-                borderColor: item.actualCost > item.estimatedCost ? '#ef4444' : 'var(--color-muted)'
-              }}>
+              <div 
+                key={item.itemId} 
+                className={`budget-item-card ${isOver ? 'is-over-budget' : ''}`}
+                style={{
+                  ...styles.card,
+                  borderColor: isOver ? '#ef4444' : 'var(--color-muted)'
+                }}
+              >
                 <div style={styles.cardHeader}>
                   <div style={styles.cardMeta}>
                     <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.25rem', textTransform: 'none' }}>{item.category}</span>

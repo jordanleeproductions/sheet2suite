@@ -29,6 +29,10 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
   function isLateNightTime(timeStr: string): boolean {
     if (!timeStr) return false;
     const str = timeStr.trim().toLowerCase();
+    
+    // Explicitly reject PM times from being flagged as overnight
+    if (str.includes('pm')) return false;
+
     if (str.includes('am')) {
       const hourMatch = str.match(/^(\d{1,2})/);
       if (hourMatch) {
@@ -38,9 +42,33 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
         }
       }
     }
+
     const match24 = str.match(/^0([0-4]):/);
-    if (match24) return true;
+    if (match24 && !str.includes('pm')) return true;
     return false;
+  }
+
+  function parseTimeToMinutes(timeStr: string): number {
+    if (!timeStr) return 0;
+    const str = timeStr.trim().toLowerCase();
+    
+    let hours = 0;
+    let minutes = 0;
+
+    const match = str.match(/^(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+    if (match) {
+      hours = parseInt(match[1], 10);
+      minutes = match[2] ? parseInt(match[2], 10) : 0;
+      const meridiem = match[3];
+
+      if (meridiem === 'pm' && hours < 12) {
+        hours += 12;
+      } else if (meridiem === 'am' && hours === 12) {
+        hours = 0;
+      }
+    }
+
+    return hours * 60 + minutes;
   }
 
   const filteredEventsWithIndex = schedule
@@ -60,7 +88,12 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
     .sort((a, b) => {
       const isNightA = a.event.isAfterMidnight || isLateNightTime(a.event.startTime) ? 1 : 0;
       const isNightB = b.event.isAfterMidnight || isLateNightTime(b.event.startTime) ? 1 : 0;
-      return isNightA - isNightB;
+      
+      if (isNightA !== isNightB) {
+        return isNightA - isNightB;
+      }
+
+      return parseTimeToMinutes(a.event.startTime) - parseTimeToMinutes(b.event.startTime);
     });
 
   const toggleExpand = (index: number) => {
@@ -373,9 +406,10 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                           type="button"
                           style={{
                             ...styles.midnightToggleBtn,
-                            backgroundColor: formState.isAfterMidnight !== false ? '#8b5cf6' : 'transparent',
-                            color: formState.isAfterMidnight !== false ? '#ffffff' : 'var(--color-text)',
-                            borderColor: formState.isAfterMidnight !== false ? '#8b5cf6' : 'var(--color-muted)'
+                            backgroundColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#ffffff',
+                            color: formState.isAfterMidnight !== false ? '#ffffff' : '#4c1d95',
+                            borderColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#a78bfa',
+                            fontWeight: 700
                           }}
                           onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: true, eventDate: 'Next Day (+1)' }))}
                         >
@@ -385,9 +419,10 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                           type="button"
                           style={{
                             ...styles.midnightToggleBtn,
-                            backgroundColor: formState.isAfterMidnight === false ? 'var(--color-primary)' : 'transparent',
-                            color: formState.isAfterMidnight === false ? 'var(--color-on-primary)' : 'var(--color-text)',
-                            borderColor: formState.isAfterMidnight === false ? 'var(--color-primary)' : 'var(--color-muted)'
+                            backgroundColor: formState.isAfterMidnight === false ? '#0d9488' : '#ffffff',
+                            color: formState.isAfterMidnight === false ? '#ffffff' : '#4c1d95',
+                            borderColor: formState.isAfterMidnight === false ? '#0d9488' : '#a78bfa',
+                            fontWeight: 700
                           }}
                           onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: false, eventDate: 'Main Wedding Day' }))}
                         >
@@ -461,6 +496,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
 
                 {/* Right Side: Collapsible detail card */}
                 <div 
+                  className={`timeline-card ${isExpanded ? 'is-expanded' : ''}`}
                   style={{
                     ...styles.timelineCard,
                     borderColor: isActiveNext ? '#cda250' : isExpanded ? 'var(--color-primary)' : 'var(--color-muted)',
@@ -470,7 +506,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                   onClick={() => setActiveEventIndex(originalIndex)}
                 >
                   {/* Card click header */}
-                  <div style={styles.cardHeader} onClick={() => toggleExpand(originalIndex)}>
+                  <div className="timeline-card-header" style={styles.cardHeader} onClick={() => toggleExpand(originalIndex)}>
                     <div style={styles.cardMainInfo}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <h3 style={styles.eventMomentTitle}>{event.eventMoment}</h3>
@@ -501,7 +537,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
 
                   {/* Expanded detail section */}
                   {isExpanded && (
-                    <div style={styles.cardBody}>
+                    <div className="timeline-card-body" style={styles.cardBody}>
                       {event.responsibility && (
                         <div style={styles.bodyDetailRow}>
                           <User size={12} style={styles.cardIcon} />

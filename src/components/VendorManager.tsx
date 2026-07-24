@@ -244,7 +244,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
         <div style={styles.cardGrid}>
           {filteredVendors.map((item) => (
             <div key={item.vendorId} style={styles.card}>
-              <div style={styles.cardHeader}>
+              <div className="vendor-card-header" style={styles.cardHeader}>
                 <div>
                   <h3 style={styles.cardTitle}>{item.vendorName}</h3>
                   <span style={styles.cardCategory}>{item.category}</span>

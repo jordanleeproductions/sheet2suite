@@ -166,6 +166,104 @@ code, pre, .font-mono {
   box-shadow: none !important;
 }
 
+/* Neo-Brutalism Over-Budget Card Red Border & Box-Shadow Override */
+[data-style='neo-brutalism'] .is-over-budget,
+[data-style='neo-brutalism'] [class*="is-over-budget"] {
+  border-color: #ef4444 !important;
+  box-shadow: 5px 5px 0px #ef4444 !important;
+}
+
+/* Kanban column panels in Neo-Brutalism Dark mode (TODO, IN PROGRESS, DONE transparent background) */
+[data-style='neo-brutalism'][data-theme='dark'] .kanban-column,
+[data-style='neo-brutalism'][data-theme='dark'] [class*="kanban-column"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Itinerary Timeline Expanded Event Colors in Neo-Brutalism Dark Mode */
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header {
+  background-color: var(--color-highlight, #00ED64) !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #000000 !important;
+}
+
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header h3,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header span,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header div,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header svg,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header button {
+  color: #000000 !important;
+}
+
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body {
+  background-color: #121824 !important;
+  color: #ffffff !important;
+}
+
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body span,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body p,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body div,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body strong,
+[data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-body svg {
+  color: #ffffff !important;
+}
+
+/* Remove background color from Sync / Mock Mode Banner in Dark Mode */
+[data-theme='dark'] .sync-banner,
+[data-theme='dark'] [class*="syncBanner"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Vendor Card Header in Neo-Brutalism Light mode (var(--color-highlight) background, excluded in Dark mode) */
+[data-style='neo-brutalism'][data-theme='light'] .vendor-card-header {
+  background-color: var(--color-highlight, #00ED64) !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #000000 !important;
+}
+
+[data-style='neo-brutalism'][data-theme='light'] .vendor-card-header h3,
+[data-style='neo-brutalism'][data-theme='light'] .vendor-card-header span,
+[data-style='neo-brutalism'][data-theme='light'] .vendor-card-header div,
+[data-style='neo-brutalism'][data-theme='light'] .vendor-card-header button {
+  color: #000000 !important;
+}
+
+/* Settings Modal Light & Dark Mode Styling Override */
+.settingsDropdown,
+[class*="settingsDropdown"] {
+  background-color: #ffffff !important;
+  color: #121824 !important;
+}
+
+.settingsDropdown label,
+.settingsDropdown span,
+.settingsDropdown div,
+.settingsDropdown a,
+.settingsDropdown button {
+  color: #121824;
+}
+
+[data-theme='dark'] [class*="settingsDropdown"],
+[data-theme='dark'] .settingsDropdown {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid var(--color-muted) !important;
+}
+
+[data-theme='dark'] [class*="settingsDropdown"] label,
+[data-theme='dark'] [class*="settingsDropdown"] span,
+[data-theme='dark'] [class*="settingsDropdown"] div,
+[data-theme='dark'] [class*="settingsDropdown"] a,
+[data-theme='dark'] [class*="settingsDropdown"] button,
+[data-theme='dark'] .settingsDropdown label,
+[data-theme='dark'] .settingsDropdown span,
+[data-theme='dark'] .settingsDropdown div,
+[data-theme='dark'] .settingsDropdown a,
+[data-theme='dark'] .settingsDropdown button {
+  color: #ffffff !important;
+}
+
 /* Responsive container */
 .container {
   width: 100%;
