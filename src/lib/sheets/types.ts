@@ -2,6 +2,15 @@ export type AgeCategory = 'Adult' | 'Youth' | 'Child' | 'Infant' | 'Vendor';
 export type RSVPStatus = 'No Response' | 'Attending' | 'Declined';
 export type KanbanStage = 'To Do' | 'In Progress' | 'Done';
 export type SongListType = 'Play List' | 'Do Not Play' | 'Special Moment' | 'General' | 'First Dance' | 'Ceremony' | 'Reception';
+export type TableShape = 'circle' | 'rectangle';
+
+export interface TableConfig {
+  tableId: string;
+  tableName: string;
+  shape: TableShape;
+  capacity: number; // seat count (even number for rectangle)
+  includeEndSeats?: boolean; // Default false (off). Put 1 person on head & foot end
+}
 
 export interface DashboardSummary {
   totalBudget: number;

@@ -11,6 +11,7 @@ export interface ModuleConfig {
   tasks: boolean;
   vendors: boolean;
   music: boolean;
+  tables?: boolean;
 }
 
 interface DashboardMetricsProps {
@@ -33,6 +34,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
     tasks: true,
     vendors: true,
     music: true,
+    tables: true,
   };
 
   // Financial Calculations

@@ -9,7 +9,8 @@ import TimelineManager from '@/components/TimelineManager';
 import KanbanBoard from '@/components/KanbanBoard';
 import VendorManager from '@/components/VendorManager';
 import MusicManager from '@/components/MusicManager';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check } from 'lucide-react';
+import SeatingChartManager from '@/components/SeatingChartManager';
+import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
 export default function Sheet2VowDashboard() {
@@ -30,6 +31,7 @@ export default function Sheet2VowDashboard() {
   const [enabledModules, setEnabledModules] = useState<ModuleConfig>({
     metrics: true,
     guests: true,
+    tables: true,
     budget: true,
     schedule: true,
     tasks: true,
@@ -58,7 +60,7 @@ export default function Sheet2VowDashboard() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music'>('metrics');
 
   // Load configuration from local storage on mount
   useEffect(() => {
@@ -441,6 +443,7 @@ export default function Sheet2VowDashboard() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.35rem' }}>
                     {[
                       { key: 'guests', label: 'Guest Registry' },
+                      { key: 'tables', label: 'Seating Chart' },
                       { key: 'budget', label: 'Budget Ledger' },
                       { key: 'schedule', label: 'Day-Of Timeline' },
                       { key: 'vendors', label: 'Vendor Directory' },
@@ -458,6 +461,12 @@ export default function Sheet2VowDashboard() {
                       </label>
                     ))}
                   </div>
+                </div>
+                <div style={styles.settingsSection}>
+                  <label style={styles.settingsLabel}>ACTIVATION & SETUP</label>
+                  <a href="/activate" style={{ ...styles.sheetLink, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--color-highlight)' }}>
+                    <Key size={12} /> RE-RUN ACTIVATION & SETUP WIZARD
+                  </a>
                 </div>
                 <div style={styles.settingsSection}>
                   <label style={styles.settingsLabel}>DATA SOURCE</label>
@@ -677,6 +686,7 @@ export default function Sheet2VowDashboard() {
             {[
               { id: 'metrics', label: '[ SUMMARY ]' },
               { id: 'guests', label: '[ GUEST LIST ]' },
+              { id: 'tables', label: '[ SEATING CHART ]' },
               { id: 'budget', label: '[ LEDGER ]' },
               { id: 'schedule', label: '[ TIMELINE ]' },
               { id: 'vendors', label: '[ VENDORS ]' },
@@ -722,6 +732,14 @@ export default function Sheet2VowDashboard() {
                 <GuestListManager
                   guests={weddingData.guests}
                   onUpdate={(data) => syncUpdate('guests', data)}
+                  isSyncing={isSyncing}
+                />
+              )}
+
+              {activeTab === 'tables' && weddingData && (
+                <SeatingChartManager
+                  guests={weddingData.guests}
+                  onUpdateGuests={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
                 />
               )}
