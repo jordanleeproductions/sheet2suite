@@ -49,6 +49,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
   const [editingTable, setEditingTable] = useState<TableConfig | null>(null);
   const [tableToDelete, setTableToDelete] = useState<TableConfig | null>(null);
   const [assignSeatTable, setAssignSeatTable] = useState<TableConfig | null>(null);
+  const [targetSeatIndex, setTargetSeatIndex] = useState<number | null>(null);
   const [assignSearch, setAssignSearch] = useState<string>('');
   const [isAddingTable, setIsAddingTable] = useState<boolean>(false);
   const [showUnassignedDrawer, setShowUnassignedDrawer] = useState<boolean>(false);
@@ -83,16 +84,20 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
     return 'badge-gold';
   };
 
-  // Helper to assign a guest to a table
-  const assignGuestToTable = async (guestId: string, tableName: string) => {
+  // Helper to assign a guest to a table and specific seat number
+  const assignGuestToTable = async (guestId: string, tableName: string, seatNumber?: number) => {
     if (isSyncing) return;
     const updated = guests.map(g => 
-      g.guestId === guestId ? { ...g, tableAssignment: tableName } : g
+      g.guestId === guestId 
+        ? { ...g, tableAssignment: tableName, seatNumber: tableName === 'Unassigned' ? undefined : seatNumber } 
+        : g
     );
     await onUpdateGuests(updated);
-    if (selectedGuest && selectedGuest.guestId === guestId) {
-      setSelectedGuest({ ...selectedGuest, tableAssignment: tableName });
-    }
+    
+    // Reset all popups cleanly
+    setSelectedGuest(null);
+    setAssignSeatTable(null);
+    setTargetSeatIndex(null);
   };
 
   // Open Add Table Modal
@@ -260,6 +265,29 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
           const seatedGuests = guests.filter(g => g.tableAssignment === table.tableName);
           const isOverCapacity = seatedGuests.length > table.capacity;
 
+          // Helper to resolve specific guest at physical seat number (1..capacity)
+          const getGuestAtSeat = (seatNum: number): Guest | undefined => {
+            const exact = seatedGuests.find(g => g.seatNumber === seatNum);
+            if (exact) return exact;
+            const unassignedNumber = seatedGuests.filter(g => typeof g.seatNumber !== 'number');
+            return unassignedNumber[seatNum - 1];
+          };
+
+          // Helper to handle seat clicks cleanly
+          const handleSeatClick = (e: React.MouseEvent, guest: Guest | undefined, seatNum: number) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (guest) {
+              setAssignSeatTable(null);
+              setTargetSeatIndex(null);
+              setSelectedGuest(guest);
+            } else {
+              setSelectedGuest(null);
+              setAssignSeatTable(table);
+              setTargetSeatIndex(seatNum);
+            }
+          };
+
           return (
             <div key={table.tableId} style={styles.tableCard}>
               {/* Table Header Controls */}
@@ -305,11 +333,12 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
 
                     {/* Perimeter Seat Nodes */}
                     {Array.from({ length: table.capacity }).map((_, index) => {
+                      const seatNum = index + 1;
                       const angle = (index * (2 * Math.PI / table.capacity)) - (Math.PI / 2);
                       const radius = 112; // Radial distance from center in px
                       const x = Math.cos(angle) * radius;
                       const y = Math.sin(angle) * radius;
-                      const guest = seatedGuests[index];
+                      const guest = getGuestAtSeat(seatNum);
 
                       return (
                         <div
@@ -318,18 +347,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                             ...styles.seatNodeCircle,
                             transform: `translate(${x}px, ${y}px)`,
                           }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            if (guest) {
-                              setAssignSeatTable(null);
-                              setSelectedGuest(guest);
-                            } else {
-                              setSelectedGuest(null);
-                              setAssignSeatTable(table);
-                            }
-                          }}
-                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
+                          onClick={(e) => handleSeatClick(e, guest, seatNum)}
+                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : `Seat ${seatNum}: Click to assign guest`}
                         >
                           {guest ? (
                             <div style={styles.seatedAvatar}>
@@ -347,52 +366,39 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                   (() => {
                     const cap = table.capacity <= 4 ? 4 : 8;
                     const perSide = Math.max(1, Math.floor(cap / 4));
-                    
-                    const topSeats = seatedGuests.slice(0, perSide);
-                    const rightSeats = seatedGuests.slice(perSide, perSide * 2);
-                    const bottomSeats = seatedGuests.slice(perSide * 2, perSide * 3);
-                    const leftSeats = seatedGuests.slice(perSide * 3, cap);
-
                     const surfaceDim = perSide === 1 ? '135px' : '160px';
 
-                    const renderSeatNode = (guest: Guest | undefined, seatKey: string) => (
-                      <div
-                        key={seatKey}
-                        style={styles.seatNodeRect}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          if (guest) {
-                            setAssignSeatTable(null);
-                            setSelectedGuest(guest);
-                          } else {
-                            setSelectedGuest(null);
-                            setAssignSeatTable(table);
-                          }
-                        }}
-                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
-                      >
-                        {guest ? (
-                          <div style={styles.seatedAvatar}>
-                            <span style={styles.initialsText}>{getInitials(guest)}</span>
-                          </div>
-                        ) : (
-                          <span style={styles.emptySeatText}>+</span>
-                        )}
-                      </div>
-                    );
+                    const renderSquareSeatNode = (seatNum: number, seatKey: string) => {
+                      const guest = getGuestAtSeat(seatNum);
+                      return (
+                        <div
+                          key={seatKey}
+                          style={styles.seatNodeRect}
+                          onClick={(e) => handleSeatClick(e, guest, seatNum)}
+                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : `Seat ${seatNum}: Click to assign guest`}
+                        >
+                          {guest ? (
+                            <div style={styles.seatedAvatar}>
+                              <span style={styles.initialsText}>{getInitials(guest)}</span>
+                            </div>
+                          ) : (
+                            <span style={styles.emptySeatText}>+</span>
+                          )}
+                        </div>
+                      );
+                    };
 
                     return (
                       <div style={styles.squareTableContainer}>
                         {/* Top Side Row */}
                         <div style={styles.rectSideRow}>
-                          {Array.from({ length: perSide }).map((_, i) => renderSeatNode(topSeats[i], `square-top-${i}`))}
+                          {Array.from({ length: perSide }).map((_, i) => renderSquareSeatNode(i + 1, `square-top-${i}`))}
                         </div>
 
                         {/* Middle Row: Left Seats + Central Square Surface + Right Seats */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {Array.from({ length: perSide }).map((_, i) => renderSeatNode(leftSeats[i], `square-left-${i}`))}
+                            {Array.from({ length: perSide }).map((_, i) => renderSquareSeatNode(perSide * 3 + i + 1, `square-left-${i}`))}
                           </div>
 
                           <div style={{
@@ -411,13 +417,13 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                           </div>
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {Array.from({ length: perSide }).map((_, i) => renderSeatNode(rightSeats[i], `square-right-${i}`))}
+                            {Array.from({ length: perSide }).map((_, i) => renderSquareSeatNode(perSide + i + 1, `square-right-${i}`))}
                           </div>
                         </div>
 
                         {/* Bottom Side Row */}
                         <div style={styles.rectSideRow}>
-                          {Array.from({ length: perSide }).map((_, i) => renderSeatNode(bottomSeats[i], `square-bottom-${i}`))}
+                          {Array.from({ length: perSide }).map((_, i) => renderSquareSeatNode(perSide * 2 + i + 1, `square-bottom-${i}`))}
                         </div>
                       </div>
                     );
@@ -429,33 +435,25 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     const includeEnd = table.includeEndSeats || false;
                     const cap = table.capacity;
 
-                    // Helper to render an individual seat node
-                    const renderSeatNode = (guest: Guest | undefined, seatKey: string) => (
-                      <div
-                        key={seatKey}
-                        style={styles.seatNodeRect}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          if (guest) {
-                            setAssignSeatTable(null);
-                            setSelectedGuest(guest);
-                          } else {
-                            setSelectedGuest(null);
-                            setAssignSeatTable(table);
-                          }
-                        }}
-                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
-                      >
-                        {guest ? (
-                          <div style={styles.seatedAvatar}>
-                            <span style={styles.initialsText}>{getInitials(guest)}</span>
-                          </div>
-                        ) : (
-                          <span style={styles.emptySeatText}>+</span>
-                        )}
-                      </div>
-                    );
+                    const renderRectSeatNode = (seatNum: number, seatKey: string) => {
+                      const guest = getGuestAtSeat(seatNum);
+                      return (
+                        <div
+                          key={seatKey}
+                          style={styles.seatNodeRect}
+                          onClick={(e) => handleSeatClick(e, guest, seatNum)}
+                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : `Seat ${seatNum}: Click to assign guest`}
+                        >
+                          {guest ? (
+                            <div style={styles.seatedAvatar}>
+                              <span style={styles.initialsText}>{getInitials(guest)}</span>
+                            </div>
+                          ) : (
+                            <span style={styles.emptySeatText}>+</span>
+                          )}
+                        </div>
+                      );
+                    };
 
                     if (singleSide) {
                       // SINGLE-SIDE SEATING: All seats placed on one side facing out
@@ -464,7 +462,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                         <div style={styles.rectTableContainer}>
                           {/* Top Single Row */}
                           <div style={styles.rectSideRow}>
-                            {Array.from({ length: cap }).map((_, i) => renderSeatNode(seatedGuests[i], `single-${i}`))}
+                            {Array.from({ length: cap }).map((_, i) => renderRectSeatNode(i + 1, `single-${i}`))}
                           </div>
 
                           {/* Central Table Surface */}
@@ -477,15 +475,13 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     } else if (!includeEnd) {
                       // DEFAULT: Even seats split on top and bottom rows
                       const sideCount = Math.max(1, Math.floor(cap / 2));
-                      const topSeats = seatedGuests.slice(0, sideCount);
-                      const bottomSeats = seatedGuests.slice(sideCount, cap);
                       const dynamicWidth = `${Math.max(100, sideCount * 48 - 10)}px`;
 
                       return (
                         <div style={styles.rectTableContainer}>
                           {/* Top Side Row */}
                           <div style={styles.rectSideRow}>
-                            {Array.from({ length: sideCount }).map((_, i) => renderSeatNode(topSeats[i], `top-${i}`))}
+                            {Array.from({ length: sideCount }).map((_, i) => renderRectSeatNode(i + 1, `top-${i}`))}
                           </div>
 
                           {/* Central Table Surface matching side seats length */}
@@ -496,39 +492,35 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
 
                           {/* Bottom Side Row */}
                           <div style={styles.rectSideRow}>
-                            {Array.from({ length: sideCount }).map((_, i) => renderSeatNode(bottomSeats[i], `bottom-${i}`))}
+                            {Array.from({ length: sideCount }).map((_, i) => renderRectSeatNode(sideCount + i + 1, `bottom-${i}`))}
                           </div>
                         </div>
                       );
                     } else {
                       // END SEATS ENABLED: 1 Head Seat (Left), 1 Foot Seat (Right), equal side seats top & bottom
                       const sideCount = Math.max(1, Math.floor((cap - 2) / 2));
-                      const headSeat = seatedGuests[0];
-                      const topSeats = seatedGuests.slice(1, 1 + sideCount);
-                      const footSeat = seatedGuests[1 + sideCount];
-                      const bottomSeats = seatedGuests.slice(2 + sideCount, cap);
                       const dynamicWidth = `${Math.max(100, sideCount * 48 - 10)}px`;
 
                       return (
                         <div style={styles.rectTableContainer}>
                           {/* Top Side Row */}
                           <div style={styles.rectSideRow}>
-                            {Array.from({ length: sideCount }).map((_, i) => renderSeatNode(topSeats[i], `top-${i}`))}
+                            {Array.from({ length: sideCount }).map((_, i) => renderRectSeatNode(1 + i + 1, `top-${i}`))}
                           </div>
 
                           {/* Middle Row: Head End Seat + Table Surface + Foot End Seat */}
                           <div style={styles.rectMiddleRow}>
-                            {renderSeatNode(headSeat, 'head-seat')}
+                            {renderRectSeatNode(1, 'head-seat')}
                             <div style={{ ...styles.rectTableSurfaceWithEnds, width: dynamicWidth }}>
                               <span style={styles.discLabel}>{table.tableName}</span>
                               <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated</span>
                             </div>
-                            {renderSeatNode(footSeat, 'foot-seat')}
+                            {renderRectSeatNode(1 + sideCount + 1, 'foot-seat')}
                           </div>
 
                           {/* Bottom Side Row */}
                           <div style={styles.rectSideRow}>
-                            {Array.from({ length: sideCount }).map((_, i) => renderSeatNode(bottomSeats[i], `bottom-${i}`))}
+                            {Array.from({ length: sideCount }).map((_, i) => renderRectSeatNode(2 + sideCount + i + 1, `bottom-${i}`))}
                           </div>
                         </div>
                       );
@@ -669,10 +661,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <UserPlus size={18} style={{ color: 'var(--color-highlight)' }} />
                 <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
-                  ASSIGN SEAT: {assignSeatTable.tableName.toUpperCase()}
+                  ASSIGN SEAT {targetSeatIndex ? `#${targetSeatIndex}` : ''}: {assignSeatTable.tableName.toUpperCase()}
                 </h3>
               </div>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => setAssignSeatTable(null)}>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setAssignSeatTable(null); setTargetSeatIndex(null); }}>
                 <X size={20} />
               </button>
             </div>
@@ -706,7 +698,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     return matchesSearch;
                   })
                   .map(guest => {
-                    const isAlreadyHere = guest.tableAssignment === assignSeatTable.tableName;
+                    const isAlreadyHere = guest.tableAssignment === assignSeatTable.tableName && guest.seatNumber === (targetSeatIndex || undefined);
                     const isUnassigned = !guest.tableAssignment || guest.tableAssignment === 'Unassigned';
 
                     return (
@@ -725,8 +717,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                         }}
                         onClick={() => {
                           if (!isAlreadyHere) {
-                            assignGuestToTable(guest.guestId, assignSeatTable.tableName);
+                            assignGuestToTable(guest.guestId, assignSeatTable.tableName, targetSeatIndex || undefined);
                             setAssignSeatTable(null);
+                            setTargetSeatIndex(null);
                             setAssignSearch('');
                           }
                         }}

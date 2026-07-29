@@ -35,6 +35,7 @@ export interface Guest {
   hasPlusOne?: boolean;
   plusOneName?: string;
   notes?: string;
+  seatNumber?: number;
 }
 
 export interface BudgetItem {
