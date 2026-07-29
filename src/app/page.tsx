@@ -94,7 +94,15 @@ export default function Sheet2VowDashboard() {
     if (savedFolder) setDriveFolder(savedFolder);
     if (savedModules) {
       try {
-        setEnabledModules(JSON.parse(savedModules));
+        const parsed = JSON.parse(savedModules);
+        setEnabledModules(prev => ({
+          ...prev,
+          ...parsed,
+          tables: parsed.tables ?? true,
+          photos: parsed.photos ?? true,
+          thanks: parsed.thanks ?? true,
+          gifts: parsed.gifts ?? true,
+        }));
       } catch (e) {
         console.error('Error parsing saved modules', e);
       }
@@ -671,7 +679,8 @@ export default function Sheet2VowDashboard() {
                   { key: 'vendors', label: 'Vendor Directory' },
                   { key: 'tasks', label: 'Kanban Checklist' },
                   { key: 'music', label: 'Wedding Playlist & Music' },
-                  { key: 'gifts', label: 'Thank You Tracker' },
+                  { key: 'photos', label: 'Photo Shot List' },
+                  { key: 'thanks', label: 'Thank You Tracker' },
                 ].map((mod) => {
                   const isChecked = enabledModules[mod.key as keyof ModuleConfig];
                   return (
