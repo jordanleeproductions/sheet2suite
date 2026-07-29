@@ -285,7 +285,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
             onClick={handleShareMusic}
             title="Email music playlist to DJ or Band"
           >
-            <Mail size={16} style={{ marginRight: '0.35rem' }} /> EMAIL PLAYLIST TO DJ
+            <Mail size={16} style={{ marginRight: '0.35rem' }} /> EMAIL LIST
           </button>
 
           <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>

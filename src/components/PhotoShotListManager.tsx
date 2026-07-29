@@ -202,7 +202,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
             onClick={handleSharePhotos}
             title="Email shot list to Photographer"
           >
-            <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST TO PHOTOGRAPHER
+            <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
           </button>
 
           <button style={styles.addButton} onClick={startAddShot}>
