@@ -63,7 +63,7 @@ export default function Sheet2VowDashboard() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos'>('metrics');
 
   // Load configuration from local storage on mount
   useEffect(() => {
@@ -253,7 +253,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
