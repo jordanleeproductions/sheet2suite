@@ -81,6 +81,13 @@ export let mockDatabase: WeddingData = {
     { shotId: 'P4', description: 'Rings & Invitation Suite Detail', location: 'Hotel Suite', shotTime: '09:00 AM', people: 'Flatlay Details', status: 'Captured', priority: 'Nice To Have', notes: 'Use silk ribbon & fresh flower petals' },
     { shotId: 'P5', description: 'Groom & Groomsmen Toast', location: 'Groom Lounge', shotTime: '11:45 AM', people: 'Groom & Groomsmen', status: 'Pending', priority: 'Nice To Have', notes: 'Whiskey glasses raised' },
     { shotId: 'P6', description: 'First Dance Golden Hour Shot', location: 'Grand Ballroom', shotTime: '06:45 PM', people: 'Bride & Groom', status: 'Pending', priority: 'Must Have', notes: 'Warm ambient lighting & sparkler effect' },
+  ],
+  gifts: [
+    { giftId: 'G1', description: 'KitchenAid Artisan Stand Mixer (Pistachio)', giverName: 'Uncle Bob & Aunt Sarah', category: 'Kitchen & Dining', amount: 450, thankYouSent: true, notes: 'Shipped directly via Williams Sonoma' },
+    { giftId: 'G2', description: '$250 Honeymoon Fund Contribution', giverName: 'Marcus & Jessica Vance', category: 'Cash / Honeyfund', amount: 250, thankYouSent: true, notes: 'Venmo transfer for Amalfi Coast dinner' },
+    { giftId: 'G3', description: 'Le Creuset Enameled Cast Iron Dutch Oven (5.5 qt)', giverName: 'Grandma Mary & Grandpa Joe', category: 'Kitchen & Dining', amount: 420, thankYouSent: false, notes: 'Delivered to home address' },
+    { giftId: 'G4', description: 'Dyson V15 Detect Cordless Vacuum', giverName: 'David & Emily Miller', category: 'Home Appliances', amount: 750, thankYouSent: false, notes: 'Target wedding registry' },
+    { giftId: 'G5', description: 'Egyptian Cotton Sheet Set (King)', giverName: 'Rachel Green', category: 'Bed & Bath', amount: 180, thankYouSent: false, notes: 'Crate & Barrel registry' },
   ]
 };
 

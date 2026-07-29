@@ -1,4 +1,4 @@
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -13,6 +13,7 @@ export const GUEST_HEADERS: Record<string, keyof Guest> = {
   'Email Address': 'emailAddress',
   'Phone Number': 'phoneNumber',
   'Mailing Address': 'mailingAddress',
+  'Thanked': 'thankedSent',
 };
 
 export const BUDGET_HEADERS: Record<string, keyof BudgetItem> = {
@@ -224,5 +225,37 @@ export const photoMapper = {
   },
   toRow(headers: string[], photo: PhotoShot): any[] {
     return mapObjectToRow(headers, photo, PHOTO_HEADERS);
+  }
+};
+
+export const GIFT_HEADERS: Record<string, keyof GiftItem> = {
+  'Item ID': 'giftId',
+  'Gift Description / Name': 'description',
+  'Giver / From': 'giverName',
+  'Category / Store': 'category',
+  'Estimated Value / Cash Amount': 'amount',
+  'Thank You Sent': 'thankYouSent',
+  'Notes': 'notes',
+};
+
+export const giftMapper = {
+  fromRow(headers: string[], row: any[]): GiftItem {
+    const obj = mapRowToObject<GiftItem>(headers, row, GIFT_HEADERS);
+    const rawThanked = String(obj.thankYouSent || '').toLowerCase();
+    return {
+      giftId: String(obj.giftId || ''),
+      description: String(obj.description || ''),
+      giverName: String(obj.giverName || ''),
+      category: String(obj.category || ''),
+      amount: Number(obj.amount) || 0,
+      thankYouSent: rawThanked === 'true' || rawThanked === 'yes' || rawThanked === '1',
+      notes: String(obj.notes || ''),
+    };
+  },
+  toRow(headers: string[], gift: GiftItem): any[] {
+    return mapObjectToRow(headers, {
+      ...gift,
+      thankYouSent: gift.thankYouSent ? 'TRUE' : 'FALSE' as any
+    }, GIFT_HEADERS);
   }
 };

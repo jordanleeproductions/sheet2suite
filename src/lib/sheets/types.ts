@@ -36,6 +36,7 @@ export interface Guest {
   plusOneName?: string;
   notes?: string;
   seatNumber?: number;
+  thankedSent?: boolean;
 }
 
 export interface BudgetItem {
@@ -110,6 +111,16 @@ export interface PhotoShot {
   priority?: 'Must Have' | 'Nice To Have';
 }
 
+export interface GiftItem {
+  giftId: string;
+  description: string;
+  giverName: string;
+  category: string;
+  amount: number;
+  thankYouSent: boolean;
+  notes?: string;
+}
+
 export interface WeddingData {
   dashboard: DashboardSummary;
   guests: Guest[];
@@ -119,4 +130,5 @@ export interface WeddingData {
   tasks: Task[];
   music: Song[];
   photos: PhotoShot[];
+  gifts: GiftItem[];
 }

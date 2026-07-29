@@ -13,6 +13,7 @@ export interface ModuleConfig {
   music: boolean;
   tables?: boolean;
   photos?: boolean;
+  gifts?: boolean;
 }
 
 interface DashboardMetricsProps {

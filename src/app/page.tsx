@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task, PhotoShot } from '@/lib/sheets/types';
+import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task, PhotoShot, GiftItem } from '@/lib/sheets/types';
 import DashboardMetrics, { ModuleConfig } from '@/components/DashboardMetrics';
 import GuestListManager from '@/components/GuestListManager';
 import BudgetLedgerManager from '@/components/BudgetLedgerManager';
@@ -11,6 +11,7 @@ import VendorManager from '@/components/VendorManager';
 import MusicManager from '@/components/MusicManager';
 import SeatingChartManager from '@/components/SeatingChartManager';
 import PhotoShotListManager from '@/components/PhotoShotListManager';
+import ThankYouManager from '@/components/ThankYouManager';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
@@ -39,6 +40,7 @@ export default function Sheet2VowDashboard() {
     vendors: true,
     music: true,
     photos: true,
+    gifts: true,
   });
 
   const toggleTaskSelection = (taskName: string) => {
@@ -63,7 +65,7 @@ export default function Sheet2VowDashboard() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('metrics');
 
   // Load configuration from local storage on mount
   useEffect(() => {
@@ -253,7 +255,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
@@ -668,6 +670,7 @@ export default function Sheet2VowDashboard() {
                   { key: 'vendors', label: 'Vendor Directory' },
                   { key: 'tasks', label: 'Kanban Checklist' },
                   { key: 'music', label: 'Wedding Playlist & Music' },
+                  { key: 'gifts', label: 'Thank You Tracker' },
                 ].map((mod) => {
                   const isChecked = enabledModules[mod.key as keyof ModuleConfig];
                   return (
@@ -786,6 +789,7 @@ export default function Sheet2VowDashboard() {
               { id: 'tasks', label: '[ KANBAN CHECKLIST ]' },
               { id: 'music', label: '[ MUSIC ]' },
               { id: 'photos', label: '[ PHOTOS ]' },
+              { id: 'thanks', label: '[ THANKS ]' },
             ]
               .filter(tab => enabledModules[tab.id as keyof ModuleConfig])
               .map(tab => (
@@ -882,6 +886,16 @@ export default function Sheet2VowDashboard() {
                 <PhotoShotListManager
                   photos={weddingData.photos || []}
                   onUpdatePhotos={(data: PhotoShot[]) => syncUpdate('photos', data)}
+                  isSyncing={isSyncing}
+                />
+              )}
+              
+              {activeTab === 'thanks' && weddingData && (
+                <ThankYouManager
+                  gifts={weddingData.gifts || []}
+                  guests={weddingData.guests || []}
+                  onUpdateGifts={(data: GiftItem[]) => syncUpdate('gifts', data)}
+                  onUpdateGuests={(data: Guest[]) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
                 />
               )}

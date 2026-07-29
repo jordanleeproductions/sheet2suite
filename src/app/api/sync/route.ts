@@ -6,21 +6,23 @@ import {
   scheduleMapper, 
   vendorMapper, 
   taskMapper,
-  photoMapper 
+  photoMapper,
+  giftMapper 
 } from '@/lib/sheets/mapper';
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, WeddingData } from '@/lib/sheets/types';
+import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 
 // Map sheet columns to standard header lists so that we can write files correctly
 const HEADERS_MAP = {
-  guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Email Address', 'Phone Number', 'Mailing Address'],
+  guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
   budget: ['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status'],
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],
   vendors: ['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required'],
   tasks: ['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links'],
   music: ['Song ID', 'Title', 'Artist', 'List Type', 'Link', 'Notes'],
-  photos: ['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes']
+  photos: ['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes'],
+  gifts: ['Item ID', 'Gift Description / Name', 'Giver / From', 'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes']
 };
 
 export async function GET(req: Request) {
@@ -64,12 +66,13 @@ export async function GET(req: Request) {
       spreadsheetId,
       ranges: [
         "'Dashboard'!B2",
-        "'Guest List'!A1:K1000",
+        "'Guest List'!A1:L1000",
         "'Budget Ledger'!A1:H1000",
         "'Day-Of-Schedule'!A1:F1000",
         "'Vendors'!A1:L1000",
         "'To-Do List'!A1:H1000",
-        "'PHOTOS'!A1:H1000"
+        "'PHOTOS'!A1:H1000",
+        "'GIFT REGISTRY'!A1:G1000"
       ]
     });
 
@@ -122,6 +125,11 @@ export async function GET(req: Request) {
     const photoHeaders = photoRows[0] || HEADERS_MAP.photos;
     const photos = photoRows.slice(1).map(row => photoMapper.fromRow(photoHeaders, row));
 
+    // Parse Gifts
+    const giftRows = valueRanges[7]?.values || [];
+    const giftHeaders = giftRows[0] || HEADERS_MAP.gifts;
+    const gifts = giftRows.slice(1).map(row => giftMapper.fromRow(giftHeaders, row));
+
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
     const actualCost = budget.reduce((sum, item) => sum + item.actualCost, 0);
@@ -140,7 +148,8 @@ export async function GET(req: Request) {
       vendors,
       tasks,
       music: [],
-      photos: photos.length > 0 ? photos : mockDatabase.photos
+      photos: photos.length > 0 ? photos : mockDatabase.photos,
+      gifts: gifts.length > 0 ? gifts : mockDatabase.gifts
     };
 
     return NextResponse.json({
@@ -188,6 +197,8 @@ export async function POST(req: Request) {
         mockDatabase.tasks = data as Task[];
       } else if (sheetType === 'photos') {
         mockDatabase.photos = data as PhotoShot[];
+      } else if (sheetType === 'gifts') {
+        mockDatabase.gifts = data as GiftItem[];
       }
 
       // Recompute metrics
@@ -232,7 +243,7 @@ export async function POST(req: Request) {
       values.push(headers);
 
       if (sheetType === 'guests') {
-        range = "'Guest List'!A1:K1000";
+        range = "'Guest List'!A1:L1000";
         (data as Guest[]).forEach(item => {
           values.push(guestMapper.toRow(headers, item));
         });
@@ -260,6 +271,11 @@ export async function POST(req: Request) {
         range = "'PHOTOS'!A1:H1000";
         (data as PhotoShot[]).forEach(item => {
           values.push(photoMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'gifts') {
+        range = "'GIFT REGISTRY'!A1:G1000";
+        (data as GiftItem[]).forEach(item => {
+          values.push(giftMapper.toRow(headers, item));
         });
       }
 
