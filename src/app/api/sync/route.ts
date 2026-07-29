@@ -18,7 +18,8 @@ const HEADERS_MAP = {
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],
   vendors: ['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required'],
   tasks: ['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links'],
-  music: ['Song ID', 'Title', 'Artist', 'List Type', 'Link', 'Notes']
+  music: ['Song ID', 'Title', 'Artist', 'List Type', 'Link', 'Notes'],
+  photos: ['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes']
 };
 
 export async function GET(req: Request) {

@@ -73,6 +73,14 @@ export let mockDatabase: WeddingData = {
     { songId: 'M3', title: 'Macarena', artist: 'Los Del Rio', listType: 'Banned', link: '', notes: 'Absolutely NO', priority: 'Banned', played: false },
     { songId: 'M4', title: 'September', artist: 'Earth, Wind & Fire', listType: 'Must Play', link: 'https://open.spotify.com/track/2tJulUYLDKOg9XrtVkMgcJ', notes: 'Classic', priority: 'Must Play', played: false },
     { songId: 'M5', title: 'Chicken Dance', artist: 'The Emeralds', listType: 'Banned', link: '', notes: 'Never play this', priority: 'Banned', played: false },
+  ],
+  photos: [
+    { shotId: 'P1', description: 'Bride & Groom First Look', location: 'Garden Path', shotTime: '01:30 PM', people: 'Bride, Groom', status: 'Captured', priority: 'Must Have', notes: 'Natural outdoor lighting' },
+    { shotId: 'P2', description: 'Bridal Party Group Shot', location: 'Courtyard Lawn', shotTime: '03:00 PM', people: 'Full Bridal Party', status: 'Pending', priority: 'Must Have', notes: 'Groom & Groomsmen on Left, Bride & Bridesmaids on Right' },
+    { shotId: 'P3', description: 'Bride with Grandparents', location: 'Bridal Suite', shotTime: '11:30 AM', people: 'Bride, Grandma Mary, Grandpa Joe', status: 'Captured', priority: 'Must Have', notes: 'Seated portrait with bouquet' },
+    { shotId: 'P4', description: 'Rings & Invitation Suite Detail', location: 'Hotel Suite', shotTime: '09:00 AM', people: 'Flatlay Details', status: 'Captured', priority: 'Nice To Have', notes: 'Use silk ribbon & fresh flower petals' },
+    { shotId: 'P5', description: 'Groom & Groomsmen Toast', location: 'Groom Lounge', shotTime: '11:45 AM', people: 'Groom & Groomsmen', status: 'Pending', priority: 'Nice To Have', notes: 'Whiskey glasses raised' },
+    { shotId: 'P6', description: 'First Dance Golden Hour Shot', location: 'Grand Ballroom', shotTime: '06:45 PM', people: 'Bride & Groom', status: 'Pending', priority: 'Must Have', notes: 'Warm ambient lighting & sparkler effect' },
   ]
 };
 

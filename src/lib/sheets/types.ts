@@ -99,6 +99,17 @@ export interface Song {
   played?: boolean;
 }
 
+export interface PhotoShot {
+  shotId: string;
+  description: string;
+  location: string;
+  shotTime: string;
+  people: string;
+  status: 'Pending' | 'Captured' | 'Skipped';
+  notes?: string;
+  priority?: 'Must Have' | 'Nice To Have';
+}
+
 export interface WeddingData {
   dashboard: DashboardSummary;
   guests: Guest[];
@@ -107,4 +118,5 @@ export interface WeddingData {
   vendors: Vendor[];
   tasks: Task[];
   music: Song[];
+  photos: PhotoShot[];
 }

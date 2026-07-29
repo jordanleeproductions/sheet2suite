@@ -1,4 +1,4 @@
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, AgeCategory, RSVPStatus, KanbanStage } from './types';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -194,5 +194,35 @@ export const taskMapper = {
   },
   toRow(headers: string[], task: Task): any[] {
     return mapObjectToRow(headers, task, TASK_HEADERS);
+  }
+};
+
+export const PHOTO_HEADERS: Record<string, keyof PhotoShot> = {
+  'Shot ID': 'shotId',
+  'Description': 'description',
+  'Location': 'location',
+  'Shot Time': 'shotTime',
+  'Included People': 'people',
+  'Status': 'status',
+  'Priority': 'priority',
+  'Notes': 'notes',
+};
+
+export const photoMapper = {
+  fromRow(headers: string[], row: any[]): PhotoShot {
+    const obj = mapRowToObject<PhotoShot>(headers, row, PHOTO_HEADERS);
+    return {
+      shotId: String(obj.shotId || ''),
+      description: String(obj.description || ''),
+      location: String(obj.location || ''),
+      shotTime: String(obj.shotTime || ''),
+      people: String(obj.people || ''),
+      status: (obj.status || 'Pending') as any,
+      priority: (obj.priority || 'Must Have') as any,
+      notes: String(obj.notes || ''),
+    };
+  },
+  toRow(headers: string[], photo: PhotoShot): any[] {
+    return mapObjectToRow(headers, photo, PHOTO_HEADERS);
   }
 };

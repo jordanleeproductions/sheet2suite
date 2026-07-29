@@ -10,6 +10,7 @@ import KanbanBoard from '@/components/KanbanBoard';
 import VendorManager from '@/components/VendorManager';
 import MusicManager from '@/components/MusicManager';
 import SeatingChartManager from '@/components/SeatingChartManager';
+import PhotoShotListManager from '@/components/PhotoShotListManager';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
@@ -37,6 +38,7 @@ export default function Sheet2VowDashboard() {
     tasks: true,
     vendors: true,
     music: true,
+    photos: true,
   });
 
   const toggleTaskSelection = (taskName: string) => {
@@ -445,6 +447,7 @@ export default function Sheet2VowDashboard() {
                       { key: 'vendors', label: 'Vendor Directory' },
                       { key: 'tasks', label: 'Kanban Checklist' },
                       { key: 'music', label: 'Music Playlist' },
+                      { key: 'photos', label: 'Photo Shot List' },
                     ].map(mod => (
                       <label key={mod.key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--color-text)' }}>
                         <input
@@ -782,6 +785,7 @@ export default function Sheet2VowDashboard() {
               { id: 'vendors', label: '[ VENDORS ]' },
               { id: 'tasks', label: '[ KANBAN CHECKLIST ]' },
               { id: 'music', label: '[ MUSIC ]' },
+              { id: 'photos', label: '[ PHOTOS ]' },
             ]
               .filter(tab => enabledModules[tab.id as keyof ModuleConfig])
               .map(tab => (
@@ -870,6 +874,14 @@ export default function Sheet2VowDashboard() {
                 <MusicManager
                   music={weddingData.music || []}
                   onUpdate={(data) => syncUpdate('music', data)}
+                  isSyncing={isSyncing}
+                />
+              )}
+
+              {activeTab === 'photos' && weddingData && (
+                <PhotoShotListManager
+                  photos={weddingData.photos || []}
+                  onUpdate={(data) => syncUpdate('photos', data)}
                   isSyncing={isSyncing}
                 />
               )}
