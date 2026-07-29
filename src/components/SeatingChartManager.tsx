@@ -22,7 +22,8 @@ import {
   Settings2,
   Sparkles,
   Search,
-  Filter
+  Filter,
+  Heart
 } from 'lucide-react';
 
 interface SeatingChartManagerProps {
@@ -33,11 +34,11 @@ interface SeatingChartManagerProps {
 
 // Default Table Configurations if none exist
 const INITIAL_TABLES: TableConfig[] = [
+  { tableId: 'table-sweetheart', tableName: 'Sweetheart Table', shape: 'sweetheart', capacity: 2 },
   { tableId: 'table-1', tableName: 'Table 1 - Head Table', shape: 'circle', capacity: 8 },
   { tableId: 'table-2', tableName: 'Table 2 - Family VIP', shape: 'circle', capacity: 8 },
   { tableId: 'table-3', tableName: 'Table 3 - Bridal Party', shape: 'rectangle', capacity: 10 },
   { tableId: 'table-4', tableName: 'Table 4 - Friends & College', shape: 'circle', capacity: 6 },
-  { tableId: 'table-5', tableName: 'Table 5 - Relatives', shape: 'rectangle', capacity: 8 },
 ];
 
 export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing }: SeatingChartManagerProps) {
@@ -118,8 +119,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
     let finalCapacity = Number(tableFormState.capacity) || 8;
     const finalShape = tableFormState.shape || 'circle';
 
-    // Enforce even number of seats for rectangular tables
-    if (finalShape === 'rectangle' && finalCapacity % 2 !== 0) {
+    if (finalShape === 'sweetheart') {
+      finalCapacity = 2;
+    } else if (finalShape === 'rectangle' && finalCapacity % 2 !== 0) {
       finalCapacity = finalCapacity + 1;
     }
 
@@ -258,6 +260,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                 <div style={styles.tableNameGroup}>
                   {table.shape === 'circle' ? (
                     <Circle size={16} style={{ color: 'var(--color-highlight)' }} />
+                  ) : table.shape === 'sweetheart' ? (
+                    <Heart size={16} style={{ color: 'var(--color-sweetheart)' }} />
                   ) : (
                     <Square size={16} style={{ color: 'var(--color-highlight)' }} />
                   )}
@@ -324,6 +328,55 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       );
                     })}
                   </div>
+                ) : table.shape === 'sweetheart' ? (
+                  // SWEETHEART TABLE (Bride & Groom side-by-side on same top side)
+                  (() => {
+                    const brideSeat = seatedGuests[0];
+                    const groomSeat = seatedGuests[1];
+
+                    const renderSeatNode = (guest: Guest | undefined, seatKey: string) => (
+                      <div
+                        key={seatKey}
+                        style={styles.seatNodeRect}
+                        onClick={() => {
+                          if (guest) setSelectedGuest(guest);
+                          else setShowUnassignedDrawer(true);
+                        }}
+                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Empty Seat Slot'}
+                      >
+                        {guest ? (
+                          <div style={styles.seatedAvatar}>
+                            <span style={styles.initialsText}>{getInitials(guest)}</span>
+                          </div>
+                        ) : (
+                          <span style={styles.emptySeatText}>+</span>
+                        )}
+                      </div>
+                    );
+
+                    return (
+                      <div style={styles.rectTableContainer}>
+                        {/* Top Side Row (Bride & Groom side-by-side facing out) */}
+                        <div style={styles.rectSideRow}>
+                          {renderSeatNode(brideSeat, 'sweet-1')}
+                          {renderSeatNode(groomSeat, 'sweet-2')}
+                        </div>
+
+                        {/* Central Sweetheart Table Surface */}
+                        <div style={{
+                          ...styles.rectTableSurface,
+                          width: '120px',
+                          border: '3px solid var(--color-sweetheart)',
+                          backgroundColor: 'var(--color-surface)',
+                          boxShadow: 'var(--box-shadow-subtle)'
+                        }}>
+                          <Heart size={16} style={{ color: 'var(--color-sweetheart)', marginBottom: '2px' }} />
+                          <span style={{ ...styles.discLabel, fontSize: '0.75rem', color: 'var(--color-text)' }}>{table.tableName}</span>
+                          <span style={{ ...styles.discSubLabel, color: 'var(--color-sweetheart)', fontWeight: 600 }}>Bride & Groom</span>
+                        </div>
+                      </div>
+                    );
+                  })()
                 ) : (
                   // RECTANGULAR TABLE VISUAL LAYOUT (Even seats on sides + optional head/foot end seats)
                   (() => {
@@ -356,6 +409,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       const sideCount = Math.max(1, Math.floor(cap / 2));
                       const topSeats = seatedGuests.slice(0, sideCount);
                       const bottomSeats = seatedGuests.slice(sideCount, cap);
+                      const dynamicWidth = `${Math.max(100, sideCount * 48 - 10)}px`;
 
                       return (
                         <div style={styles.rectTableContainer}>
@@ -364,10 +418,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                             {Array.from({ length: sideCount }).map((_, i) => renderSeatNode(topSeats[i], `top-${i}`))}
                           </div>
 
-                          {/* Central Table Surface */}
-                          <div style={styles.rectTableSurface}>
+                          {/* Central Table Surface matching side seats length */}
+                          <div style={{ ...styles.rectTableSurface, width: dynamicWidth }}>
                             <span style={styles.discLabel}>{table.tableName}</span>
-                            <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated &bull; Even Side Seats</span>
+                            <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated</span>
                           </div>
 
                           {/* Bottom Side Row */}
@@ -383,6 +437,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       const topSeats = seatedGuests.slice(1, 1 + sideCount);
                       const footSeat = seatedGuests[1 + sideCount];
                       const bottomSeats = seatedGuests.slice(2 + sideCount, cap);
+                      const dynamicWidth = `${Math.max(100, sideCount * 48 - 10)}px`;
 
                       return (
                         <div style={styles.rectTableContainer}>
@@ -394,9 +449,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                           {/* Middle Row: Head End Seat + Table Surface + Foot End Seat */}
                           <div style={styles.rectMiddleRow}>
                             {renderSeatNode(headSeat, 'head-seat')}
-                            <div style={styles.rectTableSurfaceWithEnds}>
+                            <div style={{ ...styles.rectTableSurfaceWithEnds, width: dynamicWidth }}>
                               <span style={styles.discLabel}>{table.tableName}</span>
-                              <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated &bull; End Seats On</span>
+                              <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated</span>
                             </div>
                             {renderSeatNode(footSeat, 'foot-seat')}
                           </div>
@@ -544,7 +599,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     }}
                     onClick={() => setTableFormState({ ...tableFormState, shape: 'circle' })}
                   >
-                    <Circle size={18} style={{ marginRight: '6px' }} /> Round Circle Table
+                    <Circle size={18} style={{ marginRight: '6px' }} /> Round Circle
                   </button>
 
                   <button
@@ -556,7 +611,26 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     }}
                     onClick={() => setTableFormState({ ...tableFormState, shape: 'rectangle' })}
                   >
-                    <Square size={18} style={{ marginRight: '6px' }} /> Rectangle Banquet Table
+                    <Square size={18} style={{ marginRight: '6px' }} /> Rectangle Banquet
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.shapeBtn,
+                      gridColumn: 'span 2',
+                      borderColor: tableFormState.shape === 'sweetheart' ? 'var(--color-sweetheart)' : 'var(--color-muted)',
+                      backgroundColor: tableFormState.shape === 'sweetheart' ? 'var(--color-surface)' : 'transparent',
+                      color: tableFormState.shape === 'sweetheart' ? 'var(--color-sweetheart)' : 'var(--color-text)'
+                    }}
+                    onClick={() => setTableFormState({ 
+                      ...tableFormState, 
+                      shape: 'sweetheart', 
+                      capacity: 2, 
+                      tableName: tableFormState.tableName || 'Sweetheart Table (Bride & Groom)' 
+                    })}
+                  >
+                    <Heart size={18} style={{ marginRight: '6px', color: 'var(--color-sweetheart)' }} /> 💑 Sweetheart Table (Bride & Groom)
                   </button>
                 </div>
               </div>
@@ -912,8 +986,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
   },
   rectTableSurface: {
-    width: '85%',
-    minWidth: '180px',
+    minWidth: '100px',
     height: '75px',
     backgroundColor: 'var(--color-bg)',
     border: '3px solid var(--color-primary)',
@@ -923,11 +996,11 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
-    padding: '0.5rem',
+    padding: '0.375rem',
+    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
   },
   rectTableSurfaceWithEnds: {
-    flex: 1,
-    maxWidth: '220px',
+    minWidth: '100px',
     height: '75px',
     backgroundColor: 'var(--color-bg)',
     border: '3px solid var(--color-primary)',
@@ -937,7 +1010,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
-    padding: '0.5rem',
+    padding: '0.375rem',
+    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
   },
   rectSeatsGrid: {
     display: 'grid',
@@ -956,6 +1030,8 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
+    transition: 'var(--transition-smooth)',
+    boxShadow: 'var(--box-shadow-subtle)',
   },
   seatedAvatar: {
     width: '100%',
