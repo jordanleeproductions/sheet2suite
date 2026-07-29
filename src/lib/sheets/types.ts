@@ -1,13 +1,13 @@
 export type AgeCategory = 'Adult' | 'Youth' | 'Child' | 'Infant' | 'Vendor';
-export type RSVPStatus = 'No Response' | 'Attending' | 'Declined';
+export type RSVPStatus = 'Attending' | 'Declined' | 'Pending' | 'No Response';
 export type KanbanStage = 'To Do' | 'In Progress' | 'Done';
-export type SongListType = 'Play List' | 'Do Not Play' | 'Special Moment' | 'General' | 'First Dance' | 'Ceremony' | 'Reception';
-export type TableShape = 'circle' | 'rectangle' | 'sweetheart';
+export type SongListType = 'Must Play' | 'Play If Time' | 'Banned' | 'Ceremony' | 'Reception' | 'First Dance' | 'Play List' | 'Do Not Play' | 'Special Moment' | 'General';
+export type TableShape = 'circle' | 'rectangle' | 'sweetheart' | 'Circle' | 'Rectangle' | 'Sweetheart';
 
 export interface TableConfig {
   tableId: string;
   tableName: string;
-  shape: TableShape;
+  shape: 'circle' | 'rectangle' | 'sweetheart';
   capacity: number; // seat count (even number for rectangle)
   includeEndSeats?: boolean; // Default false (off). Put 1 person on head & foot end
 }
@@ -31,6 +31,9 @@ export interface Guest {
   emailAddress: string;
   phoneNumber: string;
   mailingAddress: string;
+  hasPlusOne?: boolean;
+  plusOneName?: string;
+  notes?: string;
 }
 
 export interface BudgetItem {
@@ -42,6 +45,7 @@ export interface BudgetItem {
   amountPaid: number;
   dueDate: string;
   paymentStatus: string;
+  notes?: string;
 }
 
 export interface ScheduleEvent {
@@ -68,6 +72,7 @@ export interface Vendor {
   paymentDueDate: string;
   contractLink: string;
   staffMealsRequired: string; // "Yes" / "No" or text
+  notes?: string;
 }
 
 export interface Task {
@@ -88,6 +93,8 @@ export interface Song {
   listType: SongListType;
   link: string;
   notes: string;
+  priority?: string;
+  played?: boolean;
 }
 
 export interface WeddingData {

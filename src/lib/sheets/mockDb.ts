@@ -68,11 +68,11 @@ export let mockDatabase: WeddingData = {
   ],
   tasks: ALL_DEFAULT_TASKS,
   music: [
-    { songId: 'M1', title: 'Perfect', artist: 'Ed Sheeran', listType: 'Special Moment', link: 'https://open.spotify.com/track/0tgVpDi06FyKpA1z0VMD4v', notes: 'First Dance' },
-    { songId: 'M2', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', listType: 'Play List', link: 'https://open.spotify.com/track/32OlwWuMpZ6b0aN2RZOeMS', notes: 'Get people on the dance floor' },
-    { songId: 'M3', title: 'Macarena', artist: 'Los Del Rio', listType: 'Do Not Play', link: '', notes: 'Absolutely NO' },
-    { songId: 'M4', title: 'September', artist: 'Earth, Wind & Fire', listType: 'Play List', link: 'https://open.spotify.com/track/2tJulUYLDKOg9XrtVkMgcJ', notes: 'Classic' },
-    { songId: 'M5', title: 'Chicken Dance', artist: 'The Emeralds', listType: 'Do Not Play', link: '', notes: 'Never play this' },
+    { songId: 'M1', title: 'Perfect', artist: 'Ed Sheeran', listType: 'First Dance', link: 'https://open.spotify.com/track/0tgVpDi06FyKpA1z0VMD4v', notes: 'First Dance', priority: 'Must Play', played: false },
+    { songId: 'M2', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', listType: 'Must Play', link: 'https://open.spotify.com/track/32OlwWuMpZ6b0aN2RZOeMS', notes: 'Get people on the dance floor', priority: 'Must Play', played: false },
+    { songId: 'M3', title: 'Macarena', artist: 'Los Del Rio', listType: 'Banned', link: '', notes: 'Absolutely NO', priority: 'Banned', played: false },
+    { songId: 'M4', title: 'September', artist: 'Earth, Wind & Fire', listType: 'Must Play', link: 'https://open.spotify.com/track/2tJulUYLDKOg9XrtVkMgcJ', notes: 'Classic', priority: 'Must Play', played: false },
+    { songId: 'M5', title: 'Chicken Dance', artist: 'The Emeralds', listType: 'Banned', link: '', notes: 'Never play this', priority: 'Banned', played: false },
   ]
 };
 
