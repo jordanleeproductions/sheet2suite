@@ -99,6 +99,19 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [ ] **Lemon Squeezy Integration:** Merchant-of-Record webhook integration for Tier 2 / Pro upgrades.
 - [ ] **Sheet2 Suite Ecosystem Expansion:** Reusing `@germin8/sheet2-core` for Sheet2Finance and Sheet2Home.
 
+### Phase 4: Application Security, Risk Audit & Data Protection
+- [ ] **OAuth Scope Isolation & Token Storage Audit:**
+  - Enforce strict `drive.file` scope boundary so the application never accesses user Drive files outside Sheet2Vow.
+  - Store tokens in encrypted, HTTP-only session cookies with automatic token revocation on disconnect.
+- [ ] **Formula & CSV Injection Prevention:**
+  - Implement strict string sanitization on user input fields to prevent Google Sheets Formula Injection attacks (escaping leading `=`, `+`, `-`, `@`).
+- [ ] **Cryptographic Read-Only Token Security (`TokenShareEngine`):**
+  - Sign vendor/coordinator share links with HMAC-SHA256 JWT tokens with strict payload scoping (e.g., read-only timeline slice for coordinators; music slice for DJs) and expiration timestamps.
+- [ ] **Webhook Authentication & Replay Protection:**
+  - Verify signature headers on Etsy and Lemon Squeezy payment webhooks (`HMAC-SHA256`) to prevent fraudulent license activation.
+- [ ] **Data Loss & Backup Guardrails:**
+  - Create automatic Google Sheet version snapshots prior to executing bulk row operations or structural changes.
+
 ---
 
 ## Micro-Animations & Interactivity
