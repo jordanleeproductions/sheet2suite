@@ -4,7 +4,7 @@ This document defines the authoritative tab structure and column header contract
 
 ---
 
-## 📊 Complete Tab Architecture Overview
+## 📊 Active Master Template Architecture (v1.0)
 
 | Tab Name | Purpose | Key Data Types | Formula Protected |
 |---|---|---|---|
@@ -18,10 +18,7 @@ This document defines the authoritative tab structure and column header contract
 | **`PHOTOS`** | Photographer shot list & priority ordering | Sequence IDs, Descriptions, Locations | ✏️ User Editable |
 | **`TO DO`** | Wedding task checklist & Kanban stages | Task IDs, Status, Priorities, Dates | ✏️ User Editable |
 | **`GIFTS_REGISTRY`** | Gift tracker, amounts & thank-you note status | Gift IDs, Descriptions, Dates, Booleans | ✏️ User Editable |
-| **`ACCOMMODATIONS`** | Hotel room blocks, codes, deadlines & guest travel | Hotel Names, Room Counts, Cutoff Dates | ✏️ User Editable |
 | **`DECOR_INVENTORY`** | Venue decor, packing checklist & post-event cleanup | Item Names, Categories, Booleans | ✏️ User Editable |
-| **`DAY_OF_CONTACTS`** | VIP & emergency phone roster for coordinators | Roles, Names, Phones, Emails | ✏️ User Editable |
-| **`RSVP_LOG`** | Raw public web form RSVP submissions audit log | Timestamps, Guest Names, Statuses | ✏️ System / User |
 | **`SETTINGS`** | Application settings, hashtag, color palette & preferences | Setting Keys & Values | ✏️ User Editable |
 | **`Calc_Data`** | Internal metric lookup table for dynamic formulas | System keys & metric values | 🔒 Yes (System Internal) |
 
@@ -174,24 +171,7 @@ Tracks gifts received, physical/monetary descriptions, and thank-you note delive
 
 ---
 
-## 🏨 Tab 10: `ACCOMMODATIONS` *(Hotel Blocks & Travel)*
-Manages hotel room blocks, group discount codes, and booking cutoff deadlines.
-
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
-|---|---|---|---|
-| `Hotel ID` | `hotelId` | `string` (Primary Key) | `H1`, `H2` |
-| `Hotel Name` | `hotelName` | `string` | `Marriott Downtown` |
-| `Group Block Code` | `blockCode` | `string` | `WEDDING2026` |
-| `Nightly Rate ($)` | `nightlyRate` | `number` (Currency) | `189.00` |
-| `Cutoff Date` | `cutoffDate` | `string` (Date) | `2026-07-15` |
-| `Rooms Reserved` | `roomsReserved` | `integer` | `20` |
-| `Rooms Booked` | `roomsBooked` | `integer` | `14` |
-| `Booking Link` | `bookingLink` | `string` (URL) | `https://marriott.com/booking/...` |
-| `Notes` | `notes` | `string` | `Free shuttle to venue included` |
-
----
-
-## 📦 Tab 11: `DECOR_INVENTORY` *(Decor & Packing Checklist)*
+## 📦 Tab 10: `DECOR_INVENTORY` *(Decor & Packing Checklist)*
 Tracks physical decor, signage, card box, and post-reception cleanup responsibilities.
 
 | Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
@@ -206,36 +186,7 @@ Tracks physical decor, signage, card box, and post-reception cleanup responsibil
 
 ---
 
-## 📞 Tab 12: `DAY_OF_CONTACTS` *(VIP & Emergency Phone Roster)*
-Quick reference contact directory for wedding coordinators, bridal party, and key vendors.
-
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
-|---|---|---|---|
-| `Contact ID` | `contactId` | `string` (Primary Key) | `C1`, `C2` |
-| `Role` | `role` | `string` | `Wedding Coordinator`, `Maid of Honor`, `Venue Manager` |
-| `Name` | `name` | `string` | `Emily Davis` |
-| `Phone Number` | `phoneNumber` | `string` (Phone) | `(555) 321-7654` |
-| `Email` | `email` | `string` (Email) | `emily@weddingevents.com` |
-| `Notes / Backup` | `notes` | `string` | `Has venue master key` |
-
----
-
-## 📥 Tab 13: `RSVP_LOG` *(Public Web Form Submissions Audit)*
-Captures raw guest RSVP submissions from the public web form (`/rsvp`) prior to merging.
-
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
-|---|---|---|---|
-| `Submission ID` | `submissionId` | `string` (Primary Key) | `RSVP_1001` |
-| `Timestamp` | `timestamp` | `string` (ISO DateTime) | `2026-07-29T14:30:00Z` |
-| `Guest Name` | `guestName` | `string` | `Michael Scott` |
-| `Attending Status` | `attendingStatus` | `enum` | `Attending`, `Declined` |
-| `Dietary Restrictions` | `dietary` | `string` | `Gluten-Free` |
-| `Song Request` | `songRequest` | `string` | `Earth, Wind & Fire - September` |
-| `Status` | `status` | `enum` | `Processed`, `Pending Review` |
-
----
-
-## ⚙️ Tab 14: `SETTINGS` *(Planner Preferences)*
+## ⚙️ Tab 11: `SETTINGS` *(Planner Preferences)*
 Stores couple names, hashtag, primary theme color hex code, and active module toggles.
 
 | Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
@@ -246,7 +197,7 @@ Stores couple names, hashtag, primary theme color hex code, and active module to
 
 ---
 
-## 📊 Tab 15: `DASHBOARD` *(Summary KPI View)*
+## 📊 Tab 12: `DASHBOARD` *(Summary KPI View)*
 Contains aggregate formulas displaying high-level metrics.
 
 | Cell / Range | Metric Name | Spreadsheet Formula | Description |
@@ -261,7 +212,7 @@ Contains aggregate formulas displaying high-level metrics.
 
 ---
 
-## ⚙️ Tab 16: `Calc_Data` *(System Internal)*
+## ⚙️ Tab 13: `Calc_Data` *(System Internal)*
 Internal lookup metrics key-value table used by `@germin8/sheet2-core`.
 
 | Metric ID | Category | Name | Value |
@@ -269,3 +220,21 @@ Internal lookup metrics key-value table used by `@germin8/sheet2-core`.
 | `SYS_VERSION` | System | Core Engine Version | `1.0.0` |
 | `SCHEMA_VER` | System | Schema Specification | `2026-07-29` |
 | `DEFAULT_CURRENCY` | Settings | Currency Symbol | `$` |
+
+---
+
+## 🚀 Future Template Enhancements (Planned)
+
+The following tabs are reserved for future roadmap releases and are not required in the initial v1.0 Master Google Sheet:
+
+### 🏨 `ACCOMMODATIONS` *(Hotel Blocks & Travel)*
+Manages hotel room blocks, group discount codes, and booking cutoff deadlines.
+- **Columns**: `Hotel ID`, `Hotel Name`, `Group Block Code`, `Nightly Rate ($)`, `Cutoff Date`, `Rooms Reserved`, `Rooms Booked`, `Booking Link`, `Notes`.
+
+### 📞 `DAY_OF_CONTACTS` *(VIP & Emergency Phone Roster)*
+Quick reference contact directory for wedding coordinators, bridal party, and key vendors.
+- **Columns**: `Contact ID`, `Role`, `Name`, `Phone Number`, `Email`, `Notes / Backup`.
+
+### 📥 `RSVP_LOG` *(Public Web Form Submissions Audit)*
+Captures raw guest RSVP submissions from the public web form (`/rsvp`) prior to merging into `GUESTS`.
+- **Columns**: `Submission ID`, `Timestamp`, `Guest Name`, `Attending Status`, `Dietary Restrictions`, `Song Request`, `Status`.
