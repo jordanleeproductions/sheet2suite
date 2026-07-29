@@ -2,14 +2,15 @@ export type AgeCategory = 'Adult' | 'Youth' | 'Child' | 'Infant' | 'Vendor';
 export type RSVPStatus = 'Attending' | 'Declined' | 'Pending' | 'No Response';
 export type KanbanStage = 'To Do' | 'In Progress' | 'Done';
 export type SongListType = 'Must Play' | 'Play If Time' | 'Banned' | 'Ceremony' | 'Reception' | 'First Dance' | 'Play List' | 'Do Not Play' | 'Special Moment' | 'General';
-export type TableShape = 'circle' | 'rectangle' | 'sweetheart' | 'Circle' | 'Rectangle' | 'Sweetheart';
+export type TableShape = 'circle' | 'rectangle' | 'square' | 'Circle' | 'Rectangle' | 'Square';
 
 export interface TableConfig {
   tableId: string;
   tableName: string;
-  shape: 'circle' | 'rectangle' | 'sweetheart';
-  capacity: number; // seat count (even number for rectangle)
+  shape: 'circle' | 'rectangle' | 'square';
+  capacity: number; // seat count
   includeEndSeats?: boolean; // Default false (off). Put 1 person on head & foot end
+  singleSideSeating?: boolean; // Default false (off). Put all seats on one side
 }
 
 export interface DashboardSummary {

@@ -34,9 +34,9 @@ interface SeatingChartManagerProps {
 
 // Default Table Configurations if none exist
 const INITIAL_TABLES: TableConfig[] = [
-  { tableId: 'table-sweetheart', tableName: 'Sweetheart Table', shape: 'sweetheart', capacity: 2 },
+  { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Bride & Groom)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
   { tableId: 'table-1', tableName: 'Table 1 - Head Table', shape: 'circle', capacity: 8 },
-  { tableId: 'table-2', tableName: 'Table 2 - Family VIP', shape: 'circle', capacity: 8 },
+  { tableId: 'table-2', tableName: 'Table 2 - Family VIP', shape: 'square', capacity: 8 },
   { tableId: 'table-3', tableName: 'Table 3 - Bridal Party', shape: 'rectangle', capacity: 10 },
   { tableId: 'table-4', tableName: 'Table 4 - Friends & College', shape: 'circle', capacity: 6 },
 ];
@@ -120,10 +120,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
     let finalCapacity = Number(tableFormState.capacity) || 8;
     const finalShape = tableFormState.shape || 'circle';
 
-    if (finalShape === 'sweetheart') {
-      finalCapacity = 2;
-    } else if (finalShape === 'rectangle' && finalCapacity % 2 !== 0) {
+    if (finalShape === 'rectangle' && !tableFormState.singleSideSeating && finalCapacity % 2 !== 0) {
       finalCapacity = finalCapacity + 1;
+    } else if (finalShape === 'square' && finalCapacity % 4 !== 0) {
+      finalCapacity = Math.ceil(finalCapacity / 4) * 4;
     }
 
     const tableData: TableConfig = {
@@ -131,7 +131,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
       tableName: tableFormState.tableName,
       shape: finalShape,
       capacity: finalCapacity,
-      includeEndSeats: finalShape === 'rectangle' ? (tableFormState.includeEndSeats || false) : false,
+      includeEndSeats: finalShape === 'rectangle' && !tableFormState.singleSideSeating ? (tableFormState.includeEndSeats || false) : false,
+      singleSideSeating: finalShape === 'rectangle' ? (tableFormState.singleSideSeating || false) : false,
     };
 
     if (isAddingTable) {
@@ -264,10 +265,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                 <div style={styles.tableNameGroup}>
                   {table.shape === 'circle' ? (
                     <Circle size={16} style={{ color: 'var(--color-highlight)' }} />
-                  ) : table.shape === 'sweetheart' ? (
-                    <Heart size={16} style={{ color: 'var(--color-sweetheart)' }} />
-                  ) : (
+                  ) : table.shape === 'square' ? (
                     <Square size={16} style={{ color: 'var(--color-highlight)' }} />
+                  ) : (
+                    <Square size={16} style={{ color: 'var(--color-highlight)', transform: 'scaleX(1.3)' }} />
                   )}
                   <h3 style={styles.tableName}>{table.tableName}</h3>
                 </div>
@@ -332,11 +333,18 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       );
                     })}
                   </div>
-                ) : table.shape === 'sweetheart' ? (
-                  // SWEETHEART TABLE (Bride & Groom side-by-side on same top side)
+                ) : table.shape === 'square' ? (
+                  // SQUARE TABLE VISUAL LAYOUT (Seats arranged on all 4 sides: Top, Right, Bottom, Left)
                   (() => {
-                    const brideSeat = seatedGuests[0];
-                    const groomSeat = seatedGuests[1];
+                    const cap = table.capacity;
+                    const perSide = Math.max(1, Math.floor(cap / 4));
+                    
+                    const topSeats = seatedGuests.slice(0, perSide);
+                    const rightSeats = seatedGuests.slice(perSide, perSide * 2);
+                    const bottomSeats = seatedGuests.slice(perSide * 2, perSide * 3);
+                    const leftSeats = seatedGuests.slice(perSide * 3, cap);
+
+                    const surfaceDim = `${Math.max(85, perSide * 48)}px`;
 
                     const renderSeatNode = (guest: Guest | undefined, seatKey: string) => (
                       <div
@@ -359,31 +367,49 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     );
 
                     return (
-                      <div style={styles.rectTableContainer}>
-                        {/* Top Side Row (Bride & Groom side-by-side facing out) */}
+                      <div style={styles.squareTableContainer}>
+                        {/* Top Side Row */}
                         <div style={styles.rectSideRow}>
-                          {renderSeatNode(brideSeat, 'sweet-1')}
-                          {renderSeatNode(groomSeat, 'sweet-2')}
+                          {Array.from({ length: perSide }).map((_, i) => renderSeatNode(topSeats[i], `square-top-${i}`))}
                         </div>
 
-                        {/* Central Sweetheart Table Surface */}
-                        <div style={{
-                          ...styles.rectTableSurface,
-                          width: '120px',
-                          border: '3px solid var(--color-sweetheart)',
-                          backgroundColor: 'var(--color-surface)',
-                          boxShadow: 'var(--box-shadow-subtle)'
-                        }}>
-                          <Heart size={16} style={{ color: 'var(--color-sweetheart)', marginBottom: '2px' }} />
-                          <span style={{ ...styles.discLabel, fontSize: '0.75rem', color: 'var(--color-text)' }}>{table.tableName}</span>
-                          <span style={{ ...styles.discSubLabel, color: 'var(--color-sweetheart)', fontWeight: 600 }}>Bride & Groom</span>
+                        {/* Middle Row: Left Seats + Central Square Surface + Right Seats */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {Array.from({ length: perSide }).map((_, i) => renderSeatNode(leftSeats[i], `square-left-${i}`))}
+                          </div>
+
+                          <div style={{
+                            ...styles.rectTableSurface,
+                            width: surfaceDim,
+                            height: surfaceDim,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '4px'
+                          }}>
+                            <Square size={16} style={{ color: 'var(--color-highlight)', marginBottom: '2px' }} />
+                            <span style={styles.discLabel}>{table.tableName}</span>
+                            <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated</span>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {Array.from({ length: perSide }).map((_, i) => renderSeatNode(rightSeats[i], `square-right-${i}`))}
+                          </div>
+                        </div>
+
+                        {/* Bottom Side Row */}
+                        <div style={styles.rectSideRow}>
+                          {Array.from({ length: perSide }).map((_, i) => renderSeatNode(bottomSeats[i], `square-bottom-${i}`))}
                         </div>
                       </div>
                     );
                   })()
                 ) : (
-                  // RECTANGULAR TABLE VISUAL LAYOUT (Even seats on sides + optional head/foot end seats)
+                  // RECTANGULAR TABLE VISUAL LAYOUT (Supports single-side seating, top/bottom split, and end seats)
                   (() => {
+                    const singleSide = table.singleSideSeating || false;
                     const includeEnd = table.includeEndSeats || false;
                     const cap = table.capacity;
 
@@ -408,7 +434,24 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       </div>
                     );
 
-                    if (!includeEnd) {
+                    if (singleSide) {
+                      // SINGLE-SIDE SEATING: All seats placed on one side facing out
+                      const dynamicWidth = `${Math.max(100, cap * 48 - 10)}px`;
+                      return (
+                        <div style={styles.rectTableContainer}>
+                          {/* Top Single Row */}
+                          <div style={styles.rectSideRow}>
+                            {Array.from({ length: cap }).map((_, i) => renderSeatNode(seatedGuests[i], `single-${i}`))}
+                          </div>
+
+                          {/* Central Table Surface */}
+                          <div style={{ ...styles.rectTableSurface, width: dynamicWidth }}>
+                            <span style={styles.discLabel}>{table.tableName}</span>
+                            <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated</span>
+                          </div>
+                        </div>
+                      );
+                    } else if (!includeEnd) {
                       // DEFAULT: Even seats split on top and bottom rows
                       const sideCount = Math.max(1, Math.floor(cap / 2));
                       const topSeats = seatedGuests.slice(0, sideCount);
@@ -615,26 +658,19 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     }}
                     onClick={() => setTableFormState({ ...tableFormState, shape: 'rectangle' })}
                   >
-                    <Square size={18} style={{ marginRight: '6px' }} /> Rectangle Banquet
+                    <Square size={18} style={{ marginRight: '6px', transform: 'scaleX(1.3)' }} /> Rectangle
                   </button>
 
                   <button
                     type="button"
                     style={{
                       ...styles.shapeBtn,
-                      gridColumn: 'span 2',
-                      borderColor: tableFormState.shape === 'sweetheart' ? 'var(--color-sweetheart)' : 'var(--color-muted)',
-                      backgroundColor: tableFormState.shape === 'sweetheart' ? 'var(--color-surface)' : 'transparent',
-                      color: tableFormState.shape === 'sweetheart' ? 'var(--color-sweetheart)' : 'var(--color-text)'
+                      borderColor: tableFormState.shape === 'square' ? 'var(--color-highlight)' : 'var(--color-muted)',
+                      backgroundColor: tableFormState.shape === 'square' ? 'var(--color-surface)' : 'transparent'
                     }}
-                    onClick={() => setTableFormState({ 
-                      ...tableFormState, 
-                      shape: 'sweetheart', 
-                      capacity: 2, 
-                      tableName: tableFormState.tableName || 'Sweetheart Table (Bride & Groom)' 
-                    })}
+                    onClick={() => setTableFormState({ ...tableFormState, shape: 'square' })}
                   >
-                    <Heart size={18} style={{ marginRight: '6px', color: 'var(--color-sweetheart)' }} /> 💑 Sweetheart Table (Bride & Groom)
+                    <Square size={18} style={{ marginRight: '6px' }} /> Square
                   </button>
                 </div>
               </div>
@@ -645,12 +681,12 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                   type="number"
                   required
                   min="2"
-                  max="24"
-                  step={tableFormState.shape === 'rectangle' ? 2 : 1}
+                  max="32"
+                  step={tableFormState.shape === 'rectangle' && !tableFormState.singleSideSeating ? 2 : tableFormState.shape === 'square' ? 4 : 1}
                   value={tableFormState.capacity || 8}
                   onChange={(e) => {
                     let val = Number(e.target.value);
-                    if (tableFormState.shape === 'rectangle' && val % 2 !== 0) {
+                    if (tableFormState.shape === 'rectangle' && !tableFormState.singleSideSeating && val % 2 !== 0) {
                       val = val + 1;
                     }
                     setTableFormState({ ...tableFormState, capacity: val });
@@ -659,26 +695,48 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                 />
                 <span style={styles.hintText}>
                   {tableFormState.shape === 'rectangle' 
-                    ? 'Rectangular tables enforce an even number of total seats (equal seats per side).' 
+                    ? (tableFormState.singleSideSeating ? 'Configure total single-sided seats (e.g. 2 for Sweetheart, 4 for Head Table).' : 'Rectangular tables enforce an even number of total seats.') 
+                    : tableFormState.shape === 'square'
+                    ? 'Square tables distribute seats equally on all 4 sides.'
                     : 'Configure total seats per table (e.g. 6, 8, 10, 12).'}
                 </span>
               </div>
 
               {tableFormState.shape === 'rectangle' && (
-                <div style={styles.formGroup}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--color-text)', marginTop: '0.25rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={tableFormState.includeEndSeats || false}
-                      onChange={(e) => setTableFormState({ ...tableFormState, includeEndSeats: e.target.checked })}
-                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                    />
-                    Include Head & Foot End Seats (1 person on each end)
-                  </label>
-                  <span style={styles.hintText}>
-                    By default (off), all seats are arranged evenly along the top and bottom sides.
-                  </span>
-                </div>
+                <>
+                  <div style={styles.formGroup}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--color-text)', marginTop: '0.25rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={tableFormState.singleSideSeating || false}
+                        onChange={(e) => setTableFormState({ 
+                          ...tableFormState, 
+                          singleSideSeating: e.target.checked,
+                          includeEndSeats: e.target.checked ? false : tableFormState.includeEndSeats
+                        })}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                      />
+                      Seating on single side (All seats arranged on one side, e.g. Sweetheart or Head Table)
+                    </label>
+                  </div>
+
+                  {!tableFormState.singleSideSeating && (
+                    <div style={styles.formGroup}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--color-text)', marginTop: '0.25rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={tableFormState.includeEndSeats || false}
+                          onChange={(e) => setTableFormState({ ...tableFormState, includeEndSeats: e.target.checked })}
+                          style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                        />
+                        Include Head & Foot End Seats (1 person on each end)
+                      </label>
+                      <span style={styles.hintText}>
+                        By default (off), all seats are arranged evenly along top and bottom sides.
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
 
               <div style={styles.formActions}>
@@ -940,6 +998,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   tableCardHeader: {
     display: 'flex',
@@ -984,7 +1044,18 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '260px',
-    padding: '1rem 0',
+    padding: '1rem 0.5rem',
+    maxWidth: '100%',
+    overflow: 'hidden',
+  },
+  squareTableContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.625rem',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   circleTableWrapper: {
     position: 'relative',
