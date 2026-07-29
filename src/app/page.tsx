@@ -41,6 +41,7 @@ export default function Sheet2VowDashboard() {
     music: true,
     photos: true,
     gifts: true,
+    thanks: true,
   });
 
   const toggleTaskSelection = (taskName: string) => {
