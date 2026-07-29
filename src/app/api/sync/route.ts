@@ -5,9 +5,10 @@ import {
   budgetMapper, 
   scheduleMapper, 
   vendorMapper, 
-  taskMapper 
+  taskMapper,
+  photoMapper 
 } from '@/lib/sheets/mapper';
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, WeddingData } from '@/lib/sheets/types';
+import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 
@@ -67,7 +68,8 @@ export async function GET(req: Request) {
         "'Budget Ledger'!A1:H1000",
         "'Day-Of-Schedule'!A1:F1000",
         "'Vendors'!A1:L1000",
-        "'To-Do List'!A1:H1000"
+        "'To-Do List'!A1:H1000",
+        "'PHOTOS'!A1:H1000"
       ]
     });
 
@@ -115,6 +117,11 @@ export async function GET(req: Request) {
     const taskHeaders = taskRows[0] || HEADERS_MAP.tasks;
     const tasks = taskRows.slice(1).map(row => taskMapper.fromRow(taskHeaders, row));
 
+    // Parse Photos
+    const photoRows = valueRanges[6]?.values || [];
+    const photoHeaders = photoRows[0] || HEADERS_MAP.photos;
+    const photos = photoRows.slice(1).map(row => photoMapper.fromRow(photoHeaders, row));
+
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
     const actualCost = budget.reduce((sum, item) => sum + item.actualCost, 0);
@@ -132,7 +139,8 @@ export async function GET(req: Request) {
       schedule,
       vendors,
       tasks,
-      music: []
+      music: [],
+      photos: photos.length > 0 ? photos : mockDatabase.photos
     };
 
     return NextResponse.json({
@@ -178,6 +186,8 @@ export async function POST(req: Request) {
         mockDatabase.vendors = data as Vendor[];
       } else if (sheetType === 'tasks') {
         mockDatabase.tasks = data as Task[];
+      } else if (sheetType === 'photos') {
+        mockDatabase.photos = data as PhotoShot[];
       }
 
       // Recompute metrics
@@ -245,6 +255,11 @@ export async function POST(req: Request) {
         range = "'To-Do List'!A1:H1000";
         (data as Task[]).forEach(item => {
           values.push(taskMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'photos') {
+        range = "'PHOTOS'!A1:H1000";
+        (data as PhotoShot[]).forEach(item => {
+          values.push(photoMapper.toRow(headers, item));
         });
       }
 
