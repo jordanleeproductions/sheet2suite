@@ -457,7 +457,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
 
                     if (singleSide) {
                       // SINGLE-SIDE SEATING: All seats placed on one side facing out
-                      const dynamicWidth = `${Math.max(100, cap * 48 - 10)}px`;
+                      const dynamicWidth = `${Math.max(120, cap * 54 - 10)}px`;
                       return (
                         <div style={styles.rectTableContainer}>
                           {/* Top Single Row */}
@@ -475,7 +475,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     } else if (!includeEnd) {
                       // DEFAULT: Even seats split on top and bottom rows
                       const sideCount = Math.max(1, Math.floor(cap / 2));
-                      const dynamicWidth = `${Math.max(100, sideCount * 48 - 10)}px`;
+                      const dynamicWidth = `${Math.max(120, sideCount * 54 - 10)}px`;
 
                       return (
                         <div style={styles.rectTableContainer}>
@@ -499,7 +499,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     } else {
                       // END SEATS ENABLED: 1 Head Seat (Left), 1 Foot Seat (Right), equal side seats top & bottom
                       const sideCount = Math.max(1, Math.floor((cap - 2) / 2));
-                      const dynamicWidth = `${Math.max(100, sideCount * 48 - 10)}px`;
+                      const dynamicWidth = `${Math.max(120, sideCount * 54 - 10)}px`;
 
                       return (
                         <div style={styles.rectTableContainer}>
