@@ -318,9 +318,16 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                             ...styles.seatNodeCircle,
                             transform: `translate(${x}px, ${y}px)`,
                           }}
-                          onClick={() => {
-                            if (guest) setSelectedGuest(guest);
-                            else setAssignSeatTable(table);
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            if (guest) {
+                              setAssignSeatTable(null);
+                              setSelectedGuest(guest);
+                            } else {
+                              setSelectedGuest(null);
+                              setAssignSeatTable(table);
+                            }
                           }}
                           title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
                         >
@@ -352,9 +359,16 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       <div
                         key={seatKey}
                         style={styles.seatNodeRect}
-                        onClick={() => {
-                          if (guest) setSelectedGuest(guest);
-                          else setAssignSeatTable(table);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (guest) {
+                            setAssignSeatTable(null);
+                            setSelectedGuest(guest);
+                          } else {
+                            setSelectedGuest(null);
+                            setAssignSeatTable(table);
+                          }
                         }}
                         title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
                       >
@@ -420,9 +434,16 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                       <div
                         key={seatKey}
                         style={styles.seatNodeRect}
-                        onClick={() => {
-                          if (guest) setSelectedGuest(guest);
-                          else setAssignSeatTable(table);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (guest) {
+                            setAssignSeatTable(null);
+                            setSelectedGuest(guest);
+                          } else {
+                            setSelectedGuest(null);
+                            setAssignSeatTable(table);
+                          }
                         }}
                         title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
                       >
