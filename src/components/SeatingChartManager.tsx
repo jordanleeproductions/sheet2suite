@@ -120,10 +120,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
     let finalCapacity = Number(tableFormState.capacity) || 8;
     const finalShape = tableFormState.shape || 'circle';
 
-    if (finalShape === 'rectangle' && !tableFormState.singleSideSeating && finalCapacity % 2 !== 0) {
+    if (finalShape === 'square') {
+      finalCapacity = finalCapacity <= 4 ? 4 : 8;
+    } else if (finalShape === 'rectangle' && !tableFormState.singleSideSeating && finalCapacity % 2 !== 0) {
       finalCapacity = finalCapacity + 1;
-    } else if (finalShape === 'square' && finalCapacity % 4 !== 0) {
-      finalCapacity = Math.ceil(finalCapacity / 4) * 4;
     }
 
     const tableData: TableConfig = {
@@ -304,7 +304,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     {/* Perimeter Seat Nodes */}
                     {Array.from({ length: table.capacity }).map((_, index) => {
                       const angle = (index * (2 * Math.PI / table.capacity)) - (Math.PI / 2);
-                      const radius = 105; // Radial distance from center in px
+                      const radius = 112; // Radial distance from center in px
                       const x = Math.cos(angle) * radius;
                       const y = Math.sin(angle) * radius;
                       const guest = seatedGuests[index];
@@ -334,9 +334,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     })}
                   </div>
                 ) : table.shape === 'square' ? (
-                  // SQUARE TABLE VISUAL LAYOUT (Seats arranged on all 4 sides: Top, Right, Bottom, Left)
+                  // SQUARE TABLE VISUAL LAYOUT (Seats arranged on all 4 sides: Top, Right, Bottom, Left - strictly 4 or 8 seats)
                   (() => {
-                    const cap = table.capacity;
+                    const cap = table.capacity <= 4 ? 4 : 8;
                     const perSide = Math.max(1, Math.floor(cap / 4));
                     
                     const topSeats = seatedGuests.slice(0, perSide);
@@ -344,7 +344,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     const bottomSeats = seatedGuests.slice(perSide * 2, perSide * 3);
                     const leftSeats = seatedGuests.slice(perSide * 3, cap);
 
-                    const surfaceDim = `${Math.max(85, perSide * 48)}px`;
+                    const surfaceDim = perSide === 1 ? '135px' : '160px';
 
                     const renderSeatNode = (guest: Guest | undefined, seatKey: string) => (
                       <div
@@ -374,8 +374,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                         </div>
 
                         {/* Middle Row: Left Seats + Central Square Surface + Right Seats */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {Array.from({ length: perSide }).map((_, i) => renderSeatNode(leftSeats[i], `square-left-${i}`))}
                           </div>
 
@@ -387,14 +387,14 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            padding: '4px'
+                            padding: '8px'
                           }}>
-                            <Square size={16} style={{ color: 'var(--color-highlight)', marginBottom: '2px' }} />
-                            <span style={styles.discLabel}>{table.tableName}</span>
-                            <span style={styles.discSubLabel}>{seatedGuests.length} / {table.capacity} Seated</span>
+                            <Square size={20} style={{ color: 'var(--color-highlight)', marginBottom: '4px' }} />
+                            <span style={{ ...styles.discLabel, fontSize: '0.95rem' }}>{table.tableName}</span>
+                            <span style={{ ...styles.discSubLabel, fontSize: '0.7rem' }}>{seatedGuests.length} / {table.capacity} Seated</span>
                           </div>
 
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {Array.from({ length: perSide }).map((_, i) => renderSeatNode(rightSeats[i], `square-right-${i}`))}
                           </div>
                         </div>
@@ -1059,15 +1059,15 @@ const styles: Record<string, React.CSSProperties> = {
   },
   circleTableWrapper: {
     position: 'relative',
-    width: '260px',
-    height: '260px',
+    width: '275px',
+    height: '275px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
   circleTableDisc: {
-    width: '130px',
-    height: '130px',
+    width: '145px',
+    height: '145px',
     borderRadius: '50%',
     backgroundColor: 'var(--color-bg)',
     border: '3px solid var(--color-primary)',
@@ -1093,8 +1093,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   seatNodeCircle: {
     position: 'absolute',
-    width: '38px',
-    height: '38px',
+    width: '44px',
+    height: '44px',
     borderRadius: '50%',
     backgroundColor: 'var(--color-surface)',
     border: '2px solid var(--color-primary)',
@@ -1136,7 +1136,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   rectTableSurface: {
     minWidth: '100px',
-    height: '75px',
+    height: '80px',
     backgroundColor: 'var(--color-bg)',
     border: '3px solid var(--color-primary)',
     borderRadius: 'var(--border-radius-md)',
@@ -1150,7 +1150,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   rectTableSurfaceWithEnds: {
     minWidth: '100px',
-    height: '75px',
+    height: '80px',
     backgroundColor: 'var(--color-bg)',
     border: '3px solid var(--color-primary)',
     borderRadius: 'var(--border-radius-md)',
@@ -1170,8 +1170,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyItems: 'center',
   },
   seatNodeRect: {
-    width: '38px',
-    height: '38px',
+    width: '44px',
+    height: '44px',
     borderRadius: '50%',
     backgroundColor: 'var(--color-surface)',
     border: '2px solid var(--color-primary)',
@@ -1194,7 +1194,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   initialsText: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
+    fontSize: '0.8rem',
     fontWeight: 700,
   },
   emptySeatText: {
