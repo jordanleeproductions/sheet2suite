@@ -65,9 +65,45 @@ export default function ThankYouManager({
   const giftsThankedCount = gifts.filter(g => g.thankYouSent).length;
   const giftsThankedPercent = totalGifts > 0 ? Math.round((giftsThankedCount / totalGifts) * 100) : 0;
 
+  // Group ONLY Attending Guests by Party Group
   const attendingGuests = guests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending');
-  const attendanceThankedCount = attendingGuests.filter(g => g.thankedSent).length;
-  const attendanceThankedPercent = attendingGuests.length > 0 ? Math.round((attendanceThankedCount / attendingGuests.length) * 100) : 0;
+
+  const partyMap = new Map<string, Guest[]>();
+  attendingGuests.forEach(guest => {
+    const key = guest.partyGroup && guest.partyGroup.trim() !== '' 
+      ? guest.partyGroup.trim() 
+      : `${guest.firstName} ${guest.lastName}`;
+    
+    if (!partyMap.has(key)) {
+      partyMap.set(key, []);
+    }
+    partyMap.get(key)!.push(guest);
+  });
+
+  interface AttendingPartyGroup {
+    groupKey: string;
+    members: Guest[];
+    mailingAddress: string;
+    emailAddress: string;
+    isThanked: boolean;
+  }
+
+  const attendingParties: AttendingPartyGroup[] = Array.from(partyMap.entries()).map(([groupKey, members]) => {
+    const mailingAddress = members.find(m => m.mailingAddress)?.mailingAddress || '';
+    const emailAddress = members.find(m => m.emailAddress)?.emailAddress || '';
+    const isThanked = members.length > 0 && members.every(m => Boolean(m.thankedSent));
+
+    return {
+      groupKey,
+      members,
+      mailingAddress,
+      emailAddress,
+      isThanked
+    };
+  });
+
+  const attendanceThankedCount = attendingParties.filter(p => p.isThanked).length;
+  const attendanceThankedPercent = attendingParties.length > 0 ? Math.round((attendanceThankedCount / attendingParties.length) * 100) : 0;
 
   // Filtered Gifts
   const filteredGifts = gifts.filter(gift => {
@@ -84,15 +120,16 @@ export default function ThankYouManager({
     return matchesSearch && matchesThanked;
   });
 
-  // Filtered Guests for Attendance Thank Yous
-  const filteredAttendingGuests = attendingGuests.filter(guest => {
-    const name = `${guest.firstName} ${guest.lastName} ${guest.partyGroup || ''}`.toLowerCase();
-    const matchesSearch = name.includes(searchTerm.toLowerCase());
+  // Filtered Attending Parties for Attendance Thank Yous
+  const filteredAttendingParties = attendingParties.filter(party => {
+    const memberNames = party.members.map(m => `${m.firstName} ${m.lastName}`).join(' ');
+    const searchTarget = `${party.groupKey} ${memberNames}`.toLowerCase();
+    const matchesSearch = searchTarget.includes(searchTerm.toLowerCase());
     
     const matchesThanked = 
       thankedFilter === 'All' ? true :
-      thankedFilter === 'Thanked' ? Boolean(guest.thankedSent) :
-      !guest.thankedSent;
+      thankedFilter === 'Thanked' ? party.isThanked :
+      !party.isThanked;
 
     return matchesSearch && matchesThanked;
   });
@@ -106,11 +143,14 @@ export default function ThankYouManager({
     await onUpdateGifts(updated);
   };
 
-  // Toggle Guest Attendance Thank You Status
-  const toggleGuestAttendanceThanked = async (guestId: string) => {
+  // Toggle Guest Attendance Thank You Status for Entire Party Group
+  const togglePartyAttendanceThanked = async (members: Guest[], currentThankedState: boolean) => {
     if (isSyncing) return;
+    const targetGuestIds = new Set(members.map(m => m.guestId));
+    const newThankedState = !currentThankedState;
+
     const updated = guests.map(g => 
-      g.guestId === guestId ? { ...g, thankedSent: !g.thankedSent } : g
+      targetGuestIds.has(g.guestId) ? { ...g, thankedSent: newThankedState } : g
     );
     await onUpdateGuests(updated);
   };
@@ -204,13 +244,15 @@ export default function ThankYouManager({
           </span>
         </div>
         <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>ATTENDING GUESTS</span>
-          <span style={styles.kpiValue}>{attendingGuests.length} Guests</span>
+          <span style={styles.kpiLabel}>ATTENDING PARTIES</span>
+          <span style={styles.kpiValue}>
+            {attendingParties.length} Parties <span style={{ fontSize: '0.8rem', color: 'var(--color-muted)', fontWeight: 400 }}>({attendingGuests.length} Guests)</span>
+          </span>
         </div>
         <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>ATTENDANCE THANK YOUS SENT</span>
+          <span style={styles.kpiLabel}>ATTENDANCE CARDS SENT</span>
           <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
-            {attendanceThankedCount} / {attendingGuests.length} ({attendanceThankedPercent}%)
+            {attendanceThankedCount} / {attendingParties.length} ({attendanceThankedPercent}%)
           </span>
         </div>
       </div>
@@ -238,7 +280,7 @@ export default function ThankYouManager({
           }}
           onClick={() => setSubTab('attendance')}
         >
-          <UserCheck size={16} style={{ marginRight: '6px' }} /> GUEST ATTENDANCE CARDS ({attendingGuests.length})
+          <UserCheck size={16} style={{ marginRight: '6px' }} /> GUEST ATTENDANCE CARDS ({attendingParties.length} PARTIES)
         </button>
       </div>
 
@@ -352,13 +394,13 @@ export default function ThankYouManager({
       {/* SUB-TAB 2: ATTENDANCE THANK YOU CARDS TRACKER */}
       {subTab === 'attendance' && (
         <div style={styles.gridContainer}>
-          {filteredAttendingGuests.map(guest => (
+          {filteredAttendingParties.map(party => (
             <div 
-              key={guest.guestId} 
+              key={party.groupKey} 
               style={{
                 ...styles.card,
-                borderColor: guest.thankedSent ? 'var(--color-green)' : 'var(--color-muted)',
-                opacity: guest.thankedSent ? 0.9 : 1
+                borderColor: party.isThanked ? 'var(--color-green)' : 'var(--color-muted)',
+                opacity: party.isThanked ? 0.9 : 1
               }}
             >
               <div style={styles.cardHeader}>
@@ -366,49 +408,49 @@ export default function ThankYouManager({
                   <button 
                     style={{
                       ...styles.statusCheckBtn,
-                      color: guest.thankedSent ? 'var(--color-green)' : 'var(--color-muted)'
+                      color: party.isThanked ? 'var(--color-green)' : 'var(--color-muted)'
                     }}
-                    onClick={() => toggleGuestAttendanceThanked(guest.guestId)}
-                    title={guest.thankedSent ? 'Mark Attendance Card Unsent' : 'Mark Attendance Card Sent'}
+                    onClick={() => togglePartyAttendanceThanked(party.members, party.isThanked)}
+                    title={party.isThanked ? 'Mark Party Attendance Card Unsent' : 'Mark Party Attendance Card Sent'}
                   >
-                    {guest.thankedSent ? <CheckCircle2 size={22} /> : <Circle size={22} />}
+                    {party.isThanked ? <CheckCircle2 size={22} /> : <Circle size={22} />}
                   </button>
 
                   <div>
-                    <h3 style={{ ...styles.cardTitle, textDecoration: guest.thankedSent ? 'line-through' : 'none' }}>
-                      {guest.firstName} {guest.lastName}
+                    <h3 style={{ ...styles.cardTitle, textDecoration: party.isThanked ? 'line-through' : 'none' }}>
+                      {party.groupKey}
                     </h3>
                     <span style={styles.partyText}>
-                      Party Group: {guest.partyGroup || 'General Guest'} • {guest.tableAssignment || 'Unassigned'}
+                      {party.members.length} Attending {party.members.length === 1 ? 'Guest' : 'Guests'}: {party.members.map(m => `${m.firstName} ${m.lastName}`).join(', ')}
                     </span>
                   </div>
                 </div>
 
                 <span style={{
                   ...styles.statusTag,
-                  backgroundColor: guest.thankedSent ? 'var(--color-green-muted)' : 'var(--color-gold-muted)',
-                  color: guest.thankedSent ? 'var(--color-green)' : 'var(--color-gold)',
-                  borderColor: guest.thankedSent ? 'var(--color-green)' : 'var(--color-gold)'
+                  backgroundColor: party.isThanked ? 'var(--color-green-muted)' : 'var(--color-gold-muted)',
+                  color: party.isThanked ? 'var(--color-green)' : 'var(--color-gold)',
+                  borderColor: party.isThanked ? 'var(--color-green)' : 'var(--color-gold)'
                 }}>
-                  {guest.thankedSent ? 'THANK YOU SENT' : 'PENDING CARD'}
+                  {party.isThanked ? 'THANK YOU SENT' : 'PENDING CARD'}
                 </span>
               </div>
 
-              {(guest.emailAddress || guest.mailingAddress) && (
-                <div style={{ ...styles.cardBody, flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--color-muted)' }}>
-                  {guest.mailingAddress && <span>📫 Mailing Address: {guest.mailingAddress}</span>}
-                  {guest.emailAddress && <span>✉️ Email: {guest.emailAddress}</span>}
+              {(party.emailAddress || party.mailingAddress) && (
+                <div style={{ ...styles.cardBody, flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--color-muted)', alignItems: 'flex-start' }}>
+                  {party.mailingAddress && <span>📫 Mailing Address: {party.mailingAddress}</span>}
+                  {party.emailAddress && <span>✉️ Email: {party.emailAddress}</span>}
                 </div>
               )}
             </div>
           ))}
 
-          {filteredAttendingGuests.length === 0 && (
+          {filteredAttendingParties.length === 0 && (
             <div style={styles.emptyState}>
               <UserCheck size={40} style={{ color: 'var(--color-muted)', marginBottom: '0.5rem' }} />
-              <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)' }}>No Attending Guests Found</h4>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)' }}>No Attending Parties Found</h4>
               <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
-                Attending guests from your Guest List tab will automatically appear here!
+                Attending party groups from your Guest List tab will automatically appear here!
               </p>
             </div>
           )}
