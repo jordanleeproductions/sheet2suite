@@ -14,9 +14,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
   // Mobile Column Selector
   const [activeMobileStage, setActiveMobileStage] = useState<KanbanStage>('To Do');
   
-  // Adding & Editing states
+  // Adding & Editing & Delete states
   const [isAdding, setIsAdding] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [formState, setFormState] = useState<Partial<Task>>({});
 
   // Sorting state
@@ -128,12 +129,13 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
     setEditingTask(null);
   };
 
-  const deleteTask = async (taskId: string) => {
-    if (isSyncing || !confirm('Delete this task?')) return;
-    const updated = tasks.filter(t => t.taskId !== taskId);
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete || isSyncing) return;
+    const updated = tasks.filter(t => t.taskId !== taskToDelete.taskId);
     await onUpdate(updated);
     setIsAdding(false);
     setEditingTask(null);
+    setTaskToDelete(null);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -307,7 +309,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
                   <button 
                     type="button" 
                     style={styles.deleteBtn}
-                    onClick={() => deleteTask(editingTask.taskId)}
+                    onClick={() => setTaskToDelete(editingTask)}
                   >
                     DELETE
                   </button>
@@ -324,6 +326,70 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardP
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE TASK CONFIRMATION MODAL */}
+      {taskToDelete && (
+        <div style={styles.modalOverlay} onClick={() => setTaskToDelete(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertTriangle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE TASK CONFIRMATION
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setTaskToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to delete task <strong style={{ color: 'var(--color-red)' }}>"{taskToDelete.taskName}"</strong>?
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setTaskToDelete(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={confirmDeleteTask}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'DELETING...' : 'DELETE TASK'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

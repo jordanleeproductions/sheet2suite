@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { BudgetItem } from '@/lib/sheets/types';
-import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart } from 'lucide-react';
+import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle } from 'lucide-react';
 
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
@@ -14,8 +14,9 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
-  // Form Modal state
+  // Form & Delete Modal state
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<BudgetItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<BudgetItem>>({});
 
@@ -140,10 +141,11 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
     closeModal();
   };
 
-  const deleteItem = async (itemId: string) => {
-    if (isSyncing || !confirm('Are you sure you want to delete this budget item?')) return;
-    const updated = budget.filter(item => item.itemId !== itemId);
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete || isSyncing) return;
+    const updated = budget.filter(item => item.itemId !== itemToDelete.itemId);
     await onUpdate(updated);
+    setItemToDelete(null);
   };
 
   return (
@@ -337,7 +339,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
                         </button>
                         <button
                           style={{ ...styles.actionBtn, color: '#ef4444' }}
-                          onClick={() => deleteItem(item.itemId)}
+                          onClick={() => setItemToDelete(item)}
                           disabled={isSyncing}
                         >
                           <Trash2 size={12} />
@@ -414,7 +416,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
                     <button style={styles.actionBtn} onClick={() => startEdit(item)}>
                       <Edit2 size={12} />
                     </button>
-                    <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => deleteItem(item.itemId)} disabled={isSyncing}>
+                    <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => setItemToDelete(item)} disabled={isSyncing}>
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -577,6 +579,73 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE BUDGET ITEM CONFIRMATION MODAL */}
+      {itemToDelete && (
+        <div style={styles.modalOverlay} onClick={() => setItemToDelete(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertCircle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE ITEM CONFIRMATION
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setItemToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{itemToDelete.vendorName || itemToDelete.category}"</strong> from your budget ledger?
+              </p>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                Category: {itemToDelete.category} &bull; Estimated: ${itemToDelete.estimatedCost.toLocaleString()}
+              </span>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setItemToDelete(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={confirmDeleteItem}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'DELETING...' : 'DELETE ITEM'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ScheduleEvent } from '@/lib/sheets/types';
-import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer } from 'lucide-react';
+import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle } from 'lucide-react';
 
 interface TimelineManagerProps {
   schedule: ScheduleEvent[];
@@ -14,6 +14,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // expand first by default
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [eventToDeleteIndex, setEventToDeleteIndex] = useState<number | null>(null);
   
   const [formState, setFormState] = useState<Partial<ScheduleEvent>>({});
 
@@ -141,10 +142,13 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
     setEditingIndex(null);
   };
 
-  const deleteEvent = async (indexToDelete: number) => {
-    if (isSyncing || !confirm('Delete this event from the timeline?')) return;
-    const updated = schedule.filter((_, i) => i !== indexToDelete);
+  const confirmDeleteEvent = async () => {
+    if (eventToDeleteIndex === null || isSyncing) return;
+    const updated = schedule.filter((_, i) => i !== eventToDeleteIndex);
     await onUpdate(updated);
+    setIsAdding(false);
+    setEditingIndex(null);
+    setEventToDeleteIndex(null);
   };
 
   const exportToCSV = () => {
@@ -439,7 +443,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                   <button 
                     type="button" 
                     style={styles.deleteBtn}
-                    onClick={() => deleteEvent(editingIndex)}
+                    onClick={() => setEventToDeleteIndex(editingIndex)}
                   >
                     DELETE
                   </button>
@@ -456,6 +460,70 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE TIMELINE EVENT CONFIRMATION MODAL */}
+      {eventToDeleteIndex !== null && schedule[eventToDeleteIndex] && (
+        <div style={styles.modalOverlay} onClick={() => setEventToDeleteIndex(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertCircle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE EVENT CONFIRMATION
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setEventToDeleteIndex(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.25rem' }}>
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{schedule[eventToDeleteIndex].eventMoment}"</strong> ({schedule[eventToDeleteIndex].startTime})?
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setEventToDeleteIndex(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={confirmDeleteEvent}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'DELETING...' : 'DELETE EVENT'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

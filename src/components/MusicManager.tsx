@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Song, SongListType } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle } from 'lucide-react';
 
 interface MusicManagerProps {
   music: Song[];
@@ -12,6 +12,8 @@ interface MusicManagerProps {
 
 export default function MusicManager({ music, onUpdate, isSyncing }: MusicManagerProps) {
   const [editingItem, setEditingItem] = useState<Song | null>(null);
+  const [songToDelete, setSongToDelete] = useState<Song | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Song>>({});
 
@@ -108,14 +110,16 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     closeModal();
   };
 
-  const deleteItem = async (songId: string) => {
-    if (isSyncing || !confirm('Are you sure you want to delete this song?')) return;
-    const updated = music.filter(item => item.songId !== songId);
+  const confirmDeleteSong = async () => {
+    if (!songToDelete || isSyncing) return;
+    const updated = music.filter(item => item.songId !== songToDelete.songId);
     await onUpdate(updated);
+    setSongToDelete(null);
   };
 
   // Render a play icon that fetches and plays a preview from iTunes
   const togglePlay = async (item: Song) => {
+    setPreviewError(null);
     if (playingId === item.songId) {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -145,11 +149,11 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         await audio.play();
         setPlayingId(item.songId);
       } else {
-        alert('Preview not available for this song.');
+        setPreviewError(`Audio preview not available for "${item.title}".`);
       }
     } catch (err) {
       console.error('Error fetching preview:', err);
-      alert('Error fetching song preview.');
+      setPreviewError(`Failed to load preview for "${item.title}". Please check connection.`);
     } finally {
       setIsLoadingAudio(null);
     }
@@ -287,7 +291,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   <button style={styles.actionBtn} onClick={() => startEdit(item)}>
                     <Edit2 size={14} />
                   </button>
-                  <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => deleteItem(item.songId)}>
+                  <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => setSongToDelete(item)}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -407,6 +411,100 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST ERROR NOTIFICATION FOR AUDIO PREVIEW */}
+      {previewError && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#ef4444',
+          color: '#ffffff',
+          padding: '0.75rem 1.25rem',
+          borderRadius: 'var(--border-radius-md)',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          zIndex: 9999,
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.8rem',
+          fontWeight: 600
+        }}>
+          <AlertCircle size={18} />
+          <span>{previewError}</span>
+          <button 
+            style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', marginLeft: '0.5rem' }} 
+            onClick={() => setPreviewError(null)}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* IN-APP DELETE SONG CONFIRMATION MODAL */}
+      {songToDelete && (
+        <div style={styles.modalOverlay} onClick={() => setSongToDelete(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertCircle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE SONG CONFIRMATION
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setSongToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.25rem' }}>
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{songToDelete.title}"</strong> by {songToDelete.artist}?
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setSongToDelete(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={confirmDeleteSong}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'DELETING...' : 'DELETE SONG'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

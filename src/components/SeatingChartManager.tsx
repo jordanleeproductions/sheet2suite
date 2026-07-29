@@ -47,6 +47,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
   // Modals & Active Selections
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [editingTable, setEditingTable] = useState<TableConfig | null>(null);
+  const [tableToDelete, setTableToDelete] = useState<TableConfig | null>(null);
   const [isAddingTable, setIsAddingTable] = useState<boolean>(false);
   const [showUnassignedDrawer, setShowUnassignedDrawer] = useState<boolean>(false);
   
@@ -143,17 +144,20 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
     setEditingTable(null);
   };
 
-  // Delete Table
-  const deleteTable = (table: TableConfig) => {
-    if (!confirm(`Delete ${table.tableName}? Guests assigned to this table will become unassigned.`)) return;
-    setTables(tables.filter(t => t.tableId !== table.tableId));
+  // Delete Table Confirmation Handler
+  const confirmDeleteTable = () => {
+    if (!tableToDelete) return;
+    setTables(tables.filter(t => t.tableId !== tableToDelete.tableId));
 
     // Unassign guests at this table
     const updated = guests.map(g => 
-      g.tableAssignment === table.tableName ? { ...g, tableAssignment: 'Unassigned' } : g
+      g.tableAssignment === tableToDelete.tableName ? { ...g, tableAssignment: 'Unassigned' } : g
     );
     onUpdateGuests(updated);
+    setTableToDelete(null);
   };
+
+
 
   // Filtered tables by search
   const filteredTables = tables.filter(t => 
@@ -279,7 +283,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                   <button style={styles.actionIconBtn} onClick={() => startEditTable(table)} title="Edit Table Config">
                     <Settings2 size={14} />
                   </button>
-                  <button style={{ ...styles.actionIconBtn, color: '#ef4444' }} onClick={() => deleteTable(table)} title="Delete Table">
+                  <button style={{ ...styles.actionIconBtn, color: '#ef4444' }} onClick={() => setTableToDelete(table)} title="Delete Table">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -683,6 +687,80 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE TABLE CONFIRMATION MODAL */}
+      {tableToDelete && (
+        <div style={styles.modalOverlay} onClick={() => setTableToDelete(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertCircle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE TABLE CONFIRMATION
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setTableToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{tableToDelete.tableName}"</strong>?
+              </p>
+
+              {guests.filter(g => g.tableAssignment === tableToDelete.tableName).length > 0 && (
+                <div style={{ ...styles.reassignBox, borderColor: 'var(--color-red)', backgroundColor: 'var(--color-red-muted)' }}>
+                  <span style={{ ...styles.fieldLabel, color: 'var(--color-red)' }}>
+                    SEATED GUESTS IMPACT ({guests.filter(g => g.tableAssignment === tableToDelete.tableName).length} guests)
+                  </span>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--color-text)', margin: '0.25rem 0 0 0' }}>
+                    Deleting this table will automatically unassign all seated guests and move them back into the Unassigned Pool.
+                  </p>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setTableToDelete(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={confirmDeleteTable}
+                >
+                  DELETE TABLE
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

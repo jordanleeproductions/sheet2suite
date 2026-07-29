@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Vendor } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2 } from 'lucide-react';
+import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle } from 'lucide-react';
 
 interface VendorManagerProps {
   vendors: Vendor[];
@@ -13,6 +13,7 @@ interface VendorManagerProps {
 export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
+  const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Vendor>>({});
 
@@ -120,10 +121,11 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
     closeModal();
   };
 
-  const deleteItem = async (vendorId: string) => {
-    if (isSyncing || !confirm('Are you sure you want to delete this vendor?')) return;
-    const updated = vendors.filter(item => item.vendorId !== vendorId);
+  const confirmDeleteVendor = async () => {
+    if (!vendorToDelete || isSyncing) return;
+    const updated = vendors.filter(item => item.vendorId !== vendorToDelete.vendorId);
     await onUpdate(updated);
+    setVendorToDelete(null);
   };
 
   return (
@@ -226,7 +228,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
                     <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Vendor">
                       <Edit2 size={16} />
                     </button>
-                    <button style={styles.actionBtn} onClick={() => deleteItem(item.vendorId)} title="Delete">
+                    <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)} title="Delete">
                       <Trash2 size={16} />
                     </button>
                   </td>
@@ -253,7 +255,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
                   <button style={styles.actionBtn} onClick={() => startEdit(item)}>
                     <Edit2 size={14} />
                   </button>
-                  <button style={styles.actionBtn} onClick={() => deleteItem(item.vendorId)}>
+                  <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -429,6 +431,70 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE VENDOR CONFIRMATION MODAL */}
+      {vendorToDelete && (
+        <div style={styles.modalOverlay} onClick={() => setVendorToDelete(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertCircle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE VENDOR CONFIRMATION
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setVendorToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.25rem' }}>
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to delete vendor <strong style={{ color: 'var(--color-red)' }}>"{vendorToDelete.vendorName}"</strong> ({vendorToDelete.category})?
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setVendorToDelete(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.625rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={confirmDeleteVendor}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'DELETING...' : 'DELETE VENDOR'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

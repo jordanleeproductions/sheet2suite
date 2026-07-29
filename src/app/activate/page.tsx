@@ -146,8 +146,10 @@ export default function ActivationPage() {
       }, 1200);
     } catch (err) {
       setIsSubmitting(false);
-      alert('Error finalizing setup. Proceeding to dashboard.');
-      router.push('/');
+      setVerifyError('Error finalizing setup. Redirecting to dashboard...');
+      setTimeout(() => {
+        router.push('/');
+      }, 1000);
     }
   };
 
