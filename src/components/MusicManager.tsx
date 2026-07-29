@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Song, SongListType } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2 } from 'lucide-react';
 
 interface MusicManagerProps {
   music: Song[];
@@ -220,14 +220,78 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     );
   };
 
+  // Share / Email Playlist to Vendor
+  const handleShareMusic = () => {
+    const subject = encodeURIComponent('Wedding Music Playlist & Vendor Preferences');
+    
+    let bodyText = `Hi!\n\nHere is our official Wedding Music Playlist & Track Preferences:\n\n`;
+
+    const specialSongs = music.filter(s => s.listType === 'First Dance' || s.listType === 'Ceremony' || s.listType === 'Special Moment');
+    const playList = music.filter(s => s.listType === 'Play List' || s.priority === 'Must Play');
+    const doNotPlay = music.filter(s => s.listType === 'Do Not Play' || s.listType === 'Banned' || s.priority === 'Banned');
+    const generalSongs = music.filter(s => !specialSongs.includes(s) && !playList.includes(s) && !doNotPlay.includes(s));
+
+    if (specialSongs.length > 0) {
+      bodyText += `--- SPECIAL MOMENTS & FIRST DANCES ---\n`;
+      specialSongs.forEach(s => {
+        bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (${s.notes})` : ''}\n`;
+      });
+      bodyText += `\n`;
+    }
+
+    if (playList.length > 0) {
+      bodyText += `--- MUST PLAY SONGS ---\n`;
+      playList.forEach(s => {
+        bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (${s.notes})` : ''}\n`;
+      });
+      bodyText += `\n`;
+    }
+
+    if (generalSongs.length > 0) {
+      bodyText += `--- PLAY IF TIME / GENERAL PLAYLIST ---\n`;
+      generalSongs.forEach(s => {
+        bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (${s.notes})` : ''}\n`;
+      });
+      bodyText += `\n`;
+    }
+
+    if (doNotPlay.length > 0) {
+      bodyText += `--- DO NOT PLAY / BANNED SONGS ---\n`;
+      doNotPlay.forEach(s => {
+        bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (Reason: ${s.notes})` : ''}\n`;
+      });
+      bodyText += `\n`;
+    }
+
+    bodyText += `Thank you so much!`;
+
+    window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+  };
+
   return (
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
         <h2 style={styles.title}>Wedding Playlist</h2>
-        <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
-          <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD SONG
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <button 
+            type="button"
+            style={{
+              ...styles.addButton,
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)'
+            }} 
+            onClick={handleShareMusic}
+            title="Email music playlist to DJ or Band"
+          >
+            <Mail size={16} style={{ marginRight: '0.35rem' }} /> EMAIL PLAYLIST TO DJ
+          </button>
+
+          <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
+            <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD SONG
+          </button>
+        </div>
       </div>
 
       {/* Search & Category Filter Bar */}

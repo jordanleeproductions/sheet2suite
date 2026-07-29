@@ -17,7 +17,8 @@ import {
   Users, 
   Sparkles, 
   AlertCircle,
-  Tag
+  Tag,
+  Mail
 } from 'lucide-react';
 
 interface PhotoShotListManagerProps {
@@ -140,6 +141,44 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
     setShotToDelete(null);
   };
 
+  // Share / Email Shot List to Photographer
+  const handleSharePhotos = () => {
+    const subject = encodeURIComponent('Wedding Photography Shot List & VIP Moments');
+    
+    let bodyText = `Hi!\n\nHere is our official Wedding Photography Shot List:\n\n`;
+
+    const mustHave = photos.filter(p => p.priority === 'Must Have');
+    const niceToHave = photos.filter(p => p.priority !== 'Must Have');
+
+    if (mustHave.length > 0) {
+      bodyText += `--- MUST HAVE SHOTS (${mustHave.length}) ---\n`;
+      mustHave.forEach((p, idx) => {
+        bodyText += `${idx + 1}. [${p.shotId}] ${p.description}\n`;
+        if (p.location) bodyText += `   Location: ${p.location}\n`;
+        if (p.shotTime) bodyText += `   Est. Time: ${p.shotTime}\n`;
+        if (p.people) bodyText += `   People Included: ${p.people}\n`;
+        if (p.notes) bodyText += `   Notes: ${p.notes}\n`;
+        bodyText += `\n`;
+      });
+    }
+
+    if (niceToHave.length > 0) {
+      bodyText += `--- NICE TO HAVE SHOTS (${niceToHave.length}) ---\n`;
+      niceToHave.forEach((p, idx) => {
+        bodyText += `${idx + 1}. [${p.shotId}] ${p.description}\n`;
+        if (p.location) bodyText += `   Location: ${p.location}\n`;
+        if (p.shotTime) bodyText += `   Est. Time: ${p.shotTime}\n`;
+        if (p.people) bodyText += `   People Included: ${p.people}\n`;
+        if (p.notes) bodyText += `   Notes: ${p.notes}\n`;
+        bodyText += `\n`;
+      });
+    }
+
+    bodyText += `Thank you so much!`;
+
+    window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+  };
+
   return (
     <div style={styles.container}>
       {/* Header Title & Actions */}
@@ -151,9 +190,25 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
           </p>
         </div>
 
-        <button style={styles.addButton} onClick={startAddShot}>
-          <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <button 
+            type="button"
+            style={{
+              ...styles.addButton,
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)'
+            }} 
+            onClick={handleSharePhotos}
+            title="Email shot list to Photographer"
+          >
+            <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST TO PHOTOGRAPHER
+          </button>
+
+          <button style={styles.addButton} onClick={startAddShot}>
+            <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
+          </button>
+        </div>
       </div>
 
       {/* KPI Bar */}
