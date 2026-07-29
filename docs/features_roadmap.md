@@ -61,9 +61,24 @@
 - **iTunes Audio Preview:** Live 30-second audio preview player with play/pause circular toggle.
 - **External Streaming Buttons:** Spotify and YouTube search buttons fixed at the bottom of each song card.
 - **Smart Sorting:** Automatic grouping of Banned songs at the bottom of the list when viewing "ALL SONGS".
+- **Email Playlist to DJ/Band:** One-click `EMAIL LIST` button generating a structured, formatted email (`mailto:`) broken down by Special Moments, Must Play, General Tracks, and Banned Songs.
 
-### 11. Modular Feature Toggles (`enabledModules`)
-- **Module Customization Controls:** Users can enable or disable individual modules (*Guest Registry*, *Seating Chart*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*) during Onboarding setup or anytime in Settings.
+### 11. Photography Shot List (`PhotoShotListManager`)
+- **Shot List Catalog:** Interfacing with the `PHOTOS` Google Sheet tab (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
+- **KPI Metrics Cards:** Overview of Total Required Shots, Captured Count, Pending Shots, and Must Have priority moments.
+- **Interactive Checkoffs:** Quick-toggle checkoff buttons to mark shots `Captured` vs `Pending`.
+- **Search & Filters:** Search by description, location, or VIP names; filter by status and priority (`Must Have` | `Nice To Have`).
+- **Email List to Photographer:** One-click `EMAIL LIST` button generating a structured, formatted email (`mailto:`) for the photographer.
+
+### 12. Thank You Card & Gift Registry Tracker (`ThankYouManager`)
+- **Dual Tracker Views:**
+  - 🎁 **Gift Registry Thank Yous:** Interfacing with the `GIFT REGISTRY` Google Sheet tab (`Item ID`, `Gift Description`, `Giver / From`, `Category / Store`, `Estimated Value / Cash Amount`, `Thank You Sent`, `Notes`).
+  - 💌 **Guest Attendance Thank You Cards:** Interfacing with the `Guest List` `Thanked` column (Column L).
+- **Party Group Bundling:** Attendance thank-you cards automatically bundled per household/party group for attending guests with single party-level checkoff toggling.
+- **KPI Progress Cards:** Overview of Total Gifts Received ($ value), Gift Thank Yous Sent (%), Attending Parties, and Attendance Cards Sent (%).
+
+### 13. Modular Feature Toggles (`enabledModules`)
+- **Module Customization Controls:** Users can enable or disable individual modules (*Guest Registry*, *Seating Chart*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*, *Photo Shot List*, *Thank You Tracker*) during Onboarding setup or anytime in Settings.
 - **Dynamic Navigation & Dashboard Filtering:** Disabled modules automatically hide their top navbar tab and corresponding dashboard widgets.
 
 ---
@@ -88,12 +103,15 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [x] Purchase Activation & Setup Wizard (`/activate`).
 - [x] Task List Preset Packs (Traditional, Micro, Destination, Blank).
 - [x] Mobile-first Guest Registry, Budget Ledger, Timeline, Vendor Directory, Kanban, Music Player.
-- [x] Visual Table Seating Plan Manager (Circle, Rectangle, Sweetheart tables).
+- [x] Visual Table Seating Plan Manager (Circle, Rectangle, Square, Sweetheart/Single-side seating, Seat ID persistence).
+- [x] Photography Shot List Manager (`PhotoShotListManager`).
+- [x] Thank You Card & Gift Registry Tracker (`ThankYouManager` with Party Group bundling).
+- [x] Email List formatting for DJs and Photographers.
 
-### Phase 2: Relational Sync & Public Share Portals (In Progress)
+### Phase 2: Relational Sync & Public Share Portals (NEXT PRIORITY)
+- [ ] **Tokenized Read-Only Vendor Views (`/share/[token]`):** Cryptographic JWT view links for vendors (DJ playlist, Photographer shot list, Coordinator itinerary) so vendors can view lists on mobile without logging into Google Sheets or Sheet2Vow.
+- [ ] **Print-Ready PDF & Printable Export Templates:** One-click printable place cards, table cards, timeline rosters, and vendor contact sheets.
 - [ ] **Dynamic Relational RSVP Sync:** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts and seating chart capacity alerts.
-- [ ] **Tokenized Read-Only Vendor Views (`/share/[token]`):** Cryptographic JWT view links for vendors (DJ playlist, Photographer shot list, Coordinator itinerary) without forcing login.
-- [ ] **Print-Ready PDF CSS Export Templates:** One-click printable place cards, timeline rosters, and vendor contacts.
 
 ### Phase 3: Monetization & Suite Expansion
 - [ ] **Lemon Squeezy Integration:** Merchant-of-Record webhook integration for Tier 2 / Pro upgrades.
