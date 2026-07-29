@@ -48,6 +48,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [editingTable, setEditingTable] = useState<TableConfig | null>(null);
   const [tableToDelete, setTableToDelete] = useState<TableConfig | null>(null);
+  const [assignSeatTable, setAssignSeatTable] = useState<TableConfig | null>(null);
+  const [assignSearch, setAssignSearch] = useState<string>('');
   const [isAddingTable, setIsAddingTable] = useState<boolean>(false);
   const [showUnassignedDrawer, setShowUnassignedDrawer] = useState<boolean>(false);
   
@@ -318,9 +320,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                           }}
                           onClick={() => {
                             if (guest) setSelectedGuest(guest);
-                            else setShowUnassignedDrawer(true);
+                            else setAssignSeatTable(table);
                           }}
-                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Empty Seat Slot'}
+                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
                         >
                           {guest ? (
                             <div style={styles.seatedAvatar}>
@@ -352,9 +354,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                         style={styles.seatNodeRect}
                         onClick={() => {
                           if (guest) setSelectedGuest(guest);
-                          else setShowUnassignedDrawer(true);
+                          else setAssignSeatTable(table);
                         }}
-                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Empty Seat Slot'}
+                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
                       >
                         {guest ? (
                           <div style={styles.seatedAvatar}>
@@ -420,9 +422,9 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                         style={styles.seatNodeRect}
                         onClick={() => {
                           if (guest) setSelectedGuest(guest);
-                          else setShowUnassignedDrawer(true);
+                          else setAssignSeatTable(table);
                         }}
-                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Empty Seat Slot'}
+                        title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : 'Click to assign guest to seat'}
                       >
                         {guest ? (
                           <div style={styles.seatedAvatar}>
@@ -602,6 +604,142 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
                     {selectedGuest.phoneNumber || 'No phone number'}
                   </p>
                 </div>
+              </div>
+
+              {/* UNASSIGN SEAT BUTTON */}
+              {selectedGuest.tableAssignment && selectedGuest.tableAssignment !== 'Unassigned' && (
+                <button
+                  type="button"
+                  style={{
+                    width: '100%',
+                    marginTop: '1.25rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red-muted)',
+                    color: 'var(--color-red)',
+                    border: '1px solid var(--color-red)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                  onClick={() => {
+                    assignGuestToTable(selectedGuest.guestId, 'Unassigned');
+                    setSelectedGuest(null);
+                  }}
+                >
+                  <Trash2 size={16} /> UNASSIGN SEAT FROM {selectedGuest.tableAssignment.toUpperCase()}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP GUEST SEAT ASSIGNMENT MODAL */}
+      {assignSeatTable && (
+        <div style={styles.modalOverlay} onClick={() => setAssignSeatTable(null)}>
+          <div style={{ ...styles.modalContent, maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <UserPlus size={18} style={{ color: 'var(--color-highlight)' }} />
+                <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+                  ASSIGN SEAT: {assignSeatTable.tableName.toUpperCase()}
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => setAssignSeatTable(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              {/* Search Bar */}
+              <div style={{ position: 'relative', marginBottom: '1rem' }}>
+                <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--color-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Filter guests by name or party..."
+                  value={assignSearch}
+                  onChange={(e) => setAssignSearch(e.target.value)}
+                  style={{
+                    ...styles.inputField,
+                    paddingLeft: '32px'
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <span style={{ ...styles.fieldLabel, marginBottom: '0.5rem', display: 'block' }}>
+                GUEST REGISTRY ({guests.filter(g => g.tableAssignment === 'Unassigned' || !g.tableAssignment).length} unassigned)
+              </span>
+
+              {/* Guest Selection List */}
+              <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {guests
+                  .filter(g => {
+                    const matchesSearch = `${g.firstName} ${g.lastName} ${g.partyGroup || ''}`.toLowerCase().includes(assignSearch.toLowerCase());
+                    return matchesSearch;
+                  })
+                  .map(guest => {
+                    const isAlreadyHere = guest.tableAssignment === assignSeatTable.tableName;
+                    const isUnassigned = !guest.tableAssignment || guest.tableAssignment === 'Unassigned';
+
+                    return (
+                      <div
+                        key={guest.guestId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.625rem 0.875rem',
+                          backgroundColor: isAlreadyHere ? 'var(--color-gold-muted)' : 'var(--color-surface)',
+                          border: isAlreadyHere ? '2px solid var(--color-gold)' : '1px solid var(--color-muted)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          cursor: isAlreadyHere ? 'default' : 'pointer',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                        onClick={() => {
+                          if (!isAlreadyHere) {
+                            assignGuestToTable(guest.guestId, assignSeatTable.tableName);
+                            setAssignSeatTable(null);
+                            setAssignSearch('');
+                          }
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                          <div style={styles.initialsAvatar}>
+                            {getInitials(guest)}
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)', display: 'block' }}>
+                              {guest.firstName} {guest.lastName}
+                            </span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
+                              {guest.partyGroup || 'General Guest'} • {guest.rsvpStatus}
+                            </span>
+                          </div>
+                        </div>
+
+                        {isAlreadyHere ? (
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-gold)' }}>SEATED HERE</span>
+                        ) : isUnassigned ? (
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-highlight)' }}>+ SEAT GUEST</span>
+                        ) : (
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>At {guest.tableAssignment}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                {guests.filter(g => `${g.firstName} ${g.lastName} ${g.partyGroup || ''}`.toLowerCase().includes(assignSearch.toLowerCase())).length === 0 && (
+                  <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.85rem', padding: '1rem 0' }}>
+                    No matching guests found.
+                  </p>
+                )}
               </div>
             </div>
           </div>
