@@ -1,240 +1,204 @@
 # Sheet2Vow - Master Google Spreadsheet Schema Reference
 
-This document defines the authoritative tab structure and column header contracts required for the **Sheet2Vow Master Google Sheet Template**.
+This document defines the authoritative tab structure and column header contracts matching the live **Wedding Planner Template Google Sheet**.
 
 ---
 
-## 📊 Active Master Template Architecture (v1.0)
+## 📊 Complete Sheet Architecture Overview (14 Tabs)
 
-| Tab Name | Purpose | Key Data Types | Formula Protected |
+| Tab Name | Sheet Table Name | Key Purpose | Status |
 |---|---|---|---|
-| **`DASHBOARD`** | Aggregate summary KPI overview cards | Formulas (`SUM`, `COUNTIF`, `SUMIFS`) | 🔒 Yes (Read-Only) |
-| **`GUESTS`** | Guest registry, RSVPs, dietary needs & seating assignments | Strings, Enums, Contact Info | ✏️ User Editable |
-| **`TABLES`** | Floorplan table configurations & seating capacity | IDs, Enums, Integers, Booleans | ✏️ User Editable |
-| **`VENDORS`** | Vendor directory, contacts, contracts & meal requirements | Strings, Currency, Links, Enums | ✏️ User Editable |
-| **`BUDGET`** | Zero-formula financial ledger & payment tracking | Item IDs, Currency, Dates, Enums | ✏️ User Editable |
-| **`SCHEDULE`** | Day-of itinerary timeline & responsibility assignments | Time strings, Moments, Locations | ✏️ User Editable |
-| **`MUSIC`** | Wedding playlist & banned tracks catalog | Song Titles, Artists, List Enums | ✏️ User Editable |
-| **`PHOTOS`** | Photographer shot list & priority ordering | Sequence IDs, Descriptions, Locations | ✏️ User Editable |
-| **`TO DO`** | Wedding task checklist & Kanban stages | Task IDs, Status, Priorities, Dates | ✏️ User Editable |
-| **`GIFTS_REGISTRY`** | Gift tracker, amounts & thank-you note status | Gift IDs, Descriptions, Dates, Booleans | ✏️ User Editable |
-| **`DECOR_INVENTORY`** | Venue decor, packing checklist & post-event cleanup | Item Names, Categories, Booleans | ✏️ User Editable |
-| **`SETTINGS`** | Application settings, hashtag, color palette & preferences | Setting Keys & Values | ✏️ User Editable |
-| **`Calc_Data`** | Internal metric lookup table for dynamic formulas | System keys & metric values | 🔒 Yes (System Internal) |
+| **`INFO`** | Getting Started | Master template index & instructions | ✏️ Documentation |
+| **`DASHBOARD`** | Overview Cards | Summary KPI meters & charts | 🔒 Read-Only |
+| **`GUESTS`** | GuestList | Guest registry, RSVPs, dietary needs & seating | ✏️ Active |
+| **`TABLES`** | Table Assignments | Floorplan table shapes & seating capacity | ✏️ Active |
+| **`VENDORS`** | Vendors | Vendor directory, contacts & payment tracking | ✏️ Active |
+| **`BUDGET`** | Budget Ledger | Estimated vs. actual costs & payment status | ✏️ Active |
+| **`SCHEDULE`** | Day of Schedule | Day-of itinerary timeline & responsibilities | ✏️ Active |
+| **`MUSIC`** | Music | Playlist tracks, occasions & priorities | ✏️ Active |
+| **`PHOTOS`** | Photography Shot List | Shot list requirements, timing & status | ✏️ Active |
+| **`TO DO`** | To Do List | Task checklist, categories, due dates & status | ✏️ Active |
+| **`GIFT REGISTRY`** | Gift Registry | Gifts received, amounts & thank-you cards | ✏️ Active |
+| **`DECOR INVENTORY`**| Decor Inventory | Venue decor, packing checklist & cleanup | ✏️ Active |
+| **`Calc_Data`** | System Lookup | System metric lookup table for formulas | 🔒 Internal |
+| **`Settings`** | Config Dropdowns | Master enum dropdown validation lists | 🔒 System Config |
 
 ---
 
 ## 📑 Tab 1: `GUESTS`
-Stores guest registry information, party groups, dietary restrictions, and table assignments.
+**Sheet Table Name**: `GuestList`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Guest ID` | `guestId` | `string` (Primary Key) | `G1`, `G2`, `G3` |
-| `First Name` | `firstName` | `string` | `Jane` |
-| `Last Name` | `lastName` | `string` | `Doe` |
-| `Party Group` | `partyGroup` | `string` | `Bridal Party`, `Doe Household`, `College Friends` |
-| `Age Category` | `ageCategory` | `enum` | `Adult`, `Child`, `Infant` |
-| `RSVP Status` | `rsvpStatus` | `enum` | `Attending`, `Declined`, `Pending` |
-| `Dietary Restrictions` | `dietaryRestrictions` | `string` | `Vegetarian`, `Gluten-Free`, `Nut Allergy`, `None` |
-| `Table Assignment` | `tableAssignment` | `string` | `Sweetheart Table (Bride & Groom)`, `Table 1 - Head Table`, `Unassigned` |
-| `Email` | `email` | `string` (Email) | `jane.doe@example.com` |
-| `Phone Number` | `phoneNumber` | `string` (Phone) | `(555) 234-5678` |
-| `Mailing Address` | `mailingAddress` | `string` | `123 Main St, Suite 4, Austin, TX 78701` |
+| `Guest ID` | `guestId` | Text (Primary Key) | e.g. `G1`, `G2` |
+| `First Name` | `firstName` | Text | Guest first name |
+| `Last Name` | `lastName` | Text | Guest last name |
+| `Guest Age Category` | `ageCategory` | Dropdown | `Adult`, `Child`, `Infant` |
+| `Table Number` | `tableAssignment` | Dropdown | Assigned table name / ID |
+| `Plus-One?` | `hasPlusOne` | Checkbox | `TRUE`, `FALSE` |
+| `Plus-One Name` | `plusOneName` | Text | Name of guest's plus-one |
+| `RSVP Status` | `rsvpStatus` | Dropdown | `Attending`, `Declined`, `Pending` |
+| `Dietary Restrictions` | `dietaryRestrictions` | Text | e.g. `Vegetarian`, `Nut Allergy`, `None` |
+| `Notes` | `notes` | Text | Additional guest notes |
 
 ---
 
-## 🪑 Tab 2: `TABLES` *(Table Seating & Floorplan)*
-Configures visual seating chart floorplan tables, table shapes, and seat capacities.
+## 🪑 Tab 2: `TABLES`
+**Sheet Table Name**: `Table Assignments`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Table ID` | `tableId` | `string` (Primary Key) | `table-1`, `table-sweetheart` |
-| `Table Name` | `tableName` | `string` | `Sweetheart Table (Bride & Groom)`, `Table 1`, `Table 2` |
-| `Shape` | `shape` | `enum` | `circle`, `rectangle`, `sweetheart` |
-| `Capacity` | `capacity` | `integer` | `2`, `6`, `8`, `10`, `12` |
-| `Include End Seats` | `includeEndSeats` | `boolean` | `TRUE`, `FALSE` (Rectangle head/foot end seats) |
-| `Sort Order` | `sortOrder` | `integer` | `1`, `2`, `3` |
-| `Notes` | `notes` | `string` | `Near dance floor`, `VIP family seating` |
+| `Table ID` | `tableId` | Text (Primary Key) | e.g. `table-1`, `sweetheart` |
+| `Table Name` | `tableName` | Text | Display name (e.g. `Table 1`, `Sweetheart Table`) |
+| `Table Shape` | `shape` | Dropdown | `Circle`, `Rectangle`, `Sweetheart` |
+| `Max Seats` | `capacity` | Integer | Total seat capacity (e.g. `2`, `8`, `10`) |
+| `Assigned Seats` | `assignedCount` | Formula / Calculated | Calculated count of seated guests |
+| `Notes` | `notes` | Text | Table location or notes |
 
 ---
 
-## 💵 Tab 3: `BUDGET`
-Tracks budget line items, estimated vs. actual costs, amounts paid, and payment statuses.
+## 🤝 Tab 3: `VENDORS`
+**Sheet Table Name**: `Vendors`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Item ID` | `itemId` | `string` (Primary Key) | `B1`, `B2` |
-| `Category` | `category` | `string` | `Venue & Catering`, `Photography`, `Attire`, `Florals`, `Music` |
-| `Vendor Name` | `vendorName` | `string` | `Grand Plaza Hotel`, `Luna Photography` |
-| `Estimated Cost` | `estimatedCost` | `number` (Currency) | `12000.00` |
-| `Actual Cost` | `actualCost` | `number` (Currency) | `12500.00` |
-| `Amount Paid` | `amountPaid` | `number` (Currency) | `5000.00` |
-| `Due Date` | `dueDate` | `string` (Date) | `2026-08-15` |
-| `Payment Status` | `paymentStatus` | `enum` | `Paid`, `Pending`, `Overdue` |
+| `Vendor ID` | `vendorId` | Text (Primary Key) | e.g. `V1`, `V2` |
+| `Vendor Name` | `vendorName` | Text | Vendor business name |
+| `Category` | `category` | Dropdown | `Venue & Catering`, `DJ & MC`, `Florals`, etc. |
+| `Contact Person` | `contactName` | Text | Contact name |
+| `Email` | `email` | Text (Email) | Contact email address |
+| `Phone` | `phone` | Text (Phone) | Contact phone number |
+| `Total Cost` | `totalContractValue` | Currency ($) | Total contract value |
+| `Paid Amount` | `depositPaid` | Currency ($) | Amount paid to date |
+| `Remaining Balance` | `balanceOwing` | Formula ($) | Calculated remaining balance |
+| `Notes` | `notes` | Text | Contract or service details |
 
 ---
 
-## 🤝 Tab 4: `VENDORS`
-Maintains vendor directory, contact details, total contract values, and staff meal requirements.
+## 💵 Tab 4: `BUDGET`
+**Sheet Table Name**: `Budget Ledger`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Vendor ID` | `vendorId` | `string` (Primary Key) | `V1`, `V2` |
-| `Vendor Name` | `vendorName` | `string` | `Grand Plaza Hotel` |
-| `Category` | `category` | `string` | `Venue & Catering`, `DJ & MC`, `Floral Design` |
-| `Contact Name` | `contactName` | `string` | `Sarah Jenkins` |
-| `Email Address` | `emailAddress` | `string` (Email) | `sarah@grandplaza.com` |
-| `Phone Number` | `phoneNumber` | `string` (Phone) | `(555) 987-6543` |
-| `Total Contract Value` | `totalContractValue` | `number` (Currency) | `15000.00` |
-| `Deposit Paid` | `depositPaid` | `number` (Currency) | `5000.00` |
-| `Balance Owing` | `balanceOwing` | `number` (Currency) | `10000.00` |
-| `Payment Due` | `paymentDueDate` | `string` (Date) | `2026-09-01` |
-| `Contract Link` | `contractLink` | `string` (URL) | `https://drive.google.com/file/d/...` |
-| `Staff Meals Required` | `staffMealsRequired` | `enum` | `Yes`, `No` |
+| `Expense ID` | `itemId` | Text (Primary Key) | e.g. `B1`, `B2` |
+| `Item Name` | `vendorName` | Text | Expense / vendor line item name |
+| `Category` | `category` | Dropdown | Budget category |
+| `Estimated Cost` | `estimatedCost` | Currency ($) | Initial estimated cost |
+| `Actual Cost` | `actualCost` | Currency ($) | Final actual cost |
+| `Amount Paid` | `amountPaid` | Currency ($) | Amount paid to date |
+| `Payment Status` | `paymentStatus` | Dropdown | `Paid`, `Pending`, `Overdue` |
+| `Notes` | `notes` | Text | Due date or payment notes |
 
 ---
 
 ## ⏰ Tab 5: `SCHEDULE`
-Manages day-of timeline itinerary moments, vendor responsibilities, and late-night tracking.
+**Sheet Table Name**: `Day of Schedule`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Event ID` | `eventId` | `string` (Primary Key) | `E1`, `E2` |
-| `Start Time` | `startTime` | `string` (Time) | `08:00 AM`, `04:30 PM`, `01:00 AM` |
-| `End Time` | `endTime` | `string` (Time) | `09:30 AM`, `05:00 PM`, `02:00 AM` |
-| `Event Moment` | `eventMoment` | `string` | `Bridal Hair & Makeup`, `Ceremony Processional`, `Late Night Shuttle` |
-| `Location` | `location` | `string` | `Bridal Suite`, `Main Garden Chapel`, `Hotel Lobby` |
-| `Responsibility / Vendors` | `responsibility` | `string` | `Bridal Party`, `Catering`, `Photography`, `Guests` |
-| `Notes / Details` | `notes` | `string` | `Photographer to capture dress reveal`, `Shuttle bus leaves every 20 mins` |
-| `Is After Midnight` | `isAfterMidnight` | `boolean` | `TRUE`, `FALSE` |
+| `Time` | `startTime` | Time Text | Moment time (e.g. `08:00 AM`, `04:30 PM`) |
+| `Event Name` | `eventMoment` | Text | Moment name (e.g. `Ceremony Processional`) |
+| `Location` | `location` | Text | Event venue location |
+| `Responsible Party` | `responsibility` | Text | Responsible vendor or group |
+| `Notes` | `notes` | Text | Special cues or guidelines |
 
 ---
 
 ## 🎵 Tab 6: `MUSIC`
-Categorizes wedding music playlists, track choices, and banned tracks.
+**Sheet Table Name**: `Music`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Song ID` | `songId` | `string` (Primary Key) | `M1`, `M2` |
-| `List Type` | `listType` | `enum` | `Ceremony`, `Reception`, `First Dance`, `Must Play`, `Banned` |
-| `Song Title` | `songTitle` | `string` | `At Last`, `Perfect`, `Chicken Dance` |
-| `Artist` | `artist` | `string` | `Etta James`, `Ed Sheeran` |
-| `Requested By` | `requestedBy` | `string` | `Bride`, `Groom`, `Guests` |
-| `Notes` | `notes` | `string` | `Play during cake cutting`, `DO NOT PLAY UNDER ANY CIRCUMSTANCES` |
+| `ID` | `songId` | Text (Primary Key) | e.g. `M1`, `M2` |
+| `Song Title` | `title` | Text | Song title |
+| `Artist` | `artist` | Text | Artist / Band name |
+| `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance` |
+| `Priority` | `priority` | Dropdown | `Must Play`, `Play If Time`, `Banned` |
+| `Played?` | `played` | Checkbox | `TRUE`, `FALSE` |
+| `Notes` | `notes` | Text | Special notes or requests |
 
 ---
 
-## 📋 Tab 7: `TO DO`
-Organizes wedding tasks, categories, due dates, and Kanban workflow stages.
+## 📷 Tab 7: `PHOTOS`
+**Sheet Table Name**: `Photography Shot List`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Task ID` | `taskId` | `string` (Primary Key) | `T1`, `T2` |
-| `Task Name` | `taskName` | `string` | `Book Photographer & Videographer` |
-| `Status` | `kanbanStage` | `enum` | `To Do`, `In Progress`, `Done` |
-| `Category` | `category` | `string` | `Venue & Vendors`, `Attire & Rings`, `Logistics` |
-| `Priority` | `priority` | `enum` | `High`, `Medium`, `Low` |
-| `Assigned To` | `assignedTo` | `string` | `Alex`, `Sam`, `Wedding Planner` |
-| `Due Date` | `dueDate` | `string` (Date) | `2026-06-01` |
-| `Notes / Links` | `notes` | `string` | `Compare quotes from 3 photographers` |
+| `Shot ID` | `shotId` | Text (Primary Key) | e.g. `P1`, `P2` |
+| `Description` | `description` | Text | Shot description / people included |
+| `Location` | `location` | Text | Photo location |
+| `Estimated Time` | `shotTime` | Text | Scheduled photo time |
+| `Included People` | `people` | Text | Names of people required |
+| `Status` | `status` | Dropdown | `Pending`, `Captured` |
+| `Notes` | `notes` | Text | Lighting or composition notes |
 
 ---
 
-## 📷 Tab 8: `PHOTOS`
-Photographer shot list requirements and group priority sequence.
+## 📋 Tab 8: `TO DO`
+**Sheet Table Name**: `To Do List`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Shot ID` | `shotId` | `string` (Primary Key) | `P1`, `P2` |
-| `Shot Order` | `shotOrder` | `integer` | `1`, `2`, `3` |
-| `Shot Time` | `shotTime` | `string` | `03:30 PM (Post-Ceremony)` |
-| `Description or People` | `description` | `string` | `Bride & Groom with Bride's Grandparents` |
-| `Location` | `location` | `string` | `Chapel Altar` |
-| `Priority` | `priority` | `enum` | `Must Have`, `Nice To Have` |
+| `Task ID` | `taskId` | Text (Primary Key) | e.g. `T1`, `T2` |
+| `Task Description` | `taskName` | Text | Task name / description |
+| `Category` | `category` | Dropdown | Task category |
+| `Due Date` | `dueDate` | Date | Target completion date |
+| `Status` | `kanbanStage` | Dropdown | `To Do`, `In Progress`, `Done` |
+| `Assigned To` | `assignedTo` | Text | Person responsible |
+| `Notes` | `notes` | Text | Links or sub-checklist |
 
 ---
 
-## 🎁 Tab 9: `GIFTS_REGISTRY` *(Gift & Thank-You Card Tracker)*
-Tracks gifts received, physical/monetary descriptions, and thank-you note delivery status.
+## 🎁 Tab 9: `GIFT REGISTRY`
+**Sheet Table Name**: `Gift Registry`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Gift ID` | `giftId` | `string` (Primary Key) | `GF1`, `GF2` |
-| `Guest / Party Name` | `guestName` | `string` | `Uncle Bob & Aunt Mary` |
-| `Gift Description` | `giftDescription` | `string` | `KitchenAid Stand Mixer (Red)` |
-| `Gift Type` | `giftType` | `enum` | `Physical Item`, `Cash`, `Gift Card`, `Honeymoon Fund` |
-| `Amount ($)` | `amount` | `number` (Currency) | `250.00` |
-| `Received Date` | `receivedDate` | `string` (Date) | `2026-08-20` |
-| `Thank You Sent` | `thankYouSent` | `boolean` | `TRUE`, `FALSE` |
-| `Sent Date` | `sentDate` | `string` (Date) | `2026-09-05` |
-| `Notes` | `notes` | `string` | `Sent via registry, card included` |
+| `Gift ID` | `giftId` | Text (Primary Key) | e.g. `GF1`, `GF2` |
+| `Guest / Party Name` | `guestName` | Text | Guest or family name |
+| `Gift Description` | `giftDescription` | Text | Physical item description |
+| `Gift Type` | `giftType` | Dropdown | `Physical Item`, `Cash`, `Gift Card`, `Honeymoon Fund` |
+| `Amount` | `amount` | Currency ($) | Monetary value |
+| `Received Date` | `receivedDate` | Date | Date gift received |
+| `Thank You Sent` | `thankYouSent` | Checkbox | `TRUE`, `FALSE` |
+| `Sent Date` | `sentDate` | Date | Date thank-you card sent |
+| `Notes` | `notes` | Text | Additional gift notes |
 
 ---
 
-## 📦 Tab 10: `DECOR_INVENTORY` *(Decor & Packing Checklist)*
-Tracks physical decor, signage, card box, and post-reception cleanup responsibilities.
+## 📦 Tab 10: `DECOR INVENTORY`
+**Sheet Table Name**: `Decor Inventory`
 
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Item ID` | `itemId` | `string` (Primary Key) | `DEC1`, `DEC2` |
-| `Item Name` | `itemName` | `string` | `Acrylic Welcome Sign & Easel` |
-| `Category` | `category` | `enum` | `Ceremony`, `Reception`, `Guest Book`, `Favors`, `Signage` |
-| `Owner / Brought By` | `owner` | `string` | `Maid of Honor (Sarah)` |
-| `Packed` | `packed` | `boolean` | `TRUE`, `FALSE` |
-| `Return Home Required` | `returnHome` | `boolean` | `TRUE`, `FALSE` |
-| `Cleanup Person` | `cleanupPerson` | `string` | `Best Man (John)` |
+| `Item ID` | `itemId` | Text (Primary Key) | e.g. `DEC1`, `DEC2` |
+| `Item Name` | `itemName` | Text | Decor item name |
+| `Category` | `category` | Dropdown | `Ceremony`, `Reception`, `Signage`, etc. |
+| `Owner / Brought By` | `owner` | Text | Person bringing item |
+| `Packed` | `packed` | Checkbox | `TRUE`, `FALSE` |
+| `Return Home Required` | `returnHome` | Checkbox | `TRUE`, `FALSE` |
+| `Cleanup Person` | `cleanupPerson` | Text | Person responsible for cleanup |
 
 ---
 
-## ⚙️ Tab 11: `SETTINGS` *(Planner Preferences)*
-Stores couple names, hashtag, primary theme color hex code, and active module toggles.
-
-| Column Header Name | Developer Key | Type / Format | Allowed Values / Examples |
-|---|---|---|---|
-| `Setting Key` | `settingKey` | `string` (Primary Key) | `WEDDING_HASHTAG`, `THEME_COLOR` |
-| `Setting Name` | `settingName` | `string` | `Wedding Hashtag`, `Primary Theme Color` |
-| `Value` | `value` | `string` | `#SarahAndAlex2026`, `#00ED64` |
+## ⚙️ Tab 11: `Settings` *(Config Dropdowns)*
+Contains dropdown master validation arrays (`Guest Age Category`, `Table Shapes`, `RSVP Status`, `Payment Status`, `Task Status`, `Decor Categories`, `Vendor Categories`, `Budget Categories`, `Gift Types`).
 
 ---
 
-## 📊 Tab 12: `DASHBOARD` *(Summary KPI View)*
-Contains aggregate formulas displaying high-level metrics.
-
-| Cell / Range | Metric Name | Spreadsheet Formula | Description |
-|---|---|---|---|
-| `B2` | Total Guests | `=COUNTA(GUESTS!A2:A)` | Total guest entries |
-| `B3` | Attending Count | `=COUNTIF(GUESTS!F2:F, "Attending")` | Total confirmed attending |
-| `B4` | Declined Count | `=COUNTIF(GUESTS!F2:F, "Declined")` | Total declined |
-| `B5` | Total Estimated Budget | `=SUM(BUDGET!D2:D)` | Sum of estimated line items |
-| `B6` | Total Actual Budget | `=SUM(BUDGET!E2:E)` | Sum of actual line items |
-| `B7` | Total Paid Amount | `=SUM(BUDGET!F2:F)` | Sum of payments made |
-| `B8` | Balance Owing | `=B6-B7` | Remaining balance due |
+## 📊 Tab 12: `DASHBOARD` *(KPI Summary)*
+Aggregate summary cards (`Total Invited`, `Accepted`, `Declined`, `Pending`, `Total Estimated Budget`, `Actual Budget`, `Amount Paid`, `Tasks To Do`, `Tasks In Progress`, `Tasks Completed`) and visual charts (`Guest RSVP Breakdown`, `Estimated vs Actual Budget`).
 
 ---
 
 ## ⚙️ Tab 13: `Calc_Data` *(System Internal)*
-Internal lookup metrics key-value table used by `@germin8/sheet2-core`.
-
-| Metric ID | Category | Name | Value |
-|---|---|---|---|
-| `SYS_VERSION` | System | Core Engine Version | `1.0.0` |
-| `SCHEMA_VER` | System | Schema Specification | `2026-07-29` |
-| `DEFAULT_CURRENCY` | Settings | Currency Symbol | `$` |
+Metric lookup table (`Metric Category`, `Metric Name`, `Value`) calculated from `GUESTS`, `BUDGET`, and `TO DO` sheets for dashboard widgets.
 
 ---
 
-## 🚀 Future Template Enhancements (Planned)
+## 🚀 Future Roadmap Additions (Planned)
 
-The following tabs are reserved for future roadmap releases and are not required in the initial v1.0 Master Google Sheet:
-
-### 🏨 `ACCOMMODATIONS` *(Hotel Blocks & Travel)*
-Manages hotel room blocks, group discount codes, and booking cutoff deadlines.
-- **Columns**: `Hotel ID`, `Hotel Name`, `Group Block Code`, `Nightly Rate ($)`, `Cutoff Date`, `Rooms Reserved`, `Rooms Booked`, `Booking Link`, `Notes`.
-
-### 📞 `DAY_OF_CONTACTS` *(VIP & Emergency Phone Roster)*
-Quick reference contact directory for wedding coordinators, bridal party, and key vendors.
-- **Columns**: `Contact ID`, `Role`, `Name`, `Phone Number`, `Email`, `Notes / Backup`.
-
-### 📥 `RSVP_LOG` *(Public Web Form Submissions Audit)*
-Captures raw guest RSVP submissions from the public web form (`/rsvp`) prior to merging into `GUESTS`.
-- **Columns**: `Submission ID`, `Timestamp`, `Guest Name`, `Attending Status`, `Dietary Restrictions`, `Song Request`, `Status`.
+The following tabs are reserved for future product releases:
+- **`ACCOMMODATIONS`**: Hotel room blocks, booking codes, and cutoff dates.
+- **`DAY_OF_CONTACTS`**: Emergency phone roster for wedding coordinators and vendors.
+- **`RSVP_LOG`**: Raw web form submissions log for public guest RSVP link.
