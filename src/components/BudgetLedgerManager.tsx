@@ -4,13 +4,17 @@ import React, { useState } from 'react';
 import { BudgetItem } from '@/lib/sheets/types';
 import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle } from 'lucide-react';
 
+import { formatCurrency } from '@/lib/currency';
+
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
   onUpdate: (updatedBudget: BudgetItem[]) => Promise<void>;
   isSyncing: boolean;
+  currency?: string;
+  onEditBudget?: () => void;
 }
 
-export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: BudgetLedgerManagerProps) {
+export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, currency = 'USD', onEditBudget }: BudgetLedgerManagerProps) {
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
@@ -180,16 +184,40 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing }: Bud
       <div className={`budget-meter-card ${isOverallOverBudget ? 'is-over-budget' : ''}`} style={styles.meterCard}>
         <div style={styles.meterHeader}>
           <div>
-            <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
+              {onEditBudget && (
+                <button
+                  type="button"
+                  onClick={onEditBudget}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-primary)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    fontSize: '0.7rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    padding: 0
+                  }}
+                  title="Edit Total Budget Limit"
+                >
+                  <Edit2 size={12} /> EDIT LIMIT
+                </button>
+              )}
+            </div>
             <div style={styles.meterTitleRow}>
-              <h3 style={styles.meterTitle}>${totalActual.toLocaleString()} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>of ${totalEstimate.toLocaleString()} Estimated</span></h3>
+              <h3 style={styles.meterTitle}>{formatCurrency(totalActual, currency)} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>of {formatCurrency(totalEstimate, currency)} Estimated</span></h3>
               {isOverallOverBudget ? (
                 <span style={styles.overBadgeMain}>
-                  <AlertTriangle size={12} style={{ marginRight: '0.25rem' }} /> OVER BUDGET (+${(totalActual - totalEstimate).toLocaleString()})
+                  <AlertTriangle size={12} style={{ marginRight: '0.25rem' }} /> OVER BUDGET (+{formatCurrency(totalActual - totalEstimate, currency)})
                 </span>
               ) : (
                 <span style={styles.headroomBadge}>
-                  ${overallHeadroom.toLocaleString()} REMAINING
+                  {formatCurrency(overallHeadroom, currency)} REMAINING
                 </span>
               )}
             </div>

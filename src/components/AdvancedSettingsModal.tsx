@@ -25,6 +25,8 @@ import {
   Clock
 } from 'lucide-react';
 
+import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
+
 interface AdvancedSettingsModalProps {
   spreadsheetId: string;
   weddingName: string;
@@ -36,12 +38,14 @@ interface AdvancedSettingsModalProps {
   theme: 'light' | 'dark';
   primaryColor?: string;
   timeFormat: '12h' | '24h';
+  currency?: string;
   onUpdateWeddingDetails: (name: string, date: string, location?: string) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
   onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism') => void;
   onUpdateTheme: (theme: 'light' | 'dark') => void;
   onUpdatePrimaryColor?: (color: string) => void;
   onUpdateTimeFormat: (format: '12h' | '24h') => void;
+  onUpdateCurrency?: (currency: string) => void;
   onDisconnect: () => void;
   onOpenShareModal?: () => void;
   onClose: () => void;
@@ -58,12 +62,14 @@ export default function AdvancedSettingsModal({
   theme,
   primaryColor,
   timeFormat,
+  currency = 'USD',
   onUpdateWeddingDetails,
   onToggleModule,
   onUpdateStyleTheme,
   onUpdateTheme,
   onUpdatePrimaryColor,
   onUpdateTimeFormat,
+  onUpdateCurrency,
   onDisconnect,
   onOpenShareModal,
   onClose,
@@ -398,6 +404,24 @@ export default function AdvancedSettingsModal({
                     placeholder="e.g. Grand Plaza Hotel, Los Angeles, CA"
                     style={styles.input}
                   />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>CURRENCY FORMATTING & SYMBOL</label>
+                  <select
+                    value={currency}
+                    onChange={(e) => onUpdateCurrency && onUpdateCurrency(e.target.value)}
+                    style={styles.select}
+                  >
+                    {CURRENCY_OPTIONS.map(opt => (
+                      <option key={opt.code} value={opt.code}>
+                        {opt.label} ({opt.example})
+                      </option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.25rem' }}>
+                    Formats currency values across Budget Ledger, Dashboard KPI summary, and Vendor contracts. Supports USD ($), CAD ($), French Canadian (35 000 $), GBP (£), and EUR (€).
+                  </span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>

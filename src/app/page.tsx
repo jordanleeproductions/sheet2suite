@@ -60,10 +60,13 @@ export default function Sheet2VowDashboard() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [primaryColor, setPrimaryColor] = useState<string>('');
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
+  const [currency, setCurrency] = useState<string>('USD');
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
+  const [showEditBudgetModal, setShowEditBudgetModal] = useState<boolean>(false);
+  const [tempBudgetInput, setTempBudgetInput] = useState<string>('');
 
   const handleUpdateWeddingDetails = async (name: string, date: string) => {
     setWeddingName(name);
@@ -74,6 +77,28 @@ export default function Sheet2VowDashboard() {
         weddingName: name,
       });
     }
+  };
+
+  const handleSaveTotalBudget = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newLimit = parseFloat(tempBudgetInput);
+    if (isNaN(newLimit) || newLimit <= 0) return;
+
+    setBudgetThreshold(newLimit);
+    if (weddingData) {
+      setWeddingData(prev => prev ? {
+        ...prev,
+        dashboard: {
+          ...prev.dashboard,
+          totalBudget: newLimit
+        }
+      } : null);
+      await syncUpdate('dashboard', {
+        budget: newLimit,
+        weddingName: weddingName,
+      });
+    }
+    setShowEditBudgetModal(false);
   };
 
   // App Data & Loading states
@@ -97,6 +122,7 @@ export default function Sheet2VowDashboard() {
     const savedTheme = localStorage.getItem('s2v_theme');
     const savedColor = localStorage.getItem('s2v_primary_color');
     const savedTimeFormat = localStorage.getItem('s2v_time_format');
+    const savedCurrency = localStorage.getItem('s2v_currency');
     const savedFolder = localStorage.getItem('s2v_drive_folder');
     const savedModules = localStorage.getItem('s2v_enabled_modules');
 
@@ -110,6 +136,7 @@ export default function Sheet2VowDashboard() {
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
     if (savedTimeFormat === '12h' || savedTimeFormat === '24h') setTimeFormat(savedTimeFormat);
+    if (savedCurrency) setCurrency(savedCurrency);
     if (savedFolder) setDriveFolder(savedFolder);
     if (savedModules) {
       try {
@@ -628,6 +655,7 @@ export default function Sheet2VowDashboard() {
           theme={theme}
           primaryColor={primaryColor}
           timeFormat={timeFormat}
+          currency={currency}
           onUpdateWeddingDetails={handleUpdateWeddingDetails}
           onToggleModule={toggleModule}
           onUpdateStyleTheme={(st) => setStyleTheme(st)}
@@ -637,10 +665,56 @@ export default function Sheet2VowDashboard() {
             setTimeFormat(tf);
             localStorage.setItem('s2v_time_format', tf);
           }}
+          onUpdateCurrency={(cur) => {
+            setCurrency(cur);
+            localStorage.setItem('s2v_currency', cur);
+          }}
           onDisconnect={() => setShowDisconnectModal(true)}
           onOpenShareModal={() => setShowShareModal(true)}
           onClose={() => setShowAdvancedSettings(false)}
         />
+      )}
+
+      {/* Edit Budget Limit Modal */}
+      {showEditBudgetModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowEditBudgetModal(false)}>
+          <div style={{ ...styles.modalContent, maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>EDIT TOTAL BUDGET LIMIT</h3>
+              <button style={styles.closeBtn} onClick={() => setShowEditBudgetModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveTotalBudget} style={styles.form}>
+              <div style={styles.formGrid}>
+                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                  <label style={styles.label}>TOTAL BUDGET LIMIT ({currency}) *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="100"
+                    required
+                    value={tempBudgetInput}
+                    onChange={(e) => setTempBudgetInput(e.target.value)}
+                    style={styles.input}
+                    autoFocus
+                  />
+                  <span style={styles.fieldInfo}>
+                    Updates your overall wedding budget cap across cell <code>Settings!B2</code> in Google Sheets.
+                  </span>
+                </div>
+              </div>
+              <div style={{ ...styles.formActions, justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button type="button" style={styles.cancelBtn} onClick={() => setShowEditBudgetModal(false)}>
+                  CANCEL
+                </button>
+                <button type="submit" style={styles.submitBtn} disabled={isSyncing}>
+                  {isSyncing ? 'SAVING...' : 'SAVE BUDGET LIMIT'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Main Core Area */}
@@ -890,6 +964,11 @@ export default function Sheet2VowDashboard() {
                     tasks={weddingData.tasks}
                     music={weddingData.music}
                     enabledModules={enabledModules}
+                    currency={currency}
+                    onEditBudget={() => {
+                      setTempBudgetInput((weddingData?.dashboard?.totalBudget || budgetThreshold).toString());
+                      setShowEditBudgetModal(true);
+                    }}
                   />
                   <VendorShareLinkManager
                     spreadsheetId={spreadsheetId}
@@ -920,6 +999,11 @@ export default function Sheet2VowDashboard() {
                   budget={weddingData.budget}
                   onUpdate={(data) => syncUpdate('budget', data)}
                   isSyncing={isSyncing}
+                  currency={currency}
+                  onEditBudget={() => {
+                    setTempBudgetInput((weddingData?.dashboard?.totalBudget || budgetThreshold).toString());
+                    setShowEditBudgetModal(true);
+                  }}
                 />
               )}
 

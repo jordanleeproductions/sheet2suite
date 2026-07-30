@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { DashboardSummary, Guest, Task, Song } from '@/lib/sheets/types';
+import { Edit2 } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 export interface ModuleConfig {
   metrics: boolean;
@@ -23,9 +25,11 @@ interface DashboardMetricsProps {
   tasks?: Task[];
   music?: Song[];
   enabledModules?: ModuleConfig;
+  currency?: string;
+  onEditBudget?: () => void;
 }
 
-export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules }: DashboardMetricsProps) {
+export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD', onEditBudget }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
   
   // Default all to true if enabledModules is not supplied
@@ -72,9 +76,33 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {modules.budget && (
         <div className="kpi-grid" style={styles.kpiGrid}>
           <div className="kpi-card" style={styles.kpiCard}>
-            <div style={styles.kpiLabel}>TOTAL BUDGET</div>
-            <div style={styles.kpiValue}>
-              ${totalBudget.toLocaleString()}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={styles.kpiLabel}>TOTAL BUDGET</div>
+              {onEditBudget && (
+                <button
+                  type="button"
+                  onClick={onEditBudget}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', padding: '2px' }}
+                  title="Edit Total Budget Limit"
+                >
+                  <Edit2 size={13} />
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={styles.kpiValue}>
+                {formatCurrency(totalBudget, currency)}
+              </div>
+              {onEditBudget && (
+                <button
+                  type="button"
+                  onClick={onEditBudget}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '2px' }}
+                  title="Edit Total Budget Limit"
+                >
+                  <Edit2 size={14} />
+                </button>
+              )}
             </div>
             <div style={styles.kpiSub}>Cell B2 Config Value</div>
           </div>
@@ -82,7 +110,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           <div className="kpi-card" style={styles.kpiCard}>
             <div style={styles.kpiLabel}>ESTIMATED COST</div>
             <div style={styles.kpiValue}>
-              ${estimatedCost.toLocaleString()}
+              {formatCurrency(estimatedCost, currency)}
             </div>
             <div style={styles.kpiSub}>SUM('Budget Ledger'!D:D)</div>
           </div>
@@ -90,7 +118,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           <div className="kpi-card" style={styles.kpiCard}>
             <div style={styles.kpiLabel}>ACTUAL COST</div>
             <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
-              ${actualCost.toLocaleString()}
+              {formatCurrency(actualCost, currency)}
             </div>
             <div style={styles.kpiSub}>SUM('Budget Ledger'!E:E)</div>
           </div>
@@ -98,7 +126,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           <div className="kpi-card" style={styles.kpiCard}>
             <div style={styles.kpiLabel}>REMAINING BUDGET</div>
             <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? 'var(--color-red)' : 'var(--color-green)' }}>
-              ${remainingBudget.toLocaleString()}
+              {formatCurrency(remainingBudget, currency)}
             </div>
             <div style={styles.kpiSub}>Budget Minus Actual Spent</div>
           </div>
@@ -108,14 +136,38 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {/* Progress Bar & Ledger Balance Panel */}
       {modules.budget && (
         <div className="budget-bar-panel" style={styles.barPanel}>
-          <h3 style={styles.panelTitle}>Budget Allocation Progress</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Budget Allocation Progress</h3>
+            {onEditBudget && (
+              <button
+                type="button"
+                onClick={onEditBudget}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-primary)',
+                  border: '1px solid var(--color-primary)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.625rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Edit2 size={12} /> EDIT BUDGET LIMIT
+              </button>
+            )}
+          </div>
           
           <div style={styles.progressHeader}>
             <span style={styles.progressLabel}>
-              Actual Spent: <strong>{actualPercent}%</strong> (${actualCost.toLocaleString()})
+              Actual Spent: <strong>{actualPercent}%</strong> ({formatCurrency(actualCost, currency)})
             </span>
             <span style={styles.progressLabel}>
-              Estimated Total: <strong>{estimatedPercent}%</strong> (${estimatedCost.toLocaleString()})
+              Estimated Total: <strong>{estimatedPercent}%</strong> ({formatCurrency(estimatedCost, currency)})
             </span>
           </div>
 
@@ -130,15 +182,15 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           <div style={styles.progressFooter}>
             <div style={styles.footerItem}>
               <div style={{ ...styles.colorDot, backgroundColor: 'var(--color-primary)' }} />
-              <span>Actual Cost (${actualCost.toLocaleString()})</span>
+              <span>Actual Cost ({formatCurrency(actualCost, currency)})</span>
             </div>
             <div style={styles.footerItem}>
               <div style={{ ...styles.colorDot, backgroundColor: 'var(--color-gold)', border: '1px solid var(--color-muted)' }} />
-              <span>Estimated Outlay (${estimatedCost.toLocaleString()})</span>
+              <span>Estimated Outlay ({formatCurrency(estimatedCost, currency)})</span>
             </div>
             <div style={styles.footerItem}>
               <span style={{ ...styles.monoText, fontWeight: 600 }}>
-                Remaining: ${remainingBudget.toLocaleString()}
+                Remaining: {formatCurrency(remainingBudget, currency)}
               </span>
             </div>
           </div>
