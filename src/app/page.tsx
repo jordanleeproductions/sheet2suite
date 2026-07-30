@@ -12,7 +12,8 @@ import MusicManager from '@/components/MusicManager';
 import SeatingChartManager from '@/components/SeatingChartManager';
 import PhotoShotListManager from '@/components/PhotoShotListManager';
 import ThankYouManager from '@/components/ThankYouManager';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X } from 'lucide-react';
+import ShareModal from '@/components/ShareModal';
+import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2 } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
 export default function Sheet2VowDashboard() {
@@ -45,9 +46,9 @@ export default function Sheet2VowDashboard() {
   });
 
   const toggleTaskSelection = (taskName: string) => {
-    setSelectedTasks(prev => 
-      prev.includes(taskName) 
-        ? prev.filter(t => t !== taskName) 
+    setSelectedTasks(prev =>
+      prev.includes(taskName)
+        ? prev.filter(t => t !== taskName)
         : [...prev, taskName]
     );
   };
@@ -58,6 +59,7 @@ export default function Sheet2VowDashboard() {
   const [primaryColor, setPrimaryColor] = useState<string>('');
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState<boolean>(false);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
   // App Data & Loading states
   const [weddingData, setWeddingData] = useState<WeddingData | null>(null);
@@ -328,7 +330,7 @@ export default function Sheet2VowDashboard() {
     setShowDisconnectModal(false);
     setIsLoading(false);
     setSyncError(null);
-    
+
     // Clear all s2v_ items from localStorage
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
@@ -361,10 +363,19 @@ export default function Sheet2VowDashboard() {
         </div>
 
         {isOnboarded && (
-          <div ref={settingsRef} style={{ position: 'relative' }}>
-            <button style={styles.iconBtn} onClick={() => setShowSettings(!showSettings)}>
-              <Settings size={20} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button 
+              style={{ ...styles.iconBtn, color: 'var(--color-primary)' }} 
+              onClick={() => setShowShareModal(true)}
+              title="Share Read-Only Vendor Link"
+            >
+              <Share2 size={20} />
             </button>
+
+            <div ref={settingsRef} style={{ position: 'relative' }}>
+              <button style={styles.iconBtn} onClick={() => setShowSettings(!showSettings)} title="Settings">
+                <Settings size={20} />
+              </button>
             {showSettings && (
               <div className="settingsDropdown" style={styles.settingsDropdown}>
                 <div style={styles.settingsSection}>
@@ -433,8 +444,8 @@ export default function Sheet2VowDashboard() {
                         (styleTheme === 'neo-brutalism'
                           ? '#00ED64'
                           : theme === 'dark'
-                          ? '#f5f5f5'
-                          : '#0d1b2a')
+                            ? '#f5f5f5'
+                            : '#0d1b2a')
                       }
                       onChange={(e) => setPrimaryColor(e.target.value)}
                       style={{ padding: 0, border: 'none', width: '24px', height: '24px', cursor: 'pointer', background: 'transparent' }}
@@ -585,6 +596,13 @@ export default function Sheet2VowDashboard() {
             </div>
           </div>
         </div>
+      {/* Vendor Share Link Modal */}
+      {showShareModal && (
+        <ShareModal
+          spreadsheetId={spreadsheetId}
+          weddingName={weddingName}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
 
       {/* Main Core Area */}
@@ -796,7 +814,7 @@ export default function Sheet2VowDashboard() {
               { id: 'budget', label: '[ LEDGER ]' },
               { id: 'schedule', label: '[ TIMELINE ]' },
               { id: 'vendors', label: '[ VENDORS ]' },
-              { id: 'tasks', label: '[ KANBAN CHECKLIST ]' },
+              { id: 'tasks', label: '[ TASK LIST ]' },
               { id: 'music', label: '[ MUSIC ]' },
               { id: 'photos', label: '[ PHOTOS ]' },
               { id: 'thanks', label: '[ THANKS ]' },
@@ -899,7 +917,7 @@ export default function Sheet2VowDashboard() {
                   isSyncing={isSyncing}
                 />
               )}
-              
+
               {activeTab === 'thanks' && weddingData && (
                 <ThankYouManager
                   gifts={weddingData.gifts || []}
