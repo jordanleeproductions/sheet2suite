@@ -181,13 +181,13 @@ This document defines the authoritative tab structure and column header contract
 
 ---
 
-## ⚙️ Tab 11: `Settings` *(Config Dropdowns)*
-Contains dropdown master validation arrays (`Guest Age Category`, `Table Shapes`, `RSVP Status`, `Payment Status`, `Task Status`, `Decor Categories`, `Vendor Categories`, `Budget Categories`, `Gift Types`).
+## ⚙️ Tab 11: `Settings` *(Config & System Metadata)*
+Contains master validation dropdown lists as well as application configuration JSON in cell **`B2`** (`budget`, `weddingName`, `weddingDate`, `shareVersion`). Keeping configuration JSON in the `Settings` tab preserves the `DASHBOARD` tab purely as a human-friendly visual overview for couples opening their spreadsheet.
 
 ---
 
-## 📊 Tab 12: `DASHBOARD` *(KPI Summary)*
-Aggregate summary cards (`Total Invited`, `Accepted`, `Declined`, `Pending`, `Total Estimated Budget`, `Actual Budget`, `Amount Paid`, `Tasks To Do`, `Tasks In Progress`, `Tasks Completed`) and visual charts (`Guest RSVP Breakdown`, `Estimated vs Actual Budget`).
+## 📊 Tab 12: `DASHBOARD` *(User Visual Overview)*
+Pure human-readable visual dashboard containing aggregate summary KPI cards (`Total Invited`, `Accepted`, `Declined`, `Pending`, `Total Estimated Budget`, `Actual Budget`, `Amount Paid`, `Tasks To Do`, `Tasks Completed`) and visual charts (`Guest RSVP Breakdown`, `Estimated vs Actual Budget`).
 
 ---
 

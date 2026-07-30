@@ -65,34 +65,35 @@ export async function GET(req: Request) {
     const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
       spreadsheetId,
       ranges: [
-        "'Dashboard'!B2",
+        "'Settings'!B2",
         "'Guest List'!A1:L1000",
         "'Budget Ledger'!A1:H1000",
         "'Day-Of-Schedule'!A1:F1000",
         "'Vendors'!A1:L1000",
         "'To-Do List'!A1:H1000",
         "'PHOTOS'!A1:H1000",
-        "'GIFT REGISTRY'!A1:G1000"
+        "'GIFT REGISTRY'!A1:G1000",
+        "'Dashboard'!B2"
       ]
     });
 
     const valueRanges = batchGetResponse.data.valueRanges || [];
     
-    // Parse Dashboard (Cell B2 config JSON or numeric budget)
-    const dashboardVal = valueRanges[0]?.values?.[0]?.[0] || '';
+    // Parse Settings / Configuration JSON (Cell B2 in 'Settings' tab, fallback to 'Dashboard'!B2)
+    const settingsVal = valueRanges[0]?.values?.[0]?.[0] || valueRanges[8]?.values?.[0]?.[0] || '';
     let totalBudget = 30000;
     let weddingName = 'Our Wedding';
     
     try {
-      if (dashboardVal.startsWith('{')) {
-        const parsed = JSON.parse(dashboardVal);
+      if (settingsVal.startsWith('{')) {
+        const parsed = JSON.parse(settingsVal);
         totalBudget = Number(parsed.budget) || 30000;
         weddingName = parsed.weddingName || 'Our Wedding';
       } else {
-        totalBudget = Number(dashboardVal) || 30000;
+        totalBudget = Number(settingsVal) || 30000;
       }
     } catch {
-      totalBudget = Number(dashboardVal) || 30000;
+      totalBudget = Number(settingsVal) || 30000;
     }
 
     // Parse Guest List
@@ -224,10 +225,10 @@ export async function POST(req: Request) {
     const sheetsClient = getSheetsClient(accessToken);
 
     if (sheetType === 'dashboard') {
-      // Update cell B2
+      // Update cell B2 in 'Settings' tab for clean configuration storage
       await sheetsClient.spreadsheets.values.update({
         spreadsheetId,
-        range: "'Dashboard'!B2",
+        range: "'Settings'!B2",
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [[JSON.stringify({ budget: data.budget, weddingName: data.weddingName })]],
