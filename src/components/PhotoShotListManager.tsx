@@ -370,8 +370,23 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
 
       {/* ADD / EDIT SHOT MODAL */}
       {(isAddingShot || editingShot) && (
-        <div style={styles.modalOverlay} onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className="photo-modal-overlay" style={styles.modalOverlay} onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
+          <style>{`
+            @media (max-width: 640px) {
+              .photo-modal-overlay {
+                padding: 0.5rem !important;
+              }
+              .photo-modal-content {
+                width: 100% !important;
+                max-height: 92vh !important;
+              }
+              .photo-form-row {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+              }
+            }
+          `}</style>
+          <div className="photo-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAddingShot ? 'ADD NEW PHOTO SHOT' : 'EDIT PHOTO SHOT'}
@@ -382,91 +397,100 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
             </div>
 
             <form onSubmit={handleSaveShot} style={styles.form}>
-              <div style={styles.formGroup}>
-                <label style={styles.fieldLabel}>SHOT DESCRIPTION / DETAILS *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Bride & Groom with Bride's Grandparents"
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  style={styles.inputField}
-                />
-              </div>
-
-              <div style={styles.formRow}>
+              <div style={styles.modalBodyScroll}>
                 <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>LOCATION</label>
+                  <label style={styles.fieldLabel}>SHOT DESCRIPTION / DETAILS *</label>
                   <input
                     type="text"
-                    placeholder="e.g. Main Chapel Altar"
-                    value={formData.location || ''}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    required
+                    placeholder="e.g. Bride & Groom with Bride's Grandparents"
+                    value={formData.description || ''}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     style={styles.inputField}
                   />
                 </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>ESTIMATED TIME</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 03:30 PM (Post-Ceremony)"
-                    value={formData.shotTime || ''}
-                    onChange={(e) => setFormData({ ...formData, shotTime: e.target.value })}
-                    style={styles.inputField}
-                  />
-                </div>
-              </div>
+                <div className="photo-form-row" style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>LOCATION</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Main Chapel Altar"
+                      value={formData.location || ''}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      style={styles.inputField}
+                    />
+                  </div>
 
-              <div style={styles.formRow}>
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>INCLUDED PEOPLE / VIPS</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Sarah, John, Grandma Mary"
-                    value={formData.people || ''}
-                    onChange={(e) => setFormData({ ...formData, people: e.target.value })}
-                    style={styles.inputField}
-                  />
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>ESTIMATED TIME</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 03:30 PM (Post-Ceremony)"
+                      value={formData.shotTime || ''}
+                      onChange={(e) => setFormData({ ...formData, shotTime: e.target.value })}
+                      style={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="photo-form-row" style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>INCLUDED PEOPLE / VIPS</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Sarah, John, Grandma Mary"
+                      value={formData.people || ''}
+                      onChange={(e) => setFormData({ ...formData, people: e.target.value })}
+                      style={styles.inputField}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>PRIORITY</label>
+                    <select
+                      value={formData.priority || 'Must Have'}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                      style={styles.selectInput}
+                    >
+                      <option value="Must Have">Must Have</option>
+                      <option value="Nice To Have">Nice To Have</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>PRIORITY</label>
+                  <label style={styles.fieldLabel}>STATUS</label>
                   <select
-                    value={formData.priority || 'Must Have'}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                    value={formData.status || 'Pending'}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     style={styles.selectInput}
                   >
-                    <option value="Must Have">Must Have</option>
-                    <option value="Nice To Have">Nice To Have</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Captured">Captured</option>
                   </select>
                 </div>
-              </div>
 
-              <div style={styles.formGroup}>
-                <label style={styles.fieldLabel}>STATUS</label>
-                <select
-                  value={formData.status || 'Pending'}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  style={styles.selectInput}
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Captured">Captured</option>
-                </select>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.fieldLabel}>POSING / LIGHTING NOTES</label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. Golden hour lighting preferred, wide-angle lens"
-                  value={formData.notes || ''}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  style={{ ...styles.inputField, height: 'auto', resize: 'vertical' }}
-                />
+                <div style={styles.formGroup}>
+                  <label style={styles.fieldLabel}>POSING / LIGHTING NOTES</label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. Golden hour lighting preferred, wide-angle lens"
+                    value={formData.notes || ''}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    style={{ ...styles.inputField, height: 'auto', resize: 'vertical' }}
+                  />
+                </div>
               </div>
 
               <div style={styles.formActions}>
+                <button 
+                  type="button" 
+                  style={styles.cancelBtn} 
+                  onClick={() => { setIsAddingShot(false); setEditingShot(null); }}
+                >
+                  CANCEL
+                </button>
                 <button type="submit" style={styles.saveBtn} className="saveBtn">
                   SAVE SHOT
                 </button>
@@ -750,6 +774,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 'var(--border-radius-md)',
     width: '100%',
     maxWidth: '520px',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
     boxShadow: 'var(--box-shadow-heavy)',
     overflow: 'hidden',
   },
@@ -759,6 +786,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottom: '1px solid var(--color-muted)',
+    flexShrink: 0,
   },
   modalTitle: {
     fontFamily: 'var(--font-mono)',
@@ -775,10 +803,19 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1.25rem',
   },
   form: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  modalBodyScroll: {
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    flex: 1,
+    overflowY: 'auto',
   },
   formRow: {
     display: 'grid',
@@ -818,7 +855,14 @@ const styles: Record<string, React.CSSProperties> = {
   formActions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    marginTop: '0.5rem',
+    gap: '0.75rem',
+    padding: '0.875rem 1.25rem',
+    borderTop: '1px solid var(--color-muted)',
+    backgroundColor: 'var(--color-surface)',
+    flexShrink: 0,
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10,
   },
   saveBtn: {
     fontFamily: 'var(--font-mono)',
