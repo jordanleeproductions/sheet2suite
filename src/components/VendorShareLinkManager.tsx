@@ -16,7 +16,10 @@ import {
   Sparkles, 
   AlertCircle,
   X,
-  Plus
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  ShieldOff
 } from 'lucide-react';
 
 interface VendorShareLinkManagerProps {
@@ -35,6 +38,7 @@ export default function VendorShareLinkManager({
   const [links, setLinks] = useState<ShareLinkRecord[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
+  const [showRevokedSection, setShowRevokedSection] = useState(false);
 
   // Load links from local storage
   const loadLinks = () => {
@@ -80,8 +84,14 @@ export default function VendorShareLinkManager({
     if (onRevokeAll) await onRevokeAll();
   };
 
-  const activeLinksCount = links.filter(l => !l.isRevoked && l.exp > Date.now()).length;
-  const revokedLinksCount = links.filter(l => l.isRevoked || l.exp <= Date.now()).length;
+  const handleClearRevokedHistory = () => {
+    const activeOnly = links.filter(l => !l.isRevoked && l.exp > Date.now());
+    setLinks(activeOnly);
+    localStorage.setItem('s2v_generated_share_links', JSON.stringify(activeOnly));
+  };
+
+  const activeLinks = links.filter(l => !l.isRevoked && l.exp > Date.now());
+  const revokedLinks = links.filter(l => l.isRevoked || l.exp <= Date.now());
 
   const getScopeIcon = (scope: string) => {
     switch (scope) {
@@ -108,7 +118,7 @@ export default function VendorShareLinkManager({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          {links.length > 0 && (
+          {activeLinks.length > 0 && (
             <button 
               type="button"
               style={styles.revokeAllBtn}
@@ -135,34 +145,25 @@ export default function VendorShareLinkManager({
         <div style={styles.kpiItem}>
           <span style={styles.kpiLabel}>ACTIVE VENDOR PORTALS</span>
           <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-            {activeLinksCount} Active
+            {activeLinks.length} Active
           </span>
         </div>
 
         <div style={styles.kpiItem}>
           <span style={styles.kpiLabel}>REVOKED / EXPIRED LINKS</span>
-          <span style={{ ...styles.kpiValue, color: revokedLinksCount > 0 ? '#ef4444' : 'var(--color-muted)' }}>
-            {revokedLinksCount} Revoked
+          <span style={{ ...styles.kpiValue, color: revokedLinks.length > 0 ? '#ef4444' : 'var(--color-muted)' }}>
+            {revokedLinks.length} Revoked
           </span>
         </div>
       </div>
 
-      {/* Links Grid */}
+      {/* Active Links Grid */}
       <div style={styles.grid}>
-        {links.map(link => {
-          const isExpired = Date.now() > link.exp;
-          const isRevoked = Boolean(link.isRevoked);
+        {activeLinks.map(link => {
           const daysLeft = Math.max(0, Math.ceil((link.exp - Date.now()) / (1000 * 60 * 60 * 24)));
 
           return (
-            <div 
-              key={link.id} 
-              style={{
-                ...styles.card,
-                borderColor: isRevoked || isExpired ? 'var(--color-muted)' : 'var(--color-primary)',
-                opacity: isRevoked || isExpired ? 0.75 : 1,
-              }}
-            >
+            <div key={link.id} style={{ ...styles.card, borderColor: 'var(--color-primary)' }}>
               <div style={styles.cardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{ color: 'var(--color-primary)' }}>
@@ -178,11 +179,11 @@ export default function VendorShareLinkManager({
 
                 <span style={{
                   ...styles.statusBadge,
-                  backgroundColor: isRevoked ? 'rgba(239, 68, 68, 0.15)' : isExpired ? 'var(--color-bg)' : 'var(--color-green-muted)',
-                  color: isRevoked ? '#ef4444' : isExpired ? 'var(--color-muted)' : 'var(--color-green)',
-                  borderColor: isRevoked ? '#ef4444' : isExpired ? 'var(--color-muted)' : 'var(--color-green)',
+                  backgroundColor: 'var(--color-green-muted)',
+                  color: 'var(--color-green)',
+                  borderColor: 'var(--color-green)',
                 }}>
-                  {isRevoked ? 'REVOKED' : isExpired ? 'EXPIRED' : `ACTIVE (${daysLeft}d left)`}
+                  ACTIVE ({daysLeft}d left)
                 </span>
               </div>
 
@@ -210,16 +211,14 @@ export default function VendorShareLinkManager({
                   <ExternalLink size={14} style={{ marginRight: '2px' }} /> PREVIEW
                 </a>
 
-                {!isRevoked && !isExpired && (
-                  <button
-                    type="button"
-                    style={{ ...styles.actionBtn, color: '#ef4444', borderColor: '#ef4444' }}
-                    onClick={() => handleRevokeSingle(link.id)}
-                    title="Revoke access for this link"
-                  >
-                    <Trash2 size={14} /> REVOKE
-                  </button>
-                )}
+                <button
+                  type="button"
+                  style={{ ...styles.actionBtn, color: '#ef4444', borderColor: '#ef4444' }}
+                  onClick={() => handleRevokeSingle(link.id)}
+                  title="Revoke access for this link"
+                >
+                  <Trash2 size={14} /> REVOKE
+                </button>
               </div>
             </div>
           );
@@ -240,6 +239,108 @@ export default function VendorShareLinkManager({
           </div>
         )}
       </div>
+
+      {/* Collapsible Revoked & Expired Links Section */}
+      {revokedLinks.length > 0 && (
+        <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--color-muted)', paddingTop: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={() => setShowRevokedSection(!showRevokedSection)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                color: '#ef4444',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.25rem 0',
+              }}
+            >
+              <ShieldOff size={16} />
+              {showRevokedSection ? 'HIDE REVOKED & EXPIRED LINKS' : 'SHOW REVOKED & EXPIRED LINKS'} ({revokedLinks.length})
+              {showRevokedSection ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+            {showRevokedSection && (
+              <button
+                type="button"
+                onClick={handleClearRevokedHistory}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-muted)',
+                  border: '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.6rem',
+                  cursor: 'pointer',
+                }}
+              >
+                CLEAR REVOKED HISTORY
+              </button>
+            )}
+          </div>
+
+          {showRevokedSection && (
+            <div style={{ ...styles.grid, marginTop: '1rem' }}>
+              {revokedLinks.map(link => {
+                const isExpired = Date.now() > link.exp;
+                return (
+                  <div 
+                    key={link.id} 
+                    style={{
+                      ...styles.card,
+                      borderColor: 'var(--color-muted)',
+                      opacity: 0.75,
+                      backgroundColor: 'var(--color-bg)',
+                    }}
+                  >
+                    <div style={styles.cardHeader}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ color: 'var(--color-muted)' }}>
+                          {getScopeIcon(link.scope)}
+                        </div>
+                        <div>
+                          <h4 style={{ ...styles.cardTitle, color: 'var(--color-muted)' }}>{link.label}</h4>
+                          <span style={styles.dateText}>
+                            Created {new Date(link.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span style={{
+                        ...styles.statusBadge,
+                        backgroundColor: link.isRevoked ? 'rgba(239, 68, 68, 0.15)' : 'var(--color-bg)',
+                        color: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
+                        borderColor: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
+                      }}>
+                        {link.isRevoked ? 'REVOKED' : 'EXPIRED'}
+                      </span>
+                    </div>
+
+                    <div style={styles.cardActions}>
+                      <a
+                        href={link.shareUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ ...styles.actionBtn, textDecoration: 'none', textAlign: 'center', width: '100%' }}
+                      >
+                        <ExternalLink size={14} style={{ marginRight: '2px' }} /> PREVIEW REVOKED PAGE
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Revoke All Confirmation Modal */}
       {showRevokeAllModal && (
