@@ -63,6 +63,11 @@ export default function AdvancedSettingsModal({
   const [partnerEmail, setPartnerEmail] = useState('');
   const [partnerInviteSent, setPartnerInviteSent] = useState(false);
 
+  // Feedback Form State
+  const [feedbackType, setFeedbackType] = useState<'bug' | 'feature'>('feature');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
   const handleSaveDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
