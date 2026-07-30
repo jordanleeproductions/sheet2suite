@@ -9,7 +9,7 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 ## 2. Core Modules & Component Architecture
 
 ### 2.1 Navigation & Shell (`src/app/page.tsx` & `AdvancedSettingsModal.tsx`)
-- **Dual Design Engine:** Supports **Editorial Minimalist** (serif typography, subtle warm tones) and **Muted Neo-Brutalism** (3px slate borders, hard directional drop shadows, `Geist Mono` typography).
+- **Multi-Theme Aesthetic Engine:** Currently supports **Editorial Minimalist** (serif typography, subtle warm tones) and **Muted Neo-Brutalism** (3px slate borders, hard directional drop shadows, `Geist Mono` typography), with **Botanical Romance**, **Midnight Tuxedo**, and **Retro Cyberpunk** planned for Phase 2 expansion.
 - **Streamlined Quick Settings Dropdown:** Header settings icon triggers a lightweight dropdown for fast visual tweaks: Design Style (`Editorial` vs `Neo-Brutalism`), Color Mode (`Light` vs `Dark`), Primary Accent Color picker, and a direct launch button for **`ADVANCED SETTINGS`**.
 - **Advanced Settings & Configuration Portal (`AdvancedSettingsModal.tsx`):**
   - 💒 **Wedding Details & Location:** Edit Wedding Title, Event Date (with live countdown sync), and Venue/Location details (synced to `Settings!B2`).

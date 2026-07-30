@@ -110,9 +110,10 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [x] Tokenized Read-Only Vendor Share Portals (`/share/[token]` with HMAC-SHA256 tokens & active link manager card).
 - [x] Advanced Settings & Configuration Portal (`AdvancedSettingsModal` with Wedding Metadata Editor, Drive Inspector, Module Toggles, and Feedback/Bug Submitter).
 
-### Phase 2: Relational Sync & Printable Exports (NEXT PRIORITY)
+### Phase 2: Relational Sync, Printable Exports & Visual Customization (NEXT PRIORITY)
 - [ ] **Print-Ready PDF & Printable Export Templates:** One-click printable place cards, table cards, timeline rosters, and vendor contact sheets.
 - [ ] **Dynamic Relational RSVP Sync:** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts and seating chart capacity alerts.
+- [ ] **Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
 
 ### Phase 3: Monetization, Analytics & Suite Expansion
 - [ ] **Unified Product Usage Telemetry (GA4 Event Engine):** Standardized, privacy-conscious event tracking across the Sheet2 Suite (*Sheet2Vow, Sheet2Finance, Sheet2Home*) using Google Analytics 4 (`gtag` / `@next/third-parties`). Tracks feature engagement (e.g., `feature_tab_view`, `vendor_link_generated`, `seating_table_created`, `preset_chosen`) to pinpoint high-value modules vs. low-usage features across the product ecosystem.
