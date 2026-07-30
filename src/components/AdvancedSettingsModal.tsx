@@ -20,7 +20,9 @@ import {
   AlertCircle,
   Share2,
   UserPlus,
-  Lock
+  Lock,
+  Palette,
+  Clock
 } from 'lucide-react';
 
 interface AdvancedSettingsModalProps {
@@ -30,8 +32,16 @@ interface AdvancedSettingsModalProps {
   driveFolder: string;
   enabledModules: ModuleConfig;
   isMockMode: boolean;
+  styleTheme: 'editorial' | 'neo-brutalism';
+  theme: 'light' | 'dark';
+  primaryColor?: string;
+  timeFormat: '12h' | '24h';
   onUpdateWeddingDetails: (name: string, date: string, location?: string) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
+  onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism') => void;
+  onUpdateTheme: (theme: 'light' | 'dark') => void;
+  onUpdatePrimaryColor?: (color: string) => void;
+  onUpdateTimeFormat: (format: '12h' | '24h') => void;
   onDisconnect: () => void;
   onOpenShareModal?: () => void;
   onClose: () => void;
@@ -44,13 +54,21 @@ export default function AdvancedSettingsModal({
   driveFolder,
   enabledModules,
   isMockMode,
+  styleTheme,
+  theme,
+  primaryColor,
+  timeFormat,
   onUpdateWeddingDetails,
   onToggleModule,
+  onUpdateStyleTheme,
+  onUpdateTheme,
+  onUpdatePrimaryColor,
+  onUpdateTimeFormat,
   onDisconnect,
   onOpenShareModal,
   onClose,
 }: AdvancedSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'details' | 'drive' | 'modules' | 'security' | 'feedback'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'visual' | 'drive' | 'modules' | 'security' | 'feedback'>('details');
 
   // Form states
   const [weddingName, setWeddingName] = useState(initialName || 'Our Wedding');
@@ -151,6 +169,7 @@ export default function AdvancedSettingsModal({
           <nav className="advanced-modal-sidebar" style={styles.sidebar}>
             {[
               { id: 'details', label: 'Wedding Details', icon: Heart },
+              { id: 'visual', label: 'Visual & UX', icon: Palette },
               { id: 'drive', label: 'Drive & Data Source', icon: HardDrive },
               { id: 'modules', label: 'Module Controls', icon: Settings },
               { id: 'security', label: 'Security & Access', icon: ShieldAlert },
@@ -180,6 +199,166 @@ export default function AdvancedSettingsModal({
 
           {/* Settings Tab Content Area */}
           <div className="advanced-modal-content" style={styles.content}>
+            {/* TAB: VISUAL & UX */}
+            {activeTab === 'visual' && (
+              <div style={styles.section}>
+                <h4 style={styles.sectionTitle}>🎨 Visual & UX Preferences</h4>
+                <p style={styles.sectionDesc}>
+                  Configure your aesthetic design theme, light/dark color mode, and time display format. These options are stored locally in your browser.
+                </p>
+
+                {/* Design System Aesthetic */}
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>DESIGN SYSTEM AESTHETIC</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStyleTheme('editorial')}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        padding: '0.75rem',
+                        border: styleTheme === 'editorial' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: styleTheme === 'editorial' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>EDITORIAL MINIMALIST</div>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Refined serif headers & warm neutral tones</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStyleTheme('neo-brutalism')}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        padding: '0.75rem',
+                        border: styleTheme === 'neo-brutalism' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: styleTheme === 'neo-brutalism' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>MUTED NEO-BRUTALISM</div>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Bold borders, vivid badges & sharp contrast</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Color Mode */}
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>COLOR MODE</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateTheme('light')}
+                      style={{
+                        flex: '1 1 140px',
+                        padding: '0.625rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: theme === 'light' ? 700 : 500,
+                        border: theme === 'light' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: theme === 'light' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>☀️ LIGHT MODE</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdateTheme('dark')}
+                      style={{
+                        flex: '1 1 140px',
+                        padding: '0.625rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: theme === 'dark' ? 700 : 500,
+                        border: theme === 'dark' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: theme === 'dark' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>🌙 DARK MODE</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Time Display Format */}
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>TIME DISPLAY FORMAT</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateTimeFormat('12h')}
+                      style={{
+                        flex: '1 1 180px',
+                        padding: '0.625rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: timeFormat === '12h' ? 700 : 500,
+                        border: timeFormat === '12h' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: timeFormat === '12h' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>🕒 12-HOUR FORMAT (04:30 PM)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdateTimeFormat('24h')}
+                      style={{
+                        flex: '1 1 180px',
+                        padding: '0.625rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: timeFormat === '24h' ? 700 : 500,
+                        border: timeFormat === '24h' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: timeFormat === '24h' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>🌐 24-HOUR FORMAT (16:30)</span>
+                    </button>
+                  </div>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.35rem' }}>
+                    ⚙️ App-level preference stored locally. Formats time displays across Day-Of Timeline and Shot List without altering spreadsheet cells.
+                  </span>
+                </div>
+              </div>
+            )}
             {/* TAB 1: WEDDING DETAILS */}
             {activeTab === 'details' && (
               <form onSubmit={handleSaveDetails} style={styles.section}>

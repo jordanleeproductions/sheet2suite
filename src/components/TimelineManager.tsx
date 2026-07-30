@@ -4,13 +4,32 @@ import React, { useState } from 'react';
 import { ScheduleEvent } from '@/lib/sheets/types';
 import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle } from 'lucide-react';
 
+export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
+  if (!timeStr) return '';
+  if (format !== '24h') return timeStr;
+  const str = timeStr.trim();
+  const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (!match) return timeStr;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const modifier = match[3]?.toUpperCase();
+
+  if (modifier === 'PM' && hours < 12) hours += 12;
+  if (modifier === 'AM' && hours === 12) hours = 0;
+
+  const paddedHours = hours.toString().padStart(2, '0');
+  const rest = str.replace(/^(\d{1,2}):(\d{2})\s*(AM|PM)?/i, '').trim();
+  return `${paddedHours}:${minutes}${rest ? ` ${rest}` : ''}`;
+}
+
 interface TimelineManagerProps {
   schedule: ScheduleEvent[];
   onUpdate: (updatedSchedule: ScheduleEvent[]) => Promise<void>;
   isSyncing: boolean;
+  timeFormat?: '12h' | '24h';
 }
 
-export default function TimelineManager({ schedule, onUpdate, isSyncing }: TimelineManagerProps) {
+export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFormat = '12h' }: TimelineManagerProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // expand first by default
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -239,9 +258,9 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
           {schedule[activeEventIndex] && (
             <div style={styles.upNextBody}>
               <div style={styles.upNextTimeRow}>
-                <span style={styles.upNextTime}>{schedule[activeEventIndex].startTime}</span>
+                <span style={styles.upNextTime}>{formatTimeDisplay(schedule[activeEventIndex].startTime, timeFormat)}</span>
                 {schedule[activeEventIndex].endTime && (
-                  <span style={styles.upNextEndTime}>to {schedule[activeEventIndex].endTime}</span>
+                  <span style={styles.upNextEndTime}>to {formatTimeDisplay(schedule[activeEventIndex].endTime, timeFormat)}</span>
                 )}
               </div>
               <h3 style={styles.upNextMomentTitle}>{schedule[activeEventIndex].eventMoment}</h3>
@@ -563,8 +582,8 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                     ...styles.timeText,
                     color: isActiveNext ? 'var(--color-primary)' : 'var(--color-text)',
                     fontWeight: isActiveNext ? 700 : 600
-                  }}>{event.startTime}</span>
-                  {event.endTime && <span style={styles.endTimeText}>to {event.endTime}</span>}
+                  }}>{formatTimeDisplay(event.startTime, timeFormat)}</span>
+                  {event.endTime && <span style={styles.endTimeText}>to {formatTimeDisplay(event.endTime, timeFormat)}</span>}
                   {(event.isAfterMidnight || isLateNightTime(event.startTime)) && (
                     <span style={styles.midnightBadge}>🌙 +1 DAY</span>
                   )}

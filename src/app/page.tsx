@@ -59,6 +59,7 @@ export default function Sheet2VowDashboard() {
   const [styleTheme, setStyleTheme] = useState<'editorial' | 'neo-brutalism'>('editorial');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [primaryColor, setPrimaryColor] = useState<string>('');
+  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
@@ -95,6 +96,7 @@ export default function Sheet2VowDashboard() {
     const savedStyleTheme = localStorage.getItem('s2v_style_theme');
     const savedTheme = localStorage.getItem('s2v_theme');
     const savedColor = localStorage.getItem('s2v_primary_color');
+    const savedTimeFormat = localStorage.getItem('s2v_time_format');
     const savedFolder = localStorage.getItem('s2v_drive_folder');
     const savedModules = localStorage.getItem('s2v_enabled_modules');
 
@@ -107,6 +109,7 @@ export default function Sheet2VowDashboard() {
     if (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism') setStyleTheme(savedStyleTheme);
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
+    if (savedTimeFormat === '12h' || savedTimeFormat === '24h') setTimeFormat(savedTimeFormat);
     if (savedFolder) setDriveFolder(savedFolder);
     if (savedModules) {
       try {
@@ -621,8 +624,19 @@ export default function Sheet2VowDashboard() {
           driveFolder={driveFolder}
           enabledModules={enabledModules}
           isMockMode={isMockMode}
+          styleTheme={styleTheme}
+          theme={theme}
+          primaryColor={primaryColor}
+          timeFormat={timeFormat}
           onUpdateWeddingDetails={handleUpdateWeddingDetails}
           onToggleModule={toggleModule}
+          onUpdateStyleTheme={(st) => setStyleTheme(st)}
+          onUpdateTheme={(th) => setTheme(th)}
+          onUpdatePrimaryColor={(clr) => setPrimaryColor(clr)}
+          onUpdateTimeFormat={(tf) => {
+            setTimeFormat(tf);
+            localStorage.setItem('s2v_time_format', tf);
+          }}
           onDisconnect={() => setShowDisconnectModal(true)}
           onOpenShareModal={() => setShowShareModal(true)}
           onClose={() => setShowAdvancedSettings(false)}
@@ -914,6 +928,7 @@ export default function Sheet2VowDashboard() {
                   schedule={weddingData.schedule}
                   onUpdate={(data) => syncUpdate('schedule', data)}
                   isSyncing={isSyncing}
+                  timeFormat={timeFormat}
                 />
               )}
 
