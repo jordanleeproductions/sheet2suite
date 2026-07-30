@@ -367,10 +367,11 @@ export default function VendorSharePage() {
                     )}
                   </div>
                 );
-              </div>
+              })}
             </div>
-          );
-        })()}
+          </div>
+        );
+      })()}
 
         {/* PHOTO SHOT LIST VIEW */}
         {(activeTab === 'photos' || scope === 'photos') && data.photos && (
