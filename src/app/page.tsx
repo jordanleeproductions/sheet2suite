@@ -501,8 +501,9 @@ export default function Sheet2VowDashboard() {
               </div>
             )}
           </div>
-        )}
-      </header>
+        </div>
+      )}
+    </header>
 
       {/* IN-APP DISCONNECT CONFIRMATION MODAL */}
       {showDisconnectModal && (
