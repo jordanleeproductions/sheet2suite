@@ -459,8 +459,23 @@ export default function ThankYouManager({
 
       {/* ADD / EDIT GIFT MODAL */}
       {(isAddingGift || editingGift) && (
-        <div style={styles.modalOverlay} onClick={() => { setIsAddingGift(false); setEditingGift(null); }}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className="gift-modal-overlay" style={styles.modalOverlay} onClick={() => { setIsAddingGift(false); setEditingGift(null); }}>
+          <style>{`
+            @media (max-width: 640px) {
+              .gift-modal-overlay {
+                padding: 0.5rem !important;
+              }
+              .gift-modal-content {
+                width: 100% !important;
+                max-height: 92vh !important;
+              }
+              .gift-form-row {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+              }
+            }
+          `}</style>
+          <div className="gift-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAddingGift ? 'LOG RECEIVED GIFT' : 'EDIT GIFT RECORD'}
@@ -471,81 +486,90 @@ export default function ThankYouManager({
             </div>
 
             <form onSubmit={handleSaveGift} style={styles.form}>
-              <div style={styles.formGroup}>
-                <label style={styles.fieldLabel}>GIFT DESCRIPTION / ITEM NAME *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. KitchenAid Stand Mixer or $200 Cash Gift"
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  style={styles.inputField}
-                />
-              </div>
-
-              <div style={styles.formRow}>
+              <div style={styles.modalBodyScroll}>
                 <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>GIFT GIVER (FROM) *</label>
+                  <label style={styles.fieldLabel}>GIFT DESCRIPTION / ITEM NAME *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Uncle Bob & Aunt Sarah"
-                    value={formData.giverName || ''}
-                    onChange={(e) => setFormData({ ...formData, giverName: e.target.value })}
+                    placeholder="e.g. KitchenAid Stand Mixer or $200 Cash Gift"
+                    value={formData.description || ''}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     style={styles.inputField}
                   />
                 </div>
 
+                <div className="gift-form-row" style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>GIFT GIVER (FROM) *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Uncle Bob & Aunt Sarah"
+                      value={formData.giverName || ''}
+                      onChange={(e) => setFormData({ ...formData, giverName: e.target.value })}
+                      style={styles.inputField}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>CATEGORY / STORE</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Kitchen & Dining, Honeyfund, Target"
+                      value={formData.category || ''}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      style={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                <div className="gift-form-row" style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.fieldLabel}>ESTIMATED VALUE / CASH AMOUNT ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 150"
+                      value={formData.amount || 0}
+                      onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                      style={styles.inputField}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text)', marginTop: '1.25rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(formData.thankYouSent)}
+                        onChange={(e) => setFormData({ ...formData, thankYouSent: e.target.checked })}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                      />
+                      <span>THANK YOU CARD SENT?</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>CATEGORY / STORE</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Kitchen & Dining, Honeyfund, Target"
-                    value={formData.category || ''}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    style={styles.inputField}
+                  <label style={styles.fieldLabel}>DELIVERY / POSING NOTES</label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. Shipped via Amazon, include special note about trip to Italy"
+                    value={formData.notes || ''}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    style={{ ...styles.inputField, height: 'auto', resize: 'vertical' }}
                   />
                 </div>
-              </div>
-
-              <div style={styles.formRow}>
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>ESTIMATED VALUE / CASH AMOUNT ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="e.g. 150"
-                    value={formData.amount || 0}
-                    onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                    style={styles.inputField}
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>THANK YOU SENT?</label>
-                  <select
-                    value={formData.thankYouSent ? 'true' : 'false'}
-                    onChange={(e) => setFormData({ ...formData, thankYouSent: e.target.value === 'true' })}
-                    style={styles.selectInput}
-                  >
-                    <option value="false">Pending (Not Sent Yet)</option>
-                    <option value="true">Sent (Thanked)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.fieldLabel}>DELIVERY / POSING NOTES</label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. Shipped via Amazon, include special note about trip to Italy"
-                  value={formData.notes || ''}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  style={{ ...styles.inputField, height: 'auto', resize: 'vertical' }}
-                />
               </div>
 
               <div style={styles.formActions}>
+                <button 
+                  type="button" 
+                  style={styles.cancelBtn} 
+                  onClick={() => { setIsAddingGift(false); setEditingGift(null); }}
+                >
+                  CANCEL
+                </button>
                 <button type="submit" style={styles.saveBtn} className="saveBtn">
                   SAVE GIFT RECORD
                 </button>
@@ -889,6 +913,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 'var(--border-radius-md)',
     width: '100%',
     maxWidth: '520px',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
     boxShadow: 'var(--box-shadow-heavy)',
     overflow: 'hidden',
   },
@@ -898,6 +925,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottom: '1px solid var(--color-muted)',
+    flexShrink: 0,
   },
   modalTitle: {
     fontFamily: 'var(--font-mono)',
@@ -914,10 +942,19 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1.25rem',
   },
   form: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  modalBodyScroll: {
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    flex: 1,
+    overflowY: 'auto',
   },
   formRow: {
     display: 'grid',
@@ -957,7 +994,14 @@ const styles: Record<string, React.CSSProperties> = {
   formActions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    marginTop: '0.5rem',
+    gap: '0.75rem',
+    padding: '0.875rem 1.25rem',
+    borderTop: '1px solid var(--color-muted)',
+    backgroundColor: 'var(--color-surface)',
+    flexShrink: 0,
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10,
   },
   saveBtn: {
     fontFamily: 'var(--font-mono)',
