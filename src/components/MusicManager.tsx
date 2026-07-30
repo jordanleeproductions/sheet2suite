@@ -397,16 +397,34 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
 
       {/* Modal Overlay for Add/Edit */}
       {(isAdding || editingItem) && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div className="music-modal-overlay" style={styles.modalOverlay}>
+          <style>{`
+            @media (max-width: 640px) {
+              .music-modal-overlay {
+                padding: 0.5rem !important;
+              }
+              .music-modal-content {
+                width: 100% !important;
+                max-height: 92vh !important;
+              }
+              .music-form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+              }
+              .music-field-span-2 {
+                grid-column: span 1 !important;
+              }
+            }
+          `}</style>
+          <div className="music-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD SONG' : 'EDIT SONG'}</h3>
               <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
-              <div style={styles.formGrid}>
+              <div className="music-form-grid" style={styles.formGrid}>
                 
-                <div style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
+                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>Song Title</label>
                   <input
                     style={styles.input}
@@ -417,7 +435,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   />
                 </div>
                 
-                <div style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
+                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>Artist</label>
                   <input
                     style={styles.input}
@@ -456,7 +474,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   <span style={styles.fieldInfo}>Paste a Spotify track link for a 30s preview embed!</span>
                 </div>
                 
-                <div style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
+                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>Notes</label>
                   <textarea
                     style={styles.textarea}
@@ -824,10 +842,12 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: 'var(--color-bg)',
     borderRadius: 'var(--border-radius-md)',
     width: '100%',
-    maxWidth: '500px',
+    maxWidth: '520px',
     maxHeight: '90vh',
-    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
     boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+    overflow: 'hidden',
   },
   modalHeader: {
     display: 'flex',
@@ -836,6 +856,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1.25rem 1.5rem',
     backgroundColor: 'var(--color-primary)',
     color: 'var(--color-on-primary)',
+    flexShrink: 0,
   },
   modalTitle: {
     margin: 0,
@@ -853,12 +874,19 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
   },
   form: {
-    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
   },
   formGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '1rem',
+    padding: '1.5rem',
+    overflowY: 'auto',
+    flex: 1,
   },
   formGroup: {
     display: 'flex',
@@ -911,9 +939,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '1rem',
-    marginTop: '1.5rem',
-    paddingTop: '1rem',
+    padding: '0.875rem 1.5rem',
     borderTop: '1px solid var(--color-muted)',
+    backgroundColor: 'var(--color-bg)',
+    flexShrink: 0,
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10,
   },
   cancelBtn: {
     background: 'none',
