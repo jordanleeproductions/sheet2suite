@@ -1,4 +1,4 @@
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, AgeCategory, RSVPStatus, KanbanStage } from './types';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -257,5 +257,31 @@ export const giftMapper = {
       ...gift,
       thankYouSent: gift.thankYouSent ? 'TRUE' : 'FALSE' as any
     }, GIFT_HEADERS);
+  }
+};
+
+export const MUSIC_HEADERS: Record<string, keyof Song> = {
+  'Song ID': 'songId',
+  'Title': 'title',
+  'Artist': 'artist',
+  'List Type': 'listType',
+  'Link': 'link',
+  'Notes': 'notes',
+};
+
+export const musicMapper = {
+  fromRow(headers: string[], row: any[]): Song {
+    const obj = mapRowToObject<Song>(headers, row, MUSIC_HEADERS);
+    return {
+      songId: String(obj.songId || ''),
+      title: String(obj.title || ''),
+      artist: String(obj.artist || ''),
+      listType: (obj.listType || 'Play List') as any,
+      link: String(obj.link || ''),
+      notes: String(obj.notes || ''),
+    };
+  },
+  toRow(headers: string[], song: Song): any[] {
+    return mapObjectToRow(headers, song, MUSIC_HEADERS);
   }
 };

@@ -72,7 +72,7 @@ export async function GET(
 
     // Google Sheets Mode
     try {
-      const sheetsClient = getSheetsClient(null);
+      const sheetsClient = getSheetsClient(undefined);
 
       // Define tab ranges depending on scope
       const ranges: string[] = [];
