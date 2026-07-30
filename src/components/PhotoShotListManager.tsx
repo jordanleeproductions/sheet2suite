@@ -70,12 +70,15 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
 
   // Toggle Shot Status (Captured <-> Pending)
   const toggleShotStatus = async (shotId: string) => {
-    if (isSyncing) return;
     const updated = photos.map(p => {
       if (p.shotId === shotId) {
+        const isCurrentCaptured = 
+          (p.status || '').toLowerCase() === 'captured' || 
+          (p.status || '').toLowerCase() === 'completed';
+
         return {
           ...p,
-          status: p.status === 'Captured' ? ('Pending' as const) : ('Captured' as const)
+          status: isCurrentCaptured ? ('Pending' as const) : ('Captured' as const)
         };
       }
       return p;
@@ -271,7 +274,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
       {/* Photo Shot List Grid */}
       <div style={styles.shotsGrid}>
         {filteredPhotos.map(shot => {
-          const isCaptured = shot.status === 'Captured';
+          const isCaptured = (shot.status || '').toLowerCase() === 'captured' || (shot.status || '').toLowerCase() === 'completed';
           const isMustHave = shot.priority === 'Must Have';
 
           return (
@@ -286,6 +289,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
               <div style={styles.shotHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <button 
+                    type="button"
                     style={{
                       ...styles.statusCheckBtn,
                       color: isCaptured ? 'var(--color-green)' : 'var(--color-muted)'
