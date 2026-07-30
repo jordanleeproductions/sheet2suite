@@ -624,6 +624,7 @@ export default function Sheet2VowDashboard() {
           onUpdateWeddingDetails={handleUpdateWeddingDetails}
           onToggleModule={toggleModule}
           onDisconnect={() => setShowDisconnectModal(true)}
+          onOpenShareModal={() => setShowShareModal(true)}
           onClose={() => setShowAdvancedSettings(false)}
         />
       )}

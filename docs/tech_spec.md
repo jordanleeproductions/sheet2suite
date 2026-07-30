@@ -15,7 +15,8 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
   - 💒 **Wedding Details & Location:** Edit Wedding Title, Event Date (with live countdown sync), and Venue/Location details (synced to `Settings!B2`).
   - 📁 **Drive & Data Source Inspector:** Displays Google Spreadsheet ID, direct link to open Google Sheet, and Drive folder path (`My Drive/Wedding Planning`).
   - ⚙️ **Feature Module Controls:** Toggle active tabs (*Guest Registry*, *Seating Chart*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*, *Photo Shot List*, *Thank You Tracker*). Disabled modules automatically hide from navbar and summary dashboard.
-  - 🛡️ **Security & Access Control:** Admin passcode management (`Emery2026`) and master workspace disconnect button.
+  - 🛡️ **Security & Access Control:** Read-only vendor portal summary, spouse/partner co-planning admin invitation input (`GRANT ADMIN ACCESS` with Phase 3 Germin8 integration badge), and master workspace disconnect button.
+  - 📱 **Mobile-Responsive Modal Engine:** On mobile screens ($\le 640\text{px}$), the sidebar navigation converts into a top horizontal scrollable pill bar, providing maximum reading space for settings forms.
   - 💡 **Report a Bug / Submit Feature Idea:** Interactive feedback form with prefilled diagnostic telemetry (User Agent, Spreadsheet ID) triggering support email or feedback log.
 
 ### 2.2 Summary Dashboard (`DashboardMetrics.tsx`)

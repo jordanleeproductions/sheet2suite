@@ -117,6 +117,7 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 ### Phase 3: Monetization, Analytics & Suite Expansion
 - [ ] **Unified Product Usage Telemetry (GA4 Event Engine):** Standardized, privacy-conscious event tracking across the Sheet2 Suite (*Sheet2Vow, Sheet2Finance, Sheet2Home*) using Google Analytics 4 (`gtag` / `@next/third-parties`). Tracks feature engagement (e.g., `feature_tab_view`, `vendor_link_generated`, `seating_table_created`, `preset_chosen`) to pinpoint high-value modules vs. low-usage features across the product ecosystem.
 - [ ] **Lemon Squeezy Integration:** Merchant-of-Record webhook integration for Tier 2 / Pro upgrades.
+- [ ] **Co-Planning Partner Access (Spouse Google Drive Permission Delegation):** Invite a partner/spouse via email (`GRANT ADMIN ACCESS`) to delegate Google Drive read/write permissions so both spouses can co-plan on the same spreadsheet in real time.
 - [ ] **Sheet2 Suite Ecosystem Expansion:** Reusing `@germin8/sheet2-core` for Sheet2Finance and Sheet2Home.
 
 ### Phase 4: Application Security, Risk Audit & Data Protection

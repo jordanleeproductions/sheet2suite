@@ -17,7 +17,10 @@ import {
   Sparkles, 
   Send, 
   Sliders,
-  AlertCircle
+  AlertCircle,
+  Share2,
+  UserPlus,
+  Lock
 } from 'lucide-react';
 
 interface AdvancedSettingsModalProps {
@@ -30,6 +33,7 @@ interface AdvancedSettingsModalProps {
   onUpdateWeddingDetails: (name: string, date: string, location?: string) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
   onDisconnect: () => void;
+  onOpenShareModal?: () => void;
   onClose: () => void;
 }
 
@@ -43,6 +47,7 @@ export default function AdvancedSettingsModal({
   onUpdateWeddingDetails,
   onToggleModule,
   onDisconnect,
+  onOpenShareModal,
   onClose,
 }: AdvancedSettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'drive' | 'modules' | 'security' | 'feedback'>('details');
@@ -54,10 +59,9 @@ export default function AdvancedSettingsModal({
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Feedback Form State
-  const [feedbackType, setFeedbackType] = useState<'bug' | 'feature'>('feature');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [feedbackSent, setFeedbackSent] = useState(false);
+  // Partner Co-Planning State
+  const [partnerEmail, setPartnerEmail] = useState('');
+  const [partnerInviteSent, setPartnerInviteSent] = useState(false);
 
   const handleSaveDetails = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +114,36 @@ export default function AdvancedSettingsModal({
           </button>
         </div>
 
+        {/* Responsive Mobile Navigation Styles */}
+        <style>{`
+          @media (max-width: 640px) {
+            .advanced-modal-body {
+              flex-direction: column !important;
+            }
+            .advanced-modal-sidebar {
+              width: 100% !important;
+              flex-direction: row !important;
+              overflow-x: auto !important;
+              border-right: none !important;
+              border-bottom: 1px solid var(--color-muted) !important;
+              padding: 0.5rem !important;
+              gap: 0.35rem !important;
+            }
+            .advanced-modal-tab-btn {
+              flex-shrink: 0 !important;
+              padding: 0.4rem 0.65rem !important;
+              font-size: 0.7rem !important;
+            }
+            .advanced-modal-content {
+              padding: 1rem !important;
+            }
+          }
+        `}</style>
+
         {/* Modal Body with Sidebar Navigation */}
-        <div style={styles.body}>
+        <div className="advanced-modal-body" style={styles.body}>
           {/* Settings Sidebar */}
-          <nav style={styles.sidebar}>
+          <nav className="advanced-modal-sidebar" style={styles.sidebar}>
             {[
               { id: 'details', label: 'Wedding Details', icon: Heart },
               { id: 'drive', label: 'Drive & Data Source', icon: HardDrive },
@@ -128,6 +158,7 @@ export default function AdvancedSettingsModal({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as any)}
+                  className="advanced-modal-tab-btn"
                   style={{
                     ...styles.tabBtn,
                     backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
@@ -143,7 +174,7 @@ export default function AdvancedSettingsModal({
           </nav>
 
           {/* Settings Tab Content Area */}
-          <div style={styles.content}>
+          <div className="advanced-modal-content" style={styles.content}>
             {/* TAB 1: WEDDING DETAILS */}
             {activeTab === 'details' && (
               <form onSubmit={handleSaveDetails} style={styles.section}>
@@ -293,17 +324,83 @@ export default function AdvancedSettingsModal({
               <div style={styles.section}>
                 <h4 style={styles.sectionTitle}>🛡️ Security & Workspace Access Control</h4>
                 <p style={styles.sectionDesc}>
-                  Manage your session auth passcode and Google Drive workspace connections.
+                  Manage read-only vendor portals, invite your partner for co-planning admin access, or disconnect your workspace.
                 </p>
 
-                <div style={styles.infoCard}>
-                  <span style={styles.infoLabel}>WORKSPACE PASSCODE ACCESS</span>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--color-text)' }}>
-                    Admin Passcode: <code>Emery2026</code>
-                  </span>
+                {/* Read-Only Vendor Share Summary */}
+                <div style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-muted)', borderRadius: 'var(--border-radius-sm)', padding: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <Share2 size={18} style={{ color: 'var(--color-primary)' }} />
+                    <h5 style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                      READ-ONLY VENDOR SHARE PORTALS
+                    </h5>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0 0 0.75rem 0' }}>
+                    Generate mobile read-only share links for your DJ, photographer, coordinator, or caterer. Confidential budget items and guest addresses remain strictly hidden.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {onOpenShareModal && (
+                      <button
+                        type="button"
+                        style={styles.saveBtn}
+                        onClick={() => {
+                          onClose();
+                          onOpenShareModal();
+                        }}
+                      >
+                        <Share2 size={14} /> GENERATE VENDOR SHARE LINK
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid #ef4444', borderRadius: 'var(--border-radius-sm)', padding: '1rem', marginTop: '1rem' }}>
+                {/* Grant Partner / Spouse Admin Access Section */}
+                <div style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-muted)', borderRadius: 'var(--border-radius-sm)', padding: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <UserPlus size={18} style={{ color: 'var(--color-primary)' }} />
+                    <h5 style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                      GRANT PARTNER / SPOUSE ADMIN ACCESS
+                    </h5>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0 0 0.75rem 0' }}>
+                    Grant your spouse or co-planner admin read/write permissions so both partners can co-plan on the same spreadsheet in real time.
+                  </p>
+
+                  {partnerInviteSent && (
+                    <div style={{ backgroundColor: 'rgba(19, 170, 82, 0.1)', border: '1px solid #13AA52', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.8rem', color: '#13AA52', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Check size={16} /> Invitation request registered for {partnerEmail || 'your partner'}.
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <input
+                      type="email"
+                      value={partnerEmail}
+                      onChange={(e) => setPartnerEmail(e.target.value)}
+                      placeholder="e.g. spouse@example.com"
+                      style={{ ...styles.input, flex: 1, minWidth: '220px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (partnerEmail.trim()) setPartnerInviteSent(true);
+                      }}
+                      style={{ ...styles.saveBtn, backgroundColor: 'var(--color-surface)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+                    >
+                      <UserPlus size={14} /> GRANT ADMIN ACCESS
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid #eab308', borderRadius: 'var(--border-radius-sm)' }}>
+                    <Lock size={16} style={{ color: '#eab308', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
+                      <strong>Phase 3 Germin8 Co-Planning Integration:</strong> Real-time Google Drive permission delegation plumbing will link with your Germin8 account in a future update.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Disconnect Workspace */}
+                <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid #ef4444', borderRadius: 'var(--border-radius-sm)', padding: '1rem' }}>
                   <h5 style={{ margin: 0, color: '#ef4444', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
                     DISCONNECT WORKSPACE
                   </h5>
