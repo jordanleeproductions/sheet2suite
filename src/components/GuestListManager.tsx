@@ -8,9 +8,10 @@ interface GuestListManagerProps {
   guests: Guest[];
   onUpdate: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing: boolean;
+  availableTables?: string[];
 }
 
-export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestListManagerProps) {
+export default function GuestListManager({ guests, onUpdate, isSyncing, availableTables }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>('All');
@@ -20,6 +21,12 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Guest>>({});
+
+  // Derive known tables from props and existing guests
+  const existingTables = Array.from(new Set([
+    ...(availableTables || []),
+    ...guests.map(g => (g.tableAssignment || '').trim()).filter(Boolean)
+  ])).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
   // View Display State ('grid' | 'seating' | 'party')
   const [displayView, setDisplayView] = useState<'grid' | 'seating' | 'party'>('grid');
@@ -87,6 +94,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
       rsvpStatus: 'No Response',
       dietaryRestrictions: '',
       tableAssignment: '',
+      mealChoice: 'Unassigned / Pending',
       emailAddress: '',
       phoneNumber: '',
       mailingAddress: '',
@@ -446,8 +454,27 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
 
       {/* Editor Overlay Modal */}
       {(editingGuest || isAdding) && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div className="guest-modal-overlay" style={styles.modalOverlay}>
+          <style>{`
+            @media (max-width: 640px) {
+              .guest-modal-overlay {
+                padding: 0.5rem !important;
+              }
+              .guest-modal-content {
+                width: 100% !important;
+                max-height: 92vh !important;
+                padding: 1rem !important;
+              }
+              .guest-form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+              }
+              .form-field-span-2 {
+                grid-column: span 1 !important;
+              }
+            }
+          `}</style>
+          <div className="guest-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAdding ? 'ADD NEW GUEST' : `EDIT GUEST: ${formState.firstName} ${formState.lastName}`}
@@ -458,7 +485,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
             </div>
             
             <form onSubmit={saveGuest} style={styles.form}>
-              <div style={styles.formGrid}>
+              <div className="guest-form-grid" style={styles.formGrid}>
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>FIRST NAME *</label>
                   <input
@@ -499,11 +526,11 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
                     onChange={(e) => handleInputChange('ageCategory', e.target.value)}
                     style={styles.select}
                   >
-                    <option value="Adult">Adult (Full cater rate)</option>
-                    <option value="Youth">Youth (Underage, adult meal, no alcohol)</option>
-                    <option value="Child">Child (Kids menu pricing)</option>
-                    <option value="Infant">Infant (Seat space only, zero cost)</option>
-                    <option value="Vendor">Vendor (Flat staff meal tier)</option>
+                    <option value="Adult">Adult</option>
+                    <option value="Youth">Youth</option>
+                    <option value="Child">Child</option>
+                    <option value="Infant">Infant</option>
+                    <option value="Vendor">Vendor</option>
                   </select>
                 </div>
 
@@ -522,13 +549,37 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
 
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>TABLE ASSIGNMENT</label>
-                  <input
-                    type="text"
-                    value={formState.tableAssignment || ''}
-                    placeholder="e.g. Table 4"
-                    onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
-                    style={styles.input}
-                  />
+                  {existingTables.length > 0 ? (
+                    <select
+                      value={formState.tableAssignment || ''}
+                      onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
+                      style={styles.select}
+                    >
+                      <option value="">Unassigned</option>
+                      {existingTables.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', padding: '0.5rem 0.625rem', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-muted)', borderRadius: 'var(--border-radius-sm)' }}>
+                      ⚠️ No tables created yet. Add tables in the <strong>Seating Chart</strong> tab before assigning.
+                    </div>
+                  )}
+                </div>
+
+                <div style={styles.fieldGroup}>
+                  <label style={styles.label}>MEAL SELECTION</label>
+                  <select
+                    value={formState.mealChoice || 'Unassigned / Pending'}
+                    onChange={(e) => handleInputChange('mealChoice', e.target.value)}
+                    style={styles.select}
+                  >
+                    <option value="Unassigned / Pending">Unassigned / Pending</option>
+                    <option value="Filet Mignon">Filet Mignon</option>
+                    <option value="Pan-Seared Salmon">Pan-Seared Salmon</option>
+                    <option value="Vegan Risotto">Vegan Risotto</option>
+                    <option value="Kids Chicken Tenders">Kids Chicken Tenders</option>
+                  </select>
                 </div>
 
                 <div style={styles.fieldGroup}>
@@ -551,7 +602,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
                   />
                 </div>
 
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>DIETARY RESTRICTIONS</label>
                   <input
                     type="text"
@@ -562,7 +613,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing }: GuestL
                   />
                 </div>
 
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>MAILING ADDRESS</label>
                   <textarea
                     value={formState.mailingAddress || ''}

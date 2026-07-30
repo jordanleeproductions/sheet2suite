@@ -113,6 +113,7 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 ### Phase 2: Relational Sync, Printable Exports & Visual Customization (NEXT PRIORITY)
 - [ ] **Print-Ready PDF & Printable Export Templates:** One-click printable place cards, table cards, timeline rosters, and vendor contact sheets.
 - [ ] **Dynamic Relational RSVP Sync:** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts and seating chart capacity alerts.
+- [ ] **Catering & Menu Setup Page:** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal.
 - [ ] **Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
 
 ### Phase 3: Monetization, Analytics & Suite Expansion
