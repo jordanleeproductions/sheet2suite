@@ -280,7 +280,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
