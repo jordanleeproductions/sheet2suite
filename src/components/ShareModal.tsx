@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { generateShareToken, ShareScope } from '@/lib/share/token';
+import { generateShareToken, ShareScope, ShareLinkRecord } from '@/lib/share/token';
 import { 
   Share2, 
   X, 
@@ -22,6 +22,7 @@ interface ShareModalProps {
   weddingName: string;
   initialScope?: ShareScope;
   onClose: () => void;
+  onLinkCreated?: (record: ShareLinkRecord) => void;
 }
 
 export default function ShareModal({
@@ -29,12 +30,23 @@ export default function ShareModal({
   weddingName,
   initialScope = 'vendor_hub',
   onClose,
+  onLinkCreated
 }: ShareModalProps) {
   const [scope, setScope] = useState<ShareScope>(initialScope);
   const [expiresInDays, setExpiresInDays] = useState<number>(30);
   const [copied, setCopied] = useState(false);
 
+  // Scope labels mapping
+  const scopeLabels: Record<ShareScope, string> = {
+    music: 'DJ / Band Playlist',
+    photos: 'Photographer Shot List',
+    timeline: 'Coordinator Itinerary',
+    catering: 'Catering & Venue Manager',
+    vendor_hub: 'Full Vendor Hub',
+  };
+
   // Generate Token & Link
+  const expTimestamp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
   const token = generateShareToken({
     spreadsheetId,
     scope,
@@ -46,7 +58,33 @@ export default function ShareModal({
     ? `${window.location.origin}/share/${token}`
     : `/share/${token}`;
 
+  const recordLink = () => {
+    const newRecord: ShareLinkRecord = {
+      id: `SL_${Date.now().toString().slice(-4)}`,
+      scope,
+      label: scopeLabels[scope],
+      token,
+      shareUrl,
+      createdAt: new Date().toISOString(),
+      exp: expTimestamp,
+      shareVersion: 1,
+    };
+
+    try {
+      const existing = localStorage.getItem('s2v_generated_share_links');
+      let list: ShareLinkRecord[] = existing ? JSON.parse(existing) : [];
+      if (!list.some(l => l.token === token)) {
+        list = [newRecord, ...list];
+        localStorage.setItem('s2v_generated_share_links', JSON.stringify(list));
+        if (onLinkCreated) onLinkCreated(newRecord);
+      }
+    } catch (e) {
+      console.error('Error recording share link:', e);
+    }
+  };
+
   const handleCopy = () => {
+    recordLink();
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -160,6 +198,7 @@ export default function ShareModal({
               href={shareUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={recordLink}
               style={styles.previewBtn}
             >
               <ExternalLink size={16} style={{ marginRight: '0.35rem' }} /> PREVIEW VENDOR PORTAL

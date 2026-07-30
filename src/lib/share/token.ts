@@ -10,6 +10,18 @@ export interface ShareTokenPayload {
   exp: number; // Expiration timestamp in ms
 }
 
+export interface ShareLinkRecord {
+  id: string;
+  scope: ShareScope;
+  label: string;
+  token: string;
+  shareUrl: string;
+  createdAt: string;
+  exp: number;
+  shareVersion: number;
+  isRevoked?: boolean;
+}
+
 const JWT_SECRET = process.env.SHARE_JWT_SECRET || 'sheet2vow-secure-vendor-secret-key-2026';
 
 /**

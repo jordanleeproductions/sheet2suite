@@ -13,6 +13,7 @@ import SeatingChartManager from '@/components/SeatingChartManager';
 import PhotoShotListManager from '@/components/PhotoShotListManager';
 import ThankYouManager from '@/components/ThankYouManager';
 import ShareModal from '@/components/ShareModal';
+import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2 } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
@@ -848,13 +849,20 @@ export default function Sheet2VowDashboard() {
           ) : (
             <div style={styles.tabContent}>
               {activeTab === 'metrics' && weddingData && (
-                <DashboardMetrics
-                  metrics={weddingData.dashboard}
-                  guests={weddingData.guests}
-                  tasks={weddingData.tasks}
-                  music={weddingData.music}
-                  enabledModules={enabledModules}
-                />
+                <>
+                  <DashboardMetrics
+                    metrics={weddingData.dashboard}
+                    guests={weddingData.guests}
+                    tasks={weddingData.tasks}
+                    music={weddingData.music}
+                    enabledModules={enabledModules}
+                  />
+                  <VendorShareLinkManager
+                    spreadsheetId={spreadsheetId}
+                    weddingName={weddingName}
+                    onOpenShareModal={() => setShowShareModal(true)}
+                  />
+                </>
               )}
 
               {activeTab === 'guests' && weddingData && (
