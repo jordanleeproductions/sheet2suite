@@ -597,6 +597,8 @@ export default function Sheet2VowDashboard() {
             </div>
           </div>
         </div>
+      )}
+
       {/* Vendor Share Link Modal */}
       {showShareModal && (
         <ShareModal
