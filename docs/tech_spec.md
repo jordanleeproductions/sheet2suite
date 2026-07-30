@@ -8,10 +8,15 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 
 ## 2. Core Modules & Component Architecture
 
-### 2.1 Navigation & Shell (`src/app/page.tsx`)
+### 2.1 Navigation & Shell (`src/app/page.tsx` & `AdvancedSettingsModal.tsx`)
 - **Dual Design Engine:** Supports **Editorial Minimalist** (serif typography, subtle warm tones) and **Muted Neo-Brutalism** (3px slate borders, hard directional drop shadows, `Geist Mono` typography).
-- **Theme & Color Customization:** Light/Dark mode toggle with customizable primary accent color.
-- **Modular Feature Toggles (`enabledModules`):** Users can toggle individual modules (*Guest Registry*, *Seating Chart*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*, *Photo Shot List*, *Thank You Tracker*). Disabled modules automatically hide their top navbar tab and dashboard widgets.
+- **Streamlined Quick Settings Dropdown:** Header settings icon triggers a lightweight dropdown for fast visual tweaks: Design Style (`Editorial` vs `Neo-Brutalism`), Color Mode (`Light` vs `Dark`), Primary Accent Color picker, and a direct launch button for **`ADVANCED SETTINGS`**.
+- **Advanced Settings & Configuration Portal (`AdvancedSettingsModal.tsx`):**
+  - 💒 **Wedding Details & Location:** Edit Wedding Title, Event Date (with live countdown sync), and Venue/Location details (synced to `Settings!B2`).
+  - 📁 **Drive & Data Source Inspector:** Displays Google Spreadsheet ID, direct link to open Google Sheet, and Drive folder path (`My Drive/Wedding Planning`).
+  - ⚙️ **Feature Module Controls:** Toggle active tabs (*Guest Registry*, *Seating Chart*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*, *Photo Shot List*, *Thank You Tracker*). Disabled modules automatically hide from navbar and summary dashboard.
+  - 🛡️ **Security & Access Control:** Admin passcode management (`Emery2026`) and master workspace disconnect button.
+  - 💡 **Report a Bug / Submit Feature Idea:** Interactive feedback form with prefilled diagnostic telemetry (User Agent, Spreadsheet ID) triggering support email or feedback log.
 
 ### 2.2 Summary Dashboard (`DashboardMetrics.tsx`)
 - Real-time KPI summary cards (Guests, Attending Count, Total Budget, Paid Amount, Balance Owing).

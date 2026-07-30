@@ -14,7 +14,8 @@ import PhotoShotListManager from '@/components/PhotoShotListManager';
 import ThankYouManager from '@/components/ThankYouManager';
 import ShareModal from '@/components/ShareModal';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2 } from 'lucide-react';
+import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
+import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2, Sliders } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
 export default function Sheet2VowDashboard() {
@@ -61,6 +62,18 @@ export default function Sheet2VowDashboard() {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
+
+  const handleUpdateWeddingDetails = async (name: string, date: string) => {
+    setWeddingName(name);
+    setWeddingDate(date);
+    if (weddingData) {
+      await syncUpdate('dashboard', {
+        budget: weddingData.dashboard.totalBudget,
+        weddingName: name,
+      });
+    }
+  };
 
   // App Data & Loading states
   const [weddingData, setWeddingData] = useState<WeddingData | null>(null);
@@ -406,6 +419,7 @@ export default function Sheet2VowDashboard() {
                     </button>
                   </div>
                 </div>
+
                 <div style={styles.settingsSection}>
                   <label style={styles.settingsLabel}>COLOR MODE</label>
                   <div style={styles.themeToggle}>
@@ -433,9 +447,10 @@ export default function Sheet2VowDashboard() {
                     </button>
                   </div>
                 </div>
+
                 <div style={styles.settingsSection}>
                   <label style={styles.settingsLabel}>
-                    {styleTheme === 'neo-brutalism' ? 'ACCENT COLOR (GREEN)' : 'PRIMARY COLOR'}
+                    {styleTheme === 'neo-brutalism' ? 'ACCENT COLOR' : 'PRIMARY COLOR'}
                   </label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <input
@@ -459,46 +474,34 @@ export default function Sheet2VowDashboard() {
                     </button>
                   </div>
                 </div>
-                <div style={styles.settingsSection}>
-                  <label style={styles.settingsLabel}>ACTIVE MODULES</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.35rem' }}>
-                    {[
-                      { key: 'guests', label: 'Guest Registry' },
-                      { key: 'tables', label: 'Seating Chart' },
-                      { key: 'budget', label: 'Budget Ledger' },
-                      { key: 'schedule', label: 'Day-Of Timeline' },
-                      { key: 'vendors', label: 'Vendor Directory' },
-                      { key: 'tasks', label: 'Kanban Checklist' },
-                      { key: 'music', label: 'Music Playlist' },
-                      { key: 'photos', label: 'Photo Shot List' },
-                    ].map(mod => (
-                      <label key={mod.key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--color-text)' }}>
-                        <input
-                          type="checkbox"
-                          checked={enabledModules[mod.key as keyof ModuleConfig]}
-                          onChange={() => toggleModule(mod.key as keyof ModuleConfig)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        {mod.label}
-                      </label>
-                    ))}
-                  </div>
+
+                <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-muted)' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettings(false);
+                      setShowAdvancedSettings(true);
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-on-primary)',
+                      border: 'none',
+                      borderRadius: 'var(--border-radius-sm)',
+                      padding: '0.625rem',
+                      width: '100%',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <Sliders size={14} /> ADVANCED SETTINGS
+                  </button>
                 </div>
-                <div style={styles.settingsSection}>
-                  <label style={styles.settingsLabel}>ACTIVATION & SETUP</label>
-                  <a href="/activate" style={{ ...styles.sheetLink, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'var(--color-highlight)' }}>
-                    <Key size={12} /> RE-RUN ACTIVATION & SETUP WIZARD
-                  </a>
-                </div>
-                <div style={styles.settingsSection}>
-                  <label style={styles.settingsLabel}>DATA SOURCE</label>
-                  <a href={isMockMode ? '#' : `https://docs.google.com/spreadsheets/d/${spreadsheetId}`} target="_blank" rel="noopener noreferrer" style={styles.sheetLink}>
-                    {isMockMode ? 'MOCK DATA (NO SPREADSHEET)' : 'OPEN GOOGLE SHEET'}
-                  </a>
-                </div>
-                <button type="button" style={{ ...styles.disconnectBtn, width: '100%', marginTop: '0.5rem' }} onClick={() => setShowDisconnectModal(true)}>
-                  DISCONNECT
-                </button>
               </div>
             )}
           </div>
@@ -606,6 +609,22 @@ export default function Sheet2VowDashboard() {
           spreadsheetId={spreadsheetId}
           weddingName={weddingName}
           onClose={() => setShowShareModal(false)}
+        />
+      )}
+
+      {/* Advanced Settings Modal */}
+      {showAdvancedSettings && (
+        <AdvancedSettingsModal
+          spreadsheetId={spreadsheetId}
+          weddingName={weddingName}
+          weddingDate={weddingDate}
+          driveFolder={driveFolder}
+          enabledModules={enabledModules}
+          isMockMode={isMockMode}
+          onUpdateWeddingDetails={handleUpdateWeddingDetails}
+          onToggleModule={toggleModule}
+          onDisconnect={() => setShowDisconnectModal(true)}
+          onClose={() => setShowAdvancedSettings(false)}
         />
       )}
 

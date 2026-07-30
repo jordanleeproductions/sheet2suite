@@ -108,6 +108,7 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [x] Thank You Card & Gift Registry Tracker (`ThankYouManager` with Party Group bundling).
 - [x] Email List formatting for DJs and Photographers.
 - [x] Tokenized Read-Only Vendor Share Portals (`/share/[token]` with HMAC-SHA256 tokens & active link manager card).
+- [x] Advanced Settings & Configuration Portal (`AdvancedSettingsModal` with Wedding Metadata Editor, Drive Inspector, Module Toggles, and Feedback/Bug Submitter).
 
 ### Phase 2: Relational Sync & Printable Exports (NEXT PRIORITY)
 - [ ] **Print-Ready PDF & Printable Export Templates:** One-click printable place cards, table cards, timeline rosters, and vendor contact sheets.
