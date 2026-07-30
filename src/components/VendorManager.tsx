@@ -314,14 +314,29 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
 
       {/* Modal Overlay for Add/Edit */}
       {(isAdding || editingItem) && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div className="vendor-modal-overlay" style={styles.modalOverlay}>
+          <style>{`
+            @media (max-width: 640px) {
+              .vendor-modal-overlay {
+                padding: 0.5rem !important;
+              }
+              .vendor-modal-content {
+                width: 100% !important;
+                max-height: 92vh !important;
+              }
+              .vendor-form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+              }
+            }
+          `}</style>
+          <div className="vendor-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD VENDOR' : 'EDIT VENDOR'}</h3>
               <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
-              <div style={styles.formGrid}>
+              <div className="vendor-form-grid" style={styles.formGrid}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Vendor Name</label>
                   <input
@@ -703,8 +718,10 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     maxWidth: '600px',
     maxHeight: '90vh',
-    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
     boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+    overflow: 'hidden',
   },
   modalHeader: {
     display: 'flex',
@@ -715,6 +732,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-on-primary)',
     borderTopLeftRadius: 'var(--border-radius-md)',
     borderTopRightRadius: 'var(--border-radius-md)',
+    flexShrink: 0,
   },
   modalTitle: {
     margin: 0,
@@ -732,12 +750,19 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
   },
   form: {
-    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
   },
   formGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '1rem',
+    padding: '1.5rem',
+    overflowY: 'auto',
+    flex: 1,
   },
   filterBar: {
     display: 'flex',
@@ -805,9 +830,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '1rem',
-    marginTop: '1.5rem',
-    paddingTop: '1rem',
+    padding: '0.875rem 1.5rem',
     borderTop: '1px solid var(--color-muted)',
+    backgroundColor: 'var(--color-bg)',
+    flexShrink: 0,
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10,
   },
   cancelBtn: {
     background: 'none',

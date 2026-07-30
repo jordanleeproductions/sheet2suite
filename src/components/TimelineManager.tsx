@@ -314,8 +314,26 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
 
       {/* Editor Modal */}
       {(isAdding || editingIndex !== null) && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div className="timeline-modal-overlay" style={styles.modalOverlay}>
+          <style>{`
+            @media (max-width: 640px) {
+              .timeline-modal-overlay {
+                padding: 0.5rem !important;
+              }
+              .timeline-modal-content {
+                width: 100% !important;
+                max-height: 92vh !important;
+              }
+              .timeline-form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+              }
+              .timeline-field-span-2 {
+                grid-column: span 1 !important;
+              }
+            }
+          `}</style>
+          <div className="timeline-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
                 {isAdding ? 'ADD TIMELINE MOMENT' : 'EDIT TIMELINE MOMENT'}
@@ -326,7 +344,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
             </div>
             
             <form onSubmit={saveEvent} style={styles.form}>
-              <div style={styles.formGrid}>
+              <div className="timeline-form-grid" style={styles.formGrid}>
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>START TIME *</label>
                   <input
@@ -350,7 +368,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                   />
                 </div>
 
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>EVENT MOMENT *</label>
                   <input
                     type="text"
@@ -362,7 +380,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                   />
                 </div>
 
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>LOCATION</label>
                   <input
                     type="text"
@@ -373,7 +391,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                   />
                 </div>
 
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>RESPONSIBILITY / VENDORS</label>
                   <input
                     type="text"
@@ -384,7 +402,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing }: Timel
                   />
                 </div>
 
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>NOTES / DETAILS</label>
                   <textarea
                     placeholder="Provide specific guidelines, cues, setup details..."
@@ -1060,7 +1078,10 @@ const styles: Record<string, React.CSSProperties> = {
     border: '2px solid var(--color-primary)',
     borderRadius: 'var(--border-radius-lg)',
     width: '100%',
-    maxWidth: '500px',
+    maxWidth: '520px',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
     overflow: 'hidden',
   },
@@ -1071,6 +1092,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexShrink: 0,
   },
   modalTitle: {
     fontFamily: 'var(--font-serif)',
@@ -1084,12 +1106,19 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   form: {
-    padding: '1.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
   },
   formGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '0.875rem',
+    padding: '1.25rem',
+    overflowY: 'auto',
+    flex: 1,
   },
   fieldGroup: {
     display: 'flex',
@@ -1119,9 +1148,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '0.75rem',
-    marginTop: '1.25rem',
+    padding: '0.875rem 1.25rem',
     borderTop: '1px solid var(--color-muted)',
-    paddingTop: '1rem',
+    backgroundColor: 'var(--color-bg)',
+    flexShrink: 0,
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10,
   },
   deleteBtn: {
     fontFamily: 'var(--font-mono)',
