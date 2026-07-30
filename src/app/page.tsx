@@ -481,6 +481,50 @@ export default function Sheet2VowDashboard() {
                   </div>
                 </div>
 
+                {process.env.NODE_ENV === 'development' && (
+                  <div style={styles.settingsSection}>
+                    <label style={styles.settingsLabel}>DEV ENVIRONMENT MODE</label>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.65rem',
+                      backgroundColor: isMockMode ? 'rgba(205, 162, 80, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                      border: `1px solid ${isMockMode ? '#cda250' : '#10b981'}`,
+                      borderRadius: 'var(--border-radius-sm)',
+                      fontSize: '0.675rem',
+                      fontFamily: 'var(--font-mono)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isMockMode ? '#cda250' : '#10b981', flexShrink: 0 }} />
+                        <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
+                          {isMockMode ? 'MOCK MODE ACTIVE' : 'LIVE DRIVE CONNECTED'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextMock = !isMockMode;
+                          setIsMockMode(nextMock);
+                          localStorage.setItem('s2v_is_mock', nextMock.toString());
+                        }}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.625rem',
+                          fontWeight: 700,
+                          backgroundColor: 'transparent',
+                          color: 'var(--color-primary)',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 0
+                        }}
+                      >
+                        {isMockMode ? 'TOGGLE LIVE' : 'TOGGLE MOCK'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-muted)' }}>
                   <button
                     type="button"
@@ -814,29 +858,6 @@ export default function Sheet2VowDashboard() {
       ) : (
         /* Logged In Dashboard View */
         <div>
-          {/* Status Sub-Banner */}
-          <div className="sync-banner" style={styles.syncBanner}>
-            <div style={styles.syncStatus}>
-              {isMockMode ? (
-                <>
-                  <div style={{ ...styles.indicator, backgroundColor: '#cda250' }} />
-                  <span style={styles.syncText}>RUNNING IN MOCK MODE (NO WRITES TO DRIVE)</span>
-                </>
-              ) : (
-                <>
-                  <div style={{ ...styles.indicator, backgroundColor: '#10b981' }} />
-                  <span style={styles.syncText}>CONNECTED TO GOOGLE DRIVE: <code>{spreadsheetId.substring(0, 10)}...</code></span>
-                </>
-              )}
-            </div>
-
-            <div style={styles.syncActions}>
-              {isSyncing && <span style={styles.syncLoader}>SYNCING CELLS...</span>}
-              <button style={styles.refreshBtn} onClick={fetchWeddingData} disabled={isLoading}>
-                <RefreshCw size={14} className={isLoading ? 'spin' : ''} style={{ marginRight: '0.25rem' }} /> REFRESH
-              </button>
-            </div>
-          </div>
 
           {syncError && (
             <div style={{ ...styles.errorBox, marginBottom: '1rem' }}>

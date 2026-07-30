@@ -109,7 +109,7 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [x] Email List formatting for DJs and Photographers.
 - [x] Tokenized Read-Only Vendor Share Portals (`/share/[token]` with HMAC-SHA256 tokens & active link manager card).
 - [x] Multi-Currency Formatting Engine (`formatCurrency` helper supporting USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR € across Budget Ledger and Dashboard KPIs).
-- [x] Advanced Settings & Configuration Portal (`AdvancedSettingsModal` with Wedding Metadata Editor, Currency Selector, Visual & UX Theme / 12h-24h Time Format controls, Drive Inspector, Module Toggles, and Feedback/Bug Submitter).
+- [x] Advanced Settings & Configuration Portal (`AdvancedSettingsModal` with Wedding Metadata Editor, Currency Selector, Visual & UX Theme / 12h-24h Time Format controls, Drive Inspector, Module Toggles, Feedback/Bug Submitter, and Dev Environment Mock toggle in Quick Settings menu).
 
 ### Phase 2: Relational Sync, Printable Exports & Visual Customization (NEXT PRIORITY)
 - [ ] **Print-Ready PDF & Printable Export Templates:** One-click printable place cards, table cards, timeline rosters, and vendor contact sheets.
