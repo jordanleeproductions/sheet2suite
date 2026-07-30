@@ -58,7 +58,7 @@ export default function ShareModal({
     ? `${window.location.origin}/share/${token}`
     : `/share/${token}`;
 
-  const recordLink = () => {
+  const handleConfirm = () => {
     const newRecord: ShareLinkRecord = {
       id: `SL_${Date.now().toString().slice(-4)}`,
       scope,
@@ -79,12 +79,12 @@ export default function ShareModal({
         if (onLinkCreated) onLinkCreated(newRecord);
       }
     } catch (e) {
-      console.error('Error recording share link:', e);
+      console.error('Error confirming share link:', e);
     }
+    onClose();
   };
 
   const handleCopy = () => {
-    recordLink();
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -97,47 +97,60 @@ export default function ShareModal({
         <div style={styles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Share2 size={20} style={{ color: 'var(--color-primary)' }} />
-            <h3 style={styles.title}>GENERATE VENDOR SHARE LINK</h3>
+            <h3 style={styles.title}>GENERATE VENDOR SHARE PORTAL LINK</h3>
           </div>
-          <button style={styles.closeBtn} onClick={onClose}>
+          <button style={styles.closeBtn} onClick={onClose} title="Cancel and close">
             <X size={20} />
           </button>
         </div>
 
         <div style={styles.body}>
-          <p style={styles.desc}>
-            Create a secure, read-only mobile link for your vendors (DJ, Photographer, Coordinator, Catering). 
-            No Google login required. Budget and private guest data are strictly hidden.
-          </p>
+          {/* Unconfirmed Draft Warning Banner */}
+          <div style={{
+            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+            border: '1px solid #eab308',
+            borderRadius: 'var(--border-radius-sm)',
+            padding: '0.625rem 0.875rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+          }}>
+            <AlertCircle size={16} style={{ color: '#eab308', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
+              <strong>Draft Link Mode:</strong> This link will only become active and valid after you click <strong>CONFIRM SHARE LINK</strong> below.
+            </span>
+          </div>
 
           {/* Scope Selector */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>SELECT VENDOR PORTAL TYPE</label>
+          <div style={styles.section}>
+            <label style={styles.label}>1. SELECT VENDOR PORTAL SCOPE</label>
             <div style={styles.scopeGrid}>
               {[
-                { id: 'music', label: 'DJ / Band Playlist', icon: Music, desc: 'Must-play & Banned tracks' },
-                { id: 'photos', label: 'Photographer Shot List', icon: Camera, desc: 'Priority photo moments' },
-                { id: 'timeline', label: 'Coordinator Itinerary', icon: Clock, desc: 'Day-of timeline' },
-                { id: 'catering', label: 'Catering & Venue', icon: Utensils, desc: 'Dietary & seating headcount' },
-                { id: 'vendor_hub', label: 'Full Vendor Hub', icon: Sparkles, desc: 'All vendor tabs combined' },
-              ].map(item => {
-                const IconComponent = item.icon;
+                { id: 'vendor_hub', title: 'Full Vendor Hub', desc: 'All-in-One: Timeline, Music, Photos & Catering', icon: Sparkles },
+                { id: 'music', title: 'DJ / Band Playlist', desc: 'Must-play, special moments & banned songs', icon: Music },
+                { id: 'photos', title: 'Photographer Shot List', desc: 'Shot requirements, locations & posing notes', icon: Camera },
+                { id: 'timeline', title: 'Coordinator Itinerary', desc: 'Day-of schedule, moments & UP NEXT ticker', icon: Clock },
+                { id: 'catering', title: 'Caterer & Venue Manager', desc: 'Dietary breakdown, meals & seating counts', icon: Utensils },
+              ].map((item) => {
+                const Icon = item.icon;
                 const isSelected = scope === item.id;
                 return (
                   <button
                     key={item.id}
                     type="button"
                     style={{
-                      ...styles.scopeOptionBtn,
-                      backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg)',
-                      color: isSelected ? 'var(--color-on-primary)' : 'var(--color-text)',
+                      ...styles.scopeCard,
                       borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-muted)',
+                      backgroundColor: isSelected ? 'var(--color-bg)' : 'transparent',
                     }}
                     onClick={() => setScope(item.id as ShareScope)}
                   >
-                    <IconComponent size={18} style={{ marginBottom: '0.2rem' }} />
-                    <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{item.label}</span>
-                    <span style={{ fontSize: '0.65rem', opacity: 0.8 }}>{item.desc}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Icon size={18} style={{ color: isSelected ? 'var(--color-primary)' : 'var(--color-muted)' }} />
+                      <span style={{ fontWeight: isSelected ? 700 : 600, fontSize: '0.85rem' }}>{item.title}</span>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>{item.desc}</span>
                   </button>
                 );
               })}
@@ -145,36 +158,47 @@ export default function ShareModal({
           </div>
 
           {/* Expiration Selector */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>LINK EXPIRATION DURATION</label>
-            <select
-              value={expiresInDays}
-              onChange={(e) => setExpiresInDays(Number(e.target.value))}
-              style={styles.select}
-            >
-              <option value={7}>7 Days (Active Wedding Week)</option>
-              <option value={30}>30 Days (Recommended)</option>
-              <option value={90}>90 Days</option>
-              <option value={365}>1 Year</option>
-            </select>
+          <div style={styles.section}>
+            <label style={styles.label}>2. SET EXPIRATION DURATION</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {[
+                { days: 7, label: '7 Days' },
+                { days: 30, label: '30 Days' },
+                { days: 90, label: '90 Days' },
+                { days: 365, label: '1 Year' },
+              ].map((item) => (
+                <button
+                  key={item.days}
+                  type="button"
+                  style={{
+                    ...styles.expBtn,
+                    fontWeight: expiresInDays === item.days ? 700 : 400,
+                    backgroundColor: expiresInDays === item.days ? 'var(--color-primary)' : 'transparent',
+                    color: expiresInDays === item.days ? 'var(--color-on-primary)' : 'var(--color-text)',
+                  }}
+                  onClick={() => setExpiresInDays(item.days)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Shareable Link Box */}
-          <div style={styles.linkBox}>
-            <label style={styles.label}>YOUR SHARED VENDOR URL</label>
-            <div style={styles.inputWrapper}>
+          {/* Generated URL Box */}
+          <div style={styles.section}>
+            <label style={styles.label}>3. PREVIEW SHARE LINK URL</label>
+            <div style={styles.urlBox}>
               <input
                 type="text"
                 readOnly
                 value={shareUrl}
-                style={styles.linkInput}
+                style={styles.urlInput}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 style={{
                   ...styles.copyBtn,
-                  backgroundColor: copied ? 'var(--color-green)' : 'var(--color-btn-selected-bg)',
-                  color: copied ? '#ffffff' : 'var(--color-btn-selected-text)',
+                  backgroundColor: copied ? 'var(--color-green)' : 'var(--color-primary)',
                 }}
                 onClick={handleCopy}
               >
@@ -184,7 +208,7 @@ export default function ShareModal({
             </div>
           </div>
 
-          {/* Security Badge & Preview */}
+          {/* Security Badge */}
           <div style={styles.securityBanner}>
             <ShieldCheck size={18} style={{ color: 'var(--color-green)' }} />
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
@@ -192,17 +216,33 @@ export default function ShareModal({
             </span>
           </div>
 
-          {/* Actions */}
-          <div style={styles.actions}>
+          {/* Bottom Actions: Cancel vs Confirm */}
+          <div style={styles.footerActions}>
             <a
               href={shareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={recordLink}
               style={styles.previewBtn}
             >
-              <ExternalLink size={16} style={{ marginRight: '0.35rem' }} /> PREVIEW VENDOR PORTAL
+              <ExternalLink size={14} style={{ marginRight: '0.35rem' }} /> TEST PREVIEW PORTAL
             </a>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                type="button"
+                style={styles.cancelBtn}
+                onClick={onClose}
+              >
+                CANCEL
+              </button>
+              <button
+                type="button"
+                style={styles.confirmBtn}
+                onClick={handleConfirm}
+              >
+                <Check size={16} style={{ marginRight: '0.35rem' }} /> CONFIRM SHARE LINK
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -267,7 +307,7 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     lineHeight: 1.4,
   },
-  formGroup: {
+  section: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.4rem',
@@ -280,42 +320,35 @@ const styles: Record<string, React.CSSProperties> = {
   },
   scopeGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
     gap: '0.5rem',
   },
-  scopeOptionBtn: {
+  scopeCard: {
     fontFamily: 'var(--font-mono)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    padding: '0.625rem 0.5rem',
+    padding: '0.625rem 0.75rem',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    gap: '0.2rem',
+    alignItems: 'flex-start',
+    textAlign: 'left',
+    color: 'var(--color-text)',
     transition: 'var(--transition-smooth)',
   },
-  select: {
+  expBtn: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.8rem',
-    padding: '0.625rem',
-    backgroundColor: 'var(--color-bg)',
+    fontSize: '0.75rem',
+    padding: '0.4rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    color: 'var(--color-text)',
     cursor: 'pointer',
   },
-  linkBox: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.4rem',
-  },
-  inputWrapper: {
+  urlBox: {
     display: 'flex',
     gap: '0.5rem',
   },
-  linkInput: {
+  urlInput: {
     flex: 1,
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
@@ -336,6 +369,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.35rem',
+    color: '#ffffff',
   },
   securityBanner: {
     display: 'flex',
@@ -346,23 +380,52 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
   },
-  actions: {
+  footerActions: {
     display: 'flex',
-    justifyContent: 'flex-end',
-    marginTop: '0.25rem',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    marginTop: '0.5rem',
+    paddingTop: '0.75rem',
+    borderTop: '1px solid var(--color-muted)',
   },
   previewBtn: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.8rem',
-    fontWeight: 700,
+    fontSize: '0.75rem',
+    fontWeight: 600,
     backgroundColor: 'transparent',
-    color: 'var(--color-primary)',
-    border: '1px solid var(--color-primary)',
+    color: 'var(--color-text)',
+    border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    padding: '0.625rem 1.25rem',
+    padding: '0.5rem 0.875rem',
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
     textDecoration: 'none',
+  },
+  cancelBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    backgroundColor: 'transparent',
+    color: 'var(--color-text)',
+    border: '1px solid var(--color-muted)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.55rem 1rem',
+    cursor: 'pointer',
+  },
+  confirmBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-on-primary)',
+    border: 'none',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.55rem 1.15rem',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
   },
 };

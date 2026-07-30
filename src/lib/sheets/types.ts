@@ -28,6 +28,7 @@ export interface Guest {
   ageCategory: AgeCategory;
   rsvpStatus: RSVPStatus;
   dietaryRestrictions: string;
+  mealChoice?: string;
   tableAssignment: string;
   emailAddress: string;
   phoneNumber: string;

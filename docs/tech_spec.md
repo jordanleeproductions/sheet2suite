@@ -108,12 +108,14 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 - Fetches Google Sheet tabs server-side and strips out confidential information (Budget Ledger items, guest mailing addresses, phone numbers, private notes) before returning sanitized JSON.
 
 ### 3.3 Mobile-First Vendor Page (`src/app/share/[token]/page.tsx`)
-- High-contrast, standalone vendor page optimized for mobile phones at wedding venues.
-- Includes Light/Dark mode toggle, search/filtering, and zero app header clutter.
+- High-contrast, standalone vendor page optimized for mobile phones and tablet viewports at wedding venues.
+- **🖨️ PDF & Print Export Engine:** Built-in `PRINT / EXPORT PDF` header button with `@media print` CSS rules, cleanly formatting the vendor view into printable PDF documents without navigation buttons, theme toggles, or background clutter.
+- **🎵 Music Page Quick Filters & Sorting:** Quick filter pills (`ALL SONGS`, `REQUESTED SONGS`, `BANNED MUSIC`). Default view automatically sorts Banned / Do Not Play tracks to the bottom of the list.
+- **🍽️ Catering & Meal Choice Breakdown:** Displays aggregate headcount, **Guest Meal Choice Totals** (`Filet Mignon`, `Pan-Seared Salmon`, `Vegan Risotto`, `Kids Tenders`), and **Interactive Dietary Restriction Drawers** which expand to list matching guest names, meal choices, and table numbers.
 
-### 3.4 Access Control & Revocation
-- Configuration JSON stored in cell **`Settings!B2`** includes `shareVersion`.
-- Clicking **"Revoke All Shared Links"** in Settings increments `shareVersion` in `Settings!B2`. Old tokens generated with previous versions are instantly rejected by the backend proxy.
+### 3.4 Admin Link Confirmation & Access Control (`ShareModal.tsx` & `VendorShareLinkManager.tsx`)
+- **Draft Link Confirmation Workflow:** Generated share links remain in draft mode until the couple explicitly clicks **`CONFIRM SHARE LINK`**. Clicking **`CANCEL`** or closing the modal invalidates and discards the token.
+- **Master & Individual Revocation:** Configuration JSON stored in cell **`Settings!B2`** includes `shareVersion`. Clicking **"Revoke All Shared Links"** in Settings increments `shareVersion` in `Settings!B2`. Old tokens generated with previous versions are instantly rejected by the backend proxy.
 
 ---
 

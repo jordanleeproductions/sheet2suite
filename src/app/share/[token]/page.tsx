@@ -17,12 +17,18 @@ import {
   Moon,
   Sparkles,
   Search,
-  Filter
+  Filter,
+  Printer,
+  ChevronDown,
+  ChevronUp,
+  UserCheck
 } from 'lucide-react';
 
 interface CateringSummary {
   attendingCount: number;
   dietarySummary: Array<{ restriction: string; count: number }>;
+  mealChoicesSummary?: Array<{ meal: string; count: number }>;
+  dietaryGuestList?: Array<{ name: string; restriction: string; mealChoice: string; table: string }>;
   tableSummary: Array<{ tableName: string; count: number }>;
 }
 
@@ -47,6 +53,12 @@ export default function VendorSharePage() {
   const [activeTab, setActiveTab] = useState<'timeline' | 'music' | 'photos' | 'catering'>('timeline');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Music Page Quick Filter & Sorting
+  const [musicFilter, setMusicFilter] = useState<'all' | 'requested' | 'banned'>('all');
+
+  // Catering Dietary Restriction Interactive Drawer Toggle
+  const [selectedRestriction, setSelectedRestriction] = useState<string | null>(null);
 
   // Fetch Vendor Data
   useEffect(() => {
@@ -127,6 +139,24 @@ export default function VendorSharePage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: bgColor, color: textColor, transition: 'background-color 0.2s' }}>
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          .print-hide, nav, button {
+            display: none !important;
+          }
+          body, div, main {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+          }
+          .print-card {
+            border: 1px solid #cccccc !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+          }
+        }
+      `}</style>
+
       {/* Top Mobile Bar */}
       <header style={{ ...styles.header, backgroundColor: surfaceColor, borderBottomColor: borderColor }}>
         <div>
@@ -139,13 +169,23 @@ export default function VendorSharePage() {
           <h1 style={{ ...styles.weddingTitle, color: textColor }}>{weddingName.toUpperCase()}</h1>
         </div>
 
-        <button 
-          onClick={toggleTheme} 
-          style={{ ...styles.themeBtn, backgroundColor: bgColor, color: textColor, borderColor: borderColor }}
-          title="Toggle Light/Dark Theme"
-        >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="print-hide">
+          <button 
+            onClick={() => window.print()} 
+            style={{ ...styles.themeBtn, backgroundColor: '#13AA52', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}
+            title="Print or Export PDF"
+          >
+            <Printer size={16} /> PRINT / EXPORT PDF
+          </button>
+
+          <button 
+            onClick={toggleTheme} 
+            style={{ ...styles.themeBtn, backgroundColor: bgColor, color: textColor, borderColor: borderColor }}
+            title="Toggle Light/Dark Theme"
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
       </header>
 
       {/* Navigation Tabs (If Vendor Hub) */}
@@ -224,25 +264,67 @@ export default function VendorSharePage() {
         )}
 
         {/* MUSIC PLAYLIST VIEW */}
-        {(activeTab === 'music' || scope === 'music') && data.music && (
-          <div style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <h2 style={{ ...styles.sectionTitle, color: textColor }}>Wedding Music & Track Preferences</h2>
-              <span style={{ fontSize: '0.8rem', color: mutedColor }}>{data.music.length} Songs</span>
-            </div>
+        {(activeTab === 'music' || scope === 'music') && data.music && (() => {
+          const filteredMusic = data.music.filter(song => {
+            const isBanned = song.listType === 'Do Not Play' || song.priority === 'Banned';
+            if (musicFilter === 'requested') return !isBanned;
+            if (musicFilter === 'banned') return isBanned;
+            return true;
+          }).sort((a, b) => {
+            const aBanned = a.listType === 'Do Not Play' || a.priority === 'Banned';
+            const bBanned = b.listType === 'Do Not Play' || b.priority === 'Banned';
+            if (aBanned && !bBanned) return 1; // Sort banned to bottom
+            if (!aBanned && bBanned) return -1;
+            return 0;
+          });
 
-            <div style={styles.listContainer}>
-              {data.music.map((song, idx) => {
-                const isBanned = song.listType === 'Do Not Play' || song.priority === 'Banned';
-                return (
-                  <div 
-                    key={idx} 
-                    style={{ 
-                      ...styles.card, 
-                      backgroundColor: surfaceColor, 
-                      borderColor: isBanned ? '#ef4444' : borderColor 
+          return (
+            <div style={styles.section}>
+              <div style={styles.sectionHeader}>
+                <h2 style={{ ...styles.sectionTitle, color: textColor }}>Wedding Music & Track Preferences</h2>
+                <span style={{ fontSize: '0.8rem', color: mutedColor }}>{filteredMusic.length} Tracks</span>
+              </div>
+
+              {/* Quick Filter Pills */}
+              <div style={{ display: 'flex', gap: '0.5rem', margin: '0.75rem 0', flexWrap: 'wrap' }} className="print-hide">
+                {[
+                  { id: 'all', label: 'ALL SONGS' },
+                  { id: 'requested', label: '🎵 REQUESTED SONGS' },
+                  { id: 'banned', label: '🚫 BANNED MUSIC' },
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    onClick={() => setMusicFilter(f.id as any)}
+                    style={{
+                      fontFamily: 'inherit',
+                      fontSize: '0.75rem',
+                      fontWeight: musicFilter === f.id ? 700 : 400,
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: '4px',
+                      border: `1px solid ${musicFilter === f.id ? '#13AA52' : borderColor}`,
+                      backgroundColor: musicFilter === f.id ? '#13AA52' : surfaceColor,
+                      color: musicFilter === f.id ? '#ffffff' : textColor,
+                      cursor: 'pointer',
                     }}
                   >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={styles.listContainer}>
+                {filteredMusic.map((song, idx) => {
+                  const isBanned = song.listType === 'Do Not Play' || song.priority === 'Banned';
+                  return (
+                    <div 
+                      key={idx} 
+                      className="print-card"
+                      style={{ 
+                        ...styles.card, 
+                        backgroundColor: surfaceColor, 
+                        borderColor: isBanned ? '#ef4444' : borderColor 
+                      }}
+                    >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <span style={{
@@ -285,10 +367,10 @@ export default function VendorSharePage() {
                     )}
                   </div>
                 );
-              })}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* PHOTO SHOT LIST VIEW */}
         {(activeTab === 'photos' || scope === 'photos') && data.photos && (
@@ -344,26 +426,102 @@ export default function VendorSharePage() {
               <h2 style={{ ...styles.sectionTitle, color: textColor }}>Catering & Venue Manager Overview</h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: mutedColor }}>TOTAL ATTENDING HEADCOUNT</span>
                 <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#13AA52' }}>
-                  {data.catering.attendingCount} Attending
+                  {data.catering.attendingCount} Attending Guests
                 </span>
               </div>
             </div>
 
-            {/* Dietary Restrictions Breakdown */}
-            <div style={{ ...styles.card, backgroundColor: surfaceColor, borderColor, marginBottom: '1rem' }}>
-              <h3 style={{ ...styles.itemTitle, color: textColor, marginBottom: '0.75rem' }}>Dietary Restrictions Summary</h3>
-              {data.catering.dietarySummary.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  {data.catering.dietarySummary.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '0.35rem 0.5rem', backgroundColor: bgColor, borderRadius: '4px' }}>
-                      <span>{item.restriction}</span>
-                      <strong style={{ color: '#13AA52' }}>{item.count} Guests</strong>
+            {/* Guest Meal Choice Totals Summary */}
+            {data.catering.mealChoicesSummary && data.catering.mealChoicesSummary.length > 0 && (
+              <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor, marginBottom: '1.25rem' }}>
+                <h3 style={{ ...styles.itemTitle, color: textColor, marginBottom: '0.75rem' }}>
+                  🍽️ Guest Meal Choice Totals Breakdown
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                  {data.catering.mealChoicesSummary.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.625rem 0.75rem', backgroundColor: bgColor, borderRadius: '4px', border: `1px solid ${borderColor}` }}>
+                      <span style={{ fontWeight: 600, color: textColor }}>{item.meal}</span>
+                      <strong style={{ color: '#13AA52', fontFamily: 'inherit', fontSize: '0.95rem' }}>{item.count} Meals</strong>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Interactive Dietary Restrictions Breakdown */}
+            <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor, marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h3 style={{ ...styles.itemTitle, color: textColor, margin: 0 }}>
+                  ⚠️ Dietary Restrictions Summary
+                </h3>
+                <span style={{ fontSize: '0.7rem', color: mutedColor }}>Click any restriction to view guest names</span>
+              </div>
+
+              {data.catering.dietarySummary.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {data.catering.dietarySummary.map((item, idx) => {
+                    const isExpanded = selectedRestriction === item.restriction;
+                    const matchingGuests = (data.catering?.dietaryGuestList || []).filter(g => g.restriction === item.restriction);
+
+                    return (
+                      <div key={idx} style={{ border: `1px solid ${borderColor}`, borderRadius: '4px', overflow: 'hidden' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRestriction(isExpanded ? null : item.restriction)}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '0.85rem',
+                            padding: '0.625rem 0.75rem',
+                            backgroundColor: isExpanded ? 'rgba(19, 170, 82, 0.1)' : bgColor,
+                            border: 'none',
+                            color: textColor,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontWeight: 700 }}>{item.restriction}</span>
+                            <span style={{ fontSize: '0.7rem', color: mutedColor }}>({matchingGuests.length} Guests)</span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <strong style={{ color: '#13AA52' }}>{item.count} Guests</strong>
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </div>
+                        </button>
+
+                        {/* Expanded Guest List Drawer */}
+                        {isExpanded && (
+                          <div style={{ padding: '0.75rem 1rem', backgroundColor: surfaceColor, borderTop: `1px solid ${borderColor}` }}>
+                            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: mutedColor, margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
+                              Guests with {item.restriction}:
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              {matchingGuests.map((g, gIdx) => (
+                                <div key={gIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', padding: '0.35rem 0', borderBottom: gIdx < matchingGuests.length - 1 ? `1px dashed ${borderColor}` : 'none' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <UserCheck size={14} style={{ color: '#13AA52' }} />
+                                    <strong style={{ color: textColor }}>{g.name}</strong>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: mutedColor }}>
+                                    <span>🍽️ {g.mealChoice}</span>
+                                    <span>📍 {g.table}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <span style={{ fontSize: '0.8rem', color: mutedColor }}>No special dietary restrictions recorded.</span>
@@ -371,11 +529,11 @@ export default function VendorSharePage() {
             </div>
 
             {/* Seating Table Breakdown */}
-            <div style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
+            <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
               <h3 style={{ ...styles.itemTitle, color: textColor, marginBottom: '0.75rem' }}>Table Seating Capacity Breakdown</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
                 {data.catering.tableSummary.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '0.5rem', backgroundColor: bgColor, borderRadius: '4px' }}>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '0.5rem 0.75rem', backgroundColor: bgColor, borderRadius: '4px', border: `1px solid ${borderColor}` }}>
                     <span>{item.tableName}</span>
                     <strong>{item.count} Seats</strong>
                   </div>

@@ -40,10 +40,27 @@ export async function GET(
         
         // Group dietary restrictions
         const dietaryMap: Record<string, number> = {};
+        const dietaryGuestList: Array<{ name: string; restriction: string; mealChoice: string; table: string }> = [];
+        const mealChoiceMap: Record<string, number> = {};
+
         attendingGuests.forEach(g => {
-          if (g.dietaryRestrictions && g.dietaryRestrictions.trim() !== '') {
+          const name = `${g.firstName} ${g.lastName}`.trim();
+          const meal = g.mealChoice || 'Standard Menu';
+          const table = g.tableAssignment || 'Unassigned';
+
+          // Group Meal Choice Counts
+          mealChoiceMap[meal] = (mealChoiceMap[meal] || 0) + 1;
+
+          // Group Dietary Restrictions
+          if (g.dietaryRestrictions && g.dietaryRestrictions.trim() !== '' && g.dietaryRestrictions.trim() !== 'None') {
             const key = g.dietaryRestrictions.trim();
             dietaryMap[key] = (dietaryMap[key] || 0) + 1;
+            dietaryGuestList.push({
+              name,
+              restriction: key,
+              mealChoice: meal,
+              table
+            });
           }
         });
 
@@ -57,6 +74,8 @@ export async function GET(
         data.catering = {
           attendingCount: attendingGuests.length,
           dietarySummary: Object.entries(dietaryMap).map(([restriction, count]) => ({ restriction, count })),
+          mealChoicesSummary: Object.entries(mealChoiceMap).map(([meal, count]) => ({ meal, count })),
+          dietaryGuestList,
           tableSummary: Object.entries(tableMap).map(([tableName, count]) => ({ tableName, count })),
         };
       }
@@ -114,10 +133,27 @@ export async function GET(
         const attendingGuests = guests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending');
 
         const dietaryMap: Record<string, number> = {};
+        const dietaryGuestList: Array<{ name: string; restriction: string; mealChoice: string; table: string }> = [];
+        const mealChoiceMap: Record<string, number> = {};
+
         attendingGuests.forEach(g => {
-          if (g.dietaryRestrictions && g.dietaryRestrictions.trim() !== '') {
+          const name = `${g.firstName} ${g.lastName}`.trim();
+          const meal = g.mealChoice || 'Standard Menu';
+          const table = g.tableAssignment || 'Unassigned';
+
+          // Group Meal Choice Counts
+          mealChoiceMap[meal] = (mealChoiceMap[meal] || 0) + 1;
+
+          // Group Dietary Restrictions
+          if (g.dietaryRestrictions && g.dietaryRestrictions.trim() !== '' && g.dietaryRestrictions.trim() !== 'None') {
             const key = g.dietaryRestrictions.trim();
             dietaryMap[key] = (dietaryMap[key] || 0) + 1;
+            dietaryGuestList.push({
+              name,
+              restriction: key,
+              mealChoice: meal,
+              table
+            });
           }
         });
 
@@ -130,6 +166,8 @@ export async function GET(
         data.catering = {
           attendingCount: attendingGuests.length,
           dietarySummary: Object.entries(dietaryMap).map(([restriction, count]) => ({ restriction, count })),
+          mealChoicesSummary: Object.entries(mealChoiceMap).map(([meal, count]) => ({ meal, count })),
+          dietaryGuestList,
           tableSummary: Object.entries(tableMap).map(([tableName, count]) => ({ tableName, count })),
         };
       }

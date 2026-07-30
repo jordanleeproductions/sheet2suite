@@ -39,6 +39,7 @@ This document defines the authoritative tab structure and column header contract
 | `Plus-One Name` | `plusOneName` | Text | Name of guest's plus-one |
 | `RSVP Status` | `rsvpStatus` | Dropdown | `Attending`, `Declined`, `Pending` |
 | `Dietary Restrictions` | `dietaryRestrictions` | Text | e.g. `Vegetarian`, `Nut Allergy`, `None` |
+| `Meal Choice` | `mealChoice` | Text / Dropdown | e.g. `Filet Mignon`, `Pan-Seared Salmon`, `Vegan Risotto` |
 | `Notes` | `notes` | Text | Additional guest notes |
 
 ---
