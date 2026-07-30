@@ -26,10 +26,9 @@ interface DashboardMetricsProps {
   music?: Song[];
   enabledModules?: ModuleConfig;
   currency?: string;
-  onEditBudget?: () => void;
 }
 
-export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD', onEditBudget }: DashboardMetricsProps) {
+export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD' }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
   
   // Default all to true if enabledModules is not supplied
@@ -76,33 +75,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {modules.budget && (
         <div className="kpi-grid" style={styles.kpiGrid}>
           <div className="kpi-card" style={styles.kpiCard}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={styles.kpiLabel}>TOTAL BUDGET</div>
-              {onEditBudget && (
-                <button
-                  type="button"
-                  onClick={onEditBudget}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', padding: '2px' }}
-                  title="Edit Total Budget Limit"
-                >
-                  <Edit2 size={13} />
-                </button>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <div style={styles.kpiValue}>
-                {formatCurrency(totalBudget, currency)}
-              </div>
-              {onEditBudget && (
-                <button
-                  type="button"
-                  onClick={onEditBudget}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '2px' }}
-                  title="Edit Total Budget Limit"
-                >
-                  <Edit2 size={14} />
-                </button>
-              )}
+            <div style={styles.kpiLabel}>TOTAL BUDGET</div>
+            <div style={styles.kpiValue}>
+              {formatCurrency(totalBudget, currency)}
             </div>
             <div style={styles.kpiSub}>Cell B2 Config Value</div>
           </div>
@@ -136,31 +111,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {/* Progress Bar & Ledger Balance Panel */}
       {modules.budget && (
         <div className="budget-bar-panel" style={styles.barPanel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Budget Allocation Progress</h3>
-            {onEditBudget && (
-              <button
-                type="button"
-                onClick={onEditBudget}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  backgroundColor: 'transparent',
-                  color: 'var(--color-primary)',
-                  border: '1px solid var(--color-primary)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.625rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
-                }}
-              >
-                <Edit2 size={12} /> EDIT BUDGET LIMIT
-              </button>
-            )}
-          </div>
+          <h3 style={styles.panelTitle}>Budget Allocation Progress</h3>
           
           <div style={styles.progressHeader}>
             <span style={styles.progressLabel}>

@@ -11,10 +11,9 @@ interface BudgetLedgerManagerProps {
   onUpdate: (updatedBudget: BudgetItem[]) => Promise<void>;
   isSyncing: boolean;
   currency?: string;
-  onEditBudget?: () => void;
 }
 
-export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, currency = 'USD', onEditBudget }: BudgetLedgerManagerProps) {
+export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, currency = 'USD' }: BudgetLedgerManagerProps) {
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
@@ -184,31 +183,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
       <div className={`budget-meter-card ${isOverallOverBudget ? 'is-over-budget' : ''}`} style={styles.meterCard}>
         <div style={styles.meterHeader}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
-              {onEditBudget && (
-                <button
-                  type="button"
-                  onClick={onEditBudget}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--color-primary)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    fontSize: '0.7rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 600,
-                    padding: 0
-                  }}
-                  title="Edit Total Budget Limit"
-                >
-                  <Edit2 size={12} /> EDIT LIMIT
-                </button>
-              )}
-            </div>
+            <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
             <div style={styles.meterTitleRow}>
               <h3 style={styles.meterTitle}>{formatCurrency(totalActual, currency)} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>of {formatCurrency(totalEstimate, currency)} Estimated</span></h3>
               {isOverallOverBudget ? (
