@@ -116,7 +116,8 @@ This document defines the authoritative tab structure and column header contract
 | `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance` |
 | `Priority` | `priority` | Dropdown | `Must Play`, `Play If Time`, `Banned` |
 | `Played?` | `played` | Checkbox | `TRUE`, `FALSE` |
-| `Notes` | `notes` | Text | Special notes or requests |
+| `Notes` | `notes` | Text | Special notes or guest dedication messages |
+| `Requested By` | `requestedBy` | Text | Name of guest who requested the song |
 
 ---
 

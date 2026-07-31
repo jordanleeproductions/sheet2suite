@@ -99,6 +99,7 @@ export interface Song {
   notes: string;
   priority?: string;
   played?: boolean;
+  requestedBy?: string;
 }
 
 export interface PhotoShot {

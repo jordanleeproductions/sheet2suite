@@ -50,13 +50,13 @@ export async function POST(
       return NextResponse.json({ error: 'Song title and artist are required' }, { status: 400 });
     }
 
-    const formattedRequester = requestedBy ? `Requested by: ${requestedBy}` : 'Requested by: Reception Guest';
-    const formattedNotes = notes ? `${formattedRequester} - "${notes}"` : formattedRequester;
+    const requesterName = requestedBy ? requestedBy.trim() : 'Reception Guest';
+    const guestMessage = notes ? notes.trim() : '';
 
-    console.log(`Song Request for spreadsheet ${payload.spreadsheetId}: "${songTitle}" by ${artist} (${formattedNotes})`);
+    console.log(`Song Request for spreadsheet ${payload.spreadsheetId}: "${songTitle}" by ${artist} (Requester: ${requesterName}, Message: "${guestMessage}")`);
 
     // In a live Google Drive / Sheets context, this appends a new row to the 'Music' sheet tab:
-    // Columns: [Song ID, Song Title, Artist Name, List Type ('Play List'), Notes]
+    // Columns: [Song ID, Song Title, Artist Name, List Type ('Play List'), Notes, Requested By]
 
     return NextResponse.json({
       success: true,
@@ -66,7 +66,8 @@ export async function POST(
         songTitle,
         artistName: artist,
         listType: 'Play List',
-        notes: formattedNotes,
+        requestedBy: requesterName,
+        notes: guestMessage,
         audioPreviewUrl: audioPreviewUrl || '',
         albumArt: albumArt || '',
       },

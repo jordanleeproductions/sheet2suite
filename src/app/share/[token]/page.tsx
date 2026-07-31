@@ -360,9 +360,15 @@ export default function VendorSharePage() {
                       </div>
                     </div>
 
+                    {song.requestedBy && (
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#13AA52', margin: '0.4rem 0 0 0' }}>
+                        👤 Requested by: {song.requestedBy}
+                      </div>
+                    )}
+
                     {song.notes && (
-                      <p style={{ fontSize: '0.75rem', fontStyle: 'italic', color: mutedColor, margin: '0.5rem 0 0 0', borderTop: `1px dashed ${borderColor}`, paddingTop: '0.35rem' }}>
-                        💡 DJ Note: {song.notes}
+                      <p style={{ fontSize: '0.75rem', fontStyle: 'italic', color: mutedColor, margin: '0.4rem 0 0 0', borderTop: `1px dashed ${borderColor}`, paddingTop: '0.35rem' }}>
+                        💬 Guest Note: {song.notes}
                       </p>
                     )}
                   </div>
