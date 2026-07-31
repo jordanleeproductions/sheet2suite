@@ -67,6 +67,7 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 - **Real-Time Relational Analytics (`calculateRelationalCateringSummary`):** Calculates attending vs total invited ratios, dynamic meal choice totals (`🥩 Beef`, `🍗 Chicken`, `🐟 Fish`, `🌱 Vegan`), and dietary restriction drawers with matching guest names and table numbers.
 - **Seating Floorplan Guardrails:** Computes table capacity utilization and triggers `NORMAL`, `FULL`, and `OVER CAPACITY ⚠️` visual alert badges on seating floorplan cards whenever seat allocations exceed table limits.
 - **3-Tier Intelligent Seat Assignment Priority (`SeatingChartManager.tsx`):** Ranks guest selection list when populating table seats: (1) Unassigned guests matching seated `partyGroup` names (`🎉 SAME PARTY GROUP`), (2) All unassigned guests (`UNASSIGNED`), and (3) Already assigned guests for re-assignment.
+- **Ceremony Row & Aisle Seating Engine (`[SEAT-4]`):** Dual-side aisle seating planner calculating required seats for `Attending + Pending` guests (excluding `Declined`), customizable row count & chairs per row, central aisle runner visual, interactive seat placement, and responsive mobile dual-card layout splitting left/right sides onto dedicated cards.
 
 ---
 

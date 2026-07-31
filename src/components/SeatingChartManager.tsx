@@ -67,6 +67,22 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
     capacity: 8,
   });
 
+  // Seating Mode Switcher ('reception' | 'ceremony')
+  const [seatingMode, setSeatingMode] = useState<'reception' | 'ceremony'>('reception');
+
+  // Ceremony Aisle Config State
+  const [ceremonyConfig, setCeremonyConfig] = useState({
+    rowsCount: 7,
+    chairsPerSide: 6,
+    leftLabel: "Bride's Side (Left)",
+    rightLabel: "Groom's Side (Right)",
+  });
+
+  // Ceremony Capacity Calculations: Accepted + Pending (excluding Declined)
+  const ceremonyRequiredGuests = guests.filter(g => (g.rsvpStatus || '').toLowerCase() !== 'declined');
+  const ceremonyDeclinedCount = guests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'declined').length;
+  const totalCeremonyCapacity = ceremonyConfig.rowsCount * ceremonyConfig.chairsPerSide * 2;
+
   // Calculate assigned vs unassigned guests
   const unassignedGuests = guests.filter(g => !g.tableAssignment || g.tableAssignment.trim() === '' || g.tableAssignment === 'Unassigned');
   
@@ -176,12 +192,60 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
 
   return (
     <div style={styles.container}>
+      {/* Seating Mode View Switcher Bar */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        <button
+          type="button"
+          style={{
+            padding: '0.55rem 1.1rem',
+            fontSize: '0.8rem',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 700,
+            backgroundColor: seatingMode === 'reception' ? 'var(--color-primary)' : 'var(--color-surface)',
+            color: seatingMode === 'reception' ? 'var(--color-on-primary)' : 'var(--color-text)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            transition: 'var(--transition-smooth)',
+          }}
+          onClick={() => setSeatingMode('reception')}
+        >
+          <Utensils size={15} /> RECEPTION TABLES
+        </button>
+        <button
+          type="button"
+          style={{
+            padding: '0.55rem 1.1rem',
+            fontSize: '0.8rem',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 700,
+            backgroundColor: seatingMode === 'ceremony' ? 'var(--color-primary)' : 'var(--color-surface)',
+            color: seatingMode === 'ceremony' ? 'var(--color-on-primary)' : 'var(--color-text)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            transition: 'var(--transition-smooth)',
+          }}
+          onClick={() => setSeatingMode('ceremony')}
+        >
+          <Sparkles size={15} /> CEREMONY AISLE SEATING
+        </button>
+      </div>
+
       {/* Header Toolbar */}
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Visual Table Seating Plan</h2>
+          <h2 style={styles.title}>{seatingMode === 'reception' ? 'Visual Table Seating Plan' : 'Ceremony Aisle Seating Planner'}</h2>
           <p style={styles.subtitle}>
-            Arrange seating layouts, configure seat capacities, and view guest profiles.
+            {seatingMode === 'reception'
+              ? 'Arrange seating layouts, configure seat capacities, and view guest profiles.'
+              : 'Configure dual-side aisle seating, account for accepted + pending guests, and assign ceremony seats.'}
           </p>
         </div>
 
@@ -222,32 +286,6 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
         </div>
       </div>
 
-      {/* Summary KPI Strip */}
-      <div style={styles.kpiBar}>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>TOTAL TABLES</span>
-          <span style={styles.kpiValue}>{tables.length}</span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>TOTAL SEAT CAPACITY</span>
-          <span style={styles.kpiValue}>
-            {tables.reduce((acc, t) => acc + t.capacity, 0)}
-          </span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>SEATED GUESTS</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-            {guests.length - unassignedGuests.length} / {guests.length}
-          </span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>UNASSIGNED GUESTS</span>
-          <span style={{ ...styles.kpiValue, color: unassignedGuests.length > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>
-            {unassignedGuests.length}
-          </span>
-        </div>
-      </div>
-
       {/* Unassigned Guests Quick Drawer Panel */}
       {showUnassignedDrawer && (
         <div style={styles.drawerPanel}>
@@ -261,21 +299,6 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
             </button>
           </div>
 
-          {unassignedGuests.length === 0 ? (
-            <p style={styles.emptyText}>All guests have been assigned to tables! 🎉</p>
-          ) : (
-            <div style={styles.unassignedGrid}>
-              {unassignedGuests.map(guest => (
-                <div 
-                  key={guest.guestId} 
-                  style={styles.unassignedChip}
-                  onClick={() => setSelectedGuest(guest)}
-                >
-                  <span style={styles.initialsAvatar}>{getInitials(guest)}</span>
-                  <div style={styles.unassignedMeta}>
-                    <strong style={styles.guestNameText}>{guest.firstName} {guest.lastName}</strong>
-                    <span style={styles.partyText}>{guest.partyGroup || 'General'} &bull; {guest.rsvpStatus}</span>
-                  </div>
                 </div>
               ))}
             </div>
@@ -557,6 +580,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
           );
         })}
       </div>
+      </>
+      )}
 
       {/* GUEST PROFILE POPUP MODAL */}
       {selectedGuest && (
