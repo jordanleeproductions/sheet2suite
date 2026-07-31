@@ -844,7 +844,6 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                 })()}
               </div>
             </div>
-            </div>
           </div>
         </div>
       )}
