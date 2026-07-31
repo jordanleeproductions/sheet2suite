@@ -480,21 +480,27 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
               <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
-              {/* iTunes Auto-Suggest Search Helper */}
-              <div style={{ marginBottom: '1rem', position: 'relative' }}>
-                <label style={{ ...styles.label, color: '#10b981', fontWeight: 700 }}>
-                  🔍 ITUNES AUTO-SUGGEST SEARCH
+              {/* Compact iTunes Auto-Suggest Search Helper */}
+              <div style={{ marginBottom: '0.85rem', position: 'relative' }}>
+                <label style={{ ...styles.label, color: 'var(--color-primary)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  🔍 AUTO-SEARCH CATALOG (OPTIONAL)
                 </label>
                 <input
-                  style={{ ...styles.input, borderColor: '#10b981' }}
+                  style={{
+                    ...styles.input,
+                    padding: '0.55rem 0.75rem',
+                    fontSize: '0.8rem',
+                    borderColor: 'var(--color-muted)',
+                    backgroundColor: 'var(--color-bg, #f9fafb)',
+                  }}
                   type="text"
-                  placeholder="Search song or artist to auto-fill title, artist & preview link..."
+                  placeholder="Type song or artist to auto-fill..."
                   value={iTunesQuery}
                   onChange={(e) => setITunesQuery(e.target.value)}
                 />
                 {isSearchingITunes && (
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', display: 'block' }}>
-                    Searching iTunes catalog...
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem', display: 'block' }}>
+                    Searching iTunes...
                   </span>
                 )}
                 {iTunesResults.length > 0 && (
@@ -504,18 +510,18 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     left: 0,
                     right: 0,
                     backgroundColor: '#ffffff',
-                    border: '1px solid #10b981',
+                    border: '1px solid var(--color-muted)',
                     borderRadius: '6px',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
                     zIndex: 100,
-                    maxHeight: '200px',
+                    maxHeight: '180px',
                     overflowY: 'auto',
                   }}>
                     {iTunesResults.map(track => (
                       <div
                         key={track.trackId}
                         style={{
-                          padding: '0.5rem 0.75rem',
+                          padding: '0.45rem 0.65rem',
                           borderBottom: '1px solid #f3f4f6',
                           cursor: 'pointer',
                           display: 'flex',
@@ -525,11 +531,11 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                         onClick={() => handleSelectITunesTrack(track)}
                       >
                         {track.artworkUrl60 && (
-                          <img src={track.artworkUrl60} alt="" style={{ width: '28px', height: '28px', borderRadius: '4px' }} />
+                          <img src={track.artworkUrl60} alt="" style={{ width: '26px', height: '26px', borderRadius: '4px' }} />
                         )}
                         <div style={{ flex: 1, overflow: 'hidden' }}>
-                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>{track.trackName}</div>
-                          <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>{track.artistName}</div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111827' }}>{track.trackName}</div>
+                          <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>{track.artistName}</div>
                         </div>
                       </div>
                     ))}
@@ -539,8 +545,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
 
               <div className="music-form-grid" style={styles.formGrid}>
                 
-                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Song Title</label>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Song Title *</label>
                   <input
                     style={styles.input}
                     value={formState.title || ''}
@@ -550,8 +556,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   />
                 </div>
                 
-                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Artist</label>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Artist *</label>
                   <input
                     style={styles.input}
                     value={formState.artist || ''}
@@ -585,18 +591,6 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     <option value="Special Moment">Special Moment</option>
                     <option value="Do Not Play">Do Not Play</option>
                   </select>
-                </div>
-                
-                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Music Link (Spotify/YouTube/Preview)</label>
-                  <input
-                    style={styles.input}
-                    type="url"
-                    value={formState.link || ''}
-                    onChange={(e) => handleFormChange('link', e.target.value)}
-                    placeholder="https://open.spotify.com/..."
-                  />
-                  <span style={styles.fieldInfo}>Paste a Spotify track link or audio URL for 30s preview embed!</span>
                 </div>
                 
                 <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
