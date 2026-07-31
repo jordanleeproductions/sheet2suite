@@ -118,6 +118,7 @@ This document defines the authoritative tab structure and column header contract
 | `Played?` | `played` | Checkbox | `TRUE`, `FALSE` |
 | `Notes` | `notes` | Text | Special notes or guest dedication messages |
 | `Requested By` | `requestedBy` | Text | Name of guest who requested the song |
+| `Approval Status` | `approvalStatus` | Dropdown | `Approved`, `Pending Approval`, `Banned`, `Declined` |
 
 ---
 
