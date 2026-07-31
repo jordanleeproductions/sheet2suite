@@ -438,13 +438,10 @@ export default function PrintTemplatesModal({
                             <tr key={vendor.vendorId || idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
                               <td style={styles.paperTdBold}>{vendor.category || 'General'}</td>
                               <td style={styles.paperTdBold}>{vendor.vendorName}</td>
-                              <td style={styles.paperTd}>{vendor.contactPerson || '-'}</td>
-                              <td style={styles.paperTdMono}>{vendor.phone || '-'}</td>
-                              <td style={styles.paperTdMono}>{vendor.email || '-'}</td>
-                              <td style={styles.paperTd}>
-                                {vendor.arrivalTime ? `Arrival: ${vendor.arrivalTime}` : ''}
-                                {vendor.notes ? ` ${vendor.notes}` : ''}
-                              </td>
+                              <td style={styles.paperTd}>{vendor.contactName || '-'}</td>
+                              <td style={styles.paperTdMono}>{vendor.phoneNumber || '-'}</td>
+                              <td style={styles.paperTdMono}>{vendor.emailAddress || '-'}</td>
+                              <td style={styles.paperTd}>{vendor.notes || '-'}</td>
                             </tr>
                           ))}
                         </tbody>
