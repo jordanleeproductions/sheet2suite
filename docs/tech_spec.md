@@ -108,6 +108,8 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
   - `'timeline'`: Day-Of Schedule & responsibility moments.
   - `'catering'`: Attending headcount, dietary restrictions breakdown, and table seating capacity.
   - `'vendor_hub'`: All-in-one vendor portal hub with tab navigation.
+  - `'guest_upload'`: Guest photo/video upload portal (`/upload/[token]`) routing uploads directly into couple's Drive folder (`My Drive/Wedding Planning/Guest Uploads`).
+  - `'guest_song_request'`: Guest live song request portal (`/request-song/[token]`) appending requested tracks to `Music!A:E` for live DJ view sync.
 
 ### 3.2 Data Sanitization Proxy (`src/app/api/share/[token]/route.ts`)
 - Verifies token signature and expiration. Any tampered token produces an immediate `401 Unauthorized` response.
