@@ -1,13 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Camera, UploadCloud, Heart, CheckCircle2, AlertCircle, Image as ImageIcon, Video as VideoIcon, X, Sparkles, RefreshCw, User, MessageSquare } from 'lucide-react';
-
-interface UploadPageProps {
-  params: {
-    token: string;
-  };
-}
 
 interface FilePreviewItem {
   id: string;
@@ -16,8 +11,9 @@ interface FilePreviewItem {
   isCustomVideo: boolean;
 }
 
-export default function GuestUploadPage({ params }: UploadPageProps) {
-  const { token } = params;
+export default function GuestUploadPage() {
+  const routeParams = useParams();
+  const token = routeParams?.token as string;
 
   // Metadata State
   const [weddingName, setWeddingName] = useState<string>('Our Wedding');
@@ -35,6 +31,7 @@ export default function GuestUploadPage({ params }: UploadPageProps) {
 
   // Fetch Metadata & Verify Token
   useEffect(() => {
+    if (!token) return;
     async function fetchMeta() {
       try {
         setIsLoadingMeta(true);
