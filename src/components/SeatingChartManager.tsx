@@ -23,13 +23,15 @@ import {
   Sparkles,
   Search,
   Filter,
-  Heart
+  Heart,
+  Printer
 } from 'lucide-react';
 
 interface SeatingChartManagerProps {
   guests: Guest[];
   onUpdateGuests: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing?: boolean;
+  onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
 // Default Table Configurations if none exist
@@ -41,7 +43,7 @@ const INITIAL_TABLES: TableConfig[] = [
   { tableId: 'table-4', tableName: 'Table 4 - Friends & College', shape: 'circle', capacity: 6 },
 ];
 
-export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing }: SeatingChartManagerProps) {
+export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing, onOpenPrintStudio }: SeatingChartManagerProps) {
   const [tables, setTables] = useState<TableConfig[]>(INITIAL_TABLES);
   
   // Modals & Active Selections
@@ -184,6 +186,28 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing 
         </div>
 
         <div style={styles.headerActions}>
+          {onOpenPrintStudio && (
+            <button 
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-muted)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.5rem 0.875rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+              onClick={() => onOpenPrintStudio('table_cards')}
+              title="Print Table Tent Cards & Seating Roster"
+            >
+              <Printer size={15} style={{ marginRight: '0.35rem' }} /> PRINT TABLE CARDS
+            </button>
+          )}
+
           <button 
             style={styles.drawerToggleBtn} 
             onClick={() => setShowUnassignedDrawer(!showUnassignedDrawer)}

@@ -27,9 +27,10 @@ interface TimelineManagerProps {
   onUpdate: (updatedSchedule: ScheduleEvent[]) => Promise<void>;
   isSyncing: boolean;
   timeFormat?: '12h' | '24h';
+  onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
-export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFormat = '12h' }: TimelineManagerProps) {
+export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFormat = '12h', onOpenPrintStudio }: TimelineManagerProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // expand first by default
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -193,7 +194,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
   };
 
   const handlePrint = () => {
-    window.print();
+    if (onOpenPrintStudio) {
+      onOpenPrintStudio('timeline');
+    } else {
+      window.print();
+    }
   };
 
   return (

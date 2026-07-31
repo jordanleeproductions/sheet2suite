@@ -2,15 +2,16 @@
 
 import React, { useState } from 'react';
 import { Vendor } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer } from 'lucide-react';
 
 interface VendorManagerProps {
   vendors: Vendor[];
   onUpdate: (updatedVendors: Vendor[]) => Promise<void>;
   isSyncing: boolean;
+  onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
-export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorManagerProps) {
+export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrintStudio }: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
@@ -150,6 +151,27 @@ export default function VendorManager({ vendors, onUpdate, isSyncing }: VendorMa
               <Grid size={16} />
             </button>
           </div>
+          {onOpenPrintStudio && (
+            <button 
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-muted)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.5rem 0.875rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+              onClick={() => onOpenPrintStudio('vendors')}
+              title="Print Emergency Vendor Contact Directory"
+            >
+              <Printer size={15} style={{ marginRight: '0.35rem' }} /> PRINT ROSTER
+            </button>
+          )}
           <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD VENDOR
           </button>

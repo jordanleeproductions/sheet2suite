@@ -55,9 +55,13 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 - Required photography moments (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
 - Interactive `Captured` vs `Pending` checkoff toggles and **`EMAIL LIST`** photographer email generator (`mailto:`).
 
-### 2.11 Thank You & Gift Registry Tracker (`ThankYouManager.tsx`)
-- 🎁 **Gift Registry Thank Yous:** Tracks received gifts, givers, categories/stores, estimated values/cash amounts, and thank-you card status.
-- 💌 **Guest Attendance Thank You Cards:** Interfacing with the `Guest List` `Thanked` column (Column `L`), automatically bundled per household/party group for attending guests with single party-level checkoff toggles.
+### 2.12 Print & Export Studio (`PrintTemplatesModal.tsx`)
+- 🖨️ **Print Studio Launcher:** Header action button (`Printer` icon) and contextual module triggers opening the Print Studio portal.
+- 🎟️ **Escort & Folded Place Cards Template:** 2-column grid layout for attending guests displaying Guest Name, Table Assignment, Meal Selection icon, and optional crop/fold guidelines. Filterable by Table.
+- 🍽️ **Table Tent Cards Template:** Table number display signs featuring Table Name, seat count, and assigned guest list with meal choices. Filterable by Table.
+- 🕒 **Day-Of Timeline Roster Template:** High-contrast chronological schedule grouped by time block, filterable by responsibility role (*All*, *Bridal Party*, *Catering*, *Photography*, *Coordinators*).
+- 📋 **Emergency Vendor Contact Directory Template:** Single-page emergency vendor contact sheet listing Category, Business Name, Contact Person, Phone, Email, and Arrival/Setup notes. Filterable by Category.
+- 🖨️ **CSS `@media print` Engine:** High-performance `@media print` rules injecting `@page { size: A4 portrait; margin: 12mm; }` and isolating `#print-studio-paper-content` while hiding all app UI elements.
 
 ---
 

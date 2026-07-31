@@ -15,7 +15,8 @@ import ThankYouManager from '@/components/ThankYouManager';
 import ShareModal from '@/components/ShareModal';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2, Sliders } from 'lucide-react';
+import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
+import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2, Sliders, Printer } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 
 export default function Sheet2VowDashboard() {
@@ -65,6 +66,8 @@ export default function Sheet2VowDashboard() {
   const [showDisconnectModal, setShowDisconnectModal] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
+  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
+  const [printModalInitialTemplate, setPrintModalInitialTemplate] = useState<PrintTemplateType>('place_cards');
 
   const handleUpdateWeddingDetails = async (name: string, date: string) => {
     setWeddingName(name);
@@ -386,6 +389,17 @@ export default function Sheet2VowDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button 
               style={{ ...styles.iconBtn, color: 'var(--color-primary)' }} 
+              onClick={() => {
+                setPrintModalInitialTemplate('place_cards');
+                setShowPrintModal(true);
+              }}
+              title="Open Print & Export Studio"
+            >
+              <Printer size={20} />
+            </button>
+
+            <button 
+              style={{ ...styles.iconBtn, color: 'var(--color-primary)' }} 
               onClick={() => setShowShareModal(true)}
               title="Share Read-Only Vendor Link"
             >
@@ -662,6 +676,21 @@ export default function Sheet2VowDashboard() {
         />
       )}
 
+      {/* Print & Export Studio Modal */}
+      {showPrintModal && (
+        <PrintTemplatesModal
+          initialTemplate={printModalInitialTemplate}
+          guests={weddingData?.guests || []}
+          schedule={weddingData?.schedule || []}
+          vendors={weddingData?.vendors || []}
+          weddingName={weddingName}
+          weddingDate={weddingDate}
+          timeFormat={timeFormat}
+          currency={currency}
+          onClose={() => setShowPrintModal(false)}
+        />
+      )}
+
       {/* Advanced Settings Modal */}
       {showAdvancedSettings && (
         <AdvancedSettingsModal
@@ -934,6 +963,10 @@ export default function Sheet2VowDashboard() {
                   guests={weddingData.guests}
                   onUpdate={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
+                  onOpenPrintStudio={(tmpl) => {
+                    setPrintModalInitialTemplate(tmpl);
+                    setShowPrintModal(true);
+                  }}
                 />
               )}
 
@@ -942,6 +975,10 @@ export default function Sheet2VowDashboard() {
                   guests={weddingData.guests}
                   onUpdateGuests={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
+                  onOpenPrintStudio={(tmpl) => {
+                    setPrintModalInitialTemplate(tmpl);
+                    setShowPrintModal(true);
+                  }}
                 />
               )}
 
@@ -960,6 +997,10 @@ export default function Sheet2VowDashboard() {
                   onUpdate={(data) => syncUpdate('schedule', data)}
                   isSyncing={isSyncing}
                   timeFormat={timeFormat}
+                  onOpenPrintStudio={(tmpl) => {
+                    setPrintModalInitialTemplate(tmpl);
+                    setShowPrintModal(true);
+                  }}
                 />
               )}
 
@@ -968,6 +1009,10 @@ export default function Sheet2VowDashboard() {
                   vendors={weddingData.vendors}
                   onUpdate={(data) => syncUpdate('vendors', data)}
                   isSyncing={isSyncing}
+                  onOpenPrintStudio={(tmpl) => {
+                    setPrintModalInitialTemplate(tmpl);
+                    setShowPrintModal(true);
+                  }}
                 />
               )}
 

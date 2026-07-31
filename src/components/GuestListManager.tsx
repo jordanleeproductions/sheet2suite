@@ -9,9 +9,10 @@ interface GuestListManagerProps {
   onUpdate: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing: boolean;
   availableTables?: string[];
+  onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
-export default function GuestListManager({ guests, onUpdate, isSyncing, availableTables }: GuestListManagerProps) {
+export default function GuestListManager({ guests, onUpdate, isSyncing, availableTables, onOpenPrintStudio }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>('All');
@@ -163,7 +164,11 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   };
 
   const handlePrint = () => {
-    window.print();
+    if (onOpenPrintStudio) {
+      onOpenPrintStudio('place_cards');
+    } else {
+      window.print();
+    }
   };
 
   const renderGuestCard = (guest: Guest) => {
