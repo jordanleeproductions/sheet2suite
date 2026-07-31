@@ -487,19 +487,45 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   <label style={{ ...styles.label, color: 'var(--color-primary)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     🔍 AUTO-SEARCH CATALOG (OPTIONAL)
                   </label>
-                  <input
-                    style={{
-                      ...styles.input,
-                      padding: '0.55rem 0.75rem',
-                      fontSize: '0.8rem',
-                      borderColor: 'var(--color-muted)',
-                      backgroundColor: 'var(--color-bg, #f9fafb)',
-                    }}
-                    type="text"
-                    placeholder="Type song or artist to auto-fill..."
-                    value={iTunesQuery}
-                    onChange={(e) => setITunesQuery(e.target.value)}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      style={{
+                        ...styles.input,
+                        padding: '0.55rem 2rem 0.55rem 0.75rem',
+                        fontSize: '0.8rem',
+                        borderColor: 'var(--color-muted)',
+                        backgroundColor: 'var(--color-bg, #f9fafb)',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                      }}
+                      type="text"
+                      placeholder="Type song or artist to auto-fill..."
+                      value={iTunesQuery}
+                      onChange={(e) => setITunesQuery(e.target.value)}
+                    />
+                    {iTunesQuery && (
+                      <button
+                        type="button"
+                        onClick={() => { setITunesQuery(''); setITunesResults([]); }}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-muted)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '2px',
+                        }}
+                        title="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                   {isSearchingITunes && (
                     <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem', display: 'block' }}>
                       Searching iTunes...
