@@ -99,57 +99,57 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 ```
 
 ### Phase 1: MVP Core (Completed)
-- [x] Dual Design Engine (Editorial & Neo-Brutalism with Light/Dark modes).
-- [x] Purchase Activation & Setup Wizard (`/activate`).
-- [x] Task List Preset Packs (Traditional, Micro, Destination, Blank).
-- [x] Mobile-first Guest Registry, Budget Ledger, Timeline, Vendor Directory, Kanban, Music Player.
-- [x] Visual Table Seating Plan Manager (Circle, Rectangle, Square, Sweetheart/Single-side seating, Seat ID persistence).
-- [x] Photography Shot List Manager (`PhotoShotListManager`).
-- [x] Thank You Card & Gift Registry Tracker (`ThankYouManager` with Party Group bundling).
-- [x] Email List formatting for DJs and Photographers.
-- [x] Tokenized Read-Only Vendor Share Portals (`/share/[token]` with HMAC-SHA256 tokens & active link manager card).
-- [x] Multi-Currency Formatting Engine (`formatCurrency` helper supporting USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR € across Budget Ledger and Dashboard KPIs).
-- [x] Advanced Settings & Configuration Portal (`AdvancedSettingsModal` with Wedding Metadata Editor, Currency Selector, Visual & UX Theme / 12h-24h Time Format controls, Drive Inspector, Module Toggles, Feedback/Bug Submitter, and Dev Environment Mock toggle in Quick Settings menu).
+- [x] **[Task 1.1] Dual Design Engine:** Editorial & Neo-Brutalism with Light/Dark modes.
+- [x] **[Task 1.2] Purchase Activation & Setup Wizard:** `/activate` setup flow.
+- [x] **[Task 1.3] Task List Preset Packs:** Traditional, Micro, Destination, Blank.
+- [x] **[Task 1.4] Mobile-First Core Modules:** Guest Registry, Budget Ledger, Timeline, Vendor Directory, Kanban, Music Player.
+- [x] **[Task 1.5] Visual Table Seating Plan Manager:** Circle, Rectangle, Square, Sweetheart/Single-side seating, Seat ID persistence.
+- [x] **[Task 1.6] Photography Shot List Manager:** `PhotoShotListManager` with Captured/Pending checkoffs.
+- [x] **[Task 1.7] Thank You Card & Gift Tracker:** `ThankYouManager` with Party Group bundling.
+- [x] **[Task 1.8] DJ & Photographer Email Lists:** Quick `mailto:` email list formatting.
+- [x] **[Task 1.9] Tokenized Read-Only Vendor Share Portals:** `/share/[token]` with HMAC-SHA256 tokens & active link manager card.
+- [x] **[Task 1.10] Multi-Currency Formatting Engine:** `formatCurrency` helper supporting USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR €.
+- [x] **[Task 1.11] Advanced Settings Portal:** `AdvancedSettingsModal` with Wedding Metadata Editor, Currency Selector, Visual & UX Theme / 12h-24h Time Format controls, Drive Inspector, Module Toggles, Feedback/Bug Submitter, and Dev Environment Mock toggle in Quick Settings menu.
 
 ### Phase 2: Relational Sync, Printable Exports & Visual Customization (NEXT PRIORITY)
-- [x] **Print-Ready PDF & Printable Export Templates (`PrintTemplatesModal.tsx`):** One-click printable Escort / Folded Place Cards (with meal choice icons & crop/fold guidelines), Table Tent Cards & Seating Rosters, Day-Of Timeline Itinerary, and Emergency Vendor Directory Contact Sheet. Includes global header Print Studio launcher and contextual module triggers.
-- [ ] **Guest Photo & Video Upload Portal & Printable QR Card (`/upload/[token]`):** Tokenized, mobile-optimized public guest portal allowing wedding guests to upload photos and videos directly from their mobile gallery into the couple's personal Google Drive folder (`My Drive/Wedding Planning/Guest Uploads`) while hiding all technical Google Drive authentication details. Includes a printable QR code card generator for place settings and table cards.
-- [ ] **Guest Live Song Request Portal & DJ Sync (`/request-song/[token]`):** Public guest song request portal allowing guests to scan a printable QR code at the reception to submit live song requests. Requests automatically append to the `Music` tab in Google Sheets and instantly sync into the DJ's live read-only vendor view (`/share/[token]`).
-- [ ] **Dynamic Relational RSVP Sync:** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts and seating chart capacity alerts.
-- [ ] **Catering & Menu Setup Page:** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal.
-- [ ] **Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
+- [x] **[Task 2.1] Print-Ready PDF & Printable Export Templates (`PrintTemplatesModal.tsx`):** One-click printable Escort / Folded Place Cards (with meal choice icons & crop/fold guidelines), Table Tent Cards & Seating Rosters, Day-Of Timeline Itinerary, and Emergency Vendor Directory Contact Sheet. Includes global header Print Studio launcher and contextual module triggers.
+- [ ] **[Task 2.2] Guest Photo & Video Upload Portal & Printable QR Card (`/upload/[token]`):** Tokenized, mobile-optimized public guest portal allowing wedding guests to upload photos and videos directly from their mobile gallery into the couple's personal Google Drive folder (`My Drive/Wedding Planning/Guest Uploads`) while hiding all technical Google Drive authentication details. Includes a printable QR code card generator for place settings and table cards.
+- [ ] **[Task 2.3] Guest Live Song Request Portal & DJ Sync (`/request-song/[token]`):** Public guest song request portal allowing guests to scan a printable QR code at the reception to submit live song requests. Requests automatically append to the `Music` tab in Google Sheets and instantly sync into the DJ's live read-only vendor view (`/share/[token]`).
+- [ ] **[Task 2.4] Dynamic Relational RSVP Sync:** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts and seating chart capacity alerts.
+- [ ] **[Task 2.5] Catering & Menu Setup Page:** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal.
+- [ ] **[Task 2.6] Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
 
 ### Phase 2.5: Advanced Print & Export Studio Customization Engine
-- [ ] **Custom Print Theme & Typography Switcher:** Allow couples to switch between print visual styles (*Classic Editorial Serif*, *Modern Minimalist Sans*, *Boho Elegant Script*, *High-Contrast Mono Roster*).
-- [ ] **Canva Template Integration & Canva Bulk Create Exporter:**
+- [ ] **[Task 2.5.1] Custom Print Theme & Typography Switcher:** Allow couples to switch between print visual styles (*Classic Editorial Serif*, *Modern Minimalist Sans*, *Boho Elegant Script*, *High-Contrast Mono Roster*).
+- [ ] **[Task 2.5.2] Canva Template Integration & Canva Bulk Create Exporter:**
   - Provide a dedicated **Canva Integration Hub** in the Print Studio with official Sheet2Vow Canva template links (*Editorial, Boho Romance, Minimalist, Luxury Gold*).
   - 1-click **`EXPORT CANVA BULK MERGE CSV`** formatted specifically for Canva's *Bulk Create* tool (`First Name`, `Last Name`, `Table Name`, `Seat Number`, `Meal Choice`, `Photo Upload QR URL`), allowing couples to auto-populate custom Canva place card and table number designs in seconds.
   - Future support for Canva Connect API (`Design with Canva` embed button).
-- [ ] **Visual Table Diagrams & Numbered Seat Maps for Coordinators:** Render dynamic SVG/CSS shape diagrams (Circle, Rectangle, Square, Sweetheart) on printable Table Roster cards with numbered seat nodes (`#1`, `#2`, `#3`...) matching the numbered guest list, enabling day-of venue coordinators to physically place guest name cards at exact seat locations.
-- [ ] **Emoji & Decorative Icon Toggles:** Option to toggle off food/meal emojis (e.g. `🥩`, `🍗`, `🐟`) for ultra-formal black-tie printouts or clean text-only place cards.
-- [ ] **Granular Card Field & Seat ID Controls:** Option to show/hide Table Assignment, Seat ID (`Seat #4`), Meal Selection, or Dietary Restriction tags on place cards and table tent cards.
-- [ ] **Strict Print Page Boundary & Bleed Guardrails:** Advanced CSS page-break logic (`page-break-inside: avoid; break-inside: avoid;`) and standard cardstock grid dimensions (Avery 5302 / 3.5" x 2" folded card templates) ensuring zero card bleed or awkward page overflow during PDF generation and physical printing.
+- [ ] **[Task 2.5.3] Visual Table Diagrams & Numbered Seat Maps for Coordinators:** Render dynamic SVG/CSS shape diagrams (Circle, Rectangle, Square, Sweetheart) on printable Table Roster cards with numbered seat nodes (`#1`, `#2`, `#3`...) matching the numbered guest list, enabling day-of venue coordinators to physically place guest name cards at exact seat locations.
+- [ ] **[Task 2.5.4] Emoji & Decorative Icon Toggles:** Option to toggle off food/meal emojis (e.g. `🥩`, `🍗`, `🐟`) for ultra-formal black-tie printouts or clean text-only place cards.
+- [ ] **[Task 2.5.5] Granular Card Field & Seat ID Controls:** Option to show/hide Table Assignment, Seat ID (`Seat #4`), Meal Selection, or Dietary Restriction tags on place cards and table tent cards.
+- [ ] **[Task 2.5.6] Strict Print Page Boundary & Bleed Guardrails:** Advanced CSS page-break logic (`page-break-inside: avoid; break-inside: avoid;`) and standard cardstock grid dimensions (Avery 5302 / 3.5" x 2" folded card templates) ensuring zero card bleed or awkward page overflow during PDF generation and physical printing.
 
 ### Phase 3: Live Google OAuth, Real Sheets Sync, Monetization & Suite Expansion
-- [ ] **Production Google OAuth 2.0 & Real Google Sheets Sync:**
+- [ ] **[Task 3.1] Production Google OAuth 2.0 & Real Google Sheets Sync:**
   - Connect live Google OAuth 2.0 authentication flow (`google-auth-library` / NextAuth / `@germin8/sheet2-core`) with verified Google Cloud Console OAuth App credentials (`drive.file` scope).
   - Transition from Mock Mode to live Google Sheets API v4 / Drive API v3 cell synchronization, automatically generating and initializing the master wedding planner sheet in the user's personal Google Drive (`My Drive/Wedding Planning`) with real-time two-way cell persistence.
-- [ ] **Unified Product Usage Telemetry (GA4 Event Engine):** Standardized, privacy-conscious event tracking across the Sheet2 Suite (*Sheet2Vow, Sheet2Finance, Sheet2Home*) using Google Analytics 4 (`gtag` / `@next/third-parties`). Tracks feature engagement (e.g., `feature_tab_view`, `vendor_link_generated`, `seating_table_created`, `preset_chosen`) to pinpoint high-value modules vs. low-usage features across the product ecosystem.
-- [ ] **Lemon Squeezy Integration & License Entitlements:** Merchant-of-Record webhook integration enforcing Basic vs Pro vs VIP feature gating as documented in [pricing_models.md](file:///d:/Development/sheet2vow/docs/pricing_models.md).
-- [ ] **Co-Planning Partner Access (Spouse Google Drive Permission Delegation):** Invite a partner/spouse via email (`GRANT ADMIN ACCESS`) to delegate Google Drive read/write permissions so both spouses can co-plan on the same spreadsheet in real time.
-- [ ] **Sheet2 Suite Ecosystem Expansion:** Reusing `@germin8/sheet2-core` for Sheet2Finance and Sheet2Home.
+- [ ] **[Task 3.2] Unified Product Usage Telemetry (GA4 Event Engine):** Standardized, privacy-conscious event tracking across the Sheet2 Suite (*Sheet2Vow, Sheet2Finance, Sheet2Home*) using Google Analytics 4 (`gtag` / `@next/third-parties`). Tracks feature engagement (e.g., `feature_tab_view`, `vendor_link_generated`, `seating_table_created`, `preset_chosen`) to pinpoint high-value modules vs. low-usage features across the product ecosystem.
+- [ ] **[Task 3.3] Lemon Squeezy Integration & License Entitlements:** Merchant-of-Record webhook integration enforcing Basic vs Pro vs VIP feature gating as documented in [pricing_models.md](file:///d:/Development/sheet2vow/docs/pricing_models.md).
+- [ ] **[Task 3.4] Co-Planning Partner Access (Spouse Google Drive Permission Delegation):** Invite a partner/spouse via email (`GRANT ADMIN ACCESS`) to delegate Google Drive read/write permissions so both spouses can co-plan on the same spreadsheet in real time.
+- [ ] **[Task 3.5] Sheet2 Suite Ecosystem Expansion:** Reusing `@germin8/sheet2-core` for Sheet2Finance and Sheet2Home.
 
 ### Phase 4: Application Security, Risk Audit & Data Protection
-- [ ] **OAuth Scope Isolation & Token Storage Audit:**
+- [ ] **[Task 4.1] OAuth Scope Isolation & Token Storage Audit:**
   - Enforce strict `drive.file` scope boundary so the application never accesses user Drive files outside Sheet2Vow.
   - Store tokens in encrypted, HTTP-only session cookies with automatic token revocation on disconnect.
-- [ ] **Formula & CSV Injection Prevention:**
+- [ ] **[Task 4.2] Formula & CSV Injection Prevention:**
   - Implement strict string sanitization on user input fields to prevent Google Sheets Formula Injection attacks (escaping leading `=`, `+`, `-`, `@`).
-- [ ] **Cryptographic Read-Only Token Security (`TokenShareEngine`):**
+- [ ] **[Task 4.3] Cryptographic Read-Only Token Security (`TokenShareEngine`):**
   - Sign vendor/coordinator share links with HMAC-SHA256 JWT tokens with strict payload scoping (e.g., read-only timeline slice for coordinators; music slice for DJs) and expiration timestamps.
-- [ ] **Webhook Authentication & Replay Protection:**
+- [ ] **[Task 4.4] Webhook Authentication & Replay Protection:**
   - Verify signature headers on Etsy and Lemon Squeezy payment webhooks (`HMAC-SHA256`) to prevent fraudulent license activation.
-- [ ] **Data Loss & Backup Guardrails:**
+- [ ] **[Task 4.5] Data Loss & Backup Guardrails:**
   - Create automatic Google Sheet version snapshots prior to executing bulk row operations or structural changes.
 
 ---
