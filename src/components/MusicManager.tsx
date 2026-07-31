@@ -480,70 +480,70 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
               <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
-              {/* Compact iTunes Auto-Suggest Search Helper */}
-              <div style={{ marginBottom: '0.85rem', position: 'relative' }}>
-                <label style={{ ...styles.label, color: 'var(--color-primary)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  🔍 AUTO-SEARCH CATALOG (OPTIONAL)
-                </label>
-                <input
-                  style={{
-                    ...styles.input,
-                    padding: '0.55rem 0.75rem',
-                    fontSize: '0.8rem',
-                    borderColor: 'var(--color-muted)',
-                    backgroundColor: 'var(--color-bg, #f9fafb)',
-                  }}
-                  type="text"
-                  placeholder="Type song or artist to auto-fill..."
-                  value={iTunesQuery}
-                  onChange={(e) => setITunesQuery(e.target.value)}
-                />
-                {isSearchingITunes && (
-                  <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem', display: 'block' }}>
-                    Searching iTunes...
-                  </span>
-                )}
-                {iTunesResults.length > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: '#ffffff',
-                    border: '1px solid var(--color-muted)',
-                    borderRadius: '6px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                    zIndex: 100,
-                    maxHeight: '180px',
-                    overflowY: 'auto',
-                  }}>
-                    {iTunesResults.map(track => (
-                      <div
-                        key={track.trackId}
-                        style={{
-                          padding: '0.45rem 0.65rem',
-                          borderBottom: '1px solid #f3f4f6',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                        onClick={() => handleSelectITunesTrack(track)}
-                      >
-                        {track.artworkUrl60 && (
-                          <img src={track.artworkUrl60} alt="" style={{ width: '26px', height: '26px', borderRadius: '4px' }} />
-                        )}
-                        <div style={{ flex: 1, overflow: 'hidden' }}>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111827' }}>{track.trackName}</div>
-                          <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>{track.artistName}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <div className="music-form-grid" style={styles.formGrid}>
+                
+                {/* Compact iTunes Auto-Suggest Search Helper */}
+                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2', position: 'relative' }}>
+                  <label style={{ ...styles.label, color: 'var(--color-primary)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    🔍 AUTO-SEARCH CATALOG (OPTIONAL)
+                  </label>
+                  <input
+                    style={{
+                      ...styles.input,
+                      padding: '0.55rem 0.75rem',
+                      fontSize: '0.8rem',
+                      borderColor: 'var(--color-muted)',
+                      backgroundColor: 'var(--color-bg, #f9fafb)',
+                    }}
+                    type="text"
+                    placeholder="Type song or artist to auto-fill..."
+                    value={iTunesQuery}
+                    onChange={(e) => setITunesQuery(e.target.value)}
+                  />
+                  {isSearchingITunes && (
+                    <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem', display: 'block' }}>
+                      Searching iTunes...
+                    </span>
+                  )}
+                  {iTunesResults.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid var(--color-muted)',
+                      borderRadius: '6px',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                      zIndex: 100,
+                      maxHeight: '180px',
+                      overflowY: 'auto',
+                    }}>
+                      {iTunesResults.map(track => (
+                        <div
+                          key={track.trackId}
+                          style={{
+                            padding: '0.45rem 0.65rem',
+                            borderBottom: '1px solid #f3f4f6',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                          onClick={() => handleSelectITunesTrack(track)}
+                        >
+                          {track.artworkUrl60 && (
+                            <img src={track.artworkUrl60} alt="" style={{ width: '26px', height: '26px', borderRadius: '4px' }} />
+                          )}
+                          <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111827' }}>{track.trackName}</div>
+                            <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>{track.artistName}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Song Title *</label>
