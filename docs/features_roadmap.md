@@ -119,7 +119,10 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [ ] **Catering & Menu Setup Page:** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal.
 - [ ] **Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
 
-### Phase 3: Monetization, Analytics & Suite Expansion
+### Phase 3: Live Google OAuth, Real Sheets Sync, Monetization & Suite Expansion
+- [ ] **Production Google OAuth 2.0 & Real Google Sheets Sync:**
+  - Connect live Google OAuth 2.0 authentication flow (`google-auth-library` / NextAuth / `@germin8/sheet2-core`) with verified Google Cloud Console OAuth App credentials (`drive.file` scope).
+  - Transition from Mock Mode to live Google Sheets API v4 / Drive API v3 cell synchronization, automatically generating and initializing the master wedding planner sheet in the user's personal Google Drive (`My Drive/Wedding Planning`) with real-time two-way cell persistence.
 - [ ] **Unified Product Usage Telemetry (GA4 Event Engine):** Standardized, privacy-conscious event tracking across the Sheet2 Suite (*Sheet2Vow, Sheet2Finance, Sheet2Home*) using Google Analytics 4 (`gtag` / `@next/third-parties`). Tracks feature engagement (e.g., `feature_tab_view`, `vendor_link_generated`, `seating_table_created`, `preset_chosen`) to pinpoint high-value modules vs. low-usage features across the product ecosystem.
 - [ ] **Lemon Squeezy Integration & License Entitlements:** Merchant-of-Record webhook integration enforcing Basic vs Pro vs VIP feature gating as documented in [pricing_models.md](file:///d:/Development/sheet2vow/docs/pricing_models.md).
 - [ ] **Co-Planning Partner Access (Spouse Google Drive Permission Delegation):** Invite a partner/spouse via email (`GRANT ADMIN ACCESS`) to delegate Google Drive read/write permissions so both spouses can co-plan on the same spreadsheet in real time.
