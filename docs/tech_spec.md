@@ -63,9 +63,13 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 - 📋 **Emergency Vendor Contact Directory Template:** Single-page emergency vendor contact sheet listing Category, Business Name, Contact Person, Phone, Email, and Arrival/Setup notes. Filterable by Category.
 - 🖨️ **CSS `@media print` Engine:** High-performance `@media print` rules injecting `@page { size: A4 portrait; margin: 12mm; }` and isolating `#print-studio-paper-content` while hiding all app UI elements.
 
+### 2.13 Relational RSVP Sync Engine (`relationalSync.ts`)
+- **Real-Time Relational Analytics (`calculateRelationalCateringSummary`):** Calculates attending vs total invited ratios, dynamic meal choice totals (`🥩 Beef`, `🍗 Chicken`, `🐟 Fish`, `🌱 Vegan`), and dietary restriction drawers with matching guest names and table numbers.
+- **Seating Floorplan Guardrails:** Computes table capacity utilization and triggers `NORMAL`, `FULL`, and `OVER CAPACITY ⚠️` visual alert badges on seating floorplan cards whenever seat allocations exceed table limits.
+
 ---
 
-## 3. Cryptographic Tokenized Vendor Share Engine (`/share/[token]`)
+## 3. Vendor Access Control & Share Architecture
 
 To provide external vendors (DJs, Photographers, Coordinators, Caterers) with secure, mobile-optimized, read-only portals without forcing them to sign into Google Workspace or access confidential data:
 

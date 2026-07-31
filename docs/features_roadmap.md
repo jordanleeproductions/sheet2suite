@@ -120,7 +120,7 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
   - Automatically flags incoming guest song requests as `Pending Approval` (or `Banned` if matching a Banned track).
   - Admin approval workflow in `MusicManager.tsx` allowing couples to approve or decline song requests.
   - DJ Vendor View (`/share/[token]`) status filter pills for **All**, **Approved**, **Pending**, and **Banned**.
-- [ ] **[Task 2.4] Dynamic Relational RSVP Sync:** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts and seating chart capacity alerts.
+- [x] **[Task 2.4] Dynamic Relational RSVP Sync (`relationalSync.ts`):** Auto-updating guest RSVPs sync dietary restrictions directly into vendor catering counts, meal choice totals, and seating chart capacity alerts (`NORMAL`, `FULL`, `OVER CAPACITY ⚠️`).
 - [ ] **[Task 2.5] Catering & Menu Setup Page:** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal.
 - [ ] **[Task 2.6] Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
 

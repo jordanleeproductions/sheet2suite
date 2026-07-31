@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Guest, AgeCategory, RSVPStatus } from '@/lib/sheets/types';
-import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer } from 'lucide-react';
+import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
+import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart } from 'lucide-react';
 
 interface GuestListManagerProps {
   guests: Guest[];
@@ -329,6 +330,97 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
           </div>
         </div>
       </div>
+
+      {/* Relational RSVP & Catering Intelligence Banner */}
+      {(() => {
+        const summary = calculateRelationalCateringSummary(guests, []);
+        return (
+          <div style={{
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: 'var(--border-radius-md)',
+            padding: '1rem 1.25rem',
+            margin: '1rem 0',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Heart size={18} style={{ color: 'var(--color-primary)' }} />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                  RELATIONAL RSVP & CATERING INTELLIGENCE
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 700 }}>
+                  CONFIRMED ATTENDING: {summary.attendingCount} / {summary.totalInvited}
+                </span>
+                <span style={{ color: 'var(--color-muted)' }}>
+                  DECLINED: {summary.declinedCount}
+                </span>
+                <span style={{ color: 'var(--color-muted)' }}>
+                  PENDING: {summary.pendingCount}
+                </span>
+              </div>
+            </div>
+
+            {/* Meal Choice Breakdown Pills */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                MEAL TOTALS:
+              </span>
+              {summary.mealChoiceBreakdown.length === 0 ? (
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
+              ) : (
+                summary.mealChoiceBreakdown.map((item, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      backgroundColor: 'var(--color-bg, #f9fafb)',
+                      border: '1px solid var(--color-muted)',
+                      borderRadius: '4px',
+                      padding: '0.2rem 0.5rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.meal}:</span>
+                    <strong style={{ color: 'var(--color-primary)' }}>{item.count}</strong>
+                  </span>
+                ))
+              )}
+
+              {summary.dietaryBreakdown.length > 0 && (
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    color: '#ef4444',
+                    border: '1px solid #ef4444',
+                    borderRadius: '4px',
+                    padding: '0.2rem 0.5rem',
+                    marginLeft: 'auto',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  <AlertTriangle size={13} />
+                  <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} DIETARY RESTRICTION(S)</span>
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Filter and Search Bar */}
       <div style={styles.filterBar}>

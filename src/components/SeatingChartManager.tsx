@@ -330,10 +330,11 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                 <div style={styles.tableCardActions}>
                   <span style={{
                     ...styles.capacityBadge,
-                    backgroundColor: isOverCapacity ? 'var(--color-red-muted)' : 'var(--color-bg)',
-                    color: isOverCapacity ? 'var(--color-red)' : 'var(--color-text)'
+                    backgroundColor: isOverCapacity ? '#ef4444' : seatedGuests.length === table.capacity ? '#10b981' : 'var(--color-bg)',
+                    color: isOverCapacity || seatedGuests.length === table.capacity ? '#ffffff' : 'var(--color-text)',
+                    fontWeight: 700,
                   }}>
-                    {seatedGuests.length} / {table.capacity} Seats
+                    {isOverCapacity ? `⚠️ OVER CAPACITY (${seatedGuests.length}/${table.capacity})` : seatedGuests.length === table.capacity ? `FULL (${seatedGuests.length}/${table.capacity})` : `${seatedGuests.length} / ${table.capacity} Seats`}
                   </span>
                   <button style={styles.actionIconBtn} onClick={() => startEditTable(table)} title="Edit Table Config">
                     <Settings2 size={14} />
