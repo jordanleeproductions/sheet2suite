@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Guest, ScheduleEvent, VendorItem } from '@/lib/sheets/types';
+import { Guest, ScheduleEvent, Vendor } from '@/lib/sheets/types';
 import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, MapPin, Sparkles, Scissors } from 'lucide-react';
 import { formatTimeDisplay } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
@@ -12,7 +12,7 @@ interface PrintTemplatesModalProps {
   initialTemplate?: PrintTemplateType;
   guests?: Guest[];
   schedule?: ScheduleEvent[];
-  vendors?: VendorItem[];
+  vendors?: Vendor[];
   weddingName?: string;
   weddingDate?: string;
   timeFormat?: '12h' | '24h';
@@ -304,11 +304,11 @@ export default function PrintTemplatesModal({
                             <div style={styles.placeCardTableBadge}>
                               {guest.tableAssignment ? guest.tableAssignment.toUpperCase() : 'UNASSIGNED TABLE'}
                             </div>
-                            {showMealChoiceOnCards && (guest.mealSelection || guest.dietaryRestrictions) && (
+                            {showMealChoiceOnCards && (guest.mealChoice || guest.dietaryRestrictions) && (
                               <div style={styles.placeCardMeal}>
-                                <span>{getMealIcon(guest.mealSelection)}</span>
+                                <span>{getMealIcon(guest.mealChoice)}</span>
                                 <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>
-                                  {guest.mealSelection || guest.dietaryRestrictions}
+                                  {guest.mealChoice || guest.dietaryRestrictions}
                                 </span>
                               </div>
                             )}
@@ -350,9 +350,9 @@ export default function PrintTemplatesModal({
                                     <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
                                       {idx + 1}. {g.firstName} {g.lastName}
                                     </span>
-                                    {g.mealSelection && (
+                                    {g.mealChoice && (
                                       <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                                        {getMealIcon(g.mealSelection)} {g.mealSelection}
+                                        {getMealIcon(g.mealChoice)} {g.mealChoice}
                                       </span>
                                     )}
                                   </div>
