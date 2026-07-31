@@ -121,6 +121,10 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 
 ### Phase 2.5: Advanced Print & Export Studio Customization Engine
 - [ ] **Custom Print Theme & Typography Switcher:** Allow couples to switch between print visual styles (*Classic Editorial Serif*, *Modern Minimalist Sans*, *Boho Elegant Script*, *High-Contrast Mono Roster*).
+- [ ] **Canva Template Integration & Canva Bulk Create Exporter:**
+  - Provide a dedicated **Canva Integration Hub** in the Print Studio with official Sheet2Vow Canva template links (*Editorial, Boho Romance, Minimalist, Luxury Gold*).
+  - 1-click **`EXPORT CANVA BULK MERGE CSV`** formatted specifically for Canva's *Bulk Create* tool (`First Name`, `Last Name`, `Table Name`, `Seat Number`, `Meal Choice`, `Photo Upload QR URL`), allowing couples to auto-populate custom Canva place card and table number designs in seconds.
+  - Future support for Canva Connect API (`Design with Canva` embed button).
 - [ ] **Visual Table Diagrams & Numbered Seat Maps for Coordinators:** Render dynamic SVG/CSS shape diagrams (Circle, Rectangle, Square, Sweetheart) on printable Table Roster cards with numbered seat nodes (`#1`, `#2`, `#3`...) matching the numbered guest list, enabling day-of venue coordinators to physically place guest name cards at exact seat locations.
 - [ ] **Emoji & Decorative Icon Toggles:** Option to toggle off food/meal emojis (e.g. `🥩`, `🍗`, `🐟`) for ultra-formal black-tie printouts or clean text-only place cards.
 - [ ] **Granular Card Field & Seat ID Controls:** Option to show/hide Table Assignment, Seat ID (`Seat #4`), Meal Selection, or Dietary Restriction tags on place cards and table tent cards.
