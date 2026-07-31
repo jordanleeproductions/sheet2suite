@@ -716,15 +716,43 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
               </span>
 
               {/* Guest Selection List */}
-              <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {guests
-                  .filter(g => {
-                    const matchesSearch = `${g.firstName} ${g.lastName} ${g.partyGroup || ''}`.toLowerCase().includes(assignSearch.toLowerCase());
-                    return matchesSearch;
-                  })
-                  .map(guest => {
+              <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {(() => {
+                  const seatedPartyGroups = new Set(
+                    guests
+                      .filter(g => g.tableAssignment === assignSeatTable.tableName && g.partyGroup)
+                      .map(g => g.partyGroup.toLowerCase().trim())
+                  );
+
+                  const getPriorityScore = (g: Guest) => {
+                    const isUnassigned = !g.tableAssignment || g.tableAssignment === 'Unassigned';
+                    const matchesParty = isUnassigned && g.partyGroup && seatedPartyGroups.has(g.partyGroup.toLowerCase().trim());
+                    if (matchesParty) return 3; // Priority 1: Unassigned + Same Party Group
+                    if (isUnassigned) return 2; // Priority 2: Unassigned
+                    return 1; // Priority 3: Already assigned
+                  };
+
+                  const sortedGuests = guests
+                    .filter(g => `${g.firstName} ${g.lastName} ${g.partyGroup || ''}`.toLowerCase().includes(assignSearch.toLowerCase()))
+                    .sort((a, b) => {
+                      const scoreA = getPriorityScore(a);
+                      const scoreB = getPriorityScore(b);
+                      if (scoreA !== scoreB) return scoreB - scoreA;
+                      return (a.lastName || '').localeCompare(b.lastName || '');
+                    });
+
+                  if (sortedGuests.length === 0) {
+                    return (
+                      <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.85rem', padding: '1rem 0' }}>
+                        No matching guests found.
+                      </p>
+                    );
+                  }
+
+                  return sortedGuests.map(guest => {
                     const isAlreadyHere = guest.tableAssignment === assignSeatTable.tableName && guest.seatNumber === (targetSeatIndex || undefined);
                     const isUnassigned = !guest.tableAssignment || guest.tableAssignment === 'Unassigned';
+                    const matchesSameParty = isUnassigned && guest.partyGroup && seatedPartyGroups.has(guest.partyGroup.toLowerCase().trim());
 
                     return (
                       <div
@@ -734,8 +762,16 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '0.625rem 0.875rem',
-                          backgroundColor: isAlreadyHere ? 'var(--color-gold-muted)' : 'var(--color-surface)',
-                          border: isAlreadyHere ? '2px solid var(--color-gold)' : '1px solid var(--color-muted)',
+                          backgroundColor: matchesSameParty 
+                            ? 'rgba(16, 185, 129, 0.08)' 
+                            : isAlreadyHere 
+                            ? 'var(--color-gold-muted)' 
+                            : 'var(--color-surface)',
+                          border: matchesSameParty 
+                            ? '2px solid #10b981' 
+                            : isAlreadyHere 
+                            ? '2px solid var(--color-gold)' 
+                            : '1px solid var(--color-muted)',
                           borderRadius: 'var(--border-radius-sm)',
                           cursor: isAlreadyHere ? 'default' : 'pointer',
                           transition: 'var(--transition-smooth)'
@@ -763,23 +799,51 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                           </div>
                         </div>
 
-                        {isAlreadyHere ? (
-                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-gold)' }}>SEATED HERE</span>
-                        ) : isUnassigned ? (
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-highlight)' }}>+ SEAT GUEST</span>
-                        ) : (
-                          <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>At {guest.tableAssignment}</span>
-                        )}
+                        <div>
+                          {matchesSameParty ? (
+                            <span style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              backgroundColor: '#10b981',
+                              color: '#ffffff',
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '4px'
+                            }}>
+                              🎉 SAME PARTY ({guest.partyGroup})
+                            </span>
+                          ) : isUnassigned ? (
+                            <span style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              backgroundColor: 'var(--color-gold-muted)',
+                              color: 'var(--color-gold-dark, #b45309)',
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '4px'
+                            }}>
+                              UNASSIGNED
+                            </span>
+                          ) : (
+                            <span style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.65rem',
+                              color: 'var(--color-muted)',
+                              backgroundColor: 'var(--color-bg)',
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '4px',
+                              border: '1px solid var(--color-muted)'
+                            }}>
+                              Seated at {guest.tableAssignment}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
-                  })}
-
-                {guests.filter(g => `${g.firstName} ${g.lastName} ${g.partyGroup || ''}`.toLowerCase().includes(assignSearch.toLowerCase())).length === 0 && (
-                  <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.85rem', padding: '1rem 0' }}>
-                    No matching guests found.
-                  </p>
-                )}
+                  });
+                })()}
               </div>
+            </div>
             </div>
           </div>
         </div>
