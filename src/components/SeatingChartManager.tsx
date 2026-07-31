@@ -315,11 +315,36 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
             ))}
           </div>
         </div>
-      )}
+      ) : (
+        <>
+          {/* Summary KPI Strip */}
+          <div style={styles.kpiBar}>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>TOTAL TABLES</span>
+              <span style={styles.kpiValue}>{tables.length}</span>
+            </div>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>TOTAL SEAT CAPACITY</span>
+              <span style={styles.kpiValue}>
+                {tables.reduce((acc, t) => acc + t.capacity, 0)}
+              </span>
+            </div>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>SEATED GUESTS</span>
+              <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
+                {guests.length - unassignedGuests.length} / {guests.length}
+              </span>
+            </div>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>UNASSIGNED GUESTS</span>
+              <span style={{ ...styles.kpiValue, color: unassignedGuests.length > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>
+                {unassignedGuests.length}
+              </span>
+            </div>
+          </div>
 
-      {/* Main Floorplan Canvas Grid */}
-      <>
-      <div style={styles.floorplanGrid}>
+          {/* Main Floorplan Canvas Grid */}
+          <div style={styles.floorplanGrid}>
         {filteredTables.map(table => {
           const seatedGuests = guests.filter(g => g.tableAssignment === table.tableName);
           const isOverCapacity = seatedGuests.length > table.capacity;
