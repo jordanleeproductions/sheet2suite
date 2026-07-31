@@ -1,4 +1,4 @@
-import { Guest, Table } from './types';
+import { Guest, TableConfig } from './types';
 
 export interface MealChoiceBreakdown {
   meal: string;
@@ -43,7 +43,7 @@ export interface RelationalCateringSummary {
  */
 export function calculateRelationalCateringSummary(
   guests: Guest[],
-  tables: Table[]
+  tables: TableConfig[]
 ): RelationalCateringSummary {
   let attendingCount = 0;
   let declinedCount = 0;
