@@ -297,16 +297,28 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
             <button style={styles.closeIconBtn} onClick={() => setShowUnassignedDrawer(false)}>
               <X size={16} />
             </button>
-          </div>
-
+          <div style={styles.drawerList}>
+            {unassignedGuests.map(guest => (
+              <div 
+                key={guest.guestId} 
+                style={styles.drawerItem}
+                onClick={() => setSelectedGuest(guest)}
+              >
+                <div style={styles.initialsAvatar}>
+                  {getInitials(guest)}
                 </div>
-              ))}
-            </div>
-          )}
+                <div style={styles.drawerItemMeta}>
+                  <span style={styles.drawerItemName}>{guest.firstName} {guest.lastName}</span>
+                  <span style={styles.drawerItemGroup}>{guest.partyGroup || 'No Party'} • {guest.rsvpStatus}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Main Floorplan Canvas Grid */}
+      <>
       <div style={styles.floorplanGrid}>
         {filteredTables.map(table => {
           const seatedGuests = guests.filter(g => g.tableAssignment === table.tableName);
