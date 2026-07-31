@@ -297,6 +297,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
             <button style={styles.closeIconBtn} onClick={() => setShowUnassignedDrawer(false)}>
               <X size={16} />
             </button>
+          </div>
           <div style={styles.drawerList}>
             {unassignedGuests.map(guest => (
               <div 
@@ -313,6 +314,328 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW CONDITIONAL RENDERING: CEREMONY AISLE SEATING VS RECEPTION TABLES */}
+      {seatingMode === 'ceremony' ? (
+        <div className="ceremony-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1rem' }}>
+          {/* Ceremony KPI Summary Strip */}
+          <div style={styles.kpiBar}>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>REQUIRED CEREMONY SEATS</span>
+              <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
+                {ceremonyRequiredGuests.length}
+              </span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                (Attending + Pending)
+              </span>
+            </div>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>DECLINED GUESTS</span>
+              <span style={{ ...styles.kpiValue, color: 'var(--color-muted)' }}>
+                {ceremonyDeclinedCount}
+              </span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                (Excluded)
+              </span>
+            </div>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>TOTAL CHAIR CAPACITY</span>
+              <span style={{ ...styles.kpiValue, color: totalCeremonyCapacity >= ceremonyRequiredGuests.length ? 'var(--color-green, #10b981)' : '#ef4444' }}>
+                {totalCeremonyCapacity} Seats
+              </span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                ({ceremonyConfig.rowsCount} rows × {ceremonyConfig.chairsPerSide * 2} per row)
+              </span>
+            </div>
+            <div style={styles.kpiItem}>
+              <span style={styles.kpiLabel}>CONFIGURED LAYOUT</span>
+              <span style={styles.kpiValue}>
+                {ceremonyConfig.rowsCount} Rows
+              </span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                {ceremonyConfig.chairsPerSide} per side
+              </span>
+            </div>
+          </div>
+
+          {/* Ceremony Configuration Toolbar */}
+          <div style={{
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: 'var(--border-radius-md)',
+            padding: '1rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+              {/* Stepper: Rows Count */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>ROWS:</span>
+                <button
+                  type="button"
+                  style={styles.actionIconBtn}
+                  onClick={() => setCeremonyConfig(prev => ({ ...prev, rowsCount: Math.max(1, prev.rowsCount - 1) }))}
+                >
+                  -
+                </button>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: 'var(--font-mono)', minWidth: '24px', textAlign: 'center' }}>
+                  {ceremonyConfig.rowsCount}
+                </span>
+                <button
+                  type="button"
+                  style={styles.actionIconBtn}
+                  onClick={() => setCeremonyConfig(prev => ({ ...prev, rowsCount: Math.min(30, prev.rowsCount + 1) }))}
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Stepper: Chairs Per Side */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>CHAIRS PER SIDE:</span>
+                <button
+                  type="button"
+                  style={styles.actionIconBtn}
+                  onClick={() => setCeremonyConfig(prev => ({ ...prev, chairsPerSide: Math.max(1, prev.chairsPerSide - 1) }))}
+                >
+                  -
+                </button>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: 'var(--font-mono)', minWidth: '24px', textAlign: 'center' }}>
+                  {ceremonyConfig.chairsPerSide}
+                </span>
+                <button
+                  type="button"
+                  style={styles.actionIconBtn}
+                  onClick={() => setCeremonyConfig(prev => ({ ...prev, chairsPerSide: Math.min(15, prev.chairsPerSide + 1) }))}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                value={ceremonyConfig.leftLabel}
+                onChange={(e) => setCeremonyConfig(prev => ({ ...prev, leftLabel: e.target.value }))}
+                style={{ ...styles.inputField, width: '160px', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
+                placeholder="Left Side Label"
+              />
+              <input
+                type="text"
+                value={ceremonyConfig.rightLabel}
+                onChange={(e) => setCeremonyConfig(prev => ({ ...prev, rightLabel: e.target.value }))}
+                style={{ ...styles.inputField, width: '160px', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
+                placeholder="Right Side Label"
+              />
+            </div>
+          </div>
+
+          {/* Ceremony Altar Header Visual */}
+          <div style={{
+            textAlign: 'center',
+            padding: '0.75rem',
+            backgroundColor: 'var(--color-primary)',
+            color: 'var(--color-on-primary)',
+            borderRadius: 'var(--border-radius-md)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            letterSpacing: '0.05em',
+            boxShadow: 'var(--box-shadow-subtle)',
+          }}>
+            💒 CEREMONY ALTAR / WEDDING ARCH
+          </div>
+
+          {/* Dual-Side Ceremony Rows Visual Canvas with Mobile Responsive Card Splitting */}
+          <style>{`
+            .ceremony-canvas-grid {
+              display: grid;
+              grid-template-columns: 1fr 60px 1fr;
+              gap: 1rem;
+            }
+            @media (max-width: 768px) {
+              .ceremony-canvas-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+              }
+              .ceremony-aisle-runner {
+                display: none !important;
+              }
+            }
+          `}</style>
+
+          <div className="ceremony-canvas-grid">
+            {/* LEFT SIDE CARD (Bride's Side) */}
+            <div style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+            }}>
+              <h3 style={{ fontSize: '0.9rem', fontFamily: 'var(--font-mono)', fontWeight: 700, borderBottom: '1px solid var(--color-muted)', paddingBottom: '0.5rem', color: 'var(--color-primary)' }}>
+                {ceremonyConfig.leftLabel}
+              </h3>
+              {Array.from({ length: ceremonyConfig.rowsCount }).map((_, rIdx) => {
+                const rowNum = rIdx + 1;
+                const tableName = `Ceremony R${rowNum}-Left`;
+
+                return (
+                  <div key={`left-row-${rowNum}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', minWidth: '42px', color: 'var(--color-muted)' }}>
+                      ROW {rowNum}:
+                    </span>
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                      {Array.from({ length: ceremonyConfig.chairsPerSide }).map((_, cIdx) => {
+                        const seatNum = cIdx + 1;
+                        const guest = guests.find(g => g.tableAssignment === tableName && g.seatNumber === seatNum);
+
+                        return (
+                          <div
+                            key={`left-r${rowNum}-s${seatNum}`}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '6px',
+                              backgroundColor: guest ? 'var(--color-primary)' : 'var(--color-bg)',
+                              color: guest ? 'var(--color-on-primary)' : 'var(--color-muted)',
+                              border: guest ? '1px solid var(--color-primary)' : '1px dashed var(--color-muted)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                            title={guest ? `${guest.firstName} ${guest.lastName} (${tableName}, Seat ${seatNum})` : `Row ${rowNum} Left, Seat ${seatNum}: Click to assign`}
+                            onClick={() => {
+                              const tableConfig: TableConfig = {
+                                tableId: `ceremony-r${rowNum}-left`,
+                                tableName,
+                                shape: 'square',
+                                capacity: ceremonyConfig.chairsPerSide,
+                              };
+                              if (guest) {
+                                setSelectedGuest(guest);
+                              } else {
+                                setAssignSeatTable(tableConfig);
+                                setTargetSeatIndex(seatNum);
+                              }
+                            }}
+                          >
+                            {guest ? getInitials(guest) : '+'}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* CENTRAL AISLE RUNNER (Hidden on Mobile) */}
+            <div className="ceremony-aisle-runner" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderLeft: '2px dashed var(--color-muted)',
+              borderRight: '2px dashed var(--color-muted)',
+              backgroundColor: 'var(--color-bg)',
+              borderRadius: '4px',
+              padding: '0.5rem',
+            }}>
+              <span style={{
+                writingMode: 'vertical-rl',
+                transform: 'rotate(180deg)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: 'var(--color-muted)',
+                letterSpacing: '0.2em',
+              }}>
+                CENTRAL AISLE
+              </span>
+            </div>
+
+            {/* RIGHT SIDE CARD (Groom's Side) */}
+            <div style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+            }}>
+              <h3 style={{ fontSize: '0.9rem', fontFamily: 'var(--font-mono)', fontWeight: 700, borderBottom: '1px solid var(--color-muted)', paddingBottom: '0.5rem', color: 'var(--color-primary)' }}>
+                {ceremonyConfig.rightLabel}
+              </h3>
+              {Array.from({ length: ceremonyConfig.rowsCount }).map((_, rIdx) => {
+                const rowNum = rIdx + 1;
+                const tableName = `Ceremony R${rowNum}-Right`;
+
+                return (
+                  <div key={`right-row-${rowNum}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', minWidth: '42px', color: 'var(--color-muted)' }}>
+                      ROW {rowNum}:
+                    </span>
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                      {Array.from({ length: ceremonyConfig.chairsPerSide }).map((_, cIdx) => {
+                        const seatNum = cIdx + 1;
+                        const guest = guests.find(g => g.tableAssignment === tableName && g.seatNumber === seatNum);
+
+                        return (
+                          <div
+                            key={`right-r${rowNum}-s${seatNum}`}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '6px',
+                              backgroundColor: guest ? 'var(--color-primary)' : 'var(--color-bg)',
+                              color: guest ? 'var(--color-on-primary)' : 'var(--color-muted)',
+                              border: guest ? '1px solid var(--color-primary)' : '1px dashed var(--color-muted)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                            title={guest ? `${guest.firstName} ${guest.lastName} (${tableName}, Seat ${seatNum})` : `Row ${rowNum} Right, Seat ${seatNum}: Click to assign`}
+                            onClick={() => {
+                              const tableConfig: TableConfig = {
+                                tableId: `ceremony-r${rowNum}-right`,
+                                tableName,
+                                shape: 'square',
+                                capacity: ceremonyConfig.chairsPerSide,
+                              };
+                              if (guest) {
+                                setSelectedGuest(guest);
+                              } else {
+                                setAssignSeatTable(tableConfig);
+                                setTargetSeatIndex(seatNum);
+                              }
+                            }}
+                          >
+                            {guest ? getInitials(guest) : '+'}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (
