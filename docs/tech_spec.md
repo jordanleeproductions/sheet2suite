@@ -130,10 +130,11 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 - **Master & Individual Revocation:** Configuration JSON stored in cell **`Settings!B2`** includes `shareVersion`. Clicking **"Revoke All Shared Links"** in Settings increments `shareVersion` in `Settings!B2`. Old tokens generated with previous versions are instantly rejected by the backend proxy.
 - **Collapsible Revoked & Expired Links Section:** In the dashboard's Access Control card (`VendorShareLinkManager.tsx`), revoked and expired links are tucked away in a collapsible accordion (`SHOW REVOKED & EXPIRED LINKS`), keeping the main active dashboard uncluttered while allowing couples to view preview links or clear revoked history.
 
-### 3.5 Guest Photo & Video Upload Portal (`/upload/[token]` & `src/app/api/upload/[token]/route.ts`)
-- **Public Mobile Upload Page (`/upload/[token]/page.tsx`):** Standalone, high-contrast upload route accessible to guests without signing in. Supports multi-file selection from gallery or camera capture (`capture="environment"`), image/video thumbnail previews, uploader name & congratulatory note inputs, and real-time progress feedback.
-- **Backend Upload Proxy API (`/api/upload/[token]/route.ts`):** Validates HMAC-SHA256 token signature (`scope: 'guest_upload'`) and uploads multipart/form-data files directly into the couple's personal Google Drive folder (`My Drive/Wedding Planning/Guest Uploads`).
-- **Printable QR Code Tent Cards:** Integrated in `VendorShareLinkManager.tsx` and `PrintTemplatesModal.tsx` to print reception tent cards featuring a QR code linked directly to `/upload/[token]`.
+### 3.6 Guest Song Request Portal & DJ Live Sync (`/request-song/[token]` & `src/app/api/request-song/[token]/route.ts`)
+- **Public Mobile Song Request Portal (`/request-song/[token]/page.tsx`):** Tokenized song request page featuring real-time iTunes Search API auto-complete, 30-second audio previews, manual song entry fallback, requester name input, and special dedications for the DJ.
+- **Backend Song Request API Proxy (`/api/request-song/[token]/route.ts`):** Validates HMAC-SHA256 token signature (`scope: 'guest_song_request'`) and appends requested songs directly to `Music!A:E` (`listType: 'Play List'`).
+- **Live DJ Vendor Sync (`/share/[token]/page.tsx`):** Instantly displays requested songs under the `REQUESTED SONGS` filter pill in the DJ's live read-only vendor view.
+- **Printable QR Code Tent Cards:** Integrated in `VendorShareLinkManager.tsx` and `PrintTemplatesModal.tsx` (`song_request_qr_cards`) to print bar and DJ booth tent cards.
 
 ---
 

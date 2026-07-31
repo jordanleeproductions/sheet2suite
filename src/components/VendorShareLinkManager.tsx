@@ -70,6 +70,33 @@ export default function VendorShareLinkManager({
     localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
   };
 
+  const handleGenerateSongRequestLink = () => {
+    const token = generateShareToken({
+      spreadsheetId,
+      scope: 'guest_song_request',
+      weddingName: weddingName || 'Our Wedding',
+      expiresInDays: 90,
+    });
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const shareUrl = `${origin}/request-song/${token}`;
+
+    const newRecord: ShareLinkRecord = {
+      id: `link-song-${Date.now()}`,
+      scope: 'guest_song_request',
+      label: 'Guest Live Song Request Portal',
+      token,
+      shareUrl,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      exp: Date.now() + 90 * 24 * 60 * 60 * 1000,
+      shareVersion: 1,
+    };
+
+    const updated = [newRecord, ...links];
+    setLinks(updated);
+    localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
+  };
+
   // Load links from local storage
   const loadLinks = () => {
     try {
@@ -130,6 +157,7 @@ export default function VendorShareLinkManager({
       case 'timeline': return <Clock size={16} />;
       case 'catering': return <Utensils size={16} />;
       case 'guest_upload': return <UploadCloud size={16} />;
+      case 'guest_song_request': return <Music size={16} />;
       default: return <Sparkles size={16} />;
     }
   };
@@ -148,7 +176,7 @@ export default function VendorShareLinkManager({
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
           {activeLinks.length > 0 && (
             <button 
               type="button"
@@ -159,6 +187,27 @@ export default function VendorShareLinkManager({
               <ShieldAlert size={14} style={{ marginRight: '4px' }} /> REVOKE ALL LINKS
             </button>
           )}
+
+          <button 
+            type="button" 
+            style={{ 
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              backgroundColor: 'transparent',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-sm)',
+              padding: '0.5rem 0.875rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center'
+            }} 
+            onClick={handleGenerateSongRequestLink}
+            title="Generate mobile song request link for guests"
+          >
+            <Music size={15} style={{ marginRight: '4px' }} /> SONG REQUEST LINK
+          </button>
 
           <button 
             type="button" 
