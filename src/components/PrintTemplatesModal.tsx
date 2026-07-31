@@ -6,7 +6,7 @@ import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, 
 import { formatTimeDisplay } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
 
-export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors';
+export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards';
 
 interface PrintTemplatesModalProps {
   initialTemplate?: PrintTemplateType;
@@ -140,6 +140,7 @@ export default function PrintTemplatesModal({
             {[
               { id: 'place_cards', label: 'Escort & Place Cards', icon: Users, count: attendingGuests.length },
               { id: 'table_cards', label: 'Table Tent Cards', icon: Heart, count: tablesList.length },
+              { id: 'upload_qr_cards', label: 'Guest Photo Upload QR Cards', icon: Sparkles, count: 4 },
               { id: 'timeline', label: 'Day-Of Timeline Roster', icon: Clock, count: schedule.length },
               { id: 'vendors', label: 'Vendor Directory Sheet', icon: Phone, count: vendors.length },
             ].map(tab => {
@@ -364,6 +365,44 @@ export default function PrintTemplatesModal({
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TEMPLATE: GUEST PHOTO UPLOAD QR CARDS */}
+              {activeTemplate === 'upload_qr_cards' && (
+                <div>
+                  <div style={styles.paperSectionTitleRow}>
+                    <h3 style={styles.paperSectionTitle}>GUEST RECEPTION PHOTO UPLOAD QR CARDS</h3>
+                    <span style={styles.paperSectionMeta}>Table & Bar Display Cards</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                    {[1, 2, 3, 4].map((cardNum) => (
+                      <div key={cardNum} style={{ border: '2px solid #111827', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', margin: '0 0 0.25rem 0', color: '#111827' }}>
+                          SHARE YOUR MEMORIES
+                        </h3>
+                        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: '#6b7280', margin: '0 0 1rem 0' }}>
+                          {weddingName.toUpperCase()} {weddingDate ? `• ${weddingDate}` : ''}
+                        </p>
+
+                        {/* Simulated QR Code Box */}
+                        <div style={{ width: '120px', height: '120px', border: '3px solid #111827', padding: '8px', borderRadius: '8px', backgroundColor: '#f9fafb', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
+                          <div style={{ width: '100%', height: '100%', border: '2px dashed #374151', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>
+                            <span style={{ fontSize: '1.5rem' }}>📷</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', fontWeight: 700, color: '#111827', marginTop: '2px' }}>SCAN QR</span>
+                          </div>
+                        </div>
+
+                        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.75rem', color: '#374151', margin: '0 0 0.5rem 0', fontWeight: 600 }}>
+                          Point your phone camera to upload photos & videos directly to our Google Drive!
+                        </p>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#9ca3af' }}>
+                          No App Required • Direct Drive Upload
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

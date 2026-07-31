@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShareLinkRecord } from '@/lib/share/token';
+import { ShareLinkRecord, generateShareToken } from '@/lib/share/token';
 import { 
   Share2, 
   Copy, 
@@ -19,7 +19,8 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
-  ShieldOff
+  ShieldOff,
+  UploadCloud
 } from 'lucide-react';
 
 interface VendorShareLinkManagerProps {
@@ -27,6 +28,7 @@ interface VendorShareLinkManagerProps {
   weddingName: string;
   onOpenShareModal: () => void;
   onRevokeAll?: () => Promise<void>;
+  onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
 export default function VendorShareLinkManager({
@@ -34,11 +36,39 @@ export default function VendorShareLinkManager({
   weddingName,
   onOpenShareModal,
   onRevokeAll,
+  onOpenPrintStudio,
 }: VendorShareLinkManagerProps) {
   const [links, setLinks] = useState<ShareLinkRecord[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
   const [showRevokedSection, setShowRevokedSection] = useState(false);
+
+  const handleGenerateGuestUploadLink = () => {
+    const token = generateShareToken({
+      spreadsheetId,
+      scope: 'guest_upload',
+      weddingName: weddingName || 'Our Wedding',
+      expiresInDays: 90,
+    });
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const shareUrl = `${origin}/upload/${token}`;
+
+    const newRecord: ShareLinkRecord = {
+      id: `link-upload-${Date.now()}`,
+      scope: 'guest_upload',
+      label: 'Guest Photo & Video Upload Portal',
+      token,
+      shareUrl,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      exp: Date.now() + 90 * 24 * 60 * 60 * 1000,
+      shareVersion: 1,
+    };
+
+    const updated = [newRecord, ...links];
+    setLinks(updated);
+    localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
+  };
 
   // Load links from local storage
   const loadLinks = () => {
@@ -99,6 +129,7 @@ export default function VendorShareLinkManager({
       case 'photos': return <Camera size={16} />;
       case 'timeline': return <Clock size={16} />;
       case 'catering': return <Utensils size={16} />;
+      case 'guest_upload': return <UploadCloud size={16} />;
       default: return <Sparkles size={16} />;
     }
   };
@@ -128,6 +159,27 @@ export default function VendorShareLinkManager({
               <ShieldAlert size={14} style={{ marginRight: '4px' }} /> REVOKE ALL LINKS
             </button>
           )}
+
+          <button 
+            type="button" 
+            style={{ 
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              backgroundColor: 'transparent',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-sm)',
+              padding: '0.5rem 0.875rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center'
+            }} 
+            onClick={handleGenerateGuestUploadLink}
+            title="Generate mobile upload portal link for guests"
+          >
+            <UploadCloud size={15} style={{ marginRight: '4px' }} /> GUEST UPLOAD LINK
+          </button>
 
           <button style={styles.addBtn} onClick={onOpenShareModal}>
             <Plus size={16} style={{ marginRight: '4px' }} /> GENERATE VENDOR LINK

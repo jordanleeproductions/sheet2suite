@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export type ShareScope = 'music' | 'photos' | 'timeline' | 'catering' | 'vendor_hub';
+export type ShareScope = 'music' | 'photos' | 'timeline' | 'catering' | 'vendor_hub' | 'guest_upload' | 'guest_song_request';
 
 export interface ShareTokenPayload {
   spreadsheetId: string;
