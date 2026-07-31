@@ -43,6 +43,8 @@ export default function ShareModal({
     timeline: 'Coordinator Itinerary',
     catering: 'Catering & Venue Manager',
     vendor_hub: 'Full Vendor Hub',
+    guest_upload: 'Guest Photo & Video Upload Portal',
+    guest_song_request: 'Guest Song Request Portal',
   };
 
   // Generate Token & Link
