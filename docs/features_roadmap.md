@@ -119,6 +119,12 @@ Under the hood, Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Financ
 - [ ] **Catering & Menu Setup Page:** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal.
 - [ ] **Expanded Multi-Theme Aesthetic Engine:** Expand design presets beyond Editorial Minimalist and Neo-Brutalism by introducing **Botanical Romance** (sage green & soft blush tones with organic curves), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges), along with custom wedding palette token presets.
 
+### Phase 2.5: Advanced Print & Export Studio Customization Engine
+- [ ] **Custom Print Theme & Typography Switcher:** Allow couples to switch between print visual styles (*Classic Editorial Serif*, *Modern Minimalist Sans*, *Boho Elegant Script*, *High-Contrast Mono Roster*).
+- [ ] **Emoji & Decorative Icon Toggles:** Option to toggle off food/meal emojis (e.g. `🥩`, `🍗`, `🐟`) for ultra-formal black-tie printouts or clean text-only place cards.
+- [ ] **Granular Card Field & Seat ID Controls:** Option to show/hide Table Assignment, Seat ID (`Seat #4`), Meal Selection, or Dietary Restriction tags on place cards and table tent cards.
+- [ ] **Strict Print Page Boundary & Bleed Guardrails:** Advanced CSS page-break logic (`page-break-inside: avoid; break-inside: avoid;`) and standard cardstock grid dimensions (Avery 5302 / 3.5" x 2" folded card templates) ensuring zero card bleed or awkward page overflow during PDF generation and physical printing.
+
 ### Phase 3: Live Google OAuth, Real Sheets Sync, Monetization & Suite Expansion
 - [ ] **Production Google OAuth 2.0 & Real Google Sheets Sync:**
   - Connect live Google OAuth 2.0 authentication flow (`google-auth-library` / NextAuth / `@germin8/sheet2-core`) with verified Google Cloud Console OAuth App credentials (`drive.file` scope).
