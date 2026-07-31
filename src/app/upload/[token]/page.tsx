@@ -61,12 +61,41 @@ export default function GuestUploadPage() {
     };
   }, [selectedFiles]);
 
+  const ALLOWED_MIME_PREFIXES = ['image/', 'video/'];
+  const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.mp4', '.mov', '.avi', '.m4v', '.webm', '.3gp', '.mkv'];
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const newFiles = Array.from(e.target.files);
+    const incomingFiles = Array.from(e.target.files);
 
-    const newItems: FilePreviewItem[] = newFiles.map((file, idx) => {
-      const isVideo = file.type.startsWith('video/');
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    incomingFiles.forEach(file => {
+      const isMimeValid = ALLOWED_MIME_PREFIXES.some(prefix => (file.type || '').toLowerCase().startsWith(prefix));
+      const ext = (file.name.substring(file.name.lastIndexOf('.')) || '').toLowerCase();
+      const isExtValid = ALLOWED_EXTENSIONS.includes(ext);
+
+      if (isMimeValid || isExtValid) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      setErrorMessage(`Skipped unsupported file(s): ${invalidFiles.join(', ')}. Only photo and video formats (JPG, PNG, HEIC, MP4, MOV, etc.) are allowed.`);
+    } else {
+      setErrorMessage('');
+    }
+
+    if (validFiles.length === 0) {
+      e.target.value = '';
+      return;
+    }
+
+    const newItems: FilePreviewItem[] = validFiles.map((file, idx) => {
+      const isVideo = file.type.startsWith('video/') || ['.mp4', '.mov', '.avi', '.webm'].some(ext => file.name.toLowerCase().endsWith(ext));
       const previewUrl = URL.createObjectURL(file);
       return {
         id: `${file.name}-${file.lastModified}-${idx}-${Math.random()}`,
@@ -77,7 +106,6 @@ export default function GuestUploadPage() {
     });
 
     setSelectedFiles(prev => [...prev, ...newItems]);
-    setErrorMessage('');
     e.target.value = ''; // Reset input
   };
 

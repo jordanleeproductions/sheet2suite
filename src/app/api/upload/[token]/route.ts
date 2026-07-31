@@ -52,7 +52,24 @@ export async function POST(
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
 
-    console.log(`Received ${files.length} upload(s) from "${uploaderName}" for spreadsheet: ${payload.spreadsheetId}`);
+    // Strict Image & Video Validation
+    const ALLOWED_MIME_PREFIXES = ['image/', 'video/'];
+    const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.mp4', '.mov', '.avi', '.m4v', '.webm', '.3gp', '.mkv'];
+
+    for (const file of files) {
+      const isImageOrVideoMime = ALLOWED_MIME_PREFIXES.some(prefix => (file.type || '').toLowerCase().startsWith(prefix));
+      const ext = (file.name.substring(file.name.lastIndexOf('.')) || '').toLowerCase();
+      const isAllowedExt = ALLOWED_EXTENSIONS.includes(ext);
+
+      if (!isImageOrVideoMime && !isAllowedExt) {
+        return NextResponse.json(
+          { error: `File "${file.name}" is not a supported image or video format. Only photos and videos (JPG, PNG, HEIC, MP4, MOV, etc.) can be uploaded.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.log(`Received ${files.length} valid photo/video upload(s) from "${uploaderName}" for spreadsheet: ${payload.spreadsheetId}`);
     files.forEach((f, idx) => {
       console.log(`  File ${idx + 1}: ${f.name} (${f.type}, ${f.size} bytes)`);
     });
