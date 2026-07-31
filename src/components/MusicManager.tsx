@@ -57,6 +57,45 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     };
   }, []);
 
+  // iTunes Auto-Suggest state
+  const [iTunesQuery, setITunesQuery] = useState('');
+  const [iTunesResults, setITunesResults] = useState<any[]>([]);
+  const [isSearchingITunes, setIsSearchingITunes] = useState(false);
+
+  useEffect(() => {
+    if (!iTunesQuery || iTunesQuery.trim().length < 2) {
+      setITunesResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingITunes(true);
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(iTunesQuery)}&entity=song&limit=5`);
+        const data = await res.json();
+        if (data.results) {
+          setITunesResults(data.results);
+        }
+      } catch (err) {
+        console.error('iTunes search error:', err);
+      } finally {
+        setIsSearchingITunes(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [iTunesQuery]);
+
+  const handleSelectITunesTrack = (track: any) => {
+    setFormState(prev => ({
+      ...prev,
+      title: track.trackName,
+      artist: track.artistName,
+      link: track.previewUrl || `https://open.spotify.com/search/${encodeURIComponent(`${track.trackName} ${track.artistName}`)}`,
+      requestedBy: prev.requestedBy || 'Admin',
+    }));
+    setITunesQuery(`${track.trackName} - ${track.artistName}`);
+    setITunesResults([]);
+  };
+
   const startAdd = () => {
     setFormState({
       title: '',
@@ -64,13 +103,18 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       listType: 'Play List',
       link: '',
       notes: '',
+      requestedBy: 'Admin',
     });
+    setITunesQuery('');
+    setITunesResults([]);
     setIsAdding(true);
     setEditingItem(null);
   };
 
   const startEdit = (item: Song) => {
     setFormState(item);
+    setITunesQuery('');
+    setITunesResults([]);
     setEditingItem(item);
     setIsAdding(false);
   };
@@ -79,6 +123,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     setIsAdding(false);
     setEditingItem(null);
     setFormState({});
+    setITunesQuery('');
+    setITunesResults([]);
   };
 
   const handleFormChange = (field: keyof Song, value: any) => {
@@ -98,11 +144,16 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         listType: formState.listType || 'Play List',
         link: formState.link || '',
         notes: formState.notes || '',
+        requestedBy: formState.requestedBy || 'Admin',
       };
       updatedMusic = [...music, newItem];
     } else {
       updatedMusic = music.map(item => 
-        item.songId === editingItem?.songId ? { ...item, ...formState } as Song : item
+        item.songId === editingItem?.songId ? {
+          ...item,
+          ...formState,
+          requestedBy: formState.requestedBy || item.requestedBy || 'Admin',
+        } as Song : item
       );
     }
 
@@ -350,6 +401,18 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   }}>
                     {isBanned ? 'BANNED' : item.listType.toUpperCase()}
                   </span>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    color: 'var(--color-text)',
+                    padding: '0.15rem 0.4rem',
+                    borderRadius: '4px',
+                    marginLeft: '0.35rem'
+                  }}>
+                    👤 {item.requestedBy || 'Admin'}
+                  </span>
                 </div>
                 <div style={styles.cardActions}>
                   <button style={styles.actionBtn} onClick={() => startEdit(item)}>
@@ -398,21 +461,16 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       {/* Modal Overlay for Add/Edit */}
       {(isAdding || editingItem) && (
         <div className="music-modal-overlay" style={styles.modalOverlay}>
-          <style>{`
+          <style jsx>{`
             @media (max-width: 640px) {
-              .music-modal-overlay {
-                padding: 0.5rem !important;
-              }
               .music-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
+                width: 95% !important;
+                padding: 1rem !important;
+                margin: 1rem !important;
               }
               .music-form-grid {
                 grid-template-columns: 1fr !important;
                 gap: 0.75rem !important;
-              }
-              .music-field-span-2 {
-                grid-column: span 1 !important;
               }
             }
           `}</style>
@@ -422,6 +480,63 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
               <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
+              {/* iTunes Auto-Suggest Search Helper */}
+              <div style={{ marginBottom: '1rem', position: 'relative' }}>
+                <label style={{ ...styles.label, color: '#10b981', fontWeight: 700 }}>
+                  🔍 ITUNES AUTO-SUGGEST SEARCH
+                </label>
+                <input
+                  style={{ ...styles.input, borderColor: '#10b981' }}
+                  type="text"
+                  placeholder="Search song or artist to auto-fill title, artist & preview link..."
+                  value={iTunesQuery}
+                  onChange={(e) => setITunesQuery(e.target.value)}
+                />
+                {isSearchingITunes && (
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', display: 'block' }}>
+                    Searching iTunes catalog...
+                  </span>
+                )}
+                {iTunesResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #10b981',
+                    borderRadius: '6px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                    zIndex: 100,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}>
+                    {iTunesResults.map(track => (
+                      <div
+                        key={track.trackId}
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          borderBottom: '1px solid #f3f4f6',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                        }}
+                        onClick={() => handleSelectITunesTrack(track)}
+                      >
+                        {track.artworkUrl60 && (
+                          <img src={track.artworkUrl60} alt="" style={{ width: '28px', height: '28px', borderRadius: '4px' }} />
+                        )}
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>{track.trackName}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>{track.artistName}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="music-form-grid" style={styles.formGrid}>
                 
                 <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
@@ -445,6 +560,16 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     placeholder="e.g. Ed Sheeran"
                   />
                 </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Requested By</label>
+                  <input
+                    style={styles.input}
+                    value={formState.requestedBy || 'Admin'}
+                    onChange={(e) => handleFormChange('requestedBy', e.target.value)}
+                    placeholder="e.g. Admin, Guest, Aunt Sarah"
+                  />
+                </div>
                 
                 <div style={styles.formGroup}>
                   <label style={styles.label}>List Type</label>
@@ -462,8 +587,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   </select>
                 </div>
                 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Music Link (Spotify/YouTube)</label>
+                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
+                  <label style={styles.label}>Music Link (Spotify/YouTube/Preview)</label>
                   <input
                     style={styles.input}
                     type="url"
@@ -471,7 +596,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     onChange={(e) => handleFormChange('link', e.target.value)}
                     placeholder="https://open.spotify.com/..."
                   />
-                  <span style={styles.fieldInfo}>Paste a Spotify track link for a 30s preview embed!</span>
+                  <span style={styles.fieldInfo}>Paste a Spotify track link or audio URL for 30s preview embed!</span>
                 </div>
                 
                 <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>

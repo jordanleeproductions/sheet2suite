@@ -50,7 +50,7 @@ export async function POST(
       return NextResponse.json({ error: 'Song title and artist are required' }, { status: 400 });
     }
 
-    const requesterName = requestedBy ? requestedBy.trim() : 'Reception Guest';
+    const requesterName = requestedBy && requestedBy.trim() ? requestedBy.trim() : 'Guest';
     const guestMessage = notes ? notes.trim() : '';
 
     console.log(`Song Request for spreadsheet ${payload.spreadsheetId}: "${songTitle}" by ${artist} (Requester: ${requesterName}, Message: "${guestMessage}")`);
