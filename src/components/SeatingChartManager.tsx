@@ -482,7 +482,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
               flexDirection: 'column',
               gap: '1rem',
             }}>
-              <h3 style={{ fontSize: '0.9rem', fontFamily: 'var(--font-mono)', fontWeight: 700, borderBottom: '1px solid var(--color-muted)', paddingBottom: '0.5rem', color: 'var(--color-primary)' }}>
+              <h3 style={{ fontSize: '0.9rem', fontFamily: 'var(--font-mono)', fontWeight: 700, borderBottom: '1px solid var(--color-muted)', paddingBottom: '0.5rem', color: 'var(--color-primary)', textAlign: 'right' }}>
                 {ceremonyConfig.leftLabel}
               </h3>
               {Array.from({ length: ceremonyConfig.rowsCount }).map((_, rIdx) => {
@@ -490,11 +490,11 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                 const tableName = `Ceremony R${rowNum}-Left`;
 
                 return (
-                  <div key={`left-row-${rowNum}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', minWidth: '42px', color: 'var(--color-muted)' }}>
+                  <div key={`left-row-${rowNum}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', minWidth: '42px', color: 'var(--color-muted)', textAlign: 'right' }}>
                       ROW {rowNum}:
                     </span>
-                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {Array.from({ length: ceremonyConfig.chairsPerSide }).map((_, cIdx) => {
                         const seatNum = cIdx + 1;
                         const guest = guests.find(g => g.tableAssignment === tableName && g.seatNumber === seatNum);
