@@ -39,6 +39,7 @@ export default function PrintTemplatesModal({
   const [selectedVendorCatFilter, setSelectedVendorCatFilter] = useState<string>('ALL');
   const [showMealChoiceOnCards, setShowMealChoiceOnCards] = useState<boolean>(true);
   const [showFoldLines, setShowFoldLines] = useState<boolean>(true);
+  const [showSeatMaps, setShowSeatMaps] = useState<boolean>(true);
 
   // Filtered Lists
   const tablesList = Array.from(new Set(guests.map(g => g.tableAssignment).filter(Boolean)));
@@ -78,6 +79,126 @@ export default function PrintTemplatesModal({
     if (m.includes('vegan') || m.includes('veggie') || m.includes('vegetarian')) return '🌱';
     if (m.includes('kid') || m.includes('child')) return '🍟';
     return '🍽️';
+  };
+
+  const renderTableDiagram = (tableName: string, seatedGuests: Guest[]) => {
+    const lowerName = tableName.toLowerCase();
+    const isSweetheart = lowerName.includes('sweetheart') || lowerName.includes('bride & groom');
+    const isSquare = lowerName.includes('vip') || lowerName.includes('square');
+    const isRectangle = lowerName.includes('head') || lowerName.includes('bridal') || lowerName.includes('rectangle');
+
+    const capacity = Math.max(seatedGuests.length, isSweetheart ? 2 : 8);
+
+    if (isSweetheart) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0.75rem 0', padding: '0.5rem', backgroundColor: '#f9fafb', border: '1px dashed #d1d5db', borderRadius: '6px' }}>
+          <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#4b5563', marginBottom: '0.35rem' }}>
+            SEAT MAP DIAGRAM (SWEETHEART)
+          </span>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {Array.from({ length: 2 }).map((_, idx) => {
+              const seatNum = idx + 1;
+              const guest = seatedGuests.find(g => g.seatNumber === seatNum) || seatedGuests[idx];
+              return (
+                <div key={seatNum} style={{ textAlign: 'center' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#111827', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, margin: '0 auto 2px auto' }}>
+                    #{seatNum}
+                  </div>
+                  <span style={{ fontSize: '0.6rem', color: '#374151', fontWeight: 600, display: 'block', maxWidth: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {guest ? guest.firstName : 'Empty'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    if (isRectangle || isSquare) {
+      const perSide = Math.ceil(capacity / 2);
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0.75rem 0', padding: '0.5rem', backgroundColor: '#f9fafb', border: '1px dashed #d1d5db', borderRadius: '6px' }}>
+          <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#4b5563', marginBottom: '0.35rem' }}>
+            SEAT MAP DIAGRAM ({isSquare ? 'SQUARE' : 'RECTANGLE'})
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: '240px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              {Array.from({ length: perSide }).map((_, idx) => {
+                const seatNum = idx + 1;
+                return (
+                  <div key={`top-${seatNum}`} style={{ textAlign: 'center' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', backgroundColor: '#111827', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700 }}>
+                      #{seatNum}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ height: '22px', backgroundColor: '#e5e7eb', border: '1px solid #9ca3af', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: '#374151', fontFamily: 'var(--font-mono)' }}>
+              TABLE SURFACE
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              {Array.from({ length: perSide }).map((_, idx) => {
+                const seatNum = perSide + idx + 1;
+                return (
+                  <div key={`bottom-${seatNum}`} style={{ textAlign: 'center' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', backgroundColor: '#111827', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700 }}>
+                      #{seatNum}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Default Round Table
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0.75rem 0', padding: '0.5rem', backgroundColor: '#f9fafb', border: '1px dashed #d1d5db', borderRadius: '6px' }}>
+        <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#4b5563', marginBottom: '0.35rem' }}>
+          SEAT MAP DIAGRAM (ROUND TABLE)
+        </span>
+        <div style={{ position: 'relative', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '65px', height: '65px', borderRadius: '50%', backgroundColor: '#e5e7eb', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#374151', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+            DISC
+          </div>
+          {Array.from({ length: capacity }).map((_, idx) => {
+            const seatNum = idx + 1;
+            const angle = (2 * Math.PI * idx) / capacity - Math.PI / 2;
+            const radius = 48;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+
+            return (
+              <div
+                key={seatNum}
+                style={{
+                  position: 'absolute',
+                  left: `calc(50% + ${x}px - 11px)`,
+                  top: `calc(50% + ${y}px - 11px)`,
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  backgroundColor: '#111827',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.55rem',
+                  fontWeight: 700,
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                #{seatNum}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -215,19 +336,31 @@ export default function PrintTemplatesModal({
               )}
 
               {activeTemplate === 'table_cards' && (
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>FILTER BY TABLE</label>
-                  <select
-                    value={selectedTableFilter}
-                    onChange={(e) => setSelectedTableFilter(e.target.value)}
-                    style={styles.filterSelect}
-                  >
-                    <option value="ALL">ALL TABLES ({tablesList.length} Tables)</option>
-                    {tablesList.map(tbl => (
-                      <option key={tbl} value={tbl}>{tbl}</option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  <div style={styles.filterGroup}>
+                    <label style={styles.filterLabel}>FILTER BY TABLE</label>
+                    <select
+                      value={selectedTableFilter}
+                      onChange={(e) => setSelectedTableFilter(e.target.value)}
+                      style={styles.filterSelect}
+                    >
+                      <option value="ALL">ALL TABLES ({tablesList.length} Tables)</option>
+                      {tablesList.map(tbl => (
+                        <option key={tbl} value={tbl}>{tbl}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <label style={styles.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showSeatMaps}
+                      onChange={(e) => setShowSeatMaps(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span>SHOW COORDINATOR SEAT MAPS</span>
+                  </label>
+                </>
               )}
 
               {activeTemplate === 'timeline' && (
@@ -343,22 +476,41 @@ export default function PrintTemplatesModal({
                               <span style={styles.tableTentSubtitle}>{tableGuests.length} Guests Assigned</span>
                             </div>
 
+                            {/* Coordinator Visual Table Diagram */}
+                            {showSeatMaps && renderTableDiagram(tableName, tableGuests)}
+
                             <div style={styles.tableTentGuestList}>
                               {tableGuests.length === 0 ? (
                                 <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>No guests assigned to this table</span>
                               ) : (
-                                tableGuests.map((g, idx) => (
-                                  <div key={g.guestId} style={styles.tableTentGuestRow}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-                                      {idx + 1}. {g.firstName} {g.lastName}
-                                    </span>
-                                    {g.mealChoice && (
-                                      <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                                        {getMealIcon(g.mealChoice)} {g.mealChoice}
-                                      </span>
-                                    )}
-                                  </div>
-                                ))
+                                tableGuests.map((g, idx) => {
+                                  const seatNum = typeof g.seatNumber === 'number' ? g.seatNumber : idx + 1;
+                                  return (
+                                    <div key={g.guestId} style={styles.tableTentGuestRow}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                        <span style={{
+                                          fontFamily: 'var(--font-mono)',
+                                          fontSize: '0.65rem',
+                                          fontWeight: 700,
+                                          backgroundColor: '#111827',
+                                          color: '#ffffff',
+                                          borderRadius: '3px',
+                                          padding: '0.1rem 0.35rem',
+                                        }}>
+                                          #{seatNum}
+                                        </span>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                                          {g.firstName} {g.lastName}
+                                        </span>
+                                      </div>
+                                      {g.mealChoice && (
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                                          {getMealIcon(g.mealChoice)} {g.mealChoice}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })
                               )}
                             </div>
                           </div>
