@@ -34,6 +34,8 @@
 - [ ] **[PRINT-5] Emoji & Decorative Icon Toggles:** Option to toggle off food/meal emojis (`🥩`, `🍗`, `🐟`) for formal black-tie printouts or clean text-only place cards.
 - [ ] **[PRINT-6] Granular Card Field Controls:** Option to show/hide Table Assignment, Seat ID (`Seat #4`), Meal Selection, or Dietary Restriction tags on place cards.
 - [ ] **[PRINT-7] Strict Print Boundary & Bleed Guardrails:** Advanced CSS page-break logic (`break-inside: avoid`) and standard cardstock grid dimensions (Avery 5302 / 3.5" x 2" folded card templates) ensuring zero card bleed during PDF generation.
+- [ ] **[PRINT-8] Full Wedding Planner Binder Printout:** Dedicated Print Studio mode to print the entire wedding planner as a comprehensive physical binder (combining Master Guest List, Catering Summary, Seating Floorplan, Day-Of Timeline, Music Playlist, and Vendor Directory into a formatted bound book), with optional Canva cover page & section divider templates.
+- [ ] **[PRINT-9] Printable Ceremony Aisle Seating Chart Template:** Dedicated print template in `PrintTemplatesModal.tsx` rendering the dual-side Ceremony Aisle Seating chart (Bride's Side / Left vs Groom's Side / Right), row numbers, altar stage indicator, and assigned guest seats.
 
 ---
 
@@ -74,7 +76,7 @@
 
 | Defect ID | Module / Component | Issue Description | Severity | Status | Reported Date |
 |---|---|---|---|---|---|
-| *None currently logged* | — | No active defects reported. | — | — | — |
+| **[BUG-1]** | Print Studio (`PrintTemplatesModal.tsx`) | Content bleeds over page borders during printing/PDF generation when table rosters or timeline lists span multiple pages. Needs smart CSS `@page` page breaks (`page-break-inside: avoid; break-inside: avoid;`) and multi-page pagination splitting. | Medium | Open | 2026-08-02 |
 
 ---
 
