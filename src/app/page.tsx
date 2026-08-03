@@ -12,6 +12,7 @@ import MusicManager from '@/components/MusicManager';
 import SeatingChartManager from '@/components/SeatingChartManager';
 import PhotoShotListManager from '@/components/PhotoShotListManager';
 import ThankYouManager from '@/components/ThankYouManager';
+import MenuSetupManager from '@/components/MenuSetupManager';
 import ShareModal from '@/components/ShareModal';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
@@ -39,6 +40,7 @@ export default function Sheet2VowDashboard() {
     metrics: true,
     guests: true,
     tables: true,
+    menu: true,
     budget: true,
     schedule: true,
     tasks: true,
@@ -191,6 +193,7 @@ export default function Sheet2VowDashboard() {
           photos: parsed.photos ?? true,
           thanks: parsed.thanks ?? true,
           gifts: parsed.gifts ?? true,
+          menu: parsed.menu ?? true,
         }));
       } catch (e) {
         console.error('Error parsing saved modules', e);
@@ -1002,6 +1005,7 @@ export default function Sheet2VowDashboard() {
             {[
               { id: 'metrics', label: '[ SUMMARY ]' },
               { id: 'guests', label: '[ GUEST LIST ]' },
+              { id: 'menu', label: '[ CATERING MENU ]' },
               { id: 'tables', label: '[ SEATING CHART ]' },
               { id: 'budget', label: '[ LEDGER ]' },
               { id: 'schedule', label: '[ TIMELINE ]' },
@@ -1065,6 +1069,13 @@ export default function Sheet2VowDashboard() {
                     setPrintModalInitialTemplate(tmpl);
                     setShowPrintModal(true);
                   }}
+                />
+              )}
+
+              {activeTab === 'menu' && weddingData && (
+                <MenuSetupManager
+                  guests={weddingData.guests}
+                  onOpenGuestRegistry={() => switchTab('guests')}
                 />
               )}
 

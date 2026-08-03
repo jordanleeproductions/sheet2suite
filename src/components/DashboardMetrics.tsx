@@ -17,6 +17,7 @@ export interface ModuleConfig {
   photos?: boolean;
   gifts?: boolean;
   thanks?: boolean;
+  menu?: boolean;
 }
 
 interface DashboardMetricsProps {

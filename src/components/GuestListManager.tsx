@@ -40,6 +40,24 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   // View Display State ('grid' | 'seating' | 'party')
   const [displayView, setDisplayView] = useState<'grid' | 'seating' | 'party'>('grid');
 
+  // Dynamic Catering Menu Entree Options
+  const [menuOptions, setMenuOptions] = useState<string[]>([]);
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('s2v_catering_menu');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const entrees = parsed.filter((i: any) => i.category === 'entree').map((i: any) => i.name);
+        if (entrees.length > 0) {
+          setMenuOptions(entrees);
+          return;
+        }
+      }
+    } catch (e) {}
+    setMenuOptions(['Filet Mignon', 'Pan-Seared Salmon', 'Vegan Risotto', 'Kids Chicken Tenders']);
+  }, []);
+
   // Unique list of groups for filtering
   const groups = Array.from(new Set(guests.map(g => g.partyGroup).filter(Boolean)));
 
@@ -680,10 +698,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                     style={styles.select}
                   >
                     <option value="Unassigned / Pending">Unassigned / Pending</option>
-                    <option value="Filet Mignon">Filet Mignon</option>
-                    <option value="Pan-Seared Salmon">Pan-Seared Salmon</option>
-                    <option value="Vegan Risotto">Vegan Risotto</option>
-                    <option value="Kids Chicken Tenders">Kids Chicken Tenders</option>
+                    {menuOptions.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
                   </select>
                 </div>
 
