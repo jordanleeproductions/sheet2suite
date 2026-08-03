@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task, PhotoShot, GiftItem } from '@/lib/sheets/types';
+import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task, PhotoShot, GiftItem, RSVPStatus, KanbanStage } from '@/lib/sheets/types';
 import DashboardMetrics, { ModuleConfig } from '@/components/DashboardMetrics';
 import GuestListManager from '@/components/GuestListManager';
 import BudgetLedgerManager from '@/components/BudgetLedgerManager';
