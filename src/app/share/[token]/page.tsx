@@ -55,7 +55,7 @@ export default function VendorSharePage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Music Page Quick Filter & Sorting
-  const [musicFilter, setMusicFilter] = useState<'all' | 'requested' | 'banned'>('all');
+  const [musicFilter, setMusicFilter] = useState<'all' | 'approved' | 'pending' | 'banned'>('all');
 
   // Catering Dietary Restriction Interactive Drawer Toggle
   const [selectedRestriction, setSelectedRestriction] = useState<string | null>(null);
