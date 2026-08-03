@@ -95,8 +95,8 @@ export default function AdvancedSettingsModal({
 
   // Feedback Form State
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature'>('feature');
-  const [feedbackSuccess, setFeedbackSuccess] = useState<boolean>(false);
-  const [feedbackSending, setFeedbackSending] = useState<boolean>(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
+  const [feedbackSent, setFeedbackSent] = useState<boolean>(false);
 
   // Dashboard Layout Reorder State (DASH-3)
   const [dashSections, setDashSections] = useState<DashboardSectionConfig[]>(() => loadDashboardLayout());
