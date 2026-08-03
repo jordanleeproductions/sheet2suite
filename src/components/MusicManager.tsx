@@ -488,8 +488,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
       {/* Pending Guest Requests Alert Banner */}
       {pendingSongs.length > 0 && (
         <div style={{
-          backgroundColor: '#fffbeb',
-          border: '1px solid #f59e0b',
+          backgroundColor: 'var(--color-amber-muted)',
+          border: '1px solid var(--color-amber)',
           borderRadius: 'var(--border-radius-md)',
           padding: '0.875rem 1.25rem',
           marginBottom: '1rem',
@@ -502,10 +502,10 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <span style={{ fontSize: '1.25rem' }}>⏳</span>
             <div>
-              <strong style={{ fontSize: '0.85rem', color: '#92400e', display: 'block' }}>
+              <strong style={{ fontSize: '0.85rem', color: 'var(--color-amber-dark)', display: 'block' }}>
                 {pendingSongs.length} PENDING GUEST SONG REQUEST{pendingSongs.length > 1 ? 'S' : ''} NEED APPROVAL
               </strong>
-              <span style={{ fontSize: '0.75rem', color: '#b45309' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-amber-dark)' }}>
                 Guests have requested new tracks for your reception. Review and approve before syncing to DJ.
               </span>
             </div>
@@ -517,8 +517,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
               fontSize: '0.75rem',
               fontFamily: 'var(--font-mono)',
               fontWeight: 700,
-              backgroundColor: '#f59e0b',
-              color: '#ffffff',
+              backgroundColor: 'var(--color-amber)',
+              color: 'var(--color-on-dark)',
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
@@ -555,9 +555,9 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
               key={pill.id}
               style={{
                 ...styles.pillBtn,
-                backgroundColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : pill.id === 'PENDING APPROVAL' ? '#f59e0b' : 'var(--color-primary)') : 'transparent',
-                color: filterPill === pill.id ? (pill.id === 'BANNED' || pill.id === 'PENDING APPROVAL' ? '#ffffff' : 'var(--color-on-primary)') : 'var(--color-text)',
-                borderColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : pill.id === 'PENDING APPROVAL' ? '#f59e0b' : 'var(--color-primary)') : 'var(--color-muted)',
+                backgroundColor: filterPill === pill.id ? (pill.id === 'BANNED' ? 'var(--color-red)' : pill.id === 'PENDING APPROVAL' ? 'var(--color-amber)' : 'var(--color-primary)') : 'transparent',
+                color: filterPill === pill.id ? (pill.id === 'BANNED' || pill.id === 'PENDING APPROVAL' ? 'var(--color-on-dark)' : 'var(--color-on-primary)') : 'var(--color-text)',
+                borderColor: filterPill === pill.id ? (pill.id === 'BANNED' ? 'var(--color-red)' : pill.id === 'PENDING APPROVAL' ? 'var(--color-amber)' : 'var(--color-primary)') : 'var(--color-muted)',
               }}
               onClick={() => setFilterPill(pill.id)}
             >
@@ -579,16 +579,16 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
               key={item.songId} 
               style={{
                 ...styles.card,
-                borderColor: isPending ? '#f59e0b' : isBanned ? '#ef4444' : 'var(--color-muted)',
-                backgroundColor: isPending ? '#fffbeb' : isBanned ? '#fff5f5' : 'var(--color-surface, #ffffff)'
+                borderColor: isPending ? 'var(--color-amber)' : isBanned ? 'var(--color-red)' : 'var(--color-muted)',
+                backgroundColor: isPending ? 'var(--color-amber-muted)' : isBanned ? 'var(--color-red-muted)' : 'var(--color-surface, #ffffff)'
               }}
             >
               <div style={styles.cardHeader}>
                 <div style={{ ...styles.cardMeta, display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                   <span style={{
                     ...styles.categoryBadge,
-                    backgroundColor: isBanned ? '#ef4444' : status === 'Must Play' ? 'var(--color-highlight, #00ED64)' : '#f59e0b',
-                    color: isBanned ? '#ffffff' : '#000000'
+                    backgroundColor: isBanned ? 'var(--color-red)' : status === 'Must Play' ? 'var(--color-highlight, #00ED64)' : 'var(--color-amber)',
+                    color: isBanned ? 'var(--color-on-dark)' : 'var(--color-on-light)'
                   }}>
                     {isBanned ? '🚫 BANNED' : status === 'Must Play' ? '🔥 MUST PLAY' : '⏳ PLAY IF TIME'}
                   </span>
@@ -598,8 +598,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                       fontSize: '0.65rem',
                       fontFamily: 'var(--font-mono)',
                       fontWeight: 700,
-                      backgroundColor: isPending ? '#f59e0b' : 'var(--color-primary)',
-                      color: '#ffffff',
+                      backgroundColor: isPending ? 'var(--color-amber)' : 'var(--color-primary)',
+                      color: 'var(--color-on-dark)',
                       padding: '0.15rem 0.4rem',
                       borderRadius: '4px',
                     }}>
@@ -612,8 +612,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                       fontSize: '0.65rem',
                       fontFamily: 'var(--font-mono)',
                       fontWeight: 700,
-                      backgroundColor: '#8b5cf6',
-                      color: '#ffffff',
+                      backgroundColor: 'var(--color-purple)',
+                      color: 'var(--color-on-dark)',
                       padding: '0.15rem 0.4rem',
                       borderRadius: '4px',
                     }}>
@@ -626,7 +626,7 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                       fontSize: '0.65rem',
                       fontFamily: 'var(--font-mono)',
                       fontWeight: 700,
-                      backgroundColor: 'rgba(0,0,0,0.06)',
+                      backgroundColor: 'var(--color-bg)',
                       color: 'var(--color-text)',
                       padding: '0.15rem 0.4rem',
                       borderRadius: '4px',
@@ -638,7 +638,7 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                     fontSize: '0.65rem',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 700,
-                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    backgroundColor: 'var(--color-bg)',
                     color: 'var(--color-text)',
                     padding: '0.15rem 0.4rem',
                     borderRadius: '4px',
@@ -651,7 +651,7 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                   <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Song">
                     <Edit2 size={14} />
                   </button>
-                  <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => setSongToDelete(item)} title="Delete Song">
+                  <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setSongToDelete(item)} title="Delete Song">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -661,8 +661,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                 {/* Row 1: Title & Artist on Left, Play Button on Right */}
                 <div style={styles.songMainRow}>
                   <div style={styles.songInfoCol}>
-                    <h4 style={{ ...styles.songTitle, color: isBanned ? '#7f1d1d' : 'var(--color-primary)' }}>{item.title}</h4>
-                    <p style={{ ...styles.songArtist, color: isBanned ? '#991b1b' : 'var(--color-muted)' }}>by {item.artist}</p>
+                    <h4 style={{ ...styles.songTitle, color: isBanned ? 'var(--color-red)' : 'var(--color-primary)' }}>{item.title}</h4>
+                    <p style={{ ...styles.songArtist, color: isBanned ? 'var(--color-red)' : 'var(--color-muted)' }}>by {item.artist}</p>
                   </div>
                   <div style={styles.playButtonCol}>
                     {renderSamplePlayer(item)}
@@ -673,8 +673,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                 {item.notes && (
                   <p style={{
                     ...styles.songNotes,
-                    color: isBanned ? '#991b1b' : 'var(--color-muted)',
-                    backgroundColor: isBanned ? 'rgba(239,68,68,0.1)' : 'rgba(0,0,0,0.03)'
+                    color: isBanned ? 'var(--color-red)' : 'var(--color-muted)',
+                    backgroundColor: isBanned ? 'var(--color-red-muted)' : 'var(--color-bg)'
                   }}>"{item.notes}"</p>
                 )}
               </div>
@@ -700,8 +700,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                         fontSize: '0.7rem',
                         fontFamily: 'var(--font-mono)',
                         fontWeight: 700,
-                        backgroundColor: '#10b981',
-                        color: '#ffffff',
+                        backgroundColor: 'var(--color-green)',
+                        color: 'var(--color-on-dark)',
                         border: 'none',
                         borderRadius: '6px',
                         padding: '0.35rem 0.75rem',
@@ -719,8 +719,8 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                         fontSize: '0.7rem',
                         fontFamily: 'var(--font-mono)',
                         fontWeight: 700,
-                        backgroundColor: '#ef4444',
-                        color: '#ffffff',
+                        backgroundColor: 'var(--color-red)',
+                        color: 'var(--color-on-dark)',
                         border: 'none',
                         borderRadius: '6px',
                         padding: '0.35rem 0.75rem',
@@ -748,10 +748,10 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
         <div style={styles.modalOverlay} onClick={closeModal}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
-                {isAdding ? 'Add Song to Playlist' : 'Edit Song Details'}
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
+                {isAdding ? 'ADD NEW SONG' : 'EDIT SONG'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
               </button>
             </div>
@@ -770,7 +770,7 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                         padding: '0.55rem 2rem 0.55rem 0.75rem',
                         fontSize: '0.8rem',
                         borderColor: 'var(--color-muted)',
-                        backgroundColor: 'var(--color-bg, #f9fafb)',
+                        backgroundColor: 'var(--color-bg)',
                         width: '100%',
                         boxSizing: 'border-box',
                       }}
@@ -808,10 +808,10 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                         top: '100%',
                         left: 0,
                         right: 0,
-                        backgroundColor: 'var(--color-surface, #ffffff)',
-                        border: '2px solid var(--color-primary, #000000)',
+                        backgroundColor: 'var(--color-surface)',
+                        border: '2px solid var(--color-primary)',
                         borderRadius: '6px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        boxShadow: 'var(--box-shadow-large)',
                         zIndex: 9999,
                         marginTop: '4px',
                         maxHeight: '200px',
@@ -822,12 +822,12 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                             key={track.trackId}
                             style={{
                               padding: '0.5rem 0.75rem',
-                              borderBottom: '1px solid var(--color-muted, #e5e7eb)',
+                              borderBottom: '1px solid var(--color-muted)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.6rem',
-                              backgroundColor: 'var(--color-surface, #ffffff)',
+                              backgroundColor: 'var(--color-surface)',
                             }}
                             onMouseDown={(e) => {
                               e.preventDefault();
@@ -838,10 +838,10 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                               <img src={track.artworkUrl60} alt="" style={{ width: '28px', height: '28px', borderRadius: '4px' }} />
                             )}
                             <div style={{ flex: 1, overflow: 'hidden' }}>
-                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text, #111827)' }}>{track.trackName}</div>
-                              <div style={{ fontSize: '0.7rem', color: 'var(--color-muted, #6b7280)' }}>{track.artistName} • {track.collectionName || 'Single'}</div>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>{track.trackName}</div>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>{track.artistName} • {track.collectionName || 'Single'}</div>
                             </div>
-                            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-primary, #10b981)', fontFamily: 'var(--font-mono)' }}>SELECT</span>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>SELECT</span>
                           </div>
                         ))}
                       </div>
@@ -931,11 +931,11 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
           position: 'fixed',
           bottom: '20px',
           right: '20px',
-          backgroundColor: '#ef4444',
-          color: '#ffffff',
+          backgroundColor: 'var(--color-red)',
+          color: 'var(--color-on-dark)',
           padding: '0.75rem 1.25rem',
           borderRadius: 'var(--border-radius-md)',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          boxShadow: 'var(--box-shadow-large)',
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem',
@@ -947,7 +947,7 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
           <AlertCircle size={18} />
           <span>{previewError}</span>
           <button 
-            style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', marginLeft: '0.5rem' }} 
+            style={{ background: 'none', border: 'none', color: 'var(--color-on-dark)', cursor: 'pointer', marginLeft: '0.5rem' }} 
             onClick={() => setPreviewError(null)}
           >
             <X size={16} />
@@ -960,13 +960,13 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
         <div style={styles.modalOverlay} onClick={() => setSongToDelete(null)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-on-dark)' }}>
                 <AlertCircle size={20} />
-                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-dark)' }} className="modalTitle">
                   DELETE SONG CONFIRMATION
                 </h3>
               </div>
-              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setSongToDelete(null)}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-dark)' }} className="closeBtn" onClick={() => setSongToDelete(null)}>
                 <X size={20} />
               </button>
             </div>
@@ -1002,7 +1002,7 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     backgroundColor: 'var(--color-red)',
-                    color: '#ffffff',
+                    color: 'var(--color-on-dark)',
                     border: 'none',
                     borderRadius: 'var(--border-radius-sm)',
                     padding: '0.625rem 1.25rem',
@@ -1162,7 +1162,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.65rem',
     fontWeight: 600,
     color: 'var(--color-primary)',
-    backgroundColor: '#eef2f7',
+    backgroundColor: 'var(--color-bg-hover)',
     padding: '0.2rem 0.5rem',
     borderRadius: '4px',
     letterSpacing: '0.05em',

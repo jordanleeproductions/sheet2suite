@@ -148,9 +148,9 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
       case 'high': return { bg: 'var(--color-red-muted)', text: 'var(--color-red)' };
-      case 'medium': return { bg: 'var(--color-gold)', text: '#000000' };
-      case 'low': return { bg: 'var(--color-green-muted)', text: 'var(--color-green)' };
-      default: return { bg: 'var(--color-gold)', text: '#000000' };
+      case 'medium': return { bg: 'var(--color-gold)', text: 'var(--color-on-light)' };
+    case 'low': return { bg: 'var(--color-green)', text: 'var(--color-on-light)' };
+    default: return { bg: 'var(--color-gold)', text: 'var(--color-on-light)' };
     }
   };
 
@@ -208,7 +208,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
             )}
           </div>
 
-          <button style={{ ...styles.addButton, color: '#000000' }} className="kanban-add-btn-desktop" onClick={() => startAdd('To Do')} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: 'var(--color-on-light)' }} className="kanban-add-btn-desktop" onClick={() => startAdd('To Do')} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD TASK
           </button>
         </div>
@@ -237,10 +237,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           `}</style>
           <div className="task-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
-                {isAdding ? 'ADD TASK' : 'EDIT TASK'}
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
+                {isAdding ? 'ADD NEW TASK' : 'EDIT TASK'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingTask(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingTask(null); }}>
                 <X size={18} />
               </button>
             </div>
@@ -360,13 +360,13 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         <div style={styles.modalOverlay} onClick={() => setTaskToDelete(null)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-on-dark)' }}>
                 <AlertTriangle size={20} />
-                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-dark)' }} className="modalTitle">
                   DELETE TASK CONFIRMATION
                 </h3>
               </div>
-              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setTaskToDelete(null)}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-dark)' }} className="closeBtn" onClick={() => setTaskToDelete(null)}>
                 <X size={20} />
               </button>
             </div>
@@ -402,7 +402,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     backgroundColor: 'var(--color-red)',
-                    color: '#ffffff',
+                    color: 'var(--color-on-dark)',
                     border: 'none',
                     borderRadius: 'var(--border-radius-sm)',
                     padding: '0.625rem 1.25rem',
@@ -462,7 +462,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
               <div style={styles.columnHeader}>
                 <h3 style={styles.columnTitle}>
                   {stage.toUpperCase()} 
-                  <span className="kanban-column-count" style={{ ...styles.columnCount, color: '#000000' }}>{stageTasks.length}</span>
+                  <span className="kanban-column-count" style={{ ...styles.columnCount, color: 'var(--color-on-light)' }}>{stageTasks.length}</span>
                 </h3>
               </div>
 
@@ -476,7 +476,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                     return (
                       <div key={task.taskId} style={styles.taskCard}>
                         <div style={styles.cardHeader}>
-                          <span className="kanban-category-badge" style={{ ...styles.categoryBadge, backgroundColor: 'var(--color-muted)', color: '#ffffff' }}>{task.category.toUpperCase() || 'GENERAL'}</span>
+                          <span className="kanban-category-badge" style={{ ...styles.categoryBadge, backgroundColor: 'var(--color-muted)', color: 'var(--color-on-dark)' }}>{task.category.toUpperCase() || 'GENERAL'}</span>
                           <span style={{ 
                             ...styles.priorityBadge, 
                             backgroundColor: priColors.bg, 
@@ -700,7 +700,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   column: {
     flexDirection: 'column',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'var(--color-bg-subtle)',
     borderRadius: 'var(--border-radius-lg)',
     padding: '1rem',
     border: '1px solid var(--color-muted)',
@@ -722,7 +722,7 @@ const styles: Record<string, React.CSSProperties> = {
   columnCount: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    backgroundColor: '#eef2f7',
+    backgroundColor: 'var(--color-bg-hover)',
     color: 'var(--color-primary)',
     padding: '0.125rem 0.5rem',
     borderRadius: '10px',
@@ -754,7 +754,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.625rem',
     fontWeight: 600,
-    backgroundColor: '#eef2f7',
+    backgroundColor: 'var(--color-bg-hover)',
     color: 'var(--color-primary)',
     padding: '0.125rem 0.375rem',
     borderRadius: 'var(--border-radius-sm)',
@@ -933,8 +933,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: '#ef4444',
-    color: '#000000',
+    backgroundColor: 'var(--color-red)',
+    color: 'var(--color-on-light)',
     border: 'none',
     borderRadius: 'var(--border-radius-sm)',
     cursor: 'pointer',

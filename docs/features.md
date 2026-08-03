@@ -61,7 +61,7 @@
 - [ ] **[THEME-3] Expanded Multi-Theme Aesthetic Engine:** Introduce **Botanical Romance** (sage green & soft blush tones), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges).
 - [x] **[THEME-4] Semantic Color Token Expansion (`theme.css`):** Add missing CSS custom properties (`--color-amber`, `--color-purple`, `--color-text-secondary`, `--color-text-tertiary`, `--color-bg-subtle`, `--color-bg-hover`, `--color-border`, `--color-on-dark`, `--color-on-light`) across all 4 theme variants (Editorial Light/Dark, Neo-Brutalism Light/Dark) to eliminate hardcoded hex values.
 - [x] **[THEME-5] PhotoShotListManager Dark Mode Fix:** Replace 18 hardcoded `#000000` inline styles with `var(--color-text)` and `var(--color-on-light)` tokens so Photography page renders correctly in dark mode.
-- [ ] **[THEME-6] Full Component Color Token Cleanup (~160 replacements):** Systematically replace all remaining hardcoded hex color values in `DashboardMetrics.tsx`, `MusicManager.tsx`, `BudgetLedgerManager.tsx`, `GuestListManager.tsx`, and `KanbanBoard.tsx` with centralized CSS variables. Excludes `PrintTemplatesModal.tsx` (intentionally hardcoded for print output).
+- [x] **[THEME-6] Full Component Color Token Cleanup (~160 replacements):** Systematically replace all remaining hardcoded hex color values in `DashboardMetrics.tsx`, `MusicManager.tsx`, `BudgetLedgerManager.tsx`, `GuestListManager.tsx`, and `KanbanBoard.tsx` with centralized CSS variables. Excludes `PrintTemplatesModal.tsx` (intentionally hardcoded for print output).
 
 ---
 

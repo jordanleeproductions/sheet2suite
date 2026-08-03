@@ -414,7 +414,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setGuestViewMode('cards')}
                 style={{
                   background: guestViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: guestViewMode === 'cards' ? '#ffffff' : 'var(--color-muted)',
+                  color: guestViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -432,7 +432,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setGuestViewMode('pie')}
                 style={{
                   background: guestViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: guestViewMode === 'pie' ? '#ffffff' : 'var(--color-muted)',
+                  color: guestViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -450,7 +450,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setGuestViewMode('progress')}
                 style={{
                   background: guestViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: guestViewMode === 'progress' ? '#ffffff' : 'var(--color-muted)',
+                  color: guestViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -516,9 +516,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {guestViewMode === 'pie' && (
             <DonutChart
               slices={[
-                { label: 'Accepted (Attending)', count: attendingCount, color: '#10b981', filterKey: 'Attending' },
-                { label: 'Pending (No Response)', count: pendingCount, color: '#f59e0b', filterKey: 'Pending' },
-                { label: 'Declined (Unable to Attend)', count: declinedCount, color: '#ef4444', filterKey: 'Declined' },
+                { label: 'Accepted (Attending)', count: attendingCount, color: 'var(--color-green)', filterKey: 'Attending' },
+                { label: 'Pending (No Response)', count: pendingCount, color: 'var(--color-amber)', filterKey: 'Pending' },
+                { label: 'Declined (Unable to Attend)', count: declinedCount, color: 'var(--color-red)', filterKey: 'Declined' },
               ]}
               centerLabel="Invited"
               centerValue={totalGuestsInvited}
@@ -529,9 +529,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {guestViewMode === 'progress' && (
             <LabeledProgressBar
               items={[
-                { label: 'Accepted', count: attendingCount, color: '#10b981', filterKey: 'Attending' },
-                { label: 'Pending', count: pendingCount, color: '#f59e0b', filterKey: 'Pending' },
-                { label: 'Declined', count: declinedCount, color: '#ef4444', filterKey: 'Declined' },
+                { label: 'Accepted', count: attendingCount, color: 'var(--color-green)', filterKey: 'Attending' },
+                { label: 'Pending', count: pendingCount, color: 'var(--color-amber)', filterKey: 'Pending' },
+                { label: 'Declined', count: declinedCount, color: 'var(--color-red)', filterKey: 'Declined' },
               ]}
               total={totalGuestsInvited}
               onItemClick={(filterKey) => onNavigateTab && onNavigateTab('guests', filterKey || 'All')}
@@ -551,7 +551,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setTaskViewMode('cards')}
                 style={{
                   background: taskViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: taskViewMode === 'cards' ? '#ffffff' : 'var(--color-muted)',
+                  color: taskViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -569,7 +569,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setTaskViewMode('pie')}
                 style={{
                   background: taskViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: taskViewMode === 'pie' ? '#ffffff' : 'var(--color-muted)',
+                  color: taskViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -587,7 +587,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setTaskViewMode('progress')}
                 style={{
                   background: taskViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: taskViewMode === 'progress' ? '#ffffff' : 'var(--color-muted)',
+                  color: taskViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -656,9 +656,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {taskViewMode === 'pie' && (
             <DonutChart
               slices={[
-                { label: 'Completed (Done)', count: doneCount, color: '#10b981', filterKey: 'Done' },
-                { label: 'In Progress', count: inProgressCount, color: '#f59e0b', filterKey: 'In Progress' },
-                { label: 'To Do (Pending)', count: toDoCount, color: '#ef4444', filterKey: 'To Do' },
+                { label: 'Completed (Done)', count: doneCount, color: 'var(--color-green)', filterKey: 'Done' },
+                { label: 'In Progress', count: inProgressCount, color: 'var(--color-amber)', filterKey: 'In Progress' },
+                { label: 'To Do (Pending)', count: toDoCount, color: 'var(--color-red)', filterKey: 'To Do' },
               ]}
               centerLabel="Complete"
               centerValue={`${taskPercentComplete}%`}
@@ -669,9 +669,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {taskViewMode === 'progress' && (
             <LabeledProgressBar
               items={[
-                { label: 'Completed', count: doneCount, color: '#10b981', filterKey: 'Done' },
-                { label: 'In Progress', count: inProgressCount, color: '#f59e0b', filterKey: 'In Progress' },
-                { label: 'To Do', count: toDoCount, color: '#ef4444', filterKey: 'To Do' },
+                { label: 'Completed', count: doneCount, color: 'var(--color-green)', filterKey: 'Done' },
+                { label: 'In Progress', count: inProgressCount, color: 'var(--color-amber)', filterKey: 'In Progress' },
+                { label: 'To Do', count: toDoCount, color: 'var(--color-red)', filterKey: 'To Do' },
               ]}
               total={totalTasksCount}
               onItemClick={(filterKey) => onNavigateTab && onNavigateTab('tasks', filterKey)}
@@ -691,7 +691,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setMusicViewMode('cards')}
                 style={{
                   background: musicViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: musicViewMode === 'cards' ? '#ffffff' : 'var(--color-muted)',
+                  color: musicViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -709,7 +709,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setMusicViewMode('pie')}
                 style={{
                   background: musicViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: musicViewMode === 'pie' ? '#ffffff' : 'var(--color-muted)',
+                  color: musicViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -727,7 +727,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 onClick={() => setMusicViewMode('progress')}
                 style={{
                   background: musicViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: musicViewMode === 'progress' ? '#ffffff' : 'var(--color-muted)',
+                  color: musicViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
                   border: 'none',
                   borderRadius: 'var(--border-radius-sm)',
                   padding: '0.25rem 0.45rem',
@@ -771,20 +771,20 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 style={{
                   ...styles.kpiCard,
                   cursor: onNavigateTab ? 'pointer' : 'default',
-                  borderColor: pendingRequestsCount > 0 ? '#f59e0b' : 'var(--color-muted)',
-                  backgroundColor: pendingRequestsCount > 0 ? '#fffbeb' : 'var(--color-surface, #ffffff)',
+                  borderColor: pendingRequestsCount > 0 ? 'var(--color-amber)' : 'var(--color-muted)',
+                  backgroundColor: pendingRequestsCount > 0 ? 'var(--color-amber-muted)' : 'var(--color-surface, #ffffff)',
                   transition: 'all 0.2s ease',
                 }}
                 onClick={() => onNavigateTab && onNavigateTab('music', 'PENDING APPROVAL')}
                 title={onNavigateTab ? 'Click to open Music Manager pending requests view' : ''}
               >
-                <div style={{ ...styles.kpiLabel, color: pendingRequestsCount > 0 ? '#92400e' : 'var(--color-text)' }}>
+                <div style={{ ...styles.kpiLabel, color: pendingRequestsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-text)' }}>
                   PENDING REQUESTS
                 </div>
-                <div style={{ ...styles.kpiValue, color: pendingRequestsCount > 0 ? '#f59e0b' : 'var(--color-muted)' }}>
+                <div style={{ ...styles.kpiValue, color: pendingRequestsCount > 0 ? 'var(--color-amber)' : 'var(--color-muted)' }}>
                   {pendingRequestsCount}
                 </div>
-                <div style={{ ...styles.kpiSub, color: pendingRequestsCount > 0 ? '#b45309' : 'var(--color-muted)', fontWeight: pendingRequestsCount > 0 ? 600 : 400 }}>
+                <div style={{ ...styles.kpiSub, color: pendingRequestsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-muted)', fontWeight: pendingRequestsCount > 0 ? 600 : 400 }}>
                   {pendingRequestsCount > 0 ? 'Click to Review & Approve ➔' : 'No Pending Requests'}
                 </div>
               </div>
@@ -805,9 +805,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {musicViewMode === 'pie' && (
             <DonutChart
               slices={[
-                { label: 'Admin Curated Tracks', count: adminAddedCount, color: '#ef4444', filterKey: 'ALL' },
-                { label: 'Guest Requests (Approved)', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: '#10b981', filterKey: 'ALL' },
-                { label: 'Pending Approval Requests', count: pendingRequestsCount, color: '#f59e0b', filterKey: 'PENDING APPROVAL' },
+                { label: 'Admin Curated Tracks', count: adminAddedCount, color: 'var(--color-red)', filterKey: 'ALL' },
+                { label: 'Guest Requests (Approved)', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: 'var(--color-green)', filterKey: 'ALL' },
+                { label: 'Pending Approval Requests', count: pendingRequestsCount, color: 'var(--color-amber)', filterKey: 'PENDING APPROVAL' },
               ]}
               centerLabel="Tracks"
               centerValue={totalSongsCount}
@@ -818,9 +818,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {musicViewMode === 'progress' && (
             <LabeledProgressBar
               items={[
-                { label: 'Admin Curated', count: adminAddedCount, color: '#ef4444', filterKey: 'ALL' },
-                { label: 'Guest Requests', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: '#10b981', filterKey: 'ALL' },
-                { label: 'Pending Requests', count: pendingRequestsCount, color: '#f59e0b', filterKey: 'PENDING APPROVAL' },
+                { label: 'Admin Curated', count: adminAddedCount, color: 'var(--color-red)', filterKey: 'ALL' },
+                { label: 'Guest Requests', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: 'var(--color-green)', filterKey: 'ALL' },
+                { label: 'Pending Requests', count: pendingRequestsCount, color: 'var(--color-amber)', filterKey: 'PENDING APPROVAL' },
               ]}
               total={totalSongsCount}
               onItemClick={(filterKey) => onNavigateTab && onNavigateTab('music', filterKey || 'ALL')}
@@ -900,8 +900,8 @@ const styles: Record<string, React.CSSProperties> = {
   formulaBox: {
     marginTop: '0.5rem',
     padding: '0.4rem 0.6rem',
-    backgroundColor: '#1e293b',
-    color: '#00ED64',
+    backgroundColor: 'var(--color-surface)',
+    color: 'var(--color-highlight)',
     borderRadius: '4px',
     border: '1px solid var(--color-muted)',
     display: 'flex',
@@ -911,14 +911,14 @@ const styles: Record<string, React.CSSProperties> = {
   formulaTag: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.55rem',
-    color: '#94a3b8',
+    color: 'var(--color-text-tertiary)',
     letterSpacing: '0.05em',
   },
   formulaCode: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.675rem',
     fontWeight: 600,
-    color: '#00ED64',
+    color: 'var(--color-highlight)',
     wordBreak: 'break-all',
   },
   barPanel: {
@@ -950,7 +950,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressTrack: {
     position: 'relative',
     height: '14px',
-    backgroundColor: '#f1f1f1',
+    backgroundColor: 'var(--color-bg-hover)',
     borderRadius: '7px',
     overflow: 'hidden',
     marginBottom: '1rem',

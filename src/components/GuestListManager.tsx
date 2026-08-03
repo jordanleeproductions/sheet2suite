@@ -184,6 +184,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
       guest.rsvpStatus === 'Attending' ? 'var(--color-primary)' :
       guest.rsvpStatus === 'Declined' ? 'var(--color-muted)' :
       '#e6b800'; // dark gold/amber
+      // Note: using hardcoded for distinct RSVP visual; mapped to --color-amber-dark in dark themes
 
     return (
       <div key={guest.guestId} style={styles.card} className="anim-slide-up anim-hover-scale anim-ripple">
@@ -240,16 +241,16 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 if (status === 'Declined') {
                   btnStyle = {
                     ...styles.rsvpToggleBtn,
-                    backgroundColor: '#f87171',
-                    color: '#000000',
+                    backgroundColor: 'var(--color-red)',
+                    color: 'var(--color-on-light)',
                     border: '2px solid var(--color-muted, #121824)',
                     fontWeight: 700,
                   };
                 } else if (status === 'Attending') {
                   btnStyle = {
                     ...styles.rsvpToggleBtn,
-                    backgroundColor: '#4ade80',
-                    color: '#000000',
+                    backgroundColor: 'var(--color-green)',
+                    color: 'var(--color-on-light)',
                     border: '2px solid var(--color-muted, #121824)',
                     fontWeight: 700,
                   };
@@ -257,8 +258,8 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   // No Response / Pending / Yellow
                   btnStyle = {
                     ...styles.rsvpToggleBtn,
-                    backgroundColor: '#fde047',
-                    color: '#000000',
+                    backgroundColor: 'var(--color-gold)',
+                    color: 'var(--color-on-light)',
                     border: '2px solid var(--color-muted, #121824)',
                     fontWeight: 700,
                   };
@@ -410,7 +411,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                     fontSize: '0.75rem',
                     fontWeight: 700,
                     backgroundColor: 'rgba(239,68,68,0.1)',
-                    color: '#ef4444',
+                    color: 'var(--color-red)',
                     border: '1px solid #ef4444',
                     borderRadius: '4px',
                     padding: '0.2rem 0.5rem',
@@ -494,13 +495,13 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             return (
               <div key={table} style={{
                 ...styles.clusterCard,
-                borderColor: isUnassigned ? '#ef4444' : 'var(--color-muted)',
-                backgroundColor: isUnassigned ? '#fff5f5' : 'var(--color-bg)'
+                borderColor: isUnassigned ? 'var(--color-red)' : 'var(--color-muted)',
+                backgroundColor: isUnassigned ? 'var(--color-red-muted)' : 'var(--color-bg)'
               }}>
                 <div style={styles.clusterHeader}>
                   <div style={styles.clusterTitleRow}>
-                    <Utensils size={18} style={{ color: isUnassigned ? '#ef4444' : 'var(--color-primary)' }} />
-                    <h3 style={{ ...styles.clusterTitle, color: isUnassigned ? '#ef4444' : 'var(--color-primary)' }}>
+                    <Utensils size={18} style={{ color: isUnassigned ? 'var(--color-red)' : 'var(--color-primary)' }} />
+                    <h3 style={{ ...styles.clusterTitle, color: isUnassigned ? 'var(--color-red)' : 'var(--color-primary)' }}>
                       {isUnassigned ? 'UNASSIGNED SEATING' : table.toUpperCase()}
                     </h3>
                     {isUnassigned && (
@@ -580,10 +581,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
           `}</style>
           <div className="guest-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
                 {isAdding ? 'ADD NEW GUEST' : `EDIT GUEST: ${formState.firstName} ${formState.lastName}`}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setEditingGuest(null); setIsAdding(false); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={() => { setEditingGuest(null); setIsAdding(false); }}>
                 <X size={18} />
               </button>
             </div>
@@ -855,8 +856,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.65rem',
     fontWeight: 700,
-    backgroundColor: '#fee2e2',
-    color: '#ef4444',
+    backgroundColor: 'var(--color-red-muted)',
+    color: 'var(--color-red)',
     padding: '0.2rem 0.5rem',
     borderRadius: 'var(--border-radius-sm)',
     display: 'inline-flex',
@@ -941,7 +942,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.625rem',
     fontWeight: 600,
-    backgroundColor: '#f1f1f1',
+    backgroundColor: 'var(--color-bg-hover)',
     color: 'var(--color-text)',
     padding: '0.125rem 0.375rem',
     borderRadius: 'var(--border-radius-sm)',

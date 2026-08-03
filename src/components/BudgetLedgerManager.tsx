@@ -81,9 +81,9 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
   const overallHeadroom = totalEstimate - totalActual;
 
   const meterBarColor =
-    percentUtilized > 100 ? '#ef4444' :
-      percentUtilized > 90 ? '#cda250' :
-        '#10b981';
+    percentUtilized > 100 ? 'var(--color-red)' :
+      percentUtilized > 90 ? 'var(--color-gold-dark)' :
+        'var(--color-green)';
 
   // Category Health Breakdown
   const categoryStats = categories.map(cat => {
@@ -186,21 +186,21 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
         <div style={styles.headerActions}>
           <div style={styles.viewToggle}>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#ffffff' : 'var(--color-text)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-dark)' : 'var(--color-text)' }}
               onClick={() => setViewMode('table')}
               title="Table View"
             >
               <List size={16} />
             </button>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#ffffff' : 'var(--color-text)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? 'var(--color-on-dark)' : 'var(--color-text)' }}
               onClick={() => setViewMode('card')}
               title="Card View"
             >
               <Grid size={16} />
             </button>
           </div>
-          <button style={{ ...styles.addButton, color: '#ffffff' }} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: 'var(--color-on-dark)' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> LOG NEW EXPENSE
           </button>
         </div>
@@ -254,7 +254,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                     fontSize: '0.65rem',
                     fontWeight: 700,
                     backgroundColor: 'transparent',
-                    color: '#ef4444',
+                    color: 'var(--color-red)',
                     border: '1px solid #ef4444',
                     borderRadius: 'var(--border-radius-sm)',
                     padding: '0.15rem 0.5rem',
@@ -280,7 +280,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                     style={{
                       ...styles.categoryChip,
                       cursor: 'pointer',
-                      borderColor: isSelected ? 'var(--color-primary)' : (stat.isOver ? '#ef4444' : 'var(--color-muted)'),
+                      borderColor: isSelected ? 'var(--color-primary)' : (stat.isOver ? 'var(--color-red)' : 'var(--color-muted)'),
                       backgroundColor: isSelected 
                         ? (stat.isOver ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-surface, #ffffff)') 
                         : 'var(--color-bg)',
@@ -312,7 +312,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                       <div style={{
                         ...styles.miniFill,
                         width: `${Math.min(stat.percent, 100)}%`,
-                        backgroundColor: stat.isOver ? '#ef4444' : stat.percent > 90 ? '#cda250' : '#10b981'
+                        backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)'
                       }} />
                     </div>
                   </div>
@@ -428,7 +428,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                           <Edit2 size={12} />
                         </button>
                         <button
-                          style={{ ...styles.actionBtn, color: '#ef4444' }}
+                          style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
                           onClick={() => setItemToDelete(item)}
                           disabled={isSyncing}
                         >
@@ -465,22 +465,22 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
         <div style={styles.cardGrid}>
           {/* Ledger Total Card */}
           <div style={{ ...styles.card, ...styles.totalCard }} className="totalCard">
-            <h3 style={{ ...styles.categoryCell, fontFamily: 'var(--font-header, var(--font-serif))', fontSize: '1.25rem', color: '#ffffff' }}>LEDGER TOTALS</h3>
+            <h3 style={{ ...styles.categoryCell, fontFamily: 'var(--font-header, var(--font-serif))', fontSize: '1.25rem', color: 'var(--color-on-dark)' }}>LEDGER TOTALS</h3>
             <div style={styles.cardBody}>
               <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: '#ffffff' }}>ESTIMATED</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ESTIMATED</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalEstimate.toLocaleString()}</span>
               </div>
               <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: '#ffffff' }}>ACTUAL</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ACTUAL</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalActual.toLocaleString()}</span>
               </div>
               <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: '#ffffff' }}>PAID</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>PAID</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalPaid.toLocaleString()}</span>
               </div>
-              <div style={{ ...styles.cardRow, borderTop: '1px dotted rgba(255,255,255,0.5)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                <span style={{ ...styles.cardLabel, color: '#ffffff' }}>OWING</span>
+              <div style={{ ...styles.cardRow, borderTop: '1px dotted var(--color-on-dark-subtle)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>OWING</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalBalance.toLocaleString()}</span>
               </div>
             </div>
@@ -495,7 +495,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                 className={`budget-item-card ${isOver ? 'is-over-budget' : ''}`}
                 style={{
                   ...styles.card,
-                  borderColor: isOver ? '#ef4444' : 'var(--color-muted)'
+                  borderColor: isOver ? 'var(--color-red)' : 'var(--color-muted)'
                 }}
               >
                 <div style={styles.cardHeader}>
@@ -506,7 +506,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                     <button style={styles.actionBtn} onClick={() => startEdit(item)}>
                       <Edit2 size={12} />
                     </button>
-                    <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => setItemToDelete(item)} disabled={isSyncing}>
+                    <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setItemToDelete(item)} disabled={isSyncing}>
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -573,8 +573,8 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD BUDGET ITEM' : 'EDIT BUDGET ITEM'}</h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}>
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">{isAdding ? 'ADD BUDGET ITEM' : 'EDIT BUDGET ITEM'}</h3>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
               </button>
             </div>
@@ -678,13 +678,13 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
         <div style={styles.modalOverlay} onClick={() => setItemToDelete(null)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-on-dark)' }}>
                 <AlertCircle size={20} />
-                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
-                  DELETE ITEM CONFIRMATION
+                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-dark)' }} className="modalTitle">
+                  DELETE BUDGET ITEM CONFIRMATION
                 </h3>
               </div>
-              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setItemToDelete(null)}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-dark)' }} className="closeBtn" onClick={() => setItemToDelete(null)}>
                 <X size={20} />
               </button>
             </div>
@@ -723,7 +723,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     backgroundColor: 'var(--color-red)',
-                    color: '#ffffff',
+                    color: 'var(--color-on-dark)',
                     border: 'none',
                     borderRadius: 'var(--border-radius-sm)',
                     padding: '0.625rem 1.25rem',
@@ -788,8 +788,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.675rem',
     fontWeight: 700,
-    backgroundColor: '#fee2e2',
-    color: '#ef4444',
+    backgroundColor: 'var(--color-red-muted)',
+    color: 'var(--color-red)',
     padding: '0.2rem 0.5rem',
     borderRadius: 'var(--border-radius-sm)',
     display: 'inline-flex',
@@ -799,8 +799,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.675rem',
     fontWeight: 600,
-    backgroundColor: '#ecfdf5',
-    color: '#10b981',
+    backgroundColor: 'var(--color-green-muted)',
+    color: 'var(--color-green)',
     padding: '0.2rem 0.5rem',
     borderRadius: 'var(--border-radius-sm)',
   },
@@ -816,7 +816,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressTrack: {
     width: '100%',
     height: '8px',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'var(--color-bg-hover)',
     borderRadius: '4px',
     overflow: 'hidden',
   },
@@ -832,7 +832,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: '0.25rem',
   },
   categoryChip: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'var(--color-bg-subtle)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     padding: '0.4rem 0.6rem',
@@ -860,12 +860,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.6rem',
     fontWeight: 700,
-    color: '#ef4444',
+    color: 'var(--color-red)',
   },
   miniTrack: {
     width: '100%',
     height: '4px',
-    backgroundColor: '#e2e8f0',
+    backgroundColor: 'var(--color-bg-hover)',
     borderRadius: '2px',
     overflow: 'hidden',
   },
@@ -877,8 +877,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.6rem',
     fontWeight: 700,
-    color: '#ef4444',
-    backgroundColor: '#fee2e2',
+    color: 'var(--color-red)',
+    backgroundColor: 'var(--color-red-muted)',
     padding: '1px 4px',
     borderRadius: '2px',
     marginTop: '2px',
@@ -889,8 +889,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.65rem',
     fontWeight: 700,
-    color: '#ef4444',
-    backgroundColor: '#fee2e2',
+    color: 'var(--color-red)',
+    backgroundColor: 'var(--color-red-muted)',
     padding: '0.25rem 0.5rem',
     borderRadius: 'var(--border-radius-sm)',
     display: 'flex',
@@ -992,7 +992,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.675rem',
     fontWeight: 700,
     color: 'var(--color-muted)',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'var(--color-bg-subtle)',
     borderBottom: '1px solid var(--color-muted)',
     padding: '0.75rem',
     letterSpacing: '0.05em',
@@ -1002,7 +1002,7 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'var(--transition-smooth)',
   },
   footerTr: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'var(--color-bg-subtle)',
     borderTop: '2px solid var(--color-muted)',
   },
   td: {
