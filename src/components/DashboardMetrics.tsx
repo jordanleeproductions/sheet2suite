@@ -322,61 +322,61 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
       {/* Financial KPI Cards Grid */}
       {modules.budget && (
         <div style={styles.sectionWrapper}>
-          <h3 style={{ ...styles.panelTitle, margin: 0 }}>Financials</h3>
+          <h3 style={{ ...styles.panelTitle, margin: 0 }}>Financial Overview</h3>
           <div className="kpi-grid" style={styles.kpiGrid}>
-          <div
-            className="kpi-card"
-            style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-            onClick={() => onNavigateTab && onNavigateTab('budget')}
-            title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-          >
-            <div style={styles.kpiLabel}>TOTAL BUDGET</div>
-            <div style={styles.kpiValue}>
-              {formatCurrency(totalBudget, currency)}
+            <div
+              className="kpi-card"
+              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+              onClick={() => onNavigateTab && onNavigateTab('budget')}
+              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
+            >
+              <div style={styles.kpiLabel}>TOTAL BUDGET</div>
+              <div style={styles.kpiValue}>
+                {formatCurrency(totalBudget, currency)}
+              </div>
+              <div style={styles.kpiSub}>Cell B2 Config Value</div>
             </div>
-            <div style={styles.kpiSub}>Cell B2 Config Value</div>
-          </div>
 
-          <div
-            className="kpi-card"
-            style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-            onClick={() => onNavigateTab && onNavigateTab('budget')}
-            title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-          >
-            <div style={styles.kpiLabel}>ESTIMATED COST</div>
-            <div style={styles.kpiValue}>
-              {formatCurrency(estimatedCost, currency)}
+            <div
+              className="kpi-card"
+              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+              onClick={() => onNavigateTab && onNavigateTab('budget')}
+              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
+            >
+              <div style={styles.kpiLabel}>ESTIMATED COST</div>
+              <div style={styles.kpiValue}>
+                {formatCurrency(estimatedCost, currency)}
+              </div>
+              <div style={styles.kpiSub}>SUM('Budget Ledger'!D:D)</div>
             </div>
-            <div style={styles.kpiSub}>SUM('Budget Ledger'!D:D)</div>
-          </div>
 
-          <div
-            className="kpi-card"
-            style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-            onClick={() => onNavigateTab && onNavigateTab('budget')}
-            title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-          >
-            <div style={styles.kpiLabel}>ACTUAL COST</div>
-            <div style={styles.kpiValue}>
-              {formatCurrency(actualCost, currency)}
+            <div
+              className="kpi-card"
+              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+              onClick={() => onNavigateTab && onNavigateTab('budget')}
+              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
+            >
+              <div style={styles.kpiLabel}>ACTUAL COST</div>
+              <div style={styles.kpiValue}>
+                {formatCurrency(actualCost, currency)}
+              </div>
+              <div style={styles.kpiSub}>SUM('Budget Ledger'!E:E)</div>
             </div>
-            <div style={styles.kpiSub}>SUM('Budget Ledger'!E:E)</div>
-          </div>
 
-          <div
-            className="kpi-card"
-            style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-            onClick={() => onNavigateTab && onNavigateTab('budget')}
-            title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-          >
-            <div style={styles.kpiLabel}>REMAINING BUDGET</div>
-            <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? 'var(--color-red)' : 'var(--color-green)' }}>
-              {formatCurrency(remainingBudget, currency)}
+            <div
+              className="kpi-card"
+              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+              onClick={() => onNavigateTab && onNavigateTab('budget')}
+              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
+            >
+              <div style={styles.kpiLabel}>REMAINING BUDGET</div>
+              <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? 'var(--color-red)' : 'var(--color-green)' }}>
+                {formatCurrency(remainingBudget, currency)}
+              </div>
+              <div style={styles.kpiSub}>Budget Minus Actual Spent</div>
             </div>
-            <div style={styles.kpiSub}>Budget Minus Actual Spent</div>
           </div>
         </div>
-      </div>
       )}
 
       {/* Progress Bar & Ledger Balance Panel */}

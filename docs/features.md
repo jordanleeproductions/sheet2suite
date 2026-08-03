@@ -72,6 +72,7 @@
 - [x] **[DASH-4] Reception Table Seating Summary Module (`DashboardMetrics.tsx`):** Add a dedicated summary section for Table Seating displaying cards for `TOTAL TABLES`, `SEATED GUESTS`, `UNSEATED GUESTS`, and `% CAPACITY FILLED`, with optional Pie Chart and Labeled Progress Bar views.
 - [x] **[DASH-5] Browser Back/Forward Tab History Navigation (`page.tsx`):** Integrate HTML5 History API (`window.history.pushState` & `popstate` event listener) to push URL hashes (`#guests?filter=Attending`, `#music?filter=PENDING%20APPROVAL`, `#budget`) when switching tabs or clicking summary KPI cards, allowing couples to navigate backward/forward through tab history using browser Back/Forward buttons.
 - [x] **[DASH-6] Photography Summary Module (`DashboardMetrics.tsx`):** Add a dedicated Photography section in Summary with Cards, Donut Chart, and Labeled Progress Bar views displaying "Total Required Shots", "Captured Shots", "Pending Shots", and "Percentage Complete".
+- [ ] **[DASH-7] Edit Icon Layout Control Shortcut:** Add an edit icon on Summary sections to open section reordering/visibility settings or launch Advanced Settings directly.
 
 ---
 
@@ -84,10 +85,61 @@
 
 ## 📸 9. Photography & Shot List Manager (`PhotoShotListManager.tsx`)
 - [x] **[PHOTO-1] Photography Shot List Enhancements (`PhotoShotListManager.tsx`):** Make unchecked cards have a solid black border. Set all section headers to black text. In desktop view, display each shot item as a full-width single row card with right-aligned time and bold "Who" field for maximum visual hierarchy.
+- [ ] **[PHOTO-2] Auto-Populate Photographer Email:** When emailing the Shot List to the photographer, automatically prepopulate the `TO` email address with the photographer's email if listed in the Vendor Directory.
 
 ---
 
-## ⚙️ 10. Platform Infrastructure, Production Sync & Security
+## 📋 10. Future Task & Feature Backlog
+
+### ⚙️ General & UX Standards
+- [ ] **[GEN-1] Dropdown to Checkbox Standard:** Convert binary Yes/No dropdown fields to native checkboxes (e.g. "Staff Meals Required").
+- [ ] **[GEN-2] Desktop Wide-Screen Layout Optimization:** Reduce excessive left and right margin white space in desktop view for fuller viewport utilization.
+- [ ] **[GEN-3] Toast Notification System:** Trigger a brief "Saved!" toast notification message upon saving any setting or modal form.
+
+### 🧭 Navigation & Settings
+- [ ] **[NAV-1] Sticky Collapsible Left Sidebar Navigation Option:** Add setting to enable a sticky/collapsible left-hand hamburger sidebar navigation instead of top navbar links in Desktop mode.
+
+### 👥 Guest Registry
+- [ ] **[GUEST-4] Separate Dietary Restrictions Row:** Move Dietary Restrictions to its own dedicated row under Meal Totals within guest cards to prevent label overflow.
+- [ ] **[GUEST-5] Clickable Filter Badges:** Make Meal Totals & Dietary Restriction badges clickable quick-filters in Guest Registry.
+- [ ] **[GUEST-6] Desktop List Row View Toggle:** Provide a view mode toggle in Desktop mode to switch guest display between Card Grid and List Table Rows.
+- [ ] **[GUEST-7] Header Action Layout Realignment:** Move "Add Guest" button to the right hand side of the header and add a descriptive subtitle under "Guest Registry".
+- [ ] **[GUEST-8] Dynamic Party Group Autocomplete Dropdown:** In Add/Edit Guest modal, change Party Group text box to a combo dropdown allowing selection of existing party groups or custom text entry.
+
+### 🍽️ Catering & Menu Setup
+- [ ] **[MENU-1] Header Layout Realignment:** Move "Add Menu Item" button to the right hand side of the header.
+
+### 🪑 Seating & Floorplan
+- [ ] **[SEAT-6] Unassigned Guests Drawer Initials Avatar:** Display guest initial avatar circles to the left of names inside the Unassigned Guests drawer.
+- [ ] **[SEAT-7] Editorial Font Consistency:** Match card value typography in Editorial style with Summary KPI fonts.
+
+### 💼 Vendor Directory
+- [ ] **[VND-1] Add/Edit Vendor Header Font Fix:** Fix modal header font color in Add/Edit Vendor to white, matching primary button text.
+- [ ] **[VND-2] Google Drive File Picker Integration:** Allow selecting contracts directly from connected Google Drive instead of requiring manual URL links.
+- [ ] **[VND-3] Category Autocomplete & Pre-seeded Options:** Convert Vendor Category input to a combo dropdown pre-seeded with *DJ/Band*, *Photographer*, *Venue*, *Catering*, etc.
+- [ ] **[VND-4] Multi-Select Dietary Restrictions Tagging:** Convert Vendor Dietary Restrictions input to a multi-select dropdown pre-seeded with *Gluten Free*, *Vegetarian*, *Vegan*, *Nut Free*, *Halal*, *No Pork*.
+
+### 📋 Task Checklist & Kanban
+- [ ] **[TASK-1] Clickable Kanban Task Edit Modal:** Clicking any task card on the Kanban board opens its Edit Task modal.
+- [ ] **[TASK-2] Switchable Progress Summary Header:** Add switchable Progress Cards / Progress Bar header above the Kanban board.
+- [ ] **[TASK-3] Header Methodology Description:** Add a descriptive subtitle under the header explaining Kanban task management.
+
+### 🎵 Music Playlist
+- [ ] **[MUSIC-5] Descriptive Header Subtitle:** Add an informative subtitle explaining playlist curation and request portal workflow.
+- [ ] **[MUSIC-6] Direct Portal Quick Action Buttons:** Render active link buttons for Guest Song Request Portal and DJ Share Page directly on the Music Manager header.
+- [ ] **[MUSIC-7] YouTube Music & Streaming Platform Cleanup:** Replace standard YouTube links with YouTube Music links/branding, remove obsolete 3rd platform icon, and fix mock data audio preview playback errors.
+- [ ] **[MUSIC-8] Auto-Populate DJ Email:** Automatically prepopulate the `TO` email address with the DJ/Band's email from the Vendor Directory when exporting the Music list.
+
+### 🖨️ Print Studio
+- [ ] **[PRINT-10] Responsive Mobile Print Studio:** Redesign Print Studio modal layout for mobile viewports.
+- [ ] **[PRINT-11] Binder vs Guest Printable Categorization:** Separate binder printouts (planner pages) from guest-facing printables (place cards, QR cards).
+- [ ] **[PRINT-12] Binder Hole Punch Margins:** Option to add left-side margin spacing for 3-ring binder hole punches.
+- [ ] **[PRINT-13] Batch or Individual Binder Page Export:** Support exporting all binder pages in a single combined PDF or printing sections individually.
+- [ ] **[PRINT-14] Table Roster Page Formatting:** Limit Table Seating Rosters to 1-2 tables per page to ensure readability.
+
+---
+
+## ⚙️ 11. Platform Infrastructure, Production Sync & Security
 - [x] **[SYS-1] Purchase Activation Flow (`/activate`):** Etsy order verification API with Quick Setup and 4-screen Guided Setup Wizard.
 - [x] **[SYS-2] Multi-Currency Formatting Engine:** Support for USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR €.
 - [x] **[SYS-3] Advanced Settings Portal:** Metadata editor, currency selector, drive inspector, feature toggles, and dev mock controls.
@@ -98,11 +150,13 @@
 
 ---
 
-## 🐛 9. Bug & Defect Backlog
+## 🐛 12. Bug & Defect Backlog
 
 | Defect ID | Module / Component | Issue Description | Severity | Status | Reported Date |
 |---|---|---|---|---|---|
 | **[BUG-1]** | Print Studio (`PrintTemplatesModal.tsx`) | Content bleeds over page borders during printing/PDF generation when table rosters or timeline lists span multiple pages. Needs smart CSS `@page` page breaks (`page-break-inside: avoid; break-inside: avoid;`) and multi-page pagination splitting. | Medium | Open | 2026-08-02 |
+| **[BUG-2]** | Music Manager (`MusicManager.tsx`) | Audio preview playback triggers console/runtime error when playing mock song items. Needs fallback error handling for mock song preview URLs. | Medium | Open | 2026-08-03 |
+| **[BUG-3]** | Vendor Directory (`VendorManager.tsx`) | Add & Edit Vendor modal header font color renders dark text instead of white text, failing contrast against dark primary header bar. | Low | Open | 2026-08-03 |
 
 ---
 
@@ -115,3 +169,4 @@
 | **Active Moment Pulse** | Timeline "UP NEXT" Banner | Soft pulsing highlight on the active moment badge. |
 | **Card Hover Lift** | Guest / Music / Vendor Cards | Slight `translate-y (-2px)` with shadow offset on hover. |
 | **Audio Spinner** | Music Preview Player | Smooth rotating loading indicator while fetching iTunes audio previews. |
+
