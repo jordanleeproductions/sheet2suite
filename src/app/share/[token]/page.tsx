@@ -320,14 +320,14 @@ export default function VendorSharePage() {
 
               <div style={styles.listContainer}>
                 {filteredMusic.map((song, idx) => {
-                  const isBanned = song.listType === 'Do Not Play' || song.priority === 'Banned';
+                  const isBanned = song.approvalStatus === 'Banned' || song.playStatus === 'Banned' || song.listType === 'Do Not Play' || song.priority === 'Banned';
                   return (
                     <div 
                       key={idx} 
                       className="print-card"
                       style={{ 
                         ...styles.card, 
-                        backgroundColor: surfaceColor, 
+                        backgroundColor: isBanned ? 'rgba(239, 68, 68, 0.05)' : surfaceColor, 
                         borderColor: isBanned ? '#ef4444' : borderColor 
                       }}
                     >
@@ -343,7 +343,7 @@ export default function VendorSharePage() {
                           display: 'inline-block',
                           marginBottom: '0.35rem'
                         }}>
-                          {song.listType || 'Play List'}
+                          {isBanned ? '🚫 BANNED' : song.listType || 'Reception'}
                         </span>
 
                         <h3 style={{ ...styles.itemTitle, color: isBanned ? '#ef4444' : textColor }}>
