@@ -80,7 +80,7 @@
 ---
 
 ## 📸 9. Photography & Shot List Manager (`PhotoShotListManager.tsx`)
-- [ ] **[PHOTO-1] Photography Shot List Enhancements (`PhotoShotListManager.tsx`):** Make unchecked cards have a solid black border. Set all section headers to black text. In desktop view, display each shot item as a full-width single row card with right-aligned time and bold "Who" field for maximum visual hierarchy.
+- [x] **[PHOTO-1] Photography Shot List Enhancements (`PhotoShotListManager.tsx`):** Make unchecked cards have a solid black border. Set all section headers to black text. In desktop view, display each shot item as a full-width single row card with right-aligned time and bold "Who" field for maximum visual hierarchy.
 
 ---
 

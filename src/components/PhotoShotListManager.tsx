@@ -267,12 +267,11 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
             <option value="All">All Priorities</option>
             <option value="Must Have">Must Have</option>
             <option value="Nice To Have">Nice To Have</option>
-          </select>
-        </div>
+        </select>
       </div>
 
       {/* Photo Shot List Grid */}
-      <div style={styles.shotsGrid}>
+      <div className="photo-shots-list" style={styles.shotsGrid}>
         {filteredPhotos.map(shot => {
           const isCaptured = (shot.status || '').toLowerCase() === 'captured' || (shot.status || '').toLowerCase() === 'completed';
           const isMustHave = shot.priority === 'Must Have';
@@ -280,83 +279,103 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
           return (
             <div 
               key={shot.shotId} 
+              className="photo-shot-card"
               style={{
                 ...styles.shotCard,
-                borderColor: isCaptured ? 'var(--color-green)' : isMustHave ? 'var(--color-primary)' : 'var(--color-muted)',
+                borderColor: isCaptured ? 'var(--color-green)' : '#000000',
+                borderWidth: '2px',
                 opacity: isCaptured ? 0.85 : 1
               }}
             >
-              <div style={styles.shotHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <button 
-                    type="button"
-                    style={{
-                      ...styles.statusCheckBtn,
-                      color: isCaptured ? 'var(--color-green)' : 'var(--color-muted)'
-                    }}
-                    onClick={() => toggleShotStatus(shot.shotId)}
-                    title={isCaptured ? 'Mark as Pending' : 'Mark as Captured'}
-                  >
-                    {isCaptured ? <CheckCircle2 size={22} /> : <Circle size={22} />}
-                  </button>
+              {/* Left Group: Checkbox + Badges + Title */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 320px', minWidth: 0 }}>
+                <button 
+                  type="button"
+                  style={{
+                    ...styles.statusCheckBtn,
+                    color: isCaptured ? 'var(--color-green)' : '#000000'
+                  }}
+                  onClick={() => toggleShotStatus(shot.shotId)}
+                  title={isCaptured ? 'Mark as Pending' : 'Mark as Captured'}
+                >
+                  {isCaptured ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                </button>
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={styles.shotIdBadge}>{shot.shotId}</span>
-                      {shot.priority && (
-                        <span style={{
-                          ...styles.priorityBadge,
-                          backgroundColor: isMustHave ? 'var(--color-gold-muted)' : 'var(--color-bg)',
-                          color: isMustHave ? 'var(--color-gold)' : 'var(--color-muted)',
-                          borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-muted)'
-                        }}>
-                          {shot.priority}
-                        </span>
-                      )}
-                    </div>
-                    <h3 style={{
-                      ...styles.shotTitle,
-                      textDecoration: isCaptured ? 'line-through' : 'none'
-                    }}>
-                      {shot.description}
-                    </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span style={{ ...styles.shotIdBadge, color: '#000000', borderColor: '#000000' }}>{shot.shotId}</span>
+                    {shot.priority && (
+                      <span style={{
+                        ...styles.priorityBadge,
+                        backgroundColor: isMustHave ? 'var(--color-gold-muted)' : 'var(--color-bg)',
+                        color: isMustHave ? 'var(--color-gold)' : '#000000',
+                        borderColor: isMustHave ? 'var(--color-gold)' : '#000000'
+                      }}>
+                        {shot.priority}
+                      </span>
+                    )}
+                    {shot.location && (
+                      <span style={{ ...styles.metaBadge, border: '1px solid var(--color-muted)' }}>
+                        <MapPin size={12} style={{ marginRight: '4px' }} /> {shot.location}
+                      </span>
+                    )}
                   </div>
+
+                  <h3 style={{
+                    ...styles.shotTitle,
+                    color: '#000000',
+                    textDecoration: isCaptured ? 'line-through' : 'none'
+                  }}>
+                    {shot.description}
+                  </h3>
+
+                  {shot.notes && (
+                    <p style={styles.notesText}>
+                      💡 {shot.notes}
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              {/* Middle Group: Who / People Included (Bolder so it sticks out!) */}
+              {shot.people ? (
+                <div className="shot-who-group" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: '1 1 200px', padding: '0 0.5rem' }}>
+                  <Users size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 800, color: '#000000' }}>
+                    {shot.people}
+                  </span>
+                </div>
+              ) : <div style={{ flex: '1 1 100px' }} />}
+
+              {/* Right Group: Aligned Further Right Time & Actions */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, marginLeft: 'auto' }}>
+                {shot.shotTime && (
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#000000',
+                    backgroundColor: 'var(--color-bg)',
+                    border: '1px solid #000000',
+                    padding: '0.3rem 0.6rem',
+                    borderRadius: 'var(--border-radius-sm)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <Clock size={13} style={{ marginRight: '5px' }} /> {shot.shotTime}
+                  </span>
+                )}
 
                 <div style={styles.actionGroup}>
                   <button style={styles.iconBtn} onClick={() => startEditShot(shot)} title="Edit Shot">
-                    <Edit2 size={14} />
+                    <Edit2 size={15} style={{ color: '#000000' }} />
                   </button>
                   <button style={{ ...styles.iconBtn, color: '#ef4444' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
-                    <Trash2 size={14} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
-
-              {/* Meta Details Grid */}
-              <div style={styles.metaRow}>
-                {shot.location && (
-                  <span style={styles.metaBadge}>
-                    <MapPin size={12} style={{ marginRight: '4px' }} /> {shot.location}
-                  </span>
-                )}
-                {shot.shotTime && (
-                  <span style={styles.metaBadge}>
-                    <Clock size={12} style={{ marginRight: '4px' }} /> {shot.shotTime}
-                  </span>
-                )}
-                {shot.people && (
-                  <span style={styles.metaBadge}>
-                    <Users size={12} style={{ marginRight: '4px' }} /> {shot.people}
-                  </span>
-                )}
-              </div>
-
-              {shot.notes && (
-                <p style={styles.notesText}>
-                  💡 {shot.notes}
-                </p>
-              )}
             </div>
           );
         })}
