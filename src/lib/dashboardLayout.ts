@@ -1,4 +1,4 @@
-export type DashboardSectionKey = 'budget' | 'guests' | 'tasks' | 'music' | 'tables';
+export type DashboardSectionKey = 'budget' | 'guests' | 'tasks' | 'music' | 'tables' | 'photos';
 
 export interface DashboardSectionConfig {
   key: DashboardSectionKey;
@@ -12,6 +12,7 @@ export const DEFAULT_DASHBOARD_SECTIONS: DashboardSectionConfig[] = [
   { key: 'tasks', label: 'Kanban Checklist & Task Completion', enabled: true },
   { key: 'music', label: 'Music Playlist & Song Requests', enabled: true },
   { key: 'tables', label: 'Reception Table Seating', enabled: true },
+  { key: 'photos', label: 'Photography Shot List', enabled: true },
 ];
 
 export function loadDashboardLayout(): DashboardSectionConfig[] {

@@ -71,7 +71,7 @@
 - [x] **[DASH-3] Reorderable & Custom Summary Dashboard Layout (`dashboardLayout.ts` & `DashboardMetrics.tsx`):** Allow couples to reorder summary sections up/down and toggle section visibility via an inline layout control panel (`CUSTOMIZE DASHBOARD LAYOUT`) or Advanced Settings (`Module Controls`), persisting layout preferences in `localStorage` (`s2v_dashboard_layout`).
 - [x] **[DASH-4] Reception Table Seating Summary Module (`DashboardMetrics.tsx`):** Add a dedicated summary section for Table Seating displaying cards for `TOTAL TABLES`, `SEATED GUESTS`, `UNSEATED GUESTS`, and `% CAPACITY FILLED`, with optional Pie Chart and Labeled Progress Bar views.
 - [x] **[DASH-5] Browser Back/Forward Tab History Navigation (`page.tsx`):** Integrate HTML5 History API (`window.history.pushState` & `popstate` event listener) to push URL hashes (`#guests?filter=Attending`, `#music?filter=PENDING%20APPROVAL`, `#budget`) when switching tabs or clicking summary KPI cards, allowing couples to navigate backward/forward through tab history using browser Back/Forward buttons.
-- [ ] **[DASH-6] Photography Summary Module (`DashboardMetrics.tsx`):** Add a dedicated Photography section in Summary with Cards, Donut Chart, and Labeled Progress Bar views displaying "Total Required Shots", "Captured Shots", "Pending Shots", and "Percentage Complete".
+- [x] **[DASH-6] Photography Summary Module (`DashboardMetrics.tsx`):** Add a dedicated Photography section in Summary with Cards, Donut Chart, and Labeled Progress Bar views displaying "Total Required Shots", "Captured Shots", "Pending Shots", and "Percentage Complete".
 
 ---
 

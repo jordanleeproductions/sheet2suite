@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DashboardSummary, Guest, Task, Song } from '@/lib/sheets/types';
+import { DashboardSummary, Guest, Task, Song, PhotoShot } from '@/lib/sheets/types';
 import { Edit2, LayoutGrid, PieChart, BarChart2, ArrowUp, ArrowDown, Eye, EyeOff, Sliders } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout } from '@/lib/dashboardLayout';
@@ -26,6 +26,7 @@ interface DashboardMetricsProps {
   guests?: Guest[];
   tasks?: Task[];
   music?: Song[];
+  photos?: PhotoShot[];
   enabledModules?: ModuleConfig;
   currency?: string;
   onNavigateTab?: (tab: string, filter?: string) => void;
@@ -254,7 +255,7 @@ function LabeledProgressBar({
   );
 }
 
-export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD', onNavigateTab }: DashboardMetricsProps) {
+export default function DashboardMetrics({ metrics, guests, tasks, music, photos, enabledModules, currency = 'USD', onNavigateTab }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
 
   // Section View Modes (Cards | Pie Chart | Labeled Progress Bar)
@@ -262,6 +263,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
   const [taskViewMode, setTaskViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
   const [musicViewMode, setMusicViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
   const [tableViewMode, setTableViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
+  const [photoViewMode, setPhotoViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
 
   // Dashboard Section Order & Visibility State (DASH-3)
   const [sections, setSections] = useState<DashboardSectionConfig[]>(() => loadDashboardLayout());
@@ -327,6 +329,14 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
   const guestRequestedCount = allMusic.filter(s => (s.requestedBy && s.requestedBy !== 'Admin') || s.songId.startsWith('req-') || s.approvalStatus === 'Pending Approval').length;
   const pendingRequestsCount = allMusic.filter(s => s.approvalStatus === 'Pending Approval').length;
   const totalSongsCount = allMusic.length;
+
+  // Photography Calculations (DASH-6)
+  const allPhotos = photos || [];
+  const totalRequiredShots = allPhotos.length;
+  const capturedShotsCount = allPhotos.filter(p => p.status === 'Captured').length;
+  const pendingShotsCount = allPhotos.filter(p => p.status === 'Pending' || !p.status).length;
+  const skippedShotsCount = allPhotos.filter(p => p.status === 'Skipped').length;
+  const photoPercentComplete = totalRequiredShots > 0 ? Math.round((capturedShotsCount / totalRequiredShots) * 100) : 0;
 
   return (
     <div className="metrics-container" style={styles.container}>
@@ -1093,6 +1103,148 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
             />
           )}
         </div>
+      );
+
+      case 'photos':
+        if (!modules.photos) return null;
+        return (
+          <div key="photos" style={styles.sectionWrapper}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ ...styles.panelTitle, margin: 0 }}>Photo Shot List & Photography Progress</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
+                <button
+                  type="button"
+                  onClick={() => setPhotoViewMode('cards')}
+                  style={{
+                    background: photoViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                    color: photoViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.25rem 0.45rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  title="View as KPI Cards"
+                >
+                  <LayoutGrid size={15} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPhotoViewMode('pie')}
+                  style={{
+                    background: photoViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
+                    color: photoViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.25rem 0.45rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  title="View as Pie / Donut Chart"
+                >
+                  <PieChart size={15} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPhotoViewMode('progress')}
+                  style={{
+                    background: photoViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
+                    color: photoViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.25rem 0.45rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  title="View as Labeled Progress Bar"
+                >
+                  <BarChart2 size={15} />
+                </button>
+              </div>
+            </div>
+
+            {photoViewMode === 'cards' && (
+              <div style={styles.kpiGrid}>
+                <div
+                  className="kpi-card"
+                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                  onClick={() => onNavigateTab && onNavigateTab('photos')}
+                  title={onNavigateTab ? 'Click to view Required Shot List' : ''}
+                >
+                  <div style={styles.kpiLabel}>REQUIRED SHOTS</div>
+                  <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{totalRequiredShots}</div>
+                  <div style={styles.kpiSub}>Total Planned Shots</div>
+                </div>
+
+                <div
+                  className="kpi-card"
+                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                  onClick={() => onNavigateTab && onNavigateTab('photos')}
+                  title={onNavigateTab ? 'Click to view Captured Shots' : ''}
+                >
+                  <div style={styles.kpiLabel}>CAPTURED SHOTS</div>
+                  <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{capturedShotsCount}</div>
+                  <div style={styles.kpiSub}>Photos Captured</div>
+                </div>
+
+                <div
+                  className="kpi-card"
+                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                  onClick={() => onNavigateTab && onNavigateTab('photos')}
+                  title={onNavigateTab ? 'Click to view Pending Shots' : ''}
+                >
+                  <div style={styles.kpiLabel}>PENDING SHOTS</div>
+                  <div style={{ ...styles.kpiValue, color: pendingShotsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-muted)' }}>{pendingShotsCount}</div>
+                  <div style={styles.kpiSub}>Awaiting Capture</div>
+                </div>
+
+                <div
+                  className="kpi-card"
+                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                  onClick={() => onNavigateTab && onNavigateTab('photos')}
+                  title={onNavigateTab ? 'Click to open Photography Shot List' : ''}
+                >
+                  <div style={styles.kpiLabel}>% COMPLETE</div>
+                  <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{photoPercentComplete}%</div>
+                  <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
+                    <div style={{ ...styles.progressBarActual, width: `${photoPercentComplete}%` }} />
+                  </div>
+                  <div style={styles.kpiSub}>Captured Ratio ({capturedShotsCount}/{totalRequiredShots})</div>
+                </div>
+              </div>
+            )}
+
+            {photoViewMode === 'pie' && (
+              <DonutChart
+                slices={[
+                  { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
+                  { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
+                  { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
+                ]}
+                centerLabel="Captured"
+                centerValue={`${photoPercentComplete}%`}
+                onSliceClick={() => onNavigateTab && onNavigateTab('photos')}
+              />
+            )}
+
+            {photoViewMode === 'progress' && (
+              <LabeledProgressBar
+                items={[
+                  { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
+                  { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
+                  { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
+                ]}
+                total={totalRequiredShots}
+                onItemClick={() => onNavigateTab && onNavigateTab('photos')}
+              />
+            )}
+          </div>
+        );
       )}
     </div>
   );

@@ -1047,6 +1047,7 @@ export default function Sheet2VowDashboard() {
                     guests={weddingData.guests}
                     tasks={weddingData.tasks}
                     music={weddingData.music}
+                    photos={weddingData.photos}
                     enabledModules={enabledModules}
                     currency={currency}
                     onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
