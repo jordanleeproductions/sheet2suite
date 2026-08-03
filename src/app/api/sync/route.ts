@@ -9,7 +9,7 @@ import {
   photoMapper,
   giftMapper 
 } from '@/lib/sheets/mapper';
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, WeddingData } from '@/lib/sheets/types';
+import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 

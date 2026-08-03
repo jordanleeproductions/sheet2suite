@@ -205,8 +205,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
   // Sample Audio Player toggle
   const togglePlay = (item: Song) => {
     if (!item.link) {
-      setToastError(`No audio preview link available for "${item.title}". Use Spotify/YouTube links below to search.`);
-      setTimeout(() => setToastError(null), 4000);
+      setPreviewError(`No audio preview link available for "${item.title}". Use Spotify/YouTube links below to search.`);
+      setTimeout(() => setPreviewError(null), 4000);
       return;
     }
 
@@ -231,8 +231,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         console.error("Audio playback error:", err);
         setIsLoadingAudio(null);
         setPlayingId(null);
-        setToastError(`Unable to play sample for "${item.title}". Streaming links may be restricted.`);
-        setTimeout(() => setToastError(null), 4000);
+        setPreviewError(`Unable to play sample for "${item.title}". Streaming links may be restricted.`);
+        setTimeout(() => setPreviewError(null), 4000);
       });
 
       audio.onended = () => {
