@@ -309,7 +309,7 @@ export default function VendorShareLinkManager({
                   rel="noopener noreferrer"
                   style={{ ...styles.actionBtn, textDecoration: 'none', textAlign: 'center' }}
                 >
-                  <ExternalLink size={14} style={{ marginRight: '2px' }} /> PREVIEW
+                  <ExternalLink size={14} style={{ marginRight: '2px' }} /> OPEN
                 </a>
 
                 <button

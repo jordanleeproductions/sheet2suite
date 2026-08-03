@@ -226,7 +226,7 @@ export default function ShareModal({
               rel="noopener noreferrer"
               style={styles.previewBtn}
             >
-              <ExternalLink size={14} style={{ marginRight: '0.35rem' }} /> TEST PREVIEW PORTAL
+              <ExternalLink size={14} style={{ marginRight: '0.35rem' }} /> OPEN PORTAL
             </a>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
