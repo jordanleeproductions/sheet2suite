@@ -267,7 +267,8 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
             <option value="All">All Priorities</option>
             <option value="Must Have">Must Have</option>
             <option value="Nice To Have">Nice To Have</option>
-        </select>
+          </select>
+        </div>
       </div>
 
       {/* Photo Shot List Grid */}
