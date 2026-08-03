@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Song, SongListType } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2 } from 'lucide-react';
+
+type DeduplicatedSong = Song & { requestCount: number };
 
 interface MusicManagerProps {
   music: Song[];
@@ -47,8 +49,8 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
   };
 
   // Deduplicate songs by Title + Artist (case-insensitive)
-  const deduplicatedMusic = useMemo(() => {
-    const map = new Map<string, Song & { requestCount: number }>();
+  const deduplicatedMusic = useMemo<DeduplicatedSong[]>(() => {
+    const map = new Map<string, DeduplicatedSong>();
 
     for (const song of music) {
       const key = `${(song.title || '').trim().toLowerCase()}:::${(song.artist || '').trim().toLowerCase()}`;
@@ -91,7 +93,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     return Array.from(map.values());
   }, [music]);
 
-  const filteredMusic = deduplicatedMusic.filter(song => {
+  const filteredMusic = deduplicatedMusic.filter((song: DeduplicatedSong) => {
     const status = song.playStatus || (song.listType === 'Do Not Play' || song.priority === 'Banned' ? 'Banned' : song.priority || 'Must Play');
     const appStatus = song.approvalStatus || 'Approved';
 
@@ -112,7 +114,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       appStatus.toUpperCase() === filterPill.toUpperCase();
 
     return matchesSearch && matchesFilterPill;
-  }).sort((a, b) => {
+  }).sort((a: DeduplicatedSong, b: DeduplicatedSong) => {
     if (filterPill === 'ALL') {
       const aIsPending = a.approvalStatus === 'Pending Approval';
       const bIsPending = b.approvalStatus === 'Pending Approval';
@@ -559,7 +561,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       </div>
 
       <div style={styles.cardGrid}>
-        {filteredMusic.map((item) => {
+        {filteredMusic.map((item: DeduplicatedSong) => {
           const status = item.playStatus || (item.listType === 'Do Not Play' || item.priority === 'Banned' ? 'Banned' : item.priority || 'Must Play');
           const isBanned = status === 'Banned' || item.approvalStatus === 'Banned';
           const isPending = item.approvalStatus === 'Pending Approval';
