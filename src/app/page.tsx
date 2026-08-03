@@ -441,7 +441,7 @@ export default function Sheet2VowDashboard() {
   };
 
   return (
-    <div className="container" style={styles.container}>
+    <div className="app-viewport-container" style={styles.container}>
       {/* Brand Header */}
       <header style={styles.appHeader}>
         <div style={styles.brandGroup}>

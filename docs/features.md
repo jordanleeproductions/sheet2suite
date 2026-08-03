@@ -95,8 +95,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[GEN-1]`** | Convert binary Yes/No dropdown fields to native checkboxes (e.g., Staff Meals Required) | Multiple Modals | 🟢 Low | ⚡ Low (~1 turn) | Pending |
-| **`[GEN-2]`** | Desktop Wide-Screen Layout Optimization: Reduce margin whitespace in desktop view | `globals.css` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GEN-1]`** | Convert binary Yes/No dropdown fields to native checkboxes (e.g., Staff Meals Required) | Multiple Modals | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
+| **`[GEN-2]`** | Desktop Wide-Screen Layout Optimization: Reduce margin whitespace in desktop view | `globals.css` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[GEN-3]`** | Toast Notification System: Brief "Saved!" popup on settings/modal save | `ToastNotification.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 
 ### 🧭 Navigation & Settings

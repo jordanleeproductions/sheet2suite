@@ -450,15 +450,15 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Staff Meals Required</label>
-                  <select
-                    style={styles.select}
-                    value={formState.staffMealsRequired || 'No'}
-                    onChange={(e) => handleFormChange('staffMealsRequired', e.target.value)}
-                  >
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                  </select>
+                  <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '0.25rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={formState.staffMealsRequired === 'Yes'}
+                      onChange={(e) => handleFormChange('staffMealsRequired', e.target.checked ? 'Yes' : 'No')}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                    />
+                    <span>Staff Meals Required</span>
+                  </label>
                 </div>
               </div>
               <div style={styles.modalFooter}>
