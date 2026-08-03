@@ -92,50 +92,83 @@
 ## 📋 10. Future Task & Feature Backlog
 
 ### ⚙️ General & UX Standards
-- [ ] **[GEN-1] Dropdown to Checkbox Standard:** Convert binary Yes/No dropdown fields to native checkboxes (e.g. "Staff Meals Required").
-- [ ] **[GEN-2] Desktop Wide-Screen Layout Optimization:** Reduce excessive left and right margin white space in desktop view for fuller viewport utilization.
-- [ ] **[GEN-3] Toast Notification System:** Trigger a brief "Saved!" toast notification message upon saving any setting or modal form.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[GEN-1]`** | Convert binary Yes/No dropdown fields to native checkboxes (e.g., Staff Meals Required) | Multiple Modals | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GEN-2]`** | Desktop Wide-Screen Layout Optimization: Reduce margin whitespace in desktop view | `globals.css` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GEN-3]`** | Toast Notification System: Brief "Saved!" popup on settings/modal save | `ToastNotification.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 
 ### 🧭 Navigation & Settings
-- [ ] **[NAV-1] Sticky Collapsible Left Sidebar Navigation Option:** Add setting to enable a sticky/collapsible left-hand hamburger sidebar navigation instead of top navbar links in Desktop mode.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
 
 ### 👥 Guest Registry
-- [ ] **[GUEST-4] Separate Dietary Restrictions Row:** Move Dietary Restrictions to its own dedicated row under Meal Totals within guest cards to prevent label overflow.
-- [ ] **[GUEST-5] Clickable Filter Badges:** Make Meal Totals & Dietary Restriction badges clickable quick-filters in Guest Registry.
-- [ ] **[GUEST-6] Desktop List Row View Toggle:** Provide a view mode toggle in Desktop mode to switch guest display between Card Grid and List Table Rows.
-- [ ] **[GUEST-7] Header Action Layout Realignment:** Move "Add Guest" button to the right hand side of the header and add a descriptive subtitle under "Guest Registry".
-- [ ] **[GUEST-8] Dynamic Party Group Autocomplete Dropdown:** In Add/Edit Guest modal, change Party Group text box to a combo dropdown allowing selection of existing party groups or custom text entry.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[GUEST-4]`** | Move Dietary Restrictions to its own dedicated row under Meal Totals inside guest cards | `GuestListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GUEST-5]`** | Make Meal Totals & Dietary Restriction badges clickable quick-filters | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | Pending |
+| **`[GUEST-6]`** | Desktop List Row View Toggle: Switch between Card Grid and List Table Rows | `GuestListManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[GUEST-7]`** | Move "Add Guest" button to right hand side & add descriptive subtitle under header | `GuestListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GUEST-8]`** | Dynamic Party Group Combo Dropdown (select existing or type custom) | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 
 ### 🍽️ Catering & Menu Setup
-- [ ] **[MENU-1] Header Layout Realignment:** Move "Add Menu Item" button to the right hand side of the header.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[MENU-1]`** | Move "Add Menu Item" button to the right hand side of the header | `MenuSetupManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 
 ### 🪑 Seating & Floorplan
-- [ ] **[SEAT-6] Unassigned Guests Drawer Initials Avatar:** Display guest initial avatar circles to the left of names inside the Unassigned Guests drawer.
-- [ ] **[SEAT-7] Editorial Font Consistency:** Match card value typography in Editorial style with Summary KPI fonts.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[SEAT-6]`** | Display guest initial avatar circles to left of names inside Unassigned Guests drawer | `SeatingChartManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[SEAT-7]`** | Editorial Font Consistency: Match card value typography with Summary KPI fonts | `SeatingChartManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 
 ### 💼 Vendor Directory
-- [ ] **[VND-1] Add/Edit Vendor Header Font Fix:** Fix modal header font color in Add/Edit Vendor to white, matching primary button text.
-- [ ] **[VND-2] Google Drive File Picker Integration:** Allow selecting contracts directly from connected Google Drive instead of requiring manual URL links.
-- [ ] **[VND-3] Category Autocomplete & Pre-seeded Options:** Convert Vendor Category input to a combo dropdown pre-seeded with *DJ/Band*, *Photographer*, *Venue*, *Catering*, etc.
-- [ ] **[VND-4] Multi-Select Dietary Restrictions Tagging:** Convert Vendor Dietary Restrictions input to a multi-select dropdown pre-seeded with *Gluten Free*, *Vegetarian*, *Vegan*, *Nut Free*, *Halal*, *No Pork*.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[VND-1]`** | Fix Add & Edit Vendor modal header font color to white for contrast | `VendorManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[VND-2]`** | Google Drive File Picker integration for contracts instead of URL links | `VendorManager.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[VND-3]`** | Category Combo Dropdown pre-seeded with DJ/Band, Photographer, Venue, Catering | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[VND-4]`** | Multi-Select Dietary Restrictions Tagging (Gluten Free, Vegan, Halal, No Pork...) | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 
 ### 📋 Task Checklist & Kanban
-- [ ] **[TASK-1] Clickable Kanban Task Edit Modal:** Clicking any task card on the Kanban board opens its Edit Task modal.
-- [ ] **[TASK-2] Switchable Progress Summary Header:** Add switchable Progress Cards / Progress Bar header above the Kanban board.
-- [ ] **[TASK-3] Header Methodology Description:** Add a descriptive subtitle under the header explaining Kanban task management.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[TASK-1]`** | Clickable Kanban Task Edit Modal: Clicking any task card opens its edit modal | `KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[TASK-2]`** | Switchable Progress Cards / Progress Bar header above Kanban board | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[TASK-3]`** | Header Methodology Description under Kanban header | `KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 
 ### 🎵 Music Playlist
-- [ ] **[MUSIC-5] Descriptive Header Subtitle:** Add an informative subtitle explaining playlist curation and request portal workflow.
-- [ ] **[MUSIC-6] Direct Portal Quick Action Buttons:** Render active link buttons for Guest Song Request Portal and DJ Share Page directly on the Music Manager header.
-- [ ] **[MUSIC-7] YouTube Music & Streaming Platform Cleanup:** Replace standard YouTube links with YouTube Music links/branding, remove obsolete 3rd platform icon, and fix mock data audio preview playback errors.
-- [ ] **[MUSIC-8] Auto-Populate DJ Email:** Automatically prepopulate the `TO` email address with the DJ/Band's email from the Vendor Directory when exporting the Music list.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[MUSIC-5]`** | Descriptive Header Subtitle explaining playlist curation & portal workflow | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[MUSIC-6]`** | Direct Portal Quick Action Buttons for Request Portal and DJ Share Page | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[MUSIC-7]`** | YouTube Music branding/link, remove 3rd platform icon, fix mock preview playback | `MusicManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[MUSIC-8]`** | Auto-Populate DJ Email in `TO` field when exporting Music playlist email | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+
+### 📸 Photography & Shot List
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[PHOTO-2]`** | Auto-Populate Photographer Email in `TO` field when emailing Shot List | `PhotoShotListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 
 ### 🖨️ Print Studio
-- [ ] **[PRINT-10] Responsive Mobile Print Studio:** Redesign Print Studio modal layout for mobile viewports.
-- [ ] **[PRINT-11] Binder vs Guest Printable Categorization:** Separate binder printouts (planner pages) from guest-facing printables (place cards, QR cards).
-- [ ] **[PRINT-12] Binder Hole Punch Margins:** Option to add left-side margin spacing for 3-ring binder hole punches.
-- [ ] **[PRINT-13] Batch or Individual Binder Page Export:** Support exporting all binder pages in a single combined PDF or printing sections individually.
-- [ ] **[PRINT-14] Table Roster Page Formatting:** Limit Table Seating Rosters to 1-2 tables per page to ensure readability.
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[PRINT-10]`** | Responsive Mobile Print Studio layout redesign | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[PRINT-11]`** | Separate Binder Planner pages from Guest Printables (place cards, QR cards) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[PRINT-12]`** | Binder Hole Punch Margins toggle (space for 3-ring binder punches) | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[PRINT-13]`** | Batch Combined Binder Export or Individual Section PDF downloads | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[PRINT-14]`** | Table Seating Roster Pagination: Limit to 1-2 tables per page for legibility | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
 ---
 
