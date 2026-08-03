@@ -7,7 +7,7 @@ export interface DashboardSectionConfig {
 }
 
 export const DEFAULT_DASHBOARD_SECTIONS: DashboardSectionConfig[] = [
-  { key: 'budget', label: 'Financial KPI Overview & Budget Progress', enabled: true },
+  { key: 'budget', label: 'Financials & Budget Progress', enabled: true },
   { key: 'guests', label: 'Guest Registry & RSVP Summary', enabled: true },
   { key: 'tasks', label: 'Kanban Checklist & Task Completion', enabled: true },
   { key: 'music', label: 'Music Playlist & Song Requests', enabled: true },

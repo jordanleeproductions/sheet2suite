@@ -321,7 +321,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
     <div className="metrics-container" style={styles.container}>
       {/* Financial KPI Cards Grid */}
       {modules.budget && (
-        <div className="kpi-grid" style={styles.kpiGrid}>
+        <div style={styles.sectionWrapper}>
+          <h3 style={{ ...styles.panelTitle, margin: 0 }}>Financials</h3>
+          <div className="kpi-grid" style={styles.kpiGrid}>
           <div
             className="kpi-card"
             style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
@@ -374,6 +376,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
             <div style={styles.kpiSub}>Budget Minus Actual Spent</div>
           </div>
         </div>
+      </div>
       )}
 
       {/* Progress Bar & Ledger Balance Panel */}
