@@ -260,6 +260,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
   const [guestViewMode, setGuestViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
   const [taskViewMode, setTaskViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
   const [musicViewMode, setMusicViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
+  const [tableViewMode, setTableViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
 
   // Default all to true if enabledModules is not supplied
   const modules = enabledModules || {
@@ -284,6 +285,12 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
   const attendingCount = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending').length;
   const declinedCount = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'declined').length;
   const pendingCount = allGuests.filter(g => !(g.rsvpStatus) || (g.rsvpStatus || '').toLowerCase() === 'no response' || (g.rsvpStatus || '').toLowerCase() === 'pending').length;
+
+  // Reception Table Seating Calculations
+  const assignedAttendingGuests = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending' && g.tableAssignment && g.tableAssignment !== 'Unassigned');
+  const unassignedAttendingGuestsCount = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending' && (!g.tableAssignment || g.tableAssignment === 'Unassigned')).length;
+  const totalTablesSet = Array.from(new Set(allGuests.map(g => (g.tableAssignment || '').trim()).filter(t => t && t !== 'Unassigned'))).length;
+  const seatedPercent = attendingCount > 0 ? Math.round((assignedAttendingGuests.length / attendingCount) * 100) : 0;
 
   // Kanban Calculations
   const allTasks = tasks || [];
@@ -825,6 +832,146 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
               ]}
               total={totalSongsCount}
               onItemClick={(filterKey) => onNavigateTab && onNavigateTab('music', filterKey || 'ALL')}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Reception Table Seating Summary Row (DASH-4) */}
+      {modules.tables && (
+        <div style={styles.sectionWrapper}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Reception Table Seating</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
+              <button
+                type="button"
+                onClick={() => setTableViewMode('cards')}
+                style={{
+                  background: tableViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                  color: tableViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.45rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="View as KPI Cards"
+              >
+                <LayoutGrid size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTableViewMode('pie')}
+                style={{
+                  background: tableViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
+                  color: tableViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.45rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="View as Pie / Donut Chart"
+              >
+                <PieChart size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTableViewMode('progress')}
+                style={{
+                  background: tableViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
+                  color: tableViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.45rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="View as Labeled Progress Bar"
+              >
+                <BarChart2 size={15} />
+              </button>
+            </div>
+          </div>
+
+          {tableViewMode === 'cards' && (
+            <div style={styles.kpiGrid}>
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('tables')}
+                title={onNavigateTab ? 'Click to open Seating Chart' : ''}
+              >
+                <div style={styles.kpiLabel}>TOTAL TABLES</div>
+                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{totalTablesSet}</div>
+                <div style={styles.kpiSub}>Active Tables Configured</div>
+              </div>
+
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('tables')}
+                title={onNavigateTab ? 'Click to view Seated Guests' : ''}
+              >
+                <div style={styles.kpiLabel}>SEATED GUESTS</div>
+                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{assignedAttendingGuests.length}</div>
+                <div style={styles.kpiSub}>Assigned to Seats</div>
+              </div>
+
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('tables')}
+                title={onNavigateTab ? 'Click to view Unseated Guests' : ''}
+              >
+                <div style={styles.kpiLabel}>UNSEATED GUESTS</div>
+                <div style={{ ...styles.kpiValue, color: unassignedAttendingGuestsCount > 0 ? 'var(--color-gold-dark)' : 'var(--color-muted)' }}>
+                  {unassignedAttendingGuestsCount}
+                </div>
+                <div style={styles.kpiSub}>Pending Table Assignment</div>
+              </div>
+
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('tables')}
+                title={onNavigateTab ? 'Click to open Seating Chart' : ''}
+              >
+                <div style={styles.kpiLabel}>% CAPACITY FILLED</div>
+                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{seatedPercent}%</div>
+                <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
+                  <div style={{ ...styles.progressBarActual, width: `${seatedPercent}%` }} />
+                </div>
+                <div style={styles.kpiSub}>Seating Ratio ({assignedAttendingGuests.length}/{attendingCount})</div>
+              </div>
+            </div>
+          )}
+
+          {tableViewMode === 'pie' && (
+            <DonutChart
+              slices={[
+                { label: 'Seated Guests', count: assignedAttendingGuests.length, color: 'var(--color-green)' },
+                { label: 'Unseated Guests', count: unassignedAttendingGuestsCount, color: 'var(--color-amber)' },
+              ]}
+              centerLabel="Seated"
+              centerValue={`${seatedPercent}%`}
+              onSliceClick={() => onNavigateTab && onNavigateTab('tables')}
+            />
+          )}
+
+          {tableViewMode === 'progress' && (
+            <LabeledProgressBar
+              items={[
+                { label: 'Seated Guests', count: assignedAttendingGuests.length, color: 'var(--color-green)' },
+                { label: 'Unseated Guests', count: unassignedAttendingGuestsCount, color: 'var(--color-amber)' },
+              ]}
+              total={attendingCount}
+              onItemClick={() => onNavigateTab && onNavigateTab('tables')}
             />
           )}
         </div>
