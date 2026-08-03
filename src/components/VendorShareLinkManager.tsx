@@ -258,48 +258,71 @@ export default function VendorShareLinkManager({
         </div>
       </div>
 
-      {/* Active Links Grid */}
-      <div style={styles.grid}>
+      {/* Active Links Rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         {activeLinks.map(link => {
           const daysLeft = Math.max(0, Math.ceil((link.exp - Date.now()) / (1000 * 60 * 60 * 24)));
 
           return (
-            <div key={link.id} style={{ ...styles.card, borderColor: 'var(--color-primary)' }}>
-              <div style={styles.cardHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ color: 'var(--color-primary)' }}>
-                    {getScopeIcon(link.scope)}
-                  </div>
-                  <div>
+            <div 
+              key={link.id} 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--color-bg)',
+                border: '1.5px solid var(--color-primary)',
+                borderRadius: 'var(--border-radius-sm)',
+                transition: 'var(--transition-smooth)',
+              }}
+            >
+              {/* Left Column: Scope Icon, Title, Badge & Date */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 300px', minWidth: '240px' }}>
+                <div style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center' }}>
+                  {getScopeIcon(link.scope)}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <h4 style={styles.cardTitle}>{link.label}</h4>
-                    <span style={styles.dateText}>
-                      Created {new Date(link.createdAt).toLocaleDateString()}
+                    <span style={{
+                      ...styles.statusBadge,
+                      backgroundColor: 'var(--color-green-muted)',
+                      color: 'var(--color-green)',
+                      borderColor: 'var(--color-green)',
+                    }}>
+                      ACTIVE ({daysLeft}d left)
                     </span>
                   </div>
+                  <span style={styles.dateText}>
+                    Created {new Date(link.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-
-                <span style={{
-                  ...styles.statusBadge,
-                  backgroundColor: 'var(--color-green-muted)',
-                  color: 'var(--color-green)',
-                  borderColor: 'var(--color-green)',
-                }}>
-                  ACTIVE ({daysLeft}d left)
-                </span>
               </div>
 
-              {/* Action Buttons */}
-              <div style={styles.cardActions}>
+              {/* Right Column: Action Buttons aligned right */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                 <button 
                   type="button" 
                   style={{
-                    ...styles.actionBtn,
-                    backgroundColor: copiedId === link.id ? 'var(--color-green)' : 'var(--color-bg)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    backgroundColor: copiedId === link.id ? 'var(--color-green)' : 'var(--color-surface)',
                     color: copiedId === link.id ? '#ffffff' : 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.35rem 0.65rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
                   }}
                   onClick={() => handleCopyLink(link)}
                 >
-                  {copiedId === link.id ? <Check size={14} /> : <Copy size={14} />}
+                  {copiedId === link.id ? <Check size={13} /> : <Copy size={13} />}
                   {copiedId === link.id ? 'COPIED' : 'COPY'}
                 </button>
 
@@ -307,18 +330,44 @@ export default function VendorShareLinkManager({
                   href={link.shareUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ ...styles.actionBtn, textDecoration: 'none', textAlign: 'center' }}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.35rem 0.65rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
                 >
-                  <ExternalLink size={14} style={{ marginRight: '2px' }} /> OPEN
+                  <ExternalLink size={13} /> OPEN
                 </a>
 
                 <button
                   type="button"
-                  style={{ ...styles.actionBtn, color: '#ef4444', borderColor: '#ef4444' }}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    backgroundColor: 'var(--color-surface)',
+                    color: '#ef4444',
+                    border: '1px solid #ef4444',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.35rem 0.65rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
                   onClick={() => handleRevokeSingle(link.id)}
                   title="Revoke access for this link"
                 >
-                  <Trash2 size={14} /> REVOKE
+                  <Trash2 size={13} /> REVOKE
                 </button>
               </div>
             </div>
@@ -389,50 +438,67 @@ export default function VendorShareLinkManager({
           </div>
 
           {showRevokedSection && (
-            <div style={{ ...styles.grid, marginTop: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '1rem' }}>
               {revokedLinks.map(link => {
-                const isExpired = Date.now() > link.exp;
                 return (
                   <div 
                     key={link.id} 
                     style={{
-                      ...styles.card,
-                      borderColor: 'var(--color-muted)',
-                      opacity: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
+                      padding: '0.75rem 1rem',
                       backgroundColor: 'var(--color-bg)',
+                      border: '1px solid var(--color-muted)',
+                      borderRadius: 'var(--border-radius-sm)',
+                      opacity: 0.75,
                     }}
                   >
-                    <div style={styles.cardHeader}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ color: 'var(--color-muted)' }}>
-                          {getScopeIcon(link.scope)}
-                        </div>
-                        <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 300px', minWidth: '240px' }}>
+                      <div style={{ color: 'var(--color-muted)', display: 'flex', alignItems: 'center' }}>
+                        {getScopeIcon(link.scope)}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                           <h4 style={{ ...styles.cardTitle, color: 'var(--color-muted)' }}>{link.label}</h4>
-                          <span style={styles.dateText}>
-                            Created {new Date(link.createdAt).toLocaleDateString()}
+                          <span style={{
+                            ...styles.statusBadge,
+                            backgroundColor: link.isRevoked ? 'rgba(239, 68, 68, 0.15)' : 'var(--color-bg)',
+                            color: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
+                            borderColor: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
+                          }}>
+                            {link.isRevoked ? 'REVOKED' : 'EXPIRED'}
                           </span>
                         </div>
+                        <span style={styles.dateText}>
+                          Created {new Date(link.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
-
-                      <span style={{
-                        ...styles.statusBadge,
-                        backgroundColor: link.isRevoked ? 'rgba(239, 68, 68, 0.15)' : 'var(--color-bg)',
-                        color: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
-                        borderColor: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
-                      }}>
-                        {link.isRevoked ? 'REVOKED' : 'EXPIRED'}
-                      </span>
                     </div>
 
-                    <div style={styles.cardActions}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                       <a
                         href={link.shareUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ ...styles.actionBtn, textDecoration: 'none', textAlign: 'center', width: '100%' }}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          backgroundColor: 'var(--color-surface)',
+                          color: 'var(--color-muted)',
+                          border: '1px solid var(--color-muted)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          padding: '0.35rem 0.65rem',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                        }}
                       >
-                        <ExternalLink size={14} style={{ marginRight: '2px' }} /> PREVIEW REVOKED PAGE
+                        <ExternalLink size={13} /> OPEN REVOKED PAGE
                       </a>
                     </div>
                   </div>
