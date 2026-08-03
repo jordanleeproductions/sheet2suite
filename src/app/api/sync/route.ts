@@ -198,6 +198,8 @@ export async function POST(req: Request) {
         mockDatabase.tasks = data as Task[];
       } else if (sheetType === 'photos') {
         mockDatabase.photos = data as PhotoShot[];
+      } else if (sheetType === 'music') {
+        mockDatabase.music = data as Song[];
       } else if (sheetType === 'gifts') {
         mockDatabase.gifts = data as GiftItem[];
       }

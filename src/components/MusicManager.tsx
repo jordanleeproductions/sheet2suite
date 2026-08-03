@@ -27,10 +27,14 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
 
   const pendingSongs = music.filter(s => s.approvalStatus === 'Pending Approval');
 
-  const updateApprovalStatus = async (item: Song, approvalStatus: 'Approved' | 'Declined' | 'Banned') => {
+  const updateApprovalStatus = async (item: Song, approvalStatus: 'Approved' | 'Declined' | 'Banned', e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     if (isSyncing) return;
     const updated = music.map(s => {
-      if (s.songId === item.songId) {
+      if (s.songId === item.songId || (s.title === item.title && s.artist === item.artist)) {
         return {
           ...s,
           approvalStatus,
@@ -198,45 +202,42 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     setSongToDelete(null);
   };
 
-  // Render a play icon that fetches and plays a preview from iTunes
-  const togglePlay = async (item: Song) => {
-    setPreviewError(null);
-    if (playingId === item.songId) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      setPlayingId(null);
+  // Sample Audio Player toggle
+  const togglePlay = (item: Song) => {
+    if (!item.link) {
+      setToastError(`No audio preview link available for "${item.title}". Use Spotify/YouTube links below to search.`);
+      setTimeout(() => setToastError(null), 4000);
       return;
     }
 
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-
-    setIsLoadingAudio(item.songId);
-    
-    try {
-      const query = encodeURIComponent(`${item.artist} ${item.title}`);
-      const res = await fetch(`https://itunes.apple.com/search?term=${query}&limit=1&entity=song`);
-      const data = await res.json();
-
-      if (data.results && data.results.length > 0 && data.results[0].previewUrl) {
-        const previewUrl = data.results[0].previewUrl;
-        const audio = new Audio(previewUrl);
-        audioRef.current = audio;
-        
-        audio.onended = () => setPlayingId(null);
-        
-        await audio.play();
-        setPlayingId(item.songId);
-      } else {
-        setPreviewError(`Audio preview not available for "${item.title}".`);
+    if (playingId === item.songId) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
-    } catch (err) {
-      console.error('Error fetching preview:', err);
-      setPreviewError(`Failed to load preview for "${item.title}". Please check connection.`);
-    } finally {
-      setIsLoadingAudio(null);
+      setPlayingId(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsLoadingAudio(item.songId);
+      const audio = new Audio(item.link);
+      audioRef.current = audio;
+
+      audio.play().then(() => {
+        setIsLoadingAudio(null);
+        setPlayingId(item.songId);
+      }).catch((err) => {
+        console.error("Audio playback error:", err);
+        setIsLoadingAudio(null);
+        setPlayingId(null);
+        setToastError(`Unable to play sample for "${item.title}". Streaming links may be restricted.`);
+        setTimeout(() => setToastError(null), 4000);
+      });
+
+      audio.onended = () => {
+        setPlayingId(null);
+      };
     }
   };
 
@@ -267,34 +268,71 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${item.title} ${item.artist}`)}`;
 
     return (
-      <div style={styles.externalLinksGroup}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
         <a 
           href={spotifyUrl} 
           target="_blank" 
           rel="noopener noreferrer" 
-          style={styles.streamLinkBtn}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            backgroundColor: '#1DB954',
+            color: '#ffffff',
+            textDecoration: 'none',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          }}
           title="Search on Spotify"
         >
-          Spotify
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 C9.6 9.9 15 10.561 18.72 12.841c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72.96.42 1.5-.3.54-.96.72-1.5.42z"/>
+          </svg>
         </a>
         <a 
           href={youtubeUrl} 
           target="_blank" 
           rel="noopener noreferrer" 
-          style={styles.streamLinkBtn}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            backgroundColor: '#FF0000',
+            color: '#ffffff',
+            textDecoration: 'none',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          }}
           title="Search on YouTube"
         >
-          YouTube
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
         </a>
         {item.link && (
           <a 
             href={item.link} 
             target="_blank" 
             rel="noopener noreferrer" 
-            style={styles.customLinkBtn}
-            title="Open Direct Link"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-bg, #f3f4f6)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)',
+              textDecoration: 'none',
+            }}
+            title="Open Direct Audio Link"
           >
-            <ExternalLink size={14} />
+            <ExternalLink size={12} />
           </a>
         )}
       </div>
@@ -462,6 +500,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
           const status = item.playStatus || (item.listType === 'Do Not Play' || item.priority === 'Banned' ? 'Banned' : item.priority || 'Must Play');
           const isBanned = status === 'Banned' || item.approvalStatus === 'Banned';
           const isPending = item.approvalStatus === 'Pending Approval';
+          const isGuestRequest = isPending || (item.requestedBy && item.requestedBy !== 'Admin') || item.songId.startsWith('req-');
 
           return (
             <div 
@@ -482,17 +521,17 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     {isBanned ? '🚫 BANNED' : status === 'Must Play' ? '🔥 MUST PLAY' : '⏳ PLAY IF TIME'}
                   </span>
 
-                  {isPending && (
+                  {isGuestRequest && (
                     <span style={{
                       fontSize: '0.65rem',
                       fontFamily: 'var(--font-mono)',
                       fontWeight: 700,
-                      backgroundColor: '#f59e0b',
+                      backgroundColor: isPending ? '#f59e0b' : 'var(--color-primary)',
                       color: '#ffffff',
                       padding: '0.15rem 0.4rem',
                       borderRadius: '4px',
                     }}>
-                      ⏳ PENDING APPROVAL
+                      🎵 SONG REQUEST
                     </span>
                   )}
 
@@ -521,50 +560,10 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                 </div>
 
                 <div style={styles.cardActions}>
-                  {isPending && (
-                    <>
-                      <button
-                        type="button"
-                        style={{
-                          fontSize: '0.65rem',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 700,
-                          backgroundColor: '#10b981',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '0.2rem 0.5rem',
-                          cursor: 'pointer',
-                        }}
-                        title="Approve song request"
-                        onClick={() => updateApprovalStatus(item, 'Approved')}
-                      >
-                        APPROVE ✓
-                      </button>
-                      <button
-                        type="button"
-                        style={{
-                          fontSize: '0.65rem',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 700,
-                          backgroundColor: '#ef4444',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '0.2rem 0.5rem',
-                          cursor: 'pointer',
-                        }}
-                        title="Decline song request"
-                        onClick={() => updateApprovalStatus(item, 'Declined')}
-                      >
-                        DECLINE ✗
-                      </button>
-                    </>
-                  )}
-                  <button style={styles.actionBtn} onClick={() => startEdit(item)}>
+                  <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Song">
                     <Edit2 size={14} />
                   </button>
-                  <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => setSongToDelete(item)}>
+                  <button style={{ ...styles.actionBtn, color: '#ef4444' }} onClick={() => setSongToDelete(item)} title="Delete Song">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -592,9 +591,61 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                 )}
               </div>
 
-              {/* Fixed Bottom Card Footer for Spotify & YouTube */}
-              <div style={styles.cardFooter}>
+              {/* Fixed Bottom Card Footer for Streaming Icons & Approve/Decline Controls */}
+              <div style={{
+                ...styles.cardFooter,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.5rem',
+                flexWrap: 'wrap',
+                paddingTop: '0.5rem',
+                borderTop: '1px solid var(--color-muted)',
+              }}>
                 {renderExternalLinks(item)}
+
+                {isPending && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <button
+                      type="button"
+                      style={{
+                        fontSize: '0.7rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        backgroundColor: '#10b981',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.35rem 0.75rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(16,185,129,0.2)',
+                      }}
+                      title="Approve song request"
+                      onClick={(e) => updateApprovalStatus(item, 'Approved', e)}
+                    >
+                      APPROVE ✓
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        fontSize: '0.7rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.35rem 0.75rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(239,68,68,0.2)',
+                      }}
+                      title="Decline song request"
+                      onClick={(e) => updateApprovalStatus(item, 'Declined', e)}
+                    >
+                      DECLINE ✗
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
