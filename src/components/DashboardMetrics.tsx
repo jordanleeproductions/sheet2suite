@@ -1247,6 +1247,109 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
         );
     }
   };
+
+  return (
+    <div className="metrics-container" style={styles.container}>
+      {/* Top Inline Dashboard Layout Control Bar (DASH-3) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.25rem' }}>
+        <button
+          type="button"
+          onClick={() => setShowLayoutManager(!showLayoutManager)}
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            backgroundColor: showLayoutManager ? 'var(--color-primary)' : 'var(--color-bg)',
+            color: showLayoutManager ? 'var(--color-on-dark)' : 'var(--color-text)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: 'var(--border-radius-sm)',
+            padding: '0.35rem 0.75rem',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}
+          title="Customize Summary Dashboard Section Order & Visibility"
+        >
+          <Sliders size={14} /> CUSTOMIZE DASHBOARD LAYOUT
+        </button>
+      </div>
+
+      {/* Inline Layout Reordering Panel */}
+      {showLayoutManager && (
+        <div style={{
+          backgroundColor: 'var(--color-surface)',
+          border: '2px solid var(--color-primary)',
+          borderRadius: 'var(--border-radius-md)',
+          padding: '1rem',
+          marginBottom: '1rem',
+          boxShadow: 'var(--box-shadow-subtle)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, margin: 0 }}>
+              ⚙️ REORDER & TOGGLE DASHBOARD SUMMARY SECTIONS
+            </h4>
+            <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+              Layout changes persist in your local browser settings
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {sections.map((sec, idx) => (
+              <div
+                key={sec.key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: 'var(--color-bg)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.5rem 0.75rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionVisibility(sec.key)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: sec.enabled ? 'var(--color-primary)' : 'var(--color-muted)', padding: 0 }}
+                    title={sec.enabled ? 'Hide section' : 'Show section'}
+                  >
+                    {sec.enabled ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: sec.enabled ? 'var(--color-text)' : 'var(--color-muted)' }}>
+                    {sec.label}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => moveSection(idx, 'up')}
+                    disabled={idx === 0}
+                    style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
+                    title="Move up"
+                  >
+                    <ArrowUp size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveSection(idx, 'down')}
+                    disabled={idx === sections.length - 1}
+                    style={{ background: 'none', border: 'none', cursor: idx === sections.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === sections.length - 1 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
+                    title="Move down"
+                  >
+                    <ArrowDown size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Render Dynamic Ordered Sections */}
+      {sections.map((sec, idx) => sec.enabled ? renderSection(sec.key, idx) : null)}
     </div>
   );
 }
