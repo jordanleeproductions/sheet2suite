@@ -309,6 +309,98 @@ export default function AdvancedSettingsModal({
                   </div>
                 </div>
 
+                {/* Primary Accent Color Presets & Custom Picker */}
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>PRIMARY ACCENT COLOR</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.625rem', marginBottom: '0.75rem' }}>
+                    {[
+                      { name: 'Emerald Green', hex: '#13AA52', desc: 'Classic Vow Green' },
+                      { name: 'Royal Navy', hex: '#0d1b2a', desc: 'Midnight Luxury' },
+                      { name: 'Romantic Rose', hex: '#e11d48', desc: 'Rose & Wine' },
+                      { name: 'Velvet Purple', hex: '#7c3aed', desc: 'Elegant Violet' },
+                    ].map((preset) => {
+                      const isSelected = (primaryColor || '').toLowerCase() === preset.hex.toLowerCase();
+                      return (
+                        <button
+                          key={preset.hex}
+                          type="button"
+                          onClick={() => onUpdatePrimaryColor && onUpdatePrimaryColor(preset.hex)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 0.65rem',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.7rem',
+                            border: isSelected ? '2px solid var(--color-text)' : '1px solid var(--color-muted)',
+                            backgroundColor: 'var(--color-bg)',
+                            color: 'var(--color-text)',
+                            borderRadius: 'var(--border-radius-sm)',
+                            cursor: 'pointer',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <div style={{
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            backgroundColor: preset.hex,
+                            border: '1px solid rgba(0,0,0,0.2)',
+                            flexShrink: 0
+                          }} />
+                          <div style={{ overflow: 'hidden' }}>
+                            <div style={{ fontWeight: isSelected ? 700 : 500, whiteSpace: 'nowrap' }}>{preset.name}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Hex Color Picker */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-bg-subtle)', padding: '0.5rem 0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
+                    <input
+                      type="color"
+                      value={primaryColor || '#13AA52'}
+                      onChange={(e) => onUpdatePrimaryColor && onUpdatePrimaryColor(e.target.value)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        padding: 0,
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        backgroundColor: 'transparent'
+                      }}
+                      title="Custom Primary Color Picker"
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                        CUSTOM HEX COLOR
+                      </span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-muted)' }}>
+                        {primaryColor ? primaryColor.toUpperCase() : 'Default Theme Color'}
+                      </span>
+                    </div>
+                    {primaryColor && (
+                      <button
+                        type="button"
+                        onClick={() => onUpdatePrimaryColor && onUpdatePrimaryColor('')}
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          color: 'var(--color-muted)',
+                          background: 'none',
+                          border: 'none',
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Reset Default
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Time Display Format */}
                 <div style={styles.formGroup}>
                   <label style={styles.label}>TIME DISPLAY FORMAT</label>

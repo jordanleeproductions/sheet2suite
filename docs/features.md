@@ -57,7 +57,7 @@
 
 ## 🎨 6. Aesthetic Theme Engine & UI Design System
 - [x] **[THEME-1] Dual Design System:** High-contrast switching between **Editorial Minimalist** (serif typography, soft borders) and **Muted Neo-Brutalism** (3px borders, hard drop shadows, `Geist Mono` typography).
-- [x] **[THEME-2] Light/Dark Mode & Custom Accent Colors:** Global theme toggle with custom primary color selection (`#00ED64`, `#13AA52`, custom hex).
+- [x] **[THEME-2] Light/Dark Mode & Custom Accent Colors:** Global theme toggle with 4 curated primary accent color presets (**Emerald Green** `#13AA52`, **Royal Navy** `#0d1b2a`, **Romantic Rose** `#e11d48`, **Velvet Purple** `#7c3aed`) plus an interactive custom HTML5 native hex color picker in Advanced Settings.
 - [ ] **[THEME-3] Expanded Multi-Theme Aesthetic Engine:** Introduce **Botanical Romance** (sage green & soft blush tones), **Midnight Tuxedo** (navy & gold leaf luxury dark mode), and **Retro Cyberpunk** (neon violet/cyan grid overlays & pixel badges).
 - [x] **[THEME-4] Semantic Color Token Expansion (`theme.css`):** Add missing CSS custom properties (`--color-amber`, `--color-purple`, `--color-text-secondary`, `--color-text-tertiary`, `--color-bg-subtle`, `--color-bg-hover`, `--color-border`, `--color-on-dark`, `--color-on-light`) across all 4 theme variants (Editorial Light/Dark, Neo-Brutalism Light/Dark) to eliminate hardcoded hex values.
 - [x] **[THEME-5] PhotoShotListManager Dark Mode Fix:** Replace 18 hardcoded `#000000` inline styles with `var(--color-text)` and `var(--color-on-light)` tokens so Photography page renders correctly in dark mode.

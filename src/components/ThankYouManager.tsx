@@ -429,8 +429,8 @@ export default function ThankYouManager({
                 <span style={{
                   ...styles.statusTag,
                   backgroundColor: party.isThanked ? 'var(--color-green-muted)' : 'var(--color-gold-muted)',
-                  color: party.isThanked ? 'var(--color-green)' : 'var(--color-gold)',
-                  borderColor: party.isThanked ? 'var(--color-green)' : 'var(--color-gold)'
+                  color: party.isThanked ? 'var(--color-green)' : 'var(--color-amber-dark)',
+                  borderColor: party.isThanked ? 'var(--color-green)' : 'var(--color-gold-dark)'
                 }}>
                   {party.isThanked ? 'THANK YOU SENT' : 'PENDING CARD'}
                 </span>
@@ -795,8 +795,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     padding: '0.15rem 0.4rem',
     backgroundColor: 'var(--color-gold-muted)',
-    color: 'var(--color-gold)',
-    border: '1px solid var(--color-gold)',
+    color: 'var(--color-amber-dark)',
+    border: '1px solid var(--color-gold-dark)',
     borderRadius: 'var(--border-radius-sm)',
   },
   statusTag: {
