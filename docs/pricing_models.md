@@ -105,4 +105,4 @@ When a Basic user attempts to access a Pro or VIP feature (e.g. generating a ven
 
 ## 6. Related Documentation Sync
 - 📘 [tech_spec.md](file:///d:/Development/sheet2vow/docs/tech_spec.md) (Section 3.4 Access Control & License Entitlements)
-- 🗺️ [features_roadmap.md](file:///d:/Development/sheet2vow/docs/features_roadmap.md) (Phase 3 Monetization & Lemon Squeezy Integration)
+- 🗺️ [features.md](file:///d:/Development/sheet2vow/docs/features.md) (Phase 3 Monetization & Lemon Squeezy Integration)
