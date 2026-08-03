@@ -278,7 +278,32 @@ export default function VendorSharePage() {
 
         {/* MUSIC PLAYLIST VIEW */}
         {(activeTab === 'music' || scope === 'music') && data.music && (() => {
-          const filteredMusic = data.music.filter(song => {
+          const deduplicatedMusic = (() => {
+            const map = new Map<string, Song & { requestCount: number }>();
+            for (const song of data.music) {
+              const key = `${(song.title || '').trim().toLowerCase()}:::${(song.artist || '').trim().toLowerCase()}`;
+              if (!map.has(key)) {
+                map.set(key, { ...song, requestCount: 1 });
+              } else {
+                const existing = map.get(key)!;
+                existing.requestCount += 1;
+                if (song.requestedBy && !existing.requestedBy?.toLowerCase().includes(song.requestedBy.toLowerCase())) {
+                  existing.requestedBy = existing.requestedBy ? `${existing.requestedBy}, ${song.requestedBy}` : song.requestedBy;
+                }
+                if (song.notes && !existing.notes?.toLowerCase().includes(song.notes.toLowerCase())) {
+                  existing.notes = existing.notes ? `${existing.notes} | "${song.notes}"` : song.notes;
+                }
+                if (song.approvalStatus === 'Banned' || song.playStatus === 'Banned' || song.listType === 'Banned') {
+                  existing.approvalStatus = 'Banned';
+                  existing.playStatus = 'Banned';
+                  existing.listType = 'Banned';
+                }
+              }
+            }
+            return Array.from(map.values());
+          })();
+
+          const filteredMusic = deduplicatedMusic.filter(song => {
             const isBanned = song.approvalStatus === 'Banned' || song.playStatus === 'Banned' || song.listType === 'Do Not Play' || song.priority === 'Banned';
             const isPending = song.approvalStatus === 'Pending Approval';
             const isApproved = song.approvalStatus === 'Approved' || (!song.approvalStatus && !isBanned);
@@ -293,7 +318,7 @@ export default function VendorSharePage() {
             const bPending = b.approvalStatus === 'Pending Approval';
             if (aPending && !bPending) return 1;
             if (!aPending && bPending) return -1;
-            return 0;
+            return b.requestCount - a.requestCount;
           });
 
           return (
@@ -346,18 +371,33 @@ export default function VendorSharePage() {
                     >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <span style={{
-                          fontSize: '0.65rem',
-                          fontWeight: 700,
-                          padding: '0.15rem 0.4rem',
-                          borderRadius: '4px',
-                          backgroundColor: isBanned ? '#ef4444' : song.listType === 'Requested Song' ? '#f59e0b' : '#13AA52',
-                          color: '#ffffff',
-                          display: 'inline-block',
-                          marginBottom: '0.35rem'
-                        }}>
-                          {isBanned ? '🚫 BANNED' : song.listType === 'Requested Song' ? '🎵 SONG REQUEST' : song.listType || 'Reception'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
+                          <span style={{
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '4px',
+                            backgroundColor: isBanned ? '#ef4444' : song.listType === 'Requested Song' ? '#f59e0b' : '#13AA52',
+                            color: '#ffffff',
+                            display: 'inline-block',
+                          }}>
+                            {isBanned ? '🚫 BANNED' : song.listType === 'Requested Song' ? '🎵 SONG REQUEST' : song.listType || 'Reception'}
+                          </span>
+
+                          {song.requestCount > 1 && (
+                            <span style={{
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '4px',
+                              backgroundColor: '#8b5cf6',
+                              color: '#ffffff',
+                              display: 'inline-block',
+                            }}>
+                              🔥 {song.requestCount} REQUESTS
+                            </span>
+                          )}
+                        </div>
 
                         <h3 style={{ ...styles.itemTitle, color: isBanned ? '#ef4444' : textColor }}>
                           "{song.title}"

@@ -46,7 +46,52 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     await onUpdate(updated);
   };
 
-  const filteredMusic = music.filter(song => {
+  // Deduplicate songs by Title + Artist (case-insensitive)
+  const deduplicatedMusic = useMemo(() => {
+    const map = new Map<string, Song & { requestCount: number }>();
+
+    for (const song of music) {
+      const key = `${(song.title || '').trim().toLowerCase()}:::${(song.artist || '').trim().toLowerCase()}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          ...song,
+          requestCount: 1,
+        });
+      } else {
+        const existing = map.get(key)!;
+        existing.requestCount += 1;
+        
+        // Append requester name if unique
+        if (song.requestedBy && !existing.requestedBy?.toLowerCase().includes(song.requestedBy.toLowerCase())) {
+          existing.requestedBy = existing.requestedBy 
+            ? `${existing.requestedBy}, ${song.requestedBy}` 
+            : song.requestedBy;
+        }
+        // Append notes if unique
+        if (song.notes && !existing.notes?.toLowerCase().includes(song.notes.toLowerCase())) {
+          existing.notes = existing.notes 
+            ? `${existing.notes} | "${song.notes}"` 
+            : song.notes;
+        }
+        // Audio link fallback
+        if (!existing.link && song.link) {
+          existing.link = song.link;
+        }
+        // Priority status: Banned > Approved > Pending Approval
+        if (song.approvalStatus === 'Banned' || song.playStatus === 'Banned' || song.listType === 'Banned') {
+          existing.approvalStatus = 'Banned';
+          existing.playStatus = 'Banned';
+          existing.listType = 'Banned';
+        } else if (existing.approvalStatus !== 'Banned' && song.approvalStatus === 'Approved') {
+          existing.approvalStatus = 'Approved';
+        }
+      }
+    }
+
+    return Array.from(map.values());
+  }, [music]);
+
+  const filteredMusic = deduplicatedMusic.filter(song => {
     const status = song.playStatus || (song.listType === 'Do Not Play' || song.priority === 'Banned' ? 'Banned' : song.priority || 'Must Play');
     const appStatus = song.approvalStatus || 'Approved';
 
@@ -74,7 +119,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       if (aIsPending && !bIsPending) return -1;
       if (!aIsPending && bIsPending) return 1;
     }
-    return 0;
+    return b.requestCount - a.requestCount;
   });
 
   // Cleanup audio on unmount
@@ -550,6 +595,20 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                       borderRadius: '4px',
                     }}>
                       🎵 SONG REQUEST
+                    </span>
+                  )}
+
+                  {item.requestCount > 1 && (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      backgroundColor: '#8b5cf6',
+                      color: '#ffffff',
+                      padding: '0.15rem 0.4rem',
+                      borderRadius: '4px',
+                    }}>
+                      🔥 {item.requestCount} REQUESTS
                     </span>
                   )}
 
