@@ -396,3 +396,20 @@ button[style*="background-color: #ef4444"],
 button[style*="background-color: #8b5cf6"] {
   color: #ffffff !important;
 }
+
+/* Universal Light Background Button Black Text Color Enforcement */
+button[style*="background-color: #ffffff"],
+button[style*="background-color: #f9fafb"],
+button[style*="background-color: #f3f4f6"],
+button[style*="background-color: #f4f4f0"],
+button[style*="background-color: #e5e7eb"],
+button[style*="background-color: #e2e8f0"],
+button[style*="background-color: #FFC72C"],
+button[style*="background-color: #00ED64"],
+button[style*="background-color: var(--color-surface)"],
+button[style*="background-color: var(--color-bg)"],
+button[style*="backgroundColor: '#ffffff'"],
+button[style*="backgroundColor: 'var(--color-surface)'"],
+button[style*="backgroundColor: 'var(--color-bg)'"] {
+  color: #000000 !important;
+}
