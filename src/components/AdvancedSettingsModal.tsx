@@ -22,11 +22,16 @@ import {
   UserPlus,
   Lock,
   Palette,
-  Clock
+  Clock,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
 import { getColorPresets } from '@/lib/themePresets';
+import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout } from '@/lib/dashboardLayout';
 
 interface AdvancedSettingsModalProps {
   spreadsheetId: string;
@@ -90,8 +95,27 @@ export default function AdvancedSettingsModal({
 
   // Feedback Form State
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature'>('feature');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState<boolean>(false);
+  const [feedbackSending, setFeedbackSending] = useState<boolean>(false);
+
+  // Dashboard Layout Reorder State (DASH-3)
+  const [dashSections, setDashSections] = useState<DashboardSectionConfig[]>(() => loadDashboardLayout());
+
+  const moveDashSection = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= dashSections.length) return;
+    const updated = [...dashSections];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+    setDashSections(updated);
+    saveDashboardLayout(updated);
+  };
+
+  const toggleDashSection = (key: string) => {
+    const updated = dashSections.map(sec => sec.key === key ? { ...sec, enabled: !sec.enabled } : sec);
+    setDashSections(updated);
+    saveDashboardLayout(updated);
+  };
 
   const handleSaveDetails = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -611,6 +635,67 @@ export default function AdvancedSettingsModal({
                       </div>
                     );
                   })}
+                </div>
+
+                <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid var(--color-border)' }}>
+                  <h5 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: 'var(--color-text)' }}>
+                    📊 DASHBOARD SUMMARY SECTION ORDER & VISIBILITY
+                  </h5>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginBottom: '0.75rem' }}>
+                    Reorder or hide summary sections rendered on the main Summary Dashboard.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {dashSections.map((sec, idx) => (
+                      <div
+                        key={sec.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: 'var(--color-bg)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          padding: '0.5rem 0.75rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleDashSection(sec.key)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: sec.enabled ? 'var(--color-primary)' : 'var(--color-muted)', padding: 0 }}
+                            title={sec.enabled ? 'Hide section' : 'Show section'}
+                          >
+                            {sec.enabled ? <Eye size={16} /> : <EyeOff size={16} />}
+                          </button>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: sec.enabled ? 'var(--color-text)' : 'var(--color-muted)' }}>
+                            {sec.label}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => moveDashSection(idx, 'up')}
+                            disabled={idx === 0}
+                            style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
+                            title="Move up"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveDashSection(idx, 'down')}
+                            disabled={idx === dashSections.length - 1}
+                            style={{ background: 'none', border: 'none', cursor: idx === dashSections.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === dashSections.length - 1 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
+                            title="Move down"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
