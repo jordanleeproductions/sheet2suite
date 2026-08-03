@@ -114,10 +114,9 @@ This document defines the authoritative tab structure and column header contract
 | `Song Title` | `title` | Text | Song title |
 | `Artist` | `artist` | Text | Artist / Band name |
 | `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance` |
-| `Priority` | `priority` | Dropdown | `Must Play`, `Play If Time`, `Banned` |
-| `Played?` | `played` | Checkbox | `TRUE`, `FALSE` |
-| `Notes` | `notes` | Text | Special notes or guest dedication messages |
+| `Play Status` | `playStatus` | Dropdown | `Must Play`, `Play If Time`, `Banned` |
 | `Requested By` | `requestedBy` | Text | Name of guest who requested the song |
+| `Notes` | `notes` | Text | Special notes or guest dedication messages |
 | `Approval Status` | `approvalStatus` | Dropdown | `Approved`, `Pending Approval`, `Banned`, `Declined` |
 
 ---
