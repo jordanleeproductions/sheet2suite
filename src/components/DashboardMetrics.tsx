@@ -337,7 +337,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
             title={onNavigateTab ? 'Click to open Budget Manager' : ''}
           >
             <div style={styles.kpiLabel}>ACTUAL COST</div>
-            <div style={{ ...styles.kpiValue, color: 'var(--color-sweetheart, #000000)' }}>
+            <div style={styles.kpiValue}>
               {formatCurrency(actualCost, currency)}
             </div>
             <div style={styles.kpiSub}>SUM('Budget Ledger'!E:E)</div>
