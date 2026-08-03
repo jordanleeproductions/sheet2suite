@@ -187,7 +187,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
       {/* Header Title & Actions */}
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Photography Shot List</h2>
+          <h2 style={{ ...styles.title, color: '#000000' }}>Photography Shot List</h2>
           <p style={styles.subtitle}>
             Manage required photography moments, VIP group poses, and shot progress for your photographer.
           </p>
