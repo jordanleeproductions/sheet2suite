@@ -62,7 +62,15 @@
 
 ---
 
-## ⚙️ 7. Platform Infrastructure, Production Sync & Security
+## 📊 7. Summary Dashboard Enhancements (`DashboardMetrics.tsx`)
+- [ ] **[DASH-1] Interactive & Filtered KPI Navigation (`DashboardMetrics.tsx`):** Make all summary KPI cards clickable links routing directly to their corresponding tab (Guest Registry, Kanban Tasks, Budget, Music Playlist, Table Seating) with pre-applied status filters (e.g., *Attending Guests* -> Guests tab `Attending`; *Tasks To Do* -> Kanban tab `To Do`; *Pending Requests* -> Music tab `PENDING APPROVAL`).
+- [ ] **[DASH-2] Multi-View Section Toggles (Cards | Pie Chart | Labeled Progress Bar):** Display right-aligned header view mode icons (`LayoutGrid`, `PieChart`, `BarChart2`) on summary sections (*Checklist*, *Guest Registry & RSVP Summary*, *Music Playlist*, *Table Seating*), rendering SVG donut/pie charts with legends or labeled progress bars.
+- [ ] **[DASH-3] Reorderable & Custom Summary Dashboard Layout:** Allow couples to reorder summary sections up/down and toggle section visibility via an inline layout control panel or Advanced Settings, persisting layout preferences in `localStorage` and `Settings` cell B2 JSON config.
+- [ ] **[DASH-4] Reception Table Seating Summary Module:** Add a dedicated summary section for Table Seating displaying cards for `TOTAL TABLES`, `SEATED GUESTS`, `UNSEATED GUESTS`, and `% CAPACITY FILLED`, with optional Pie Chart and Labeled Progress Bar views.
+
+---
+
+## ⚙️ 8. Platform Infrastructure, Production Sync & Security
 - [x] **[SYS-1] Purchase Activation Flow (`/activate`):** Etsy order verification API with Quick Setup and 4-screen Guided Setup Wizard.
 - [x] **[SYS-2] Multi-Currency Formatting Engine:** Support for USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR €.
 - [x] **[SYS-3] Advanced Settings Portal:** Metadata editor, currency selector, drive inspector, feature toggles, and dev mock controls.
@@ -73,15 +81,7 @@
 
 ---
 
-## 📊 9. Summary Dashboard Enhancements (`DashboardMetrics.tsx`)
-- [ ] **[DASH-1] Interactive & Filtered KPI Navigation (`DashboardMetrics.tsx`):** Make all summary KPI cards clickable links routing directly to their corresponding tab (Guest Registry, Kanban Tasks, Budget, Music Playlist, Table Seating) with pre-applied status filters (e.g., *Attending Guests* -> Guests tab `Attending`; *Tasks To Do* -> Kanban tab `To Do`; *Pending Requests* -> Music tab `PENDING APPROVAL`).
-- [ ] **[DASH-2] Multi-View Section Toggles (Cards | Pie Chart | Labeled Progress Bar):** Display right-aligned header view mode icons (`LayoutGrid`, `PieChart`, `BarChart2`) on summary sections (*Checklist*, *Guest Registry & RSVP Summary*, *Music Playlist*, *Table Seating*), rendering SVG donut/pie charts with legends or labeled progress bars.
-- [ ] **[DASH-3] Reorderable & Custom Summary Dashboard Layout:** Allow couples to reorder summary sections up/down and toggle section visibility via an inline layout control panel or Advanced Settings, persisting layout preferences in `localStorage` and `Settings` cell B2 JSON config.
-- [ ] **[DASH-4] Reception Table Seating Summary Module:** Add a dedicated summary section for Table Seating displaying cards for `TOTAL TABLES`, `SEATED GUESTS`, `UNSEATED GUESTS`, and `% CAPACITY FILLED`, with optional Pie Chart and Labeled Progress Bar views.
-
----
-
-## 🐛 8. Bug & Defect Backlog
+## 🐛 9. Bug & Defect Backlog
 
 | Defect ID | Module / Component | Issue Description | Severity | Status | Reported Date |
 |---|---|---|---|---|---|
