@@ -67,6 +67,7 @@
 - [x] **[DASH-2] Multi-View Section Toggles (Cards | Pie Chart | Labeled Progress Bar):** Display right-aligned header view mode icons (`LayoutGrid`, `PieChart`, `BarChart2`) on summary sections (*Checklist*, *Guest Registry & RSVP Summary*, *Music Playlist*, *Table Seating*), rendering SVG donut/pie charts with legends or labeled progress bars.
 - [ ] **[DASH-3] Reorderable & Custom Summary Dashboard Layout:** Allow couples to reorder summary sections up/down and toggle section visibility via an inline layout control panel or Advanced Settings, persisting layout preferences in `localStorage` and `Settings` cell B2 JSON config.
 - [ ] **[DASH-4] Reception Table Seating Summary Module:** Add a dedicated summary section for Table Seating displaying cards for `TOTAL TABLES`, `SEATED GUESTS`, `UNSEATED GUESTS`, and `% CAPACITY FILLED`, with optional Pie Chart and Labeled Progress Bar views.
+- [x] **[DASH-5] Browser Back/Forward Tab History Navigation (`page.tsx`):** Integrate HTML5 History API (`window.history.pushState` & `popstate` event listener) to push URL hashes (`#guests?filter=Attending`, `#music?filter=PENDING%20APPROVAL`, `#budget`) when switching tabs or clicking summary KPI cards, allowing couples to navigate backward/forward through tab history using browser Back/Forward buttons.
 
 ---
 
