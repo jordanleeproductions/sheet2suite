@@ -64,9 +64,11 @@ export default function VendorSharePage() {
   useEffect(() => {
     if (!token) return;
 
+    let isFirst = true;
+
     async function fetchVendorData() {
       try {
-        setLoading(true);
+        if (isFirst) setLoading(true);
         setError(null);
 
         const res = await fetch(`/api/share/${token}`);
@@ -81,13 +83,14 @@ export default function VendorSharePage() {
         setScope(result.scope || 'vendor_hub');
         setData(result.data || {});
 
-        // Set default active tab based on scope
-        if (result.scope === 'music') setActiveTab('music');
-        else if (result.scope === 'photos') setActiveTab('photos');
-        else if (result.scope === 'timeline') setActiveTab('timeline');
-        else if (result.scope === 'catering') setActiveTab('catering');
-        else setActiveTab('timeline');
-
+        if (isFirst) {
+          if (result.scope === 'music') setActiveTab('music');
+          else if (result.scope === 'photos') setActiveTab('photos');
+          else if (result.scope === 'timeline') setActiveTab('timeline');
+          else if (result.scope === 'catering') setActiveTab('catering');
+          else setActiveTab('timeline');
+          isFirst = false;
+        }
       } catch (err: any) {
         console.error('Error loading vendor share portal:', err);
         setError('Network error loading vendor portal. Please check your connection.');
@@ -97,6 +100,16 @@ export default function VendorSharePage() {
     }
 
     fetchVendorData();
+
+    // 15-second background auto-polling for live updates
+    const interval = setInterval(fetchVendorData, 15000);
+    const onFocus = () => fetchVendorData();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [token]);
 
   const toggleTheme = () => {
