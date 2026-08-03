@@ -684,7 +684,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {modules.music && (
         <div style={styles.sectionWrapper}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Music Playlist Summary</h3>
+            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Music Playlist</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
               <button
                 type="button"
@@ -805,7 +805,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {musicViewMode === 'pie' && (
             <DonutChart
               slices={[
-                { label: 'Admin Curated Tracks', count: adminAddedCount, color: 'var(--color-primary)', filterKey: 'ALL' },
+                { label: 'Admin Curated Tracks', count: adminAddedCount, color: '#ef4444', filterKey: 'ALL' },
                 { label: 'Guest Requests (Approved)', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: '#10b981', filterKey: 'ALL' },
                 { label: 'Pending Approval Requests', count: pendingRequestsCount, color: '#f59e0b', filterKey: 'PENDING APPROVAL' },
               ]}
@@ -818,7 +818,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
           {musicViewMode === 'progress' && (
             <LabeledProgressBar
               items={[
-                { label: 'Admin Curated', count: adminAddedCount, color: 'var(--color-primary)', filterKey: 'ALL' },
+                { label: 'Admin Curated', count: adminAddedCount, color: '#ef4444', filterKey: 'ALL' },
                 { label: 'Guest Requests', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: '#10b981', filterKey: 'ALL' },
                 { label: 'Pending Requests', count: pendingRequestsCount, color: '#f59e0b', filterKey: 'PENDING APPROVAL' },
               ]}
