@@ -279,31 +279,30 @@ export default function VendorShareLinkManager({
                 transition: 'var(--transition-smooth)',
               }}
             >
-              {/* Left Column: Scope Icon, Title, Badge & Date */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 300px', minWidth: '240px' }}>
+              {/* Left Column: Scope Icon, Title & Date */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 250px', minWidth: '200px' }}>
                 <div style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center' }}>
                   {getScopeIcon(link.scope)}
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <h4 style={styles.cardTitle}>{link.label}</h4>
-                    <span style={{
-                      ...styles.statusBadge,
-                      backgroundColor: 'var(--color-green-muted)',
-                      color: 'var(--color-green)',
-                      borderColor: 'var(--color-green)',
-                    }}>
-                      ACTIVE ({daysLeft}d left)
-                    </span>
-                  </div>
+                  <h4 style={styles.cardTitle}>{link.label}</h4>
                   <span style={styles.dateText}>
                     Created {new Date(link.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
 
-              {/* Right Column: Action Buttons aligned right */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              {/* Right Column: Active Badge + Action Buttons aligned right */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <span style={{
+                  ...styles.statusBadge,
+                  backgroundColor: 'var(--color-green-muted)',
+                  color: 'var(--color-green)',
+                  borderColor: 'var(--color-green)',
+                }}>
+                  ACTIVE ({daysLeft}d left)
+                </span>
+
                 <button 
                   type="button" 
                   style={{
@@ -456,29 +455,28 @@ export default function VendorShareLinkManager({
                       opacity: 0.75,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 300px', minWidth: '240px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 250px', minWidth: '200px' }}>
                       <div style={{ color: 'var(--color-muted)', display: 'flex', alignItems: 'center' }}>
                         {getScopeIcon(link.scope)}
                       </div>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <h4 style={{ ...styles.cardTitle, color: 'var(--color-muted)' }}>{link.label}</h4>
-                          <span style={{
-                            ...styles.statusBadge,
-                            backgroundColor: link.isRevoked ? 'rgba(239, 68, 68, 0.15)' : 'var(--color-bg)',
-                            color: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
-                            borderColor: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
-                          }}>
-                            {link.isRevoked ? 'REVOKED' : 'EXPIRED'}
-                          </span>
-                        </div>
+                        <h4 style={{ ...styles.cardTitle, color: 'var(--color-muted)' }}>{link.label}</h4>
                         <span style={styles.dateText}>
                           Created {new Date(link.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      <span style={{
+                        ...styles.statusBadge,
+                        backgroundColor: link.isRevoked ? 'rgba(239, 68, 68, 0.15)' : 'var(--color-bg)',
+                        color: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
+                        borderColor: link.isRevoked ? '#ef4444' : 'var(--color-muted)',
+                      }}>
+                        {link.isRevoked ? 'REVOKED' : 'EXPIRED'}
+                      </span>
+
                       <a
                         href={link.shareUrl}
                         target="_blank"
