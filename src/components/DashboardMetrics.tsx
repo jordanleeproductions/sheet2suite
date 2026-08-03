@@ -751,7 +751,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 title={onNavigateTab ? 'Click to view Admin songs' : ''}
               >
                 <div style={styles.kpiLabel}>ADDED BY ADMIN</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{adminAddedCount}</div>
+                <div style={{ ...styles.kpiValue, color: adminAddedCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>{adminAddedCount}</div>
                 <div style={styles.kpiSub}>Curated Track List</div>
               </div>
 
