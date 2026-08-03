@@ -126,7 +126,7 @@ export default function VendorSharePage() {
   if (loading) {
     return (
       <div style={{ ...styles.fullScreen, backgroundColor: bgColor, color: textColor }}>
-        <RefreshCw className="spin" size={36} style={{ color: 'var(--color-primary, #13AA52)', marginBottom: '1rem' }} />
+        <RefreshCw className="spin" size={36} style={{ color: 'var(--color-primary, #11552D)', marginBottom: '1rem' }} />
         <h3 style={{ fontFamily: 'sans-serif', margin: 0 }}>Loading Vendor Portal...</h3>
         <p style={{ color: mutedColor, fontSize: '0.85rem' }}>Verifying secure token signature</p>
       </div>
@@ -174,7 +174,7 @@ export default function VendorSharePage() {
       <header style={{ ...styles.header, backgroundColor: surfaceColor, borderBottomColor: borderColor }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ ...styles.badge, backgroundColor: '#13AA52', color: '#ffffff' }}>VENDOR PORTAL</span>
+            <span style={{ ...styles.badge, backgroundColor: '#11552D', color: '#ffffff' }}>VENDOR PORTAL</span>
             <span style={{ ...styles.badge, backgroundColor: surfaceColor, color: mutedColor, border: `1px solid ${borderColor}` }}>
               READ-ONLY VIEW
             </span>
@@ -185,7 +185,7 @@ export default function VendorSharePage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="print-hide">
           <button 
             onClick={() => window.print()} 
-            style={{ ...styles.themeBtn, backgroundColor: '#13AA52', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}
+            style={{ ...styles.themeBtn, backgroundColor: '#11552D', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}
             title="Print or Export PDF"
           >
             <Printer size={16} /> PRINT / EXPORT PDF
@@ -217,8 +217,8 @@ export default function VendorSharePage() {
                 key={tab.id}
                 style={{
                   ...styles.tabBtn,
-                  color: isActive ? '#13AA52' : mutedColor,
-                  borderBottomColor: isActive ? '#13AA52' : 'transparent',
+                  color: isActive ? '#11552D' : mutedColor,
+                  borderBottomColor: isActive ? '#11552D' : 'transparent',
                   fontWeight: isActive ? 700 : 400,
                 }}
                 onClick={() => setActiveTab(tab.id as any)}
@@ -247,7 +247,7 @@ export default function VendorSharePage() {
               {data.schedule.map((item, idx) => (
                 <div key={idx} style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
                   <div style={styles.timeBadge}>
-                    <Clock size={14} style={{ marginRight: '4px', color: '#13AA52' }} />
+                    <Clock size={14} style={{ marginRight: '4px', color: '#11552D' }} />
                     {item.startTime} {item.endTime ? `- ${item.endTime}` : ''}
                   </div>
 
@@ -260,7 +260,7 @@ export default function VendorSharePage() {
                   )}
 
                   {item.responsibility && (
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#13AA52', marginTop: '0.35rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#11552D', marginTop: '0.35rem' }}>
                       👤 Assigned: {item.responsibility}
                     </div>
                   )}
@@ -345,8 +345,8 @@ export default function VendorSharePage() {
                       fontWeight: musicFilter === f.id ? 700 : 400,
                       padding: '0.4rem 0.75rem',
                       borderRadius: '4px',
-                      border: `1px solid ${musicFilter === f.id ? (f.id === 'banned' ? '#ef4444' : f.id === 'pending' ? '#f59e0b' : '#13AA52') : borderColor}`,
-                      backgroundColor: musicFilter === f.id ? (f.id === 'banned' ? '#ef4444' : f.id === 'pending' ? '#f59e0b' : '#13AA52') : surfaceColor,
+                      border: `1px solid ${musicFilter === f.id ? (f.id === 'banned' ? '#ef4444' : f.id === 'pending' ? '#f59e0b' : '#11552D') : borderColor}`,
+                      backgroundColor: musicFilter === f.id ? (f.id === 'banned' ? '#ef4444' : f.id === 'pending' ? '#f59e0b' : '#11552D') : surfaceColor,
                       color: musicFilter === f.id ? '#ffffff' : textColor,
                       cursor: 'pointer',
                     }}
@@ -377,7 +377,7 @@ export default function VendorSharePage() {
                             fontWeight: 700,
                             padding: '0.15rem 0.4rem',
                             borderRadius: '4px',
-                            backgroundColor: isBanned ? '#ef4444' : song.listType === 'Requested Song' ? '#f59e0b' : '#13AA52',
+                            backgroundColor: isBanned ? '#ef4444' : song.listType === 'Requested Song' ? '#f59e0b' : '#11552D',
                             color: '#ffffff',
                             display: 'inline-block',
                           }}>
@@ -420,7 +420,7 @@ export default function VendorSharePage() {
                     </div>
 
                     {song.requestedBy && (
-                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#13AA52', margin: '0.4rem 0 0 0' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#11552D', margin: '0.4rem 0 0 0' }}>
                         👤 Requested by: {song.requestedBy}
                       </div>
                     )}
@@ -463,7 +463,7 @@ export default function VendorSharePage() {
                       <h3 style={{ ...styles.itemTitle, color: textColor }}>{photo.description}</h3>
                     </div>
 
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: photo.status === 'Captured' ? '#13AA52' : mutedColor }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: photo.status === 'Captured' ? '#11552D' : mutedColor }}>
                       {photo.status}
                     </span>
                   </div>
@@ -495,7 +495,7 @@ export default function VendorSharePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
               <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: mutedColor }}>TOTAL ATTENDING HEADCOUNT</span>
-                <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#13AA52' }}>
+                <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#11552D' }}>
                   {data.catering.attendingCount} Attending Guests
                 </span>
               </div>
@@ -511,7 +511,7 @@ export default function VendorSharePage() {
                   {data.catering.mealChoicesSummary.map((item, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.625rem 0.75rem', backgroundColor: bgColor, borderRadius: '4px', border: `1px solid ${borderColor}` }}>
                       <span style={{ fontWeight: 600, color: textColor }}>{item.meal}</span>
-                      <strong style={{ color: '#13AA52', fontFamily: 'inherit', fontSize: '0.95rem' }}>{item.count} Meals</strong>
+                      <strong style={{ color: '#11552D', fontFamily: 'inherit', fontSize: '0.95rem' }}>{item.count} Meals</strong>
                     </div>
                   ))}
                 </div>
@@ -558,7 +558,7 @@ export default function VendorSharePage() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <strong style={{ color: '#13AA52' }}>{item.count} Guests</strong>
+                            <strong style={{ color: '#11552D' }}>{item.count} Guests</strong>
                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                           </div>
                         </button>
@@ -573,7 +573,7 @@ export default function VendorSharePage() {
                               {matchingGuests.map((g, gIdx) => (
                                 <div key={gIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', padding: '0.35rem 0', borderBottom: gIdx < matchingGuests.length - 1 ? `1px dashed ${borderColor}` : 'none' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                    <UserCheck size={14} style={{ color: '#13AA52' }} />
+                                    <UserCheck size={14} style={{ color: '#11552D' }} />
                                     <strong style={{ color: textColor }}>{g.name}</strong>
                                   </div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: mutedColor }}>
@@ -710,7 +710,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.75rem',
     fontWeight: 700,
     fontFamily: 'monospace',
-    color: '#13AA52',
+    color: '#11552D',
   },
   itemTitle: {
     fontFamily: 'sans-serif',

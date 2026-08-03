@@ -127,12 +127,12 @@ code, pre, .font-mono {
 /* Green background text contrast rule for Neo-Brutalism */
 [data-style='neo-brutalism'] [style*="backgroundColor: var(--color-highlight)"],
 [data-style='neo-brutalism'] [style*="backgroundColor: #00ED64"],
-[data-style='neo-brutalism'] [style*="backgroundColor: #13AA52"],
+[data-style='neo-brutalism'] [style*="backgroundColor: #11552D"],
 [data-style='neo-brutalism'] [style*="backgroundColor: #10b981"],
 [data-style='neo-brutalism'] [style*="backgroundColor: #4ade80"],
 [data-style='neo-brutalism'] [style*="background-color: var(--color-highlight)"],
 [data-style='neo-brutalism'] [style*="background-color: #00ED64"],
-[data-style='neo-brutalism'] [style*="background-color: #13AA52"],
+[data-style='neo-brutalism'] [style*="background-color: #11552D"],
 [data-style='neo-brutalism'] [style*="background-color: #10b981"],
 [data-style='neo-brutalism'] [style*="background-color: #4ade80"] {
   color: #000000 !important;
@@ -391,7 +391,7 @@ button[style*="background-color: #000000"],
 button[style*="background-color: #121824"],
 button[style*="background-color: #0d1b2a"],
 button[style*="background-color: #10b981"],
-button[style*="background-color: #13AA52"],
+button[style*="background-color: #11552D"],
 button[style*="background-color: #ef4444"],
 button[style*="background-color: #8b5cf6"] {
   color: #ffffff !important;

@@ -535,6 +535,39 @@ export default function Sheet2VowDashboard() {
                   <label style={styles.settingsLabel}>
                     {styleTheme === 'neo-brutalism' ? 'ACCENT COLOR' : 'PRIMARY COLOR'}
                   </label>
+
+                  {/* Suggestive Color Presets */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                    {[
+                      { name: 'Emerald Green', hex: '#11552D' },
+                      { name: 'Royal Navy', hex: '#0d1b2a' },
+                      { name: 'Romantic Rose', hex: '#e11d48' },
+                      { name: 'Velvet Purple', hex: '#7c3aed' },
+                    ].map((preset) => {
+                      const isSelected = (primaryColor || '').toLowerCase() === preset.hex.toLowerCase();
+                      return (
+                        <button
+                          key={preset.hex}
+                          type="button"
+                          onClick={() => setPrimaryColor(preset.hex)}
+                          title={preset.name}
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: preset.hex,
+                            border: isSelected ? '2px solid var(--color-text)' : '1px solid var(--color-border)',
+                            boxShadow: isSelected ? '0 0 0 2px var(--color-bg), 0 0 0 3px var(--color-primary)' : 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                            flexShrink: 0
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Hex Input & Reset */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <input
                       type="color"
@@ -548,10 +581,14 @@ export default function Sheet2VowDashboard() {
                       }
                       onChange={(e) => setPrimaryColor(e.target.value)}
                       style={{ padding: 0, border: 'none', width: '24px', height: '24px', cursor: 'pointer', background: 'transparent' }}
+                      title="Custom Color Picker"
                     />
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-muted)' }}>
+                      {primaryColor ? primaryColor.toUpperCase() : 'DEFAULT'}
+                    </span>
                     <button
                       onClick={() => setPrimaryColor('')}
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.25rem 0.5rem', background: 'transparent', border: '1px solid var(--color-muted)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text)' }}
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.2rem 0.4rem', background: 'transparent', border: '1px solid var(--color-muted)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text)', marginLeft: 'auto' }}
                     >
                       RESET
                     </button>

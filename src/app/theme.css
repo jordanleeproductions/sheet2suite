@@ -120,11 +120,11 @@
   --color-text: #121824;
   --color-muted: #121824;
   --color-highlight: #00ED64;
-  --color-gold-dark: #13AA52;
+  --color-gold-dark: #11552D;
   --color-white: #ffffff;
 
   /* Standard Accent & Status Tokens */
-  --color-green: #13AA52;
+  --color-green: #11552D;
   --color-green-muted: #e6f7ec;
   --color-gold: #FFC72C;
   --color-gold-muted: #fff9db;
@@ -169,7 +169,7 @@
 [data-style='neo-brutalism'][data-theme='dark'] {
   --color-bg: #0B0F19;
   --color-surface: #121824;
-  --color-primary: #13AA52;
+  --color-primary: #11552D;
   --color-on-primary: #ffffff;
   --color-text: #F4F4F0;
   --color-muted: #ffffff;

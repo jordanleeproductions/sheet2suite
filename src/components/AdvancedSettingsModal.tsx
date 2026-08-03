@@ -314,7 +314,7 @@ export default function AdvancedSettingsModal({
                   <label style={styles.label}>PRIMARY ACCENT COLOR</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.625rem', marginBottom: '0.75rem' }}>
                     {[
-                      { name: 'Emerald Green', hex: '#13AA52', desc: 'Classic Vow Green' },
+                      { name: 'Emerald Green', hex: '#11552D', desc: 'Classic Vow Green' },
                       { name: 'Royal Navy', hex: '#0d1b2a', desc: 'Midnight Luxury' },
                       { name: 'Romantic Rose', hex: '#e11d48', desc: 'Rose & Wine' },
                       { name: 'Velvet Purple', hex: '#7c3aed', desc: 'Elegant Violet' },
@@ -360,7 +360,7 @@ export default function AdvancedSettingsModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-bg-subtle)', padding: '0.5rem 0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
                     <input
                       type="color"
-                      value={primaryColor || '#13AA52'}
+                      value={primaryColor || '#11552D'}
                       onChange={(e) => onUpdatePrimaryColor && onUpdatePrimaryColor(e.target.value)}
                       style={{
                         width: '32px',
@@ -667,7 +667,7 @@ export default function AdvancedSettingsModal({
                   </p>
 
                   {partnerInviteSent && (
-                    <div style={{ backgroundColor: 'rgba(19, 170, 82, 0.1)', border: '1px solid #13AA52', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.8rem', color: '#13AA52', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ backgroundColor: 'rgba(19, 170, 82, 0.1)', border: '1px solid #11552D', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.8rem', color: '#11552D', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Check size={16} /> Invitation request registered for {partnerEmail || 'your partner'}.
                     </div>
                   )}
@@ -730,7 +730,7 @@ export default function AdvancedSettingsModal({
                 </p>
 
                 {feedbackSent && (
-                  <div style={{ backgroundColor: 'rgba(19, 170, 82, 0.1)', border: '1px solid #13AA52', padding: '0.625rem 0.875rem', borderRadius: '4px', fontSize: '0.85rem', color: '#13AA52', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ backgroundColor: 'rgba(19, 170, 82, 0.1)', border: '1px solid #11552D', padding: '0.625rem 0.875rem', borderRadius: '4px', fontSize: '0.85rem', color: '#11552D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Check size={16} /> Opening email client with prefilled diagnostic report...
                   </div>
                 )}
