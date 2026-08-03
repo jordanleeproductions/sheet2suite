@@ -10,9 +10,10 @@ interface MusicManagerProps {
   music: Song[];
   onUpdate: (updatedMusic: Song[]) => Promise<void>;
   isSyncing: boolean;
+  initialFilterPill?: string;
 }
 
-export default function MusicManager({ music, onUpdate, isSyncing }: MusicManagerProps) {
+export default function MusicManager({ music, onUpdate, isSyncing, initialFilterPill }: MusicManagerProps) {
   const [editingItem, setEditingItem] = useState<Song | null>(null);
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -25,7 +26,13 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterPill, setFilterPill] = useState<string>('ALL');
+  const [filterPill, setFilterPill] = useState<string>(initialFilterPill || 'ALL');
+
+  useEffect(() => {
+    if (initialFilterPill) {
+      setFilterPill(initialFilterPill);
+    }
+  }, [initialFilterPill]);
 
   const pendingSongs = music.filter(s => s.approvalStatus === 'Pending Approval');
 

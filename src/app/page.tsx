@@ -88,6 +88,9 @@ export default function Sheet2VowDashboard() {
 
   // Navigation
   const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('metrics');
+  const [guestInitialFilter, setGuestInitialFilter] = useState<RSVPStatus | 'All'>('All');
+  const [taskInitialFilter, setTaskInitialFilter] = useState<KanbanStage | undefined>(undefined);
+  const [musicInitialFilter, setMusicInitialFilter] = useState<string | undefined>(undefined);
 
   // Load configuration from local storage on mount
   useEffect(() => {
@@ -949,7 +952,14 @@ export default function Sheet2VowDashboard() {
                     music={weddingData.music}
                     enabledModules={enabledModules}
                     currency={currency}
-                    onNavigateTab={(tab) => setActiveTab(tab as any)}
+                    onNavigateTab={(tab, filter) => {
+                      setActiveTab(tab as any);
+                      if (filter) {
+                        if (tab === 'guests') setGuestInitialFilter(filter as any);
+                        if (tab === 'tasks') setTaskInitialFilter(filter as any);
+                        if (tab === 'music') setMusicInitialFilter(filter);
+                      }
+                    }}
                   />
                   <VendorShareLinkManager
                     spreadsheetId={spreadsheetId}
@@ -964,6 +974,7 @@ export default function Sheet2VowDashboard() {
                   guests={weddingData.guests}
                   onUpdate={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
+                  initialRsvpFilter={guestInitialFilter}
                   onOpenPrintStudio={(tmpl) => {
                     setPrintModalInitialTemplate(tmpl);
                     setShowPrintModal(true);
@@ -1022,6 +1033,7 @@ export default function Sheet2VowDashboard() {
                   tasks={weddingData.tasks}
                   onUpdate={(data) => syncUpdate('tasks', data)}
                   isSyncing={isSyncing}
+                  initialStage={taskInitialFilter}
                 />
               )}
 
@@ -1030,6 +1042,7 @@ export default function Sheet2VowDashboard() {
                   music={weddingData.music || []}
                   onUpdate={(data) => syncUpdate('music', data)}
                   isSyncing={isSyncing}
+                  initialFilterPill={musicInitialFilter}
                 />
               )}
 

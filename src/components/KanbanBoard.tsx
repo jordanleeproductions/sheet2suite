@@ -8,11 +8,18 @@ interface KanbanBoardProps {
   tasks: Task[];
   onUpdate: (updatedTasks: Task[]) => Promise<void>;
   isSyncing: boolean;
+  initialStage?: KanbanStage;
 }
 
-export default function KanbanBoard({ tasks, onUpdate, isSyncing }: KanbanBoardProps) {
+export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }: KanbanBoardProps) {
   // Mobile Column Selector
-  const [activeMobileStage, setActiveMobileStage] = useState<KanbanStage>('To Do');
+  const [activeMobileStage, setActiveMobileStage] = useState<KanbanStage>(initialStage || 'To Do');
+
+  React.useEffect(() => {
+    if (initialStage) {
+      setActiveMobileStage(initialStage);
+    }
+  }, [initialStage]);
   
   // Adding & Editing & Delete states
   const [isAdding, setIsAdding] = useState(false);

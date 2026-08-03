@@ -11,13 +11,20 @@ interface GuestListManagerProps {
   isSyncing: boolean;
   availableTables?: string[];
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
+  initialRsvpFilter?: RSVPStatus | 'All';
 }
 
-export default function GuestListManager({ guests, onUpdate, isSyncing, availableTables, onOpenPrintStudio }: GuestListManagerProps) {
+export default function GuestListManager({ guests, onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
-  const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>('All');
+  const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
   const [groupFilter, setGroupFilter] = useState<string>('All');
+
+  React.useEffect(() => {
+    if (initialRsvpFilter) {
+      setRsvpFilter(initialRsvpFilter);
+    }
+  }, [initialRsvpFilter]);
   
   // Edit Dialog State
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);

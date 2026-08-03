@@ -383,3 +383,16 @@ input:focus, select:focus, textarea:focus {
     margin: 0 !important;
   }
 }
+
+/* Universal Dark Background Button White Text Color Enforcement */
+button[style*="background-color: var(--color-primary)"],
+button[style*="background-color: var(--color-btn-selected-bg)"],
+button[style*="background-color: #000000"],
+button[style*="background-color: #121824"],
+button[style*="background-color: #0d1b2a"],
+button[style*="background-color: #10b981"],
+button[style*="background-color: #13AA52"],
+button[style*="background-color: #ef4444"],
+button[style*="background-color: #8b5cf6"] {
+  color: #ffffff !important;
+}

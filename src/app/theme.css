@@ -106,7 +106,7 @@
 
   /* Interactive Button & Header Tokens */
   --color-btn-selected-bg: #121824;
-  --color-btn-selected-text: #00ED64;
+  --color-btn-selected-text: #ffffff;
 
   --font-geist-mono: var(--font-geist-mono-google), "Geist Mono", "Geist Mono Fallback", monospace;
   --font-mono: var(--font-geist-mono);
