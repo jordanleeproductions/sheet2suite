@@ -110,7 +110,7 @@ This document defines the authoritative tab structure and column header contract
 
 | Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `ID` | `songId` | Text (Primary Key) | e.g. `M1`, `M2` |
+| `Song ID` | `songId` | Text (Primary Key) | e.g. `M1`, `M2` |
 | `Song Title` | `title` | Text | Song title |
 | `Artist` | `artist` | Text | Artist / Band name |
 | `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance` |

@@ -68,11 +68,11 @@ export let mockDatabase: WeddingData = {
   ],
   tasks: ALL_DEFAULT_TASKS,
   music: [
-    { songId: 'M1', title: 'Perfect', artist: 'Ed Sheeran', listType: 'First Dance', link: 'https://open.spotify.com/track/0tgVpDi06FyKpA1z0VMD4v', notes: 'First Dance', priority: 'Must Play', played: false },
-    { songId: 'M2', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', listType: 'Must Play', link: 'https://open.spotify.com/track/32OlwWuMpZ6b0aN2RZOeMS', notes: 'Get people on the dance floor', priority: 'Must Play', played: false },
-    { songId: 'M3', title: 'Macarena', artist: 'Los Del Rio', listType: 'Banned', link: '', notes: 'Absolutely NO', priority: 'Banned', played: false },
-    { songId: 'M4', title: 'September', artist: 'Earth, Wind & Fire', listType: 'Must Play', link: 'https://open.spotify.com/track/2tJulUYLDKOg9XrtVkMgcJ', notes: 'Classic', priority: 'Must Play', played: false },
-    { songId: 'M5', title: 'Chicken Dance', artist: 'The Emeralds', listType: 'Banned', link: '', notes: 'Never play this', priority: 'Banned', played: false },
+    { songId: 'M1', title: 'Perfect', artist: 'Ed Sheeran', listType: 'First Dance', playStatus: 'Must Play', requestedBy: 'Couple', notes: 'First Dance song', approvalStatus: 'Approved', link: 'https://open.spotify.com/track/0tgVpDi06FyKpA1z0VMD4v' },
+    { songId: 'M2', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', listType: 'Reception', playStatus: 'Must Play', requestedBy: 'Sarah (Maid of Honor)', notes: 'Get people on the dance floor', approvalStatus: 'Approved', link: 'https://open.spotify.com/track/32OlwWuMpZ6b0aN2RZOeMS' },
+    { songId: 'M3', title: 'Macarena', artist: 'Los Del Rio', listType: 'Reception', playStatus: 'Banned', requestedBy: 'Uncle Dave', notes: 'Absolutely NO', approvalStatus: 'Banned', link: '' },
+    { songId: 'M4', title: 'September', artist: 'Earth, Wind & Fire', listType: 'Reception', playStatus: 'Play If Time', requestedBy: 'Admin', notes: 'Classic wedding jam', approvalStatus: 'Approved', link: 'https://open.spotify.com/track/2tJulUYLDKOg9XrtVkMgcJ' },
+    { songId: 'M5', title: 'Chicken Dance', artist: 'The Emeralds', listType: 'Reception', playStatus: 'Banned', requestedBy: 'Cousin Tim', notes: 'Never play this', approvalStatus: 'Banned', link: '' },
   ],
   photos: [
     { shotId: 'P1', description: 'Bride & Groom First Look', location: 'Garden Path', shotTime: '01:30 PM', people: 'Bride, Groom', status: 'Captured', priority: 'Must Have', notes: 'Natural outdoor lighting' },

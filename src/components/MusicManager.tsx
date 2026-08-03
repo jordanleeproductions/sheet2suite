@@ -26,23 +26,28 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
   const [filterPill, setFilterPill] = useState<string>('ALL');
 
   const filteredMusic = music.filter(song => {
+    const status = song.playStatus || (song.listType === 'Do Not Play' || song.priority === 'Banned' ? 'Banned' : song.priority || 'Must Play');
+
     const matchesSearch = 
       (song.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (song.artist || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (song.notes || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (song.listType || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (song.requestedBy || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (song.listType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      status.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilterPill = 
       filterPill === 'ALL' ? true :
+      status.toUpperCase() === filterPill.toUpperCase() ||
       (song.listType || '').toUpperCase() === filterPill.toUpperCase();
 
     return matchesSearch && matchesFilterPill;
   }).sort((a, b) => {
     if (filterPill === 'ALL') {
-      const aIsBanned = a.listType === 'Do Not Play';
-      const bIsBanned = b.listType === 'Do Not Play';
-      if (aIsBanned && !bIsBanned) return 1;
-      if (!aIsBanned && bIsBanned) return -1;
+      const aStatus = a.playStatus || (a.listType === 'Do Not Play' ? 'Banned' : 'Must Play');
+      const bStatus = b.playStatus || (b.listType === 'Do Not Play' ? 'Banned' : 'Must Play');
+      if (aStatus === 'Banned' && bStatus !== 'Banned') return 1;
+      if (aStatus !== 'Banned' && bStatus === 'Banned') return -1;
     }
     return 0;
   });
@@ -91,6 +96,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       artist: track.artistName,
       link: track.previewUrl || `https://open.spotify.com/search/${encodeURIComponent(`${track.trackName} ${track.artistName}`)}`,
       requestedBy: prev.requestedBy || 'Admin',
+      playStatus: prev.playStatus || 'Must Play',
     }));
     setITunesQuery(`${track.trackName} - ${track.artistName}`);
     setITunesResults([]);
@@ -100,10 +106,11 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     setFormState({
       title: '',
       artist: '',
-      listType: 'Play List',
-      link: '',
+      listType: 'Reception',
+      playStatus: 'Must Play',
       notes: '',
       requestedBy: 'Admin',
+      approvalStatus: 'Approved',
     });
     setITunesQuery('');
     setITunesResults([]);
@@ -141,10 +148,12 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         songId: `M${Date.now()}`,
         title: formState.title || 'Unknown Song',
         artist: formState.artist || 'Unknown Artist',
-        listType: formState.listType || 'Play List',
-        link: formState.link || '',
+        listType: formState.listType || 'Reception',
+        playStatus: formState.playStatus || 'Must Play',
         notes: formState.notes || '',
         requestedBy: formState.requestedBy || 'Admin',
+        approvalStatus: formState.approvalStatus || 'Approved',
+        link: formState.link || '',
       };
       updatedMusic = [...music, newItem];
     } else {
@@ -278,9 +287,9 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
     let bodyText = `Hi!\n\nHere is our official Wedding Music Playlist & Track Preferences:\n\n`;
 
     const specialSongs = music.filter(s => s.listType === 'First Dance' || s.listType === 'Ceremony' || s.listType === 'Special Moment');
-    const playList = music.filter(s => s.listType === 'Play List' || s.priority === 'Must Play');
-    const doNotPlay = music.filter(s => s.listType === 'Do Not Play' || s.listType === 'Banned' || s.priority === 'Banned');
-    const generalSongs = music.filter(s => !specialSongs.includes(s) && !playList.includes(s) && !doNotPlay.includes(s));
+    const mustPlay = music.filter(s => (s.playStatus || s.priority) === 'Must Play' && !specialSongs.includes(s));
+    const playIfTime = music.filter(s => (s.playStatus || s.priority) === 'Play If Time' && !specialSongs.includes(s));
+    const bannedSongs = music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play' || s.listType === 'Banned');
 
     if (specialSongs.length > 0) {
       bodyText += `--- SPECIAL MOMENTS & FIRST DANCES ---\n`;
@@ -290,25 +299,25 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       bodyText += `\n`;
     }
 
-    if (playList.length > 0) {
+    if (mustPlay.length > 0) {
       bodyText += `--- MUST PLAY SONGS ---\n`;
-      playList.forEach(s => {
+      mustPlay.forEach(s => {
         bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (${s.notes})` : ''}\n`;
       });
       bodyText += `\n`;
     }
 
-    if (generalSongs.length > 0) {
-      bodyText += `--- PLAY IF TIME / GENERAL PLAYLIST ---\n`;
-      generalSongs.forEach(s => {
+    if (playIfTime.length > 0) {
+      bodyText += `--- PLAY IF TIME ---\n`;
+      playIfTime.forEach(s => {
         bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (${s.notes})` : ''}\n`;
       });
       bodyText += `\n`;
     }
 
-    if (doNotPlay.length > 0) {
-      bodyText += `--- DO NOT PLAY / BANNED SONGS ---\n`;
-      doNotPlay.forEach(s => {
+    if (bannedSongs.length > 0) {
+      bodyText += `--- BANNED SONGS (DO NOT PLAY) ---\n`;
+      bannedSongs.forEach(s => {
         bodyText += `• "${s.title}" by ${s.artist}${s.notes ? ` (Reason: ${s.notes})` : ''}\n`;
       });
       bodyText += `\n`;
@@ -349,7 +358,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       <div style={styles.filterSection}>
         <input
           type="text"
-          placeholder="SEARCH TITLE, ARTIST, OR NOTES..."
+          placeholder="SEARCH TITLE, ARTIST, REQUESTED BY, OR NOTES..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={styles.searchInput}
@@ -358,19 +367,20 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         <div style={styles.pillsRow}>
           {[
             { id: 'ALL', label: 'ALL SONGS', count: music.length },
-            { id: 'Play List', label: 'MUST PLAY', count: music.filter(s => s.listType === 'Play List').length },
-            { id: 'First Dance', label: 'FIRST DANCE', count: music.filter(s => s.listType === 'First Dance').length },
-            { id: 'Ceremony', label: 'CEREMONY', count: music.filter(s => s.listType === 'Ceremony').length },
-            { id: 'Reception', label: 'RECEPTION', count: music.filter(s => s.listType === 'Reception').length },
-            { id: 'Do Not Play', label: 'DO NOT PLAY', count: music.filter(s => s.listType === 'Do Not Play').length },
+            { id: 'MUST PLAY', label: '🔥 MUST PLAY', count: music.filter(s => (s.playStatus || s.priority || 'Must Play') === 'Must Play' && s.listType !== 'Do Not Play').length },
+            { id: 'PLAY IF TIME', label: '⏳ PLAY IF TIME', count: music.filter(s => (s.playStatus || s.priority) === 'Play If Time').length },
+            { id: 'BANNED', label: '🚫 BANNED', count: music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play').length },
+            { id: 'CEREMONY', label: 'CEREMONY', count: music.filter(s => s.listType === 'Ceremony').length },
+            { id: 'RECEPTION', label: 'RECEPTION', count: music.filter(s => s.listType === 'Reception').length },
+            { id: 'FIRST DANCE', label: 'FIRST DANCE', count: music.filter(s => s.listType === 'First Dance').length },
           ].map(pill => (
             <button
               key={pill.id}
               style={{
                 ...styles.pillBtn,
-                backgroundColor: filterPill === pill.id ? (pill.id === 'Do Not Play' ? '#ef4444' : 'var(--color-primary)') : 'transparent',
-                color: filterPill === pill.id ? (pill.id === 'Do Not Play' ? '#000000' : 'var(--color-on-primary)') : 'var(--color-text)',
-                borderColor: filterPill === pill.id ? (pill.id === 'Do Not Play' ? '#ef4444' : 'var(--color-primary)') : 'var(--color-muted)',
+                backgroundColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : 'var(--color-primary)') : 'transparent',
+                color: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ffffff' : 'var(--color-on-primary)') : 'var(--color-text)',
+                borderColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : 'var(--color-primary)') : 'var(--color-muted)',
               }}
               onClick={() => setFilterPill(pill.id)}
             >
@@ -382,7 +392,9 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
 
       <div style={styles.cardGrid}>
         {filteredMusic.map((item) => {
-          const isBanned = item.listType === 'Do Not Play';
+          const status = item.playStatus || (item.listType === 'Do Not Play' || item.priority === 'Banned' ? 'Banned' : item.priority || 'Must Play');
+          const isBanned = status === 'Banned';
+
           return (
             <div 
               key={item.songId} 
@@ -396,10 +408,22 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                 <div style={styles.cardMeta}>
                   <span style={{
                     ...styles.categoryBadge,
-                    backgroundColor: isBanned ? '#ef4444' : 'var(--color-highlight, #00ED64)',
-                    color: '#000000'
+                    backgroundColor: isBanned ? '#ef4444' : status === 'Must Play' ? 'var(--color-highlight, #00ED64)' : '#f59e0b',
+                    color: isBanned ? '#ffffff' : '#000000'
                   }}>
-                    {isBanned ? 'BANNED' : item.listType.toUpperCase()}
+                    {isBanned ? '🚫 BANNED' : status === 'Must Play' ? '🔥 MUST PLAY' : '⏳ PLAY IF TIME'}
+                  </span>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    color: 'var(--color-text)',
+                    padding: '0.15rem 0.4rem',
+                    borderRadius: '4px',
+                    marginLeft: '0.35rem'
+                  }}>
+                    {item.listType || 'Reception'}
                   </span>
                   <span style={{
                     fontSize: '0.65rem',
@@ -458,34 +482,25 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         )}
       </div>
 
-      {/* Modal Overlay for Add/Edit */}
+      {/* ADD / EDIT SONG MODAL */}
       {(isAdding || editingItem) && (
-        <div className="music-modal-overlay" style={styles.modalOverlay}>
-          <style jsx>{`
-            @media (max-width: 640px) {
-              .music-modal-content {
-                width: 95% !important;
-                padding: 1rem !important;
-                margin: 1rem !important;
-              }
-              .music-form-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-            }
-          `}</style>
-          <div className="music-modal-content" style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={closeModal}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD SONG' : 'EDIT SONG'}</h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
+              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+                {isAdding ? 'Add Song to Playlist' : 'Edit Song Details'}
+              </h3>
+              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}>
+                <X size={18} />
+              </button>
             </div>
-            <form onSubmit={saveItem} style={styles.form}>
-              <div className="music-form-grid" style={styles.formGrid}>
+            <form onSubmit={saveItem} style={styles.modalForm}>
+              <div style={styles.formGrid} className="formGrid">
                 
-                {/* Compact iTunes Auto-Suggest Search Helper */}
-                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2', position: 'relative' }}>
-                  <label style={{ ...styles.label, color: 'var(--color-primary)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    🔍 AUTO-SEARCH CATALOG (OPTIONAL)
+                {/* Auto-Search Row */}
+                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
+                  <label style={styles.label}>
+                    🎵 Auto-Search iTunes Database (Auto-Fills Details)
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input

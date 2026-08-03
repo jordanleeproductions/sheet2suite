@@ -264,11 +264,14 @@ export const giftMapper = {
 
 export const MUSIC_HEADERS: Record<string, keyof Song> = {
   'Song ID': 'songId',
-  'Title': 'title',
+  'Song Title': 'title',
   'Artist': 'artist',
-  'List Type': 'listType',
-  'Link': 'link',
+  'Occasion': 'listType',
+  'Play Status': 'playStatus',
+  'Requested By': 'requestedBy',
   'Notes': 'notes',
+  'Approval Status': 'approvalStatus',
+  'Link': 'link',
 };
 
 export const musicMapper = {
@@ -278,9 +281,12 @@ export const musicMapper = {
       songId: String(obj.songId || ''),
       title: String(obj.title || ''),
       artist: String(obj.artist || ''),
-      listType: (obj.listType || 'Play List') as any,
-      link: String(obj.link || ''),
+      listType: (obj.listType || 'Reception') as any,
+      playStatus: (obj.playStatus || 'Must Play') as any,
+      requestedBy: String(obj.requestedBy || ''),
       notes: String(obj.notes || ''),
+      approvalStatus: (obj.approvalStatus || 'Approved') as any,
+      link: String(obj.link || ''),
     };
   },
   toRow(headers: string[], song: Song): any[] {

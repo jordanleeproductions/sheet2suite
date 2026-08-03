@@ -90,16 +90,21 @@ export interface Task {
   notes: string; // From "Notes / Links"
 }
 
+export type PlayStatus = 'Must Play' | 'Play If Time' | 'Banned';
+
 export interface Song {
   songId: string;
   title: string;
   artist: string;
   listType: SongListType;
-  link: string;
-  notes: string;
+  playStatus?: PlayStatus;
+  requestedBy?: string;
+  notes?: string;
+  approvalStatus?: 'Approved' | 'Pending Approval' | 'Banned' | 'Declined';
+  link?: string;
+  // Legacy fields preserved for backward compatibility
   priority?: string;
   played?: boolean;
-  requestedBy?: string;
 }
 
 export interface PhotoShot {
