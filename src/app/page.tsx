@@ -92,6 +92,66 @@ export default function Sheet2VowDashboard() {
   const [taskInitialFilter, setTaskInitialFilter] = useState<KanbanStage | undefined>(undefined);
   const [musicInitialFilter, setMusicInitialFilter] = useState<string | undefined>(undefined);
 
+  // Tab switching with browser History API push & URL hash sync
+  const switchTab = (tab: 'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks', filter?: string, pushToHistory = true) => {
+    setActiveTab(tab);
+    if (filter) {
+      if (tab === 'guests') setGuestInitialFilter(filter as any);
+      if (tab === 'tasks') setTaskInitialFilter(filter as any);
+      if (tab === 'music') setMusicInitialFilter(filter);
+    }
+
+    if (pushToHistory && typeof window !== 'undefined') {
+      const hash = `#${tab}${filter ? `?filter=${encodeURIComponent(filter)}` : ''}`;
+      if (window.location.hash !== hash) {
+        window.history.pushState({ tab, filter }, '', hash);
+      }
+    }
+  };
+
+  // Listen for browser Back & Forward popstate events
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (typeof window === 'undefined') return;
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        const [tabName, queryStr] = hash.split('?');
+        const params = new URLSearchParams(queryStr || '');
+        const filter = params.get('filter') || undefined;
+
+        const validTabs = ['metrics', 'guests', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
+        if (validTabs.includes(tabName)) {
+          switchTab(tabName as any, filter, false);
+          return;
+        }
+      }
+      if (event.state?.tab) {
+        switchTab(event.state.tab, event.state.filter, false);
+      } else {
+        switchTab('metrics', undefined, false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Initial load URL hash check
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const initialHash = window.location.hash.replace('#', '');
+      const [tabName, queryStr] = initialHash.split('?');
+      const params = new URLSearchParams(queryStr || '');
+      const filter = params.get('filter') || undefined;
+
+      const validTabs = ['metrics', 'guests', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
+      if (validTabs.includes(tabName)) {
+        switchTab(tabName as any, filter, false);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   // Load configuration from local storage on mount
   useEffect(() => {
     const savedSheetId = localStorage.getItem('s2v_spreadsheet_id');
@@ -922,7 +982,7 @@ export default function Sheet2VowDashboard() {
               .map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => switchTab(tab.id as any)}
                   style={{
                     ...styles.navTabBtn,
                     color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-muted)',
@@ -952,14 +1012,7 @@ export default function Sheet2VowDashboard() {
                     music={weddingData.music}
                     enabledModules={enabledModules}
                     currency={currency}
-                    onNavigateTab={(tab, filter) => {
-                      setActiveTab(tab as any);
-                      if (filter) {
-                        if (tab === 'guests') setGuestInitialFilter(filter as any);
-                        if (tab === 'tasks') setTaskInitialFilter(filter as any);
-                        if (tab === 'music') setMusicInitialFilter(filter);
-                      }
-                    }}
+                    onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
                   />
                   <VendorShareLinkManager
                     spreadsheetId={spreadsheetId}
