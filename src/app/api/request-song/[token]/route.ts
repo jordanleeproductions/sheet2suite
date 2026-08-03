@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyShareToken } from '@/lib/share/token';
+import { mockDatabase } from '@/lib/sheets/mockDb';
+import { Song } from '@/lib/sheets/types';
 
 export async function GET(
   request: NextRequest,
@@ -50,29 +52,40 @@ export async function POST(
       return NextResponse.json({ error: 'Song title and artist are required' }, { status: 400 });
     }
 
+    const titleClean = songTitle.trim();
+    const artistClean = (artist || 'Various Artists').trim();
     const requesterName = requestedBy && requestedBy.trim() ? requestedBy.trim() : 'Guest';
     const guestMessage = notes ? notes.trim() : '';
 
-    console.log(`Song Request for spreadsheet ${payload.spreadsheetId}: "${songTitle}" by ${artist} (Requester: ${requesterName}, Message: "${guestMessage}")`);
+    console.log(`Song Request for spreadsheet ${payload.spreadsheetId}: "${titleClean}" by ${artistClean} (Requester: ${requesterName}, Message: "${guestMessage}")`);
 
-    // In a live Google Drive / Sheets context, this appends a new row to the 'Music' sheet tab:
-    // Columns: [Song ID, Song Title, Artist Name, List Type ('Play List'), Notes, Requested By]
+    // Check if song matches an existing banned track in database
+    const isBanned = (mockDatabase.music || []).some(s => 
+      (s.playStatus === 'Banned' || s.approvalStatus === 'Banned' || s.listType === 'Do Not Play') &&
+      s.title.toLowerCase() === titleClean.toLowerCase()
+    );
+
+    const newSong: Song = {
+      songId: `req-${Date.now()}`,
+      title: titleClean,
+      artist: artistClean,
+      listType: 'Reception',
+      playStatus: isBanned ? 'Banned' : 'Must Play',
+      approvalStatus: isBanned ? 'Banned' : 'Pending Approval',
+      requestedBy: requesterName,
+      notes: guestMessage,
+      link: audioPreviewUrl || '',
+    };
+
+    if (!mockDatabase.music) {
+      mockDatabase.music = [];
+    }
+    mockDatabase.music.push(newSong);
 
     return NextResponse.json({
       success: true,
-      message: `Successfully requested "${songTitle}" by ${artist}!`,
-      requestedSong: {
-        songId: `req-${Date.now()}`,
-        songTitle,
-        artistName: artist,
-        listType: 'Reception',
-        playStatus: 'Must Play',
-        approvalStatus: 'Pending Approval',
-        requestedBy: requesterName,
-        notes: guestMessage,
-        audioPreviewUrl: audioPreviewUrl || '',
-        albumArt: albumArt || '',
-      },
+      message: `Successfully requested "${titleClean}" by ${artistClean}!`,
+      requestedSong: newSong,
     });
   } catch (error) {
     console.error('Error in song request proxy:', error);

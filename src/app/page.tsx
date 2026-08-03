@@ -202,7 +202,7 @@ export default function Sheet2VowDashboard() {
     if (isOnboarded && spreadsheetId) {
       fetchWeddingData();
     }
-  }, [isOnboarded, spreadsheetId]);
+  }, [isOnboarded, spreadsheetId, activeTab]);
 
   const fetchWeddingData = async () => {
     setIsLoading(true);
