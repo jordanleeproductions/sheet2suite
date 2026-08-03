@@ -236,13 +236,13 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
                     {item.category.toUpperCase()}
                   </span>
 
-                  {item.isVegetarian && <span style={styles.dietBadge}>🌱 VEGETARIAN</span>}
-                  {item.isVegan && <span style={styles.dietBadge}>🌿 VEGAN</span>}
-                  {item.isGlutenFree && <span style={styles.dietBadge}>🌾 GLUTEN FREE</span>}
-                  {item.isNutFree && <span style={styles.dietBadge}>🥜 NUT FREE</span>}
-                  {item.isGuestChoice === false && (
-                    <span style={{ ...styles.dietBadge, backgroundColor: 'var(--color-gold-muted)', color: 'var(--color-amber-dark)', borderColor: 'var(--color-gold-dark)' }}>
-                      🍽️ BUFFET / SHARED (NOT INDIVIDUAL CHOICE)
+                  {item.isGuestChoice !== false && (
+                    <span style={{
+                      ...styles.categoryBadge,
+                      backgroundColor: 'var(--color-green)',
+                      color: 'var(--color-on-dark)'
+                    }}>
+                      ✓ GUEST CHOICE
                     </span>
                   )}
                 </div>
@@ -256,6 +256,16 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
                   </button>
                 </div>
               </div>
+
+              {/* Dietary Tags on Separate Row */}
+              {(item.isVegetarian || item.isVegan || item.isGlutenFree || item.isNutFree) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.65rem' }}>
+                  {item.isVegetarian && <span style={styles.dietBadge}>🌱 VEGETARIAN</span>}
+                  {item.isVegan && <span style={styles.dietBadge}>🌿 VEGAN</span>}
+                  {item.isGlutenFree && <span style={styles.dietBadge}>🌾 GLUTEN FREE</span>}
+                  {item.isNutFree && <span style={styles.dietBadge}>🥜 NUT FREE</span>}
+                </div>
+              )}
 
               <h3 style={styles.itemTitle}>{item.name}</h3>
               {item.description && <p style={styles.itemDesc}>{item.description}</p>}
