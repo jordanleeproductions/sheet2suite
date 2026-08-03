@@ -1245,7 +1245,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
             )}
           </div>
         );
-      )}
+    }
+  };
     </div>
   );
 }
