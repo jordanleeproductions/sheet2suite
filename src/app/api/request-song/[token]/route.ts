@@ -69,7 +69,7 @@ export async function POST(
       songId: `req-${Date.now()}`,
       title: titleClean,
       artist: artistClean,
-      listType: 'Reception',
+      listType: 'Requested Song',
       playStatus: isBanned ? 'Banned' : 'Must Play',
       approvalStatus: isBanned ? 'Banned' : 'Pending Approval',
       requestedBy: requesterName,

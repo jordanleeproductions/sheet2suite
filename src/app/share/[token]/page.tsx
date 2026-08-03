@@ -351,12 +351,12 @@ export default function VendorSharePage() {
                           fontWeight: 700,
                           padding: '0.15rem 0.4rem',
                           borderRadius: '4px',
-                          backgroundColor: isBanned ? '#ef4444' : '#13AA52',
+                          backgroundColor: isBanned ? '#ef4444' : song.listType === 'Requested Song' ? '#f59e0b' : '#13AA52',
                           color: '#ffffff',
                           display: 'inline-block',
                           marginBottom: '0.35rem'
                         }}>
-                          {isBanned ? '🚫 BANNED' : song.listType || 'Reception'}
+                          {isBanned ? '🚫 BANNED' : song.listType === 'Requested Song' ? '🎵 SONG REQUEST' : song.listType || 'Reception'}
                         </span>
 
                         <h3 style={{ ...styles.itemTitle, color: isBanned ? '#ef4444' : textColor }}>

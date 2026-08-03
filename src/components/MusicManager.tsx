@@ -535,17 +535,19 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     </span>
                   )}
 
-                  <span style={{
-                    fontSize: '0.65rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 700,
-                    backgroundColor: 'rgba(0,0,0,0.06)',
-                    color: 'var(--color-text)',
-                    padding: '0.15rem 0.4rem',
-                    borderRadius: '4px',
-                  }}>
-                    {item.listType || 'Reception'}
-                  </span>
+                  {!isGuestRequest && item.listType !== 'Requested Song' && (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      backgroundColor: 'rgba(0,0,0,0.06)',
+                      color: 'var(--color-text)',
+                      padding: '0.15rem 0.4rem',
+                      borderRadius: '4px',
+                    }}>
+                      {item.listType || 'Reception'}
+                    </span>
+                  )}
                   <span style={{
                     fontSize: '0.65rem',
                     fontFamily: 'var(--font-mono)',
