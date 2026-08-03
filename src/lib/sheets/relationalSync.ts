@@ -94,15 +94,7 @@ export function calculateRelationalCateringSummary(
 
   // Convert Meal Map to Array
   const mealChoiceBreakdown: MealChoiceBreakdown[] = Object.entries(mealMap).map(([meal, count]) => {
-    let icon = '🍽️';
-    const lower = meal.toLowerCase();
-    if (lower.includes('beef') || lower.includes('steak') || lower.includes('filet')) icon = '🥩';
-    else if (lower.includes('chicken') || lower.includes('poultry')) icon = '🍗';
-    else if (lower.includes('fish') || lower.includes('salmon') || lower.includes('seafood')) icon = '🐟';
-    else if (lower.includes('vegan') || lower.includes('veggie') || lower.includes('vegetarian')) icon = '🌱';
-    else if (lower.includes('kid') || lower.includes('child') || lower.includes('tender')) icon = '🍟';
-
-    return { meal, count, icon };
+    return { meal, count };
   });
 
   // Convert Dietary Map to Array

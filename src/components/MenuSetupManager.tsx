@@ -7,10 +7,11 @@ import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, Chev
 
 interface MenuSetupManagerProps {
   guests: Guest[];
+  onUpdateGuests?: (updatedGuests: Guest[]) => Promise<void>;
   onOpenGuestRegistry?: () => void;
 }
 
-export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSetupManagerProps) {
+export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRegistry }: MenuSetupManagerProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<'all' | 'entree' | 'appetizer' | 'dessert'>('all');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -25,6 +26,7 @@ export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSe
     isVegan: false,
     isGlutenFree: false,
     isNutFree: false,
+    isGuestChoice: true,
   });
 
   // Load menu items from localStorage on mount
@@ -69,6 +71,7 @@ export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSe
       isVegan: false,
       isGlutenFree: false,
       isNutFree: false,
+      isGuestChoice: true,
     });
     setIsAdding(true);
     setEditingItem(null);
@@ -76,7 +79,7 @@ export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSe
 
   const startEdit = (item: MenuItem) => {
     setEditingItem(item);
-    setFormState({ ...item });
+    setFormState({ ...item, isGuestChoice: item.isGuestChoice !== false });
     setIsAdding(false);
   };
 
@@ -100,9 +103,27 @@ export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSe
       isVegan: !!formState.isVegan,
       isGlutenFree: !!formState.isGlutenFree,
       isNutFree: !!formState.isNutFree,
+      isGuestChoice: formState.isGuestChoice !== false,
     };
 
     if (editingItem) {
+      const oldName = editingItem.name;
+      const newName = newItem.name;
+
+      // Auto-update guests who selected this dish if the name changed
+      if (oldName !== newName && onUpdateGuests) {
+        const affectedGuests = guests.filter(g => (g.mealChoice || '').trim().toLowerCase() === oldName.trim().toLowerCase());
+        if (affectedGuests.length > 0) {
+          const updatedGuests = guests.map(g => {
+            if ((g.mealChoice || '').trim().toLowerCase() === oldName.trim().toLowerCase()) {
+              return { ...g, mealChoice: newName };
+            }
+            return g;
+          });
+          onUpdateGuests(updatedGuests).catch(err => console.error('Error auto-updating guest meal choices:', err));
+        }
+      }
+
       const updated = menuItems.map(item => item.id === editingItem.id ? newItem : item);
       saveMenuItemsToStorage(updated);
     } else {
@@ -219,6 +240,11 @@ export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSe
                   {item.isVegan && <span style={styles.dietBadge}>🌿 VEGAN</span>}
                   {item.isGlutenFree && <span style={styles.dietBadge}>🌾 GLUTEN FREE</span>}
                   {item.isNutFree && <span style={styles.dietBadge}>🥜 NUT FREE</span>}
+                  {item.isGuestChoice === false && (
+                    <span style={{ ...styles.dietBadge, backgroundColor: 'var(--color-gold-muted)', color: 'var(--color-amber-dark)', borderColor: 'var(--color-gold-dark)' }}>
+                      🍽️ BUFFET / SHARED (NOT INDIVIDUAL CHOICE)
+                    </span>
+                  )}
                 </div>
 
                 <div style={styles.actionGroup}>
@@ -320,6 +346,21 @@ export default function MenuSetupManager({ guests, onOpenGuestRegistry }: MenuSe
                   onChange={(e) => setFormState(prev => ({ ...prev, description: e.target.value }))}
                   style={styles.textarea}
                 />
+              </div>
+
+              {/* Guest Choice Option Toggle */}
+              <div style={{ ...styles.fieldGroup, backgroundColor: 'var(--color-bg-subtle)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
+                <label style={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={formState.isGuestChoice !== false}
+                    onChange={(e) => setFormState(prev => ({ ...prev, isGuestChoice: e.target.checked }))}
+                  />
+                  <strong>GUEST CHOICE OPTION</strong>
+                </label>
+                <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', display: 'block' }}>
+                  Enable for individual plated guest choices. Uncheck for buffet-style or shared dishes where guests do not pick individually.
+                </span>
               </div>
 
               {/* Dietary Restriction Tags Checkboxes */}

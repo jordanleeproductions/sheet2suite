@@ -1005,7 +1005,7 @@ export default function Sheet2VowDashboard() {
             {[
               { id: 'metrics', label: '[ SUMMARY ]' },
               { id: 'guests', label: '[ GUEST LIST ]' },
-              { id: 'menu', label: '[ CATERING MENU ]' },
+              { id: 'menu', label: '[ CATERING ]' },
               { id: 'tables', label: '[ SEATING CHART ]' },
               { id: 'budget', label: '[ LEDGER ]' },
               { id: 'schedule', label: '[ TIMELINE ]' },
@@ -1075,6 +1075,7 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'menu' && weddingData && (
                 <MenuSetupManager
                   guests={weddingData.guests}
+                  onUpdateGuests={(data) => syncUpdate('guests', data)}
                   onOpenGuestRegistry={() => switchTab('guests')}
                 />
               )}

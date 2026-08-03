@@ -48,7 +48,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
       const saved = localStorage.getItem('s2v_catering_menu');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const entrees = parsed.filter((i: any) => i.category === 'entree').map((i: any) => i.name);
+        const entrees = parsed
+          .filter((i: any) => i.category === 'entree' && i.isGuestChoice !== false)
+          .map((i: any) => i.name);
         if (entrees.length > 0) {
           setMenuOptions(entrees);
           return;
