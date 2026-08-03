@@ -1,7 +1,7 @@
 export type AgeCategory = 'Adult' | 'Youth' | 'Child' | 'Infant' | 'Vendor';
 export type RSVPStatus = 'Attending' | 'Declined' | 'Pending' | 'No Response';
 export type KanbanStage = 'To Do' | 'In Progress' | 'Done';
-export type SongListType = 'Must Play' | 'Play If Time' | 'Banned' | 'Ceremony' | 'Reception' | 'First Dance' | 'Play List' | 'Do Not Play' | 'Special Moment' | 'General';
+export type SongListType = 'Must Play' | 'Play If Time' | 'Banned' | 'Ceremony' | 'Reception' | 'First Dance' | 'Play List' | 'Do Not Play' | 'Special Moment' | 'General' | 'Requested Song';
 export type TableShape = 'circle' | 'rectangle' | 'square' | 'Circle' | 'Rectangle' | 'Square';
 
 export interface TableConfig {
