@@ -113,7 +113,7 @@ This document defines the authoritative tab structure and column header contract
 | `Song ID` | `songId` | Text (Primary Key) | e.g. `M1`, `M2` |
 | `Song Title` | `title` | Text | Song title |
 | `Artist` | `artist` | Text | Artist / Band name |
-| `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance` |
+| `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance`, `Special Moment`, `Requested Song`, `Banned` |
 | `Play Status` | `playStatus` | Dropdown | `Must Play`, `Play If Time`, `Banned` |
 | `Notes` | `notes` | Text | Special notes or guest dedication messages |
 | `Requested By` | `requestedBy` | Text | Name of guest who requested the song |
