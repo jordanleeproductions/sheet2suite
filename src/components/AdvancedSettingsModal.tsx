@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
+import { getColorPresets } from '@/lib/themePresets';
 
 interface AdvancedSettingsModalProps {
   spreadsheetId: string;
@@ -313,12 +314,7 @@ export default function AdvancedSettingsModal({
                 <div style={styles.formGroup}>
                   <label style={styles.label}>PRIMARY ACCENT COLOR</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.625rem', marginBottom: '0.75rem' }}>
-                    {[
-                      { name: 'Emerald Green', hex: '#11552D', desc: 'Classic Vow Green' },
-                      { name: 'Royal Navy', hex: '#0d1b2a', desc: 'Midnight Luxury' },
-                      { name: 'Romantic Rose', hex: '#e11d48', desc: 'Rose & Wine' },
-                      { name: 'Velvet Purple', hex: '#7c3aed', desc: 'Elegant Violet' },
-                    ].map((preset) => {
+                    {getColorPresets(styleTheme, theme).map((preset) => {
                       const isSelected = (primaryColor || '').toLowerCase() === preset.hex.toLowerCase();
                       return (
                         <button

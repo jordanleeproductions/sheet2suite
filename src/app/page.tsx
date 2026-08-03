@@ -18,6 +18,7 @@ import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2, Sliders, Printer } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
+import { getColorPresets } from '@/lib/themePresets';
 
 export default function Sheet2VowDashboard() {
   // Authentication & Spreadsheet Settings
@@ -536,21 +537,16 @@ export default function Sheet2VowDashboard() {
                     {styleTheme === 'neo-brutalism' ? 'ACCENT COLOR' : 'PRIMARY COLOR'}
                   </label>
 
-                  {/* Suggestive Color Presets */}
+                  {/* Suggestive Color Presets (Adapted by Style & Theme Mode) */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                    {[
-                      { name: 'Emerald Green', hex: '#11552D' },
-                      { name: 'Royal Navy', hex: '#0d1b2a' },
-                      { name: 'Romantic Rose', hex: '#e11d48' },
-                      { name: 'Velvet Purple', hex: '#7c3aed' },
-                    ].map((preset) => {
+                    {getColorPresets(styleTheme, theme).map((preset) => {
                       const isSelected = (primaryColor || '').toLowerCase() === preset.hex.toLowerCase();
                       return (
                         <button
                           key={preset.hex}
                           type="button"
                           onClick={() => setPrimaryColor(preset.hex)}
-                          title={preset.name}
+                          title={`${preset.name} (${preset.hex})`}
                           style={{
                             width: '20px',
                             height: '20px',
