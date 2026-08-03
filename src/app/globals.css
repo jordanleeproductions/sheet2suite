@@ -413,3 +413,22 @@ button[style*="backgroundColor: 'var(--color-surface)'"],
 button[style*="backgroundColor: 'var(--color-bg)'"] {
   color: #000000 !important;
 }
+
+/* Even Card Grid Column Rules for Summary Dashboard (1, 2, or 4 cols per row) */
+.kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 1rem !important;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
