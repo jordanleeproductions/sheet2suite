@@ -160,12 +160,27 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
   };
 
   const handleFormChange = (field: keyof Song, value: any) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+    setFormState(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === 'listType' && value === 'Banned') {
+        next.playStatus = 'Banned';
+        next.approvalStatus = 'Banned';
+      } else if (field === 'playStatus' && value === 'Banned') {
+        next.listType = 'Banned';
+        next.approvalStatus = 'Banned';
+      } else if (field === 'approvalStatus' && value === 'Banned') {
+        next.listType = 'Banned';
+        next.playStatus = 'Banned';
+      }
+      return next;
+    });
   };
 
   const saveItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSyncing) return;
+
+    const isBanned = formState.listType === 'Banned' || formState.listType === 'Do Not Play' || formState.playStatus === 'Banned' || formState.approvalStatus === 'Banned';
 
     let updatedMusic: Song[];
     if (isAdding) {
@@ -173,11 +188,11 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         songId: `M${Date.now()}`,
         title: formState.title || 'Unknown Song',
         artist: formState.artist || 'Unknown Artist',
-        listType: formState.listType || 'Reception',
-        playStatus: formState.playStatus || 'Must Play',
+        listType: isBanned ? 'Banned' : (formState.listType || 'Reception'),
+        playStatus: isBanned ? 'Banned' : (formState.playStatus || 'Must Play'),
         notes: formState.notes || '',
         requestedBy: formState.requestedBy || 'Admin',
-        approvalStatus: formState.approvalStatus || 'Approved',
+        approvalStatus: isBanned ? 'Banned' : (formState.approvalStatus || 'Approved'),
         link: formState.link || '',
       };
       updatedMusic = [...music, newItem];
@@ -186,6 +201,9 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         item.songId === editingItem?.songId ? {
           ...item,
           ...formState,
+          listType: isBanned ? 'Banned' : (formState.listType || item.listType || 'Reception'),
+          playStatus: isBanned ? 'Banned' : (formState.playStatus || item.playStatus || 'Must Play'),
+          approvalStatus: isBanned ? 'Banned' : (formState.approvalStatus || item.approvalStatus || 'Approved'),
           requestedBy: formState.requestedBy || item.requestedBy || 'Admin',
         } as Song : item
       );
@@ -812,7 +830,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     <option value="Ceremony">Ceremony</option>
                     <option value="Reception">Reception</option>
                     <option value="Special Moment">Special Moment</option>
-                    <option value="Do Not Play">Do Not Play</option>
+                    <option value="Banned">Banned (Do Not Play)</option>
                   </select>
                 </div>
                 
