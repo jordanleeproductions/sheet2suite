@@ -90,13 +90,13 @@ export default function Sheet2VowDashboard() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('metrics');
   const [guestInitialFilter, setGuestInitialFilter] = useState<RSVPStatus | 'All'>('All');
   const [taskInitialFilter, setTaskInitialFilter] = useState<KanbanStage | undefined>(undefined);
   const [musicInitialFilter, setMusicInitialFilter] = useState<string | undefined>(undefined);
 
   // Tab switching with browser History API push & URL hash sync
-  const switchTab = (tab: 'metrics' | 'guests' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks', filter?: string, pushToHistory = true) => {
+  const switchTab = (tab: 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks', filter?: string, pushToHistory = true) => {
     setActiveTab(tab);
     if (filter) {
       if (tab === 'guests') setGuestInitialFilter(filter as any);
