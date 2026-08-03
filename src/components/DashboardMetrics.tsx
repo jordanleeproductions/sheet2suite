@@ -29,12 +29,12 @@ interface DashboardMetricsProps {
   onNavigateTab?: (tab: string, filter?: string) => void;
 }
 
-function DonutChart({ 
-  slices, 
-  centerLabel, 
+function DonutChart({
+  slices,
+  centerLabel,
   centerValue,
-  onSliceClick 
-}: { 
+  onSliceClick
+}: {
   slices: { label: string; count: number; color: string; filterKey?: string }[];
   centerLabel: string;
   centerValue: string | number;
@@ -254,7 +254,7 @@ function LabeledProgressBar({
 
 export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD', onNavigateTab }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
-  
+
   // Section View Modes (Cards | Pie Chart | Labeled Progress Bar)
   const [guestViewMode, setGuestViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
   const [taskViewMode, setTaskViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
@@ -304,8 +304,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {/* Financial KPI Cards Grid */}
       {modules.budget && (
         <div className="kpi-grid" style={styles.kpiGrid}>
-          <div 
-            className="kpi-card" 
+          <div
+            className="kpi-card"
             style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
             onClick={() => onNavigateTab && onNavigateTab('budget')}
             title={onNavigateTab ? 'Click to open Budget Manager' : ''}
@@ -317,8 +317,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
             <div style={styles.kpiSub}>Cell B2 Config Value</div>
           </div>
 
-          <div 
-            className="kpi-card" 
+          <div
+            className="kpi-card"
             style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
             onClick={() => onNavigateTab && onNavigateTab('budget')}
             title={onNavigateTab ? 'Click to open Budget Manager' : ''}
@@ -330,8 +330,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
             <div style={styles.kpiSub}>SUM('Budget Ledger'!D:D)</div>
           </div>
 
-          <div 
-            className="kpi-card" 
+          <div
+            className="kpi-card"
             style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
             onClick={() => onNavigateTab && onNavigateTab('budget')}
             title={onNavigateTab ? 'Click to open Budget Manager' : ''}
@@ -343,8 +343,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
             <div style={styles.kpiSub}>SUM('Budget Ledger'!E:E)</div>
           </div>
 
-          <div 
-            className="kpi-card" 
+          <div
+            className="kpi-card"
             style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
             onClick={() => onNavigateTab && onNavigateTab('budget')}
             title={onNavigateTab ? 'Click to open Budget Manager' : ''}
@@ -360,14 +360,14 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
       {/* Progress Bar & Ledger Balance Panel */}
       {modules.budget && (
-        <div 
-          className="budget-bar-panel" 
+        <div
+          className="budget-bar-panel"
           style={{ ...styles.barPanel, cursor: onNavigateTab ? 'pointer' : 'default' }}
           onClick={() => onNavigateTab && onNavigateTab('budget')}
           title={onNavigateTab ? 'Click to open Budget Manager' : ''}
         >
           <h3 style={styles.panelTitle}>Budget Allocation Progress</h3>
-          
+
           <div style={styles.progressHeader}>
             <span style={styles.progressLabel}>
               Actual Spent: <strong>{actualPercent}%</strong> ({formatCurrency(actualCost, currency)})
@@ -467,8 +467,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
           {guestViewMode === 'cards' && (
             <div className="kpi-grid" style={styles.kpiGrid}>
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('guests', 'All')}
                 title={onNavigateTab ? 'Click to open Guest Registry' : ''}
@@ -478,8 +478,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Guest Invites Total</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('guests', 'Attending')}
                 title={onNavigateTab ? 'Click to view Attending guests' : ''}
@@ -489,8 +489,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>RSVP Attending</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('guests', 'Pending')}
                 title={onNavigateTab ? 'Click to view Pending guests' : ''}
@@ -500,8 +500,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Awaiting Response</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('guests', 'Declined')}
                 title={onNavigateTab ? 'Click to view Declined guests' : ''}
@@ -544,7 +544,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {modules.tasks && (
         <div style={styles.sectionWrapper}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Kanban Checklist Progress</h3>
+            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Task List (Kanban)</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
               <button
                 type="button"
@@ -604,8 +604,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
           {taskViewMode === 'cards' && (
             <div className="kpi-grid" style={styles.kpiGrid}>
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('tasks', 'To Do')}
                 title={onNavigateTab ? 'Click to view To Do tasks' : ''}
@@ -615,8 +615,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Pending Tasks</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('tasks', 'In Progress')}
                 title={onNavigateTab ? 'Click to view In Progress tasks' : ''}
@@ -626,8 +626,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Active Tasks</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('tasks', 'Done')}
                 title={onNavigateTab ? 'Click to view Completed tasks' : ''}
@@ -637,8 +637,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Done ({doneCount}/{totalTasksCount})</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('tasks')}
                 title={onNavigateTab ? 'Click to open Kanban Checklist' : ''}
@@ -744,8 +744,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
           {musicViewMode === 'cards' && (
             <div className="kpi-grid" style={styles.kpiGrid}>
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('music', 'ALL')}
                 title={onNavigateTab ? 'Click to view Admin songs' : ''}
@@ -755,8 +755,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Curated Track List</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('music', 'PENDING APPROVAL')}
                 title={onNavigateTab ? 'Click to view Guest song requests' : ''}
@@ -766,8 +766,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 <div style={styles.kpiSub}>Approved + Declined + Pending</div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{
                   ...styles.kpiCard,
                   cursor: onNavigateTab ? 'pointer' : 'default',
@@ -789,8 +789,8 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
                 </div>
               </div>
 
-              <div 
-                className="kpi-card" 
+              <div
+                className="kpi-card"
                 style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('music', 'ALL')}
                 title={onNavigateTab ? 'Click to open Music Manager' : ''}

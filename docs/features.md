@@ -68,6 +68,7 @@
 - [ ] **[DASH-3] Reorderable & Custom Summary Dashboard Layout:** Allow couples to reorder summary sections up/down and toggle section visibility via an inline layout control panel or Advanced Settings, persisting layout preferences in `localStorage` and `Settings` cell B2 JSON config.
 - [ ] **[DASH-4] Reception Table Seating Summary Module:** Add a dedicated summary section for Table Seating displaying cards for `TOTAL TABLES`, `SEATED GUESTS`, `UNSEATED GUESTS`, and `% CAPACITY FILLED`, with optional Pie Chart and Labeled Progress Bar views.
 - [x] **[DASH-5] Browser Back/Forward Tab History Navigation (`page.tsx`):** Integrate HTML5 History API (`window.history.pushState` & `popstate` event listener) to push URL hashes (`#guests?filter=Attending`, `#music?filter=PENDING%20APPROVAL`, `#budget`) when switching tabs or clicking summary KPI cards, allowing couples to navigate backward/forward through tab history using browser Back/Forward buttons.
+- [ ] **[DASH-6] Photography Summary Module (`DashboardMetrics.tsx`):** Add a dedicated Photography section in Summary with Cards, Donut Chart, and Labeled Progress Bar views displaying "Total Required Shots", "Captured Shots", "Pending Shots", and "Percentage Complete".
 
 ---
 
@@ -78,7 +79,12 @@
 
 ---
 
-## ⚙️ 9. Platform Infrastructure, Production Sync & Security
+## 📸 9. Photography & Shot List Manager (`PhotoShotListManager.tsx`)
+- [ ] **[PHOTO-1] Photography Shot List Enhancements (`PhotoShotListManager.tsx`):** Make unchecked cards have a solid black border. Set all section headers to black text. In desktop view, display each shot item as a full-width single row card with right-aligned time and bold "Who" field for maximum visual hierarchy.
+
+---
+
+## ⚙️ 10. Platform Infrastructure, Production Sync & Security
 - [x] **[SYS-1] Purchase Activation Flow (`/activate`):** Etsy order verification API with Quick Setup and 4-screen Guided Setup Wizard.
 - [x] **[SYS-2] Multi-Currency Formatting Engine:** Support for USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR €.
 - [x] **[SYS-3] Advanced Settings Portal:** Metadata editor, currency selector, drive inspector, feature toggles, and dev mock controls.
