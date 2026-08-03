@@ -381,7 +381,7 @@ export default function Sheet2VowDashboard() {
       {/* Brand Header */}
       <header style={styles.appHeader}>
         <div style={styles.brandGroup}>
-          <img src="/logo.png" alt="Sheet2Vow Logo" style={{ height: '50px', objectFit: 'contain' }} />
+          <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0 }} />
           <div>
             <h1 style={styles.brandName}>Sheet2Vow</h1>
             <p style={styles.brandSubtitle}>Clean digital canvas for spreadsheet purists.</p>
