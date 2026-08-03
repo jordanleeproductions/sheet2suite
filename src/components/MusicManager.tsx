@@ -25,8 +25,26 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPill, setFilterPill] = useState<string>('ALL');
 
+  const pendingSongs = music.filter(s => s.approvalStatus === 'Pending Approval');
+
+  const updateApprovalStatus = async (item: Song, approvalStatus: 'Approved' | 'Declined' | 'Banned') => {
+    if (isSyncing) return;
+    const updated = music.map(s => {
+      if (s.songId === item.songId) {
+        return {
+          ...s,
+          approvalStatus,
+          playStatus: approvalStatus === 'Banned' ? 'Banned' : s.playStatus || 'Must Play',
+        };
+      }
+      return s;
+    });
+    await onUpdate(updated);
+  };
+
   const filteredMusic = music.filter(song => {
     const status = song.playStatus || (song.listType === 'Do Not Play' || song.priority === 'Banned' ? 'Banned' : song.priority || 'Must Play');
+    const appStatus = song.approvalStatus || 'Approved';
 
     const matchesSearch = 
       (song.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,20 +52,23 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       (song.notes || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (song.requestedBy || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (song.listType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appStatus.toLowerCase().includes(searchTerm.toLowerCase()) ||
       status.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilterPill = 
       filterPill === 'ALL' ? true :
+      filterPill === 'PENDING APPROVAL' ? appStatus === 'Pending Approval' :
       status.toUpperCase() === filterPill.toUpperCase() ||
-      (song.listType || '').toUpperCase() === filterPill.toUpperCase();
+      (song.listType || '').toUpperCase() === filterPill.toUpperCase() ||
+      appStatus.toUpperCase() === filterPill.toUpperCase();
 
     return matchesSearch && matchesFilterPill;
   }).sort((a, b) => {
     if (filterPill === 'ALL') {
-      const aStatus = a.playStatus || (a.listType === 'Do Not Play' ? 'Banned' : 'Must Play');
-      const bStatus = b.playStatus || (b.listType === 'Do Not Play' ? 'Banned' : 'Must Play');
-      if (aStatus === 'Banned' && bStatus !== 'Banned') return 1;
-      if (aStatus !== 'Banned' && bStatus === 'Banned') return -1;
+      const aIsPending = a.approvalStatus === 'Pending Approval';
+      const bIsPending = b.approvalStatus === 'Pending Approval';
+      if (aIsPending && !bIsPending) return -1;
+      if (!aIsPending && bIsPending) return 1;
     }
     return 0;
   });
@@ -354,6 +375,51 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         </div>
       </div>
 
+      {/* Pending Guest Requests Alert Banner */}
+      {pendingSongs.length > 0 && (
+        <div style={{
+          backgroundColor: '#fffbeb',
+          border: '1px solid #f59e0b',
+          borderRadius: 'var(--border-radius-md)',
+          padding: '0.875rem 1.25rem',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>⏳</span>
+            <div>
+              <strong style={{ fontSize: '0.85rem', color: '#92400e', display: 'block' }}>
+                {pendingSongs.length} PENDING GUEST SONG REQUEST{pendingSongs.length > 1 ? 'S' : ''} NEED APPROVAL
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: '#b45309' }}>
+                Guests have requested new tracks for your reception. Review and approve before syncing to DJ.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            style={{
+              padding: '0.4rem 0.85rem',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              backgroundColor: '#f59e0b',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+            onClick={() => setFilterPill('PENDING APPROVAL')}
+          >
+            REVIEW PENDING ({pendingSongs.length})
+          </button>
+        </div>
+      )}
+
       {/* Search & Category Filter Bar */}
       <div style={styles.filterSection}>
         <input
@@ -367,6 +433,7 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
         <div style={styles.pillsRow}>
           {[
             { id: 'ALL', label: 'ALL SONGS', count: music.length },
+            { id: 'PENDING APPROVAL', label: '⏳ PENDING APPROVAL', count: pendingSongs.length },
             { id: 'MUST PLAY', label: '🔥 MUST PLAY', count: music.filter(s => (s.playStatus || s.priority || 'Must Play') === 'Must Play' && s.listType !== 'Do Not Play').length },
             { id: 'PLAY IF TIME', label: '⏳ PLAY IF TIME', count: music.filter(s => (s.playStatus || s.priority) === 'Play If Time').length },
             { id: 'BANNED', label: '🚫 BANNED', count: music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play').length },
@@ -378,9 +445,9 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
               key={pill.id}
               style={{
                 ...styles.pillBtn,
-                backgroundColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : 'var(--color-primary)') : 'transparent',
-                color: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ffffff' : 'var(--color-on-primary)') : 'var(--color-text)',
-                borderColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : 'var(--color-primary)') : 'var(--color-muted)',
+                backgroundColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : pill.id === 'PENDING APPROVAL' ? '#f59e0b' : 'var(--color-primary)') : 'transparent',
+                color: filterPill === pill.id ? (pill.id === 'BANNED' || pill.id === 'PENDING APPROVAL' ? '#ffffff' : 'var(--color-on-primary)') : 'var(--color-text)',
+                borderColor: filterPill === pill.id ? (pill.id === 'BANNED' ? '#ef4444' : pill.id === 'PENDING APPROVAL' ? '#f59e0b' : 'var(--color-primary)') : 'var(--color-muted)',
               }}
               onClick={() => setFilterPill(pill.id)}
             >
@@ -393,19 +460,20 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
       <div style={styles.cardGrid}>
         {filteredMusic.map((item) => {
           const status = item.playStatus || (item.listType === 'Do Not Play' || item.priority === 'Banned' ? 'Banned' : item.priority || 'Must Play');
-          const isBanned = status === 'Banned';
+          const isBanned = status === 'Banned' || item.approvalStatus === 'Banned';
+          const isPending = item.approvalStatus === 'Pending Approval';
 
           return (
             <div 
               key={item.songId} 
               style={{
                 ...styles.card,
-                borderColor: 'var(--color-muted)',
-                backgroundColor: isBanned ? '#fff5f5' : 'var(--color-surface, #ffffff)'
+                borderColor: isPending ? '#f59e0b' : isBanned ? '#ef4444' : 'var(--color-muted)',
+                backgroundColor: isPending ? '#fffbeb' : isBanned ? '#fff5f5' : 'var(--color-surface, #ffffff)'
               }}
             >
               <div style={styles.cardHeader}>
-                <div style={styles.cardMeta}>
+                <div style={{ ...styles.cardMeta, display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                   <span style={{
                     ...styles.categoryBadge,
                     backgroundColor: isBanned ? '#ef4444' : status === 'Must Play' ? 'var(--color-highlight, #00ED64)' : '#f59e0b',
@@ -413,6 +481,21 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                   }}>
                     {isBanned ? '🚫 BANNED' : status === 'Must Play' ? '🔥 MUST PLAY' : '⏳ PLAY IF TIME'}
                   </span>
+
+                  {isPending && (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      backgroundColor: '#f59e0b',
+                      color: '#ffffff',
+                      padding: '0.15rem 0.4rem',
+                      borderRadius: '4px',
+                    }}>
+                      ⏳ PENDING APPROVAL
+                    </span>
+                  )}
+
                   <span style={{
                     fontSize: '0.65rem',
                     fontFamily: 'var(--font-mono)',
@@ -421,7 +504,6 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     color: 'var(--color-text)',
                     padding: '0.15rem 0.4rem',
                     borderRadius: '4px',
-                    marginLeft: '0.35rem'
                   }}>
                     {item.listType || 'Reception'}
                   </span>
@@ -433,12 +515,52 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                     color: 'var(--color-text)',
                     padding: '0.15rem 0.4rem',
                     borderRadius: '4px',
-                    marginLeft: '0.35rem'
                   }}>
                     👤 {item.requestedBy || 'Admin'}
                   </span>
                 </div>
+
                 <div style={styles.cardActions}>
+                  {isPending && (
+                    <>
+                      <button
+                        type="button"
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
+                          backgroundColor: '#10b981',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '0.2rem 0.5rem',
+                          cursor: 'pointer',
+                        }}
+                        title="Approve song request"
+                        onClick={() => updateApprovalStatus(item, 'Approved')}
+                      >
+                        APPROVE ✓
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
+                          backgroundColor: '#ef4444',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '0.2rem 0.5rem',
+                          cursor: 'pointer',
+                        }}
+                        title="Decline song request"
+                        onClick={() => updateApprovalStatus(item, 'Declined')}
+                      >
+                        DECLINE ✗
+                      </button>
+                    </>
+                  )}
                   <button style={styles.actionBtn} onClick={() => startEdit(item)}>
                     <Edit2 size={14} />
                   </button>

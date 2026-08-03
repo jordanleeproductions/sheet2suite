@@ -115,8 +115,8 @@ This document defines the authoritative tab structure and column header contract
 | `Artist` | `artist` | Text | Artist / Band name |
 | `Occasion` | `listType` | Dropdown / Text | `Ceremony`, `Reception`, `First Dance` |
 | `Play Status` | `playStatus` | Dropdown | `Must Play`, `Play If Time`, `Banned` |
-| `Requested By` | `requestedBy` | Text | Name of guest who requested the song |
 | `Notes` | `notes` | Text | Special notes or guest dedication messages |
+| `Requested By` | `requestedBy` | Text | Name of guest who requested the song |
 | `Approval Status` | `approvalStatus` | Dropdown | `Approved`, `Pending Approval`, `Banned`, `Declined` |
 
 ---

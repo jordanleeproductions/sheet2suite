@@ -15,11 +15,7 @@
 - [x] **[MUSIC-1] Song Catalog & Banned Tracks:** Categorized playlists (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned Songs*) with streaming links and structured `mailto:` DJ email export.
 - [x] **[MUSIC-2] iTunes Auto-Suggest Search:** Integrated live iTunes search bar in "Add Song" modal with 30s audio previews and track metadata auto-fill.
 - [x] **[MUSIC-3] Guest Live Song Request Portal (`/request-song/[token]`):** Tokenized mobile guest portal allowing wedding guests to scan reception QR codes and submit live song requests with iTunes previews.
-- [ ] **[MUSIC-4] Admin Song Request Approval Queue & DJ Status Filter:**
-  - Adds Column I: `Approval Status` (`approvalStatus`: `'Approved' | 'Pending Approval' | 'Banned' | 'Declined'`) to the `MUSIC` tab schema.
-  - Automatically flags incoming guest song requests as `Pending Approval` (or `Banned` if matching a Banned track).
-  - Admin approval workflow in `MusicManager.tsx` allowing couples to approve or decline song requests.
-  - DJ Vendor View (`/share/[token]`) status filter pills for **All**, **Approved**, **Pending**, and **Banned**.
+- [x] **[MUSIC-4] Admin Song Request Approval Queue & DJ Status Filter (`MusicManager.tsx`, `/share/[token]`):** Column I `Approval Status` schema integration, automated `Pending Approval` flagging for incoming guest song requests, pending request banner & quick inline `Approve ✓` / `Decline ✗` actions in MusicManager, and DJ Vendor Share status filter pills (`ALL ACTIVE TRACKS`, `APPROVED ONLY`, `PENDING APPROVAL`, `BANNED TRACKS`).
 
 ---
 

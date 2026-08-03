@@ -266,15 +266,20 @@ export default function VendorSharePage() {
         {/* MUSIC PLAYLIST VIEW */}
         {(activeTab === 'music' || scope === 'music') && data.music && (() => {
           const filteredMusic = data.music.filter(song => {
-            const isBanned = song.listType === 'Do Not Play' || song.priority === 'Banned';
-            if (musicFilter === 'requested') return !isBanned;
+            const isBanned = song.approvalStatus === 'Banned' || song.playStatus === 'Banned' || song.listType === 'Do Not Play' || song.priority === 'Banned';
+            const isPending = song.approvalStatus === 'Pending Approval';
+            const isApproved = song.approvalStatus === 'Approved' || (!song.approvalStatus && !isBanned);
+
             if (musicFilter === 'banned') return isBanned;
-            return true;
+            if (musicFilter === 'pending') return isPending;
+            if (musicFilter === 'approved') return isApproved && !isBanned;
+            // Default 'all': Show non-banned songs
+            return !isBanned;
           }).sort((a, b) => {
-            const aBanned = a.listType === 'Do Not Play' || a.priority === 'Banned';
-            const bBanned = b.listType === 'Do Not Play' || b.priority === 'Banned';
-            if (aBanned && !bBanned) return 1; // Sort banned to bottom
-            if (!aBanned && bBanned) return -1;
+            const aPending = a.approvalStatus === 'Pending Approval';
+            const bPending = b.approvalStatus === 'Pending Approval';
+            if (aPending && !bPending) return 1;
+            if (!aPending && bPending) return -1;
             return 0;
           });
 
@@ -288,9 +293,10 @@ export default function VendorSharePage() {
               {/* Quick Filter Pills */}
               <div style={{ display: 'flex', gap: '0.5rem', margin: '0.75rem 0', flexWrap: 'wrap' }} className="print-hide">
                 {[
-                  { id: 'all', label: 'ALL SONGS' },
-                  { id: 'requested', label: '🎵 REQUESTED SONGS' },
-                  { id: 'banned', label: '🚫 BANNED MUSIC' },
+                  { id: 'all', label: 'ALL ACTIVE TRACKS' },
+                  { id: 'approved', label: '✓ APPROVED SONGS' },
+                  { id: 'pending', label: '⏳ PENDING APPROVAL' },
+                  { id: 'banned', label: '🚫 BANNED TRACKS' },
                 ].map(f => (
                   <button
                     key={f.id}
@@ -301,8 +307,8 @@ export default function VendorSharePage() {
                       fontWeight: musicFilter === f.id ? 700 : 400,
                       padding: '0.4rem 0.75rem',
                       borderRadius: '4px',
-                      border: `1px solid ${musicFilter === f.id ? '#13AA52' : borderColor}`,
-                      backgroundColor: musicFilter === f.id ? '#13AA52' : surfaceColor,
+                      border: `1px solid ${musicFilter === f.id ? (f.id === 'banned' ? '#ef4444' : f.id === 'pending' ? '#f59e0b' : '#13AA52') : borderColor}`,
+                      backgroundColor: musicFilter === f.id ? (f.id === 'banned' ? '#ef4444' : f.id === 'pending' ? '#f59e0b' : '#13AA52') : surfaceColor,
                       color: musicFilter === f.id ? '#ffffff' : textColor,
                       cursor: 'pointer',
                     }}

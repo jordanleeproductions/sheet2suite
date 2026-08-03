@@ -51,6 +51,11 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 - Categorized music tracks (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned / Do Not Play*).
 - Live 30-second iTunes audio preview player, Spotify/YouTube search buttons, and **`EMAIL LIST`** DJ email generator (`mailto:`).
 
+### 2.11 Admin Song Request Approval Queue & DJ Gating (`[MUSIC-4]`)
+- **Automated Request Gating:** Incoming guest song requests (`/api/request-song/[token]`) default to `approvalStatus: 'Pending Approval'` (or `Banned` if matching a Banned track).
+- **Admin Approval Queue:** Displays a Pending Requests Banner in `MusicManager.tsx` with quick inline action buttons (`Approve ✓`, `Decline ✗`) and `PENDING APPROVAL` filter pills.
+- **DJ Status Filtering:** Tokenized DJ Share portal (`/share/[token]`) status filter pills (`ALL ACTIVE TRACKS`, `APPROVED ONLY`, `PENDING APPROVAL`, `BANNED TRACKS`), automatically hiding Banned songs from the active playlist.
+
 ### 2.10 Photography Shot List (`PhotoShotListManager.tsx`)
 - Required photography moments (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
 - Interactive `Captured` vs `Pending` checkoff toggles and **`EMAIL LIST`** photographer email generator (`mailto:`).
