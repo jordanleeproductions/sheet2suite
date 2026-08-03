@@ -715,49 +715,56 @@ export default function MusicManager({ music, onUpdate, isSyncing }: MusicManage
                         <X size={14} />
                       </button>
                     )}
+
+                    {iTunesResults.length > 0 && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'var(--color-surface, #ffffff)',
+                        border: '2px solid var(--color-primary, #000000)',
+                        borderRadius: '6px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        zIndex: 9999,
+                        marginTop: '4px',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                      }}>
+                        {iTunesResults.map(track => (
+                          <div
+                            key={track.trackId}
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              borderBottom: '1px solid var(--color-muted, #e5e7eb)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.6rem',
+                              backgroundColor: 'var(--color-surface, #ffffff)',
+                            }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSelectITunesTrack(track);
+                            }}
+                          >
+                            {track.artworkUrl60 && (
+                              <img src={track.artworkUrl60} alt="" style={{ width: '28px', height: '28px', borderRadius: '4px' }} />
+                            )}
+                            <div style={{ flex: 1, overflow: 'hidden' }}>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text, #111827)' }}>{track.trackName}</div>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--color-muted, #6b7280)' }}>{track.artistName} • {track.collectionName || 'Single'}</div>
+                            </div>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-primary, #10b981)', fontFamily: 'var(--font-mono)' }}>SELECT</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {isSearchingITunes && (
                     <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem', display: 'block' }}>
-                      Searching iTunes...
+                      Searching iTunes catalog...
                     </span>
-                  )}
-                  {iTunesResults.length > 0 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      backgroundColor: '#ffffff',
-                      border: '1px solid var(--color-muted)',
-                      borderRadius: '6px',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                      zIndex: 100,
-                      maxHeight: '180px',
-                      overflowY: 'auto',
-                    }}>
-                      {iTunesResults.map(track => (
-                        <div
-                          key={track.trackId}
-                          style={{
-                            padding: '0.45rem 0.65rem',
-                            borderBottom: '1px solid #f3f4f6',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                          }}
-                          onClick={() => handleSelectITunesTrack(track)}
-                        >
-                          {track.artworkUrl60 && (
-                            <img src={track.artworkUrl60} alt="" style={{ width: '26px', height: '26px', borderRadius: '4px' }} />
-                          )}
-                          <div style={{ flex: 1, overflow: 'hidden' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111827' }}>{track.trackName}</div>
-                            <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>{track.artistName}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   )}
                 </div>
                 
