@@ -26,17 +26,40 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Pending'>('All');
 
   // Unique categories for summaries & dropdowns
   const categories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
+
+  const toggleCategoryFilter = (cat: string) => {
+    setSelectedCategories(prev => {
+      const isAlreadySelected = prev.includes(cat);
+      const updated = isAlreadySelected ? prev.filter(c => c !== cat) : [...prev, cat];
+      
+      // Keep dropdown in sync
+      if (updated.length === 1) {
+        setCategoryFilter(updated[0]);
+      } else {
+        setCategoryFilter('All');
+      }
+      return updated;
+    });
+  };
+
+  const clearCategoryFilters = () => {
+    setSelectedCategories([]);
+    setCategoryFilter('All');
+  };
 
   const filteredBudget = budget.filter(item => {
     const matchesSearch =
       (item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.vendorName || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesCategory = categoryFilter === 'All' || (item.category || '').toLowerCase() === categoryFilter.toLowerCase();
+    const matchesCategory = selectedCategories.length > 0
+      ? selectedCategories.some(c => c.toLowerCase() === (item.category || '').toLowerCase())
+      : (categoryFilter === 'All' || (item.category || '').toLowerCase() === categoryFilter.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'All' ? true :
@@ -117,64 +140,68 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
     }));
   };
 
-  const saveItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSyncing) return;
+  const saveItem = async () => {
+    if (!formState.category || !formState.vendorName) {
+      alert('Please provide Category and Vendor Name');
+      return;
+    }
 
     let updatedBudget: BudgetItem[];
-    if (isAdding) {
+
+    if (editingItem) {
+      updatedBudget = budget.map(i => i.itemId === editingItem.itemId ? { ...i, ...formState } as BudgetItem : i);
+    } else {
       const newItem: BudgetItem = {
-        itemId: `B${budget.length + 1}`,
+        itemId: `item-${Date.now()}`,
         category: formState.category || 'General',
-        vendorName: formState.vendorName || 'TBD',
-        estimatedCost: formState.estimatedCost || 0,
-        actualCost: formState.actualCost || 0,
-        amountPaid: formState.amountPaid || 0,
+        vendorName: formState.vendorName || 'New Expense',
+        estimatedCost: Number(formState.estimatedCost) || 0,
+        actualCost: Number(formState.actualCost) || 0,
+        amountPaid: Number(formState.amountPaid) || 0,
         dueDate: formState.dueDate || '',
         paymentStatus: formState.paymentStatus || 'Pending',
       };
-      updatedBudget = [...budget, newItem];
-    } else {
-      updatedBudget = budget.map(item =>
-        item.itemId === editingItem?.itemId ? { ...item, ...formState } as BudgetItem : item
-      );
+      updatedBudget = [newItem, ...budget];
     }
 
     await onUpdate(updatedBudget);
-    closeModal();
+    setEditingItem(null);
+    setIsAdding(false);
   };
 
-  const confirmDeleteItem = async () => {
-    if (!itemToDelete || isSyncing) return;
-    const updated = budget.filter(item => item.itemId !== itemToDelete.itemId);
+  const deleteItem = async (itemId: string) => {
+    const updated = budget.filter(i => i.itemId !== itemId);
     await onUpdate(updated);
     setItemToDelete(null);
   };
 
   return (
-    <div style={styles.container}>
+    <div className="budget-manager-container" style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>Budget Ledger</h2>
+        <div>
+          <h2 style={styles.title}>EXPENSE & BUDGET LEDGER</h2>
+          <p style={styles.subtitle}>Track estimated vs actual costs and log payments</p>
+        </div>
         <div style={styles.headerActions}>
           <div style={styles.viewToggle}>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#000000' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#ffffff' : 'var(--color-text)' }}
               onClick={() => setViewMode('table')}
               title="Table View"
             >
               <List size={16} />
             </button>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#000000' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#ffffff' : 'var(--color-text)' }}
               onClick={() => setViewMode('card')}
               title="Card View"
             >
               <Grid size={16} />
             </button>
           </div>
-          <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD ITEM
+          <button style={{ ...styles.addButton, color: '#ffffff' }} onClick={startAdd} disabled={isSyncing}>
+            <Plus size={16} style={{ marginRight: '0.25rem' }} /> LOG NEW EXPENSE
           </button>
         </div>
       </div>
@@ -211,31 +238,87 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
           }} />
         </div>
 
-        {/* Category Breakdown Progress Meters */}
+        {/* Category Breakdown Progress Meters (Clickable Quick Filters) */}
         {categoryStats.length > 0 && (
-          <div style={styles.categoryMeterGrid}>
-            {categoryStats.map(stat => (
-              <div key={stat.category} className="category-chip" style={{
-                ...styles.categoryChip,
-                borderColor: stat.isOver ? '#ef4444' : 'var(--color-muted)'
-              }}>
-                <div style={styles.categoryChipHeader}>
-                  <span style={styles.categoryChipName}>{stat.category}</span>
-                  {stat.isOver ? (
-                    <span style={styles.overBadgeMini}>+${stat.overAmount.toLocaleString()}</span>
-                  ) : (
-                    <span style={styles.categoryChipPercent}>{stat.percent}%</span>
-                  )}
-                </div>
-                <div style={styles.miniTrack}>
-                  <div style={{
-                    ...styles.miniFill,
-                    width: `${Math.min(stat.percent, 100)}%`,
-                    backgroundColor: stat.isOver ? '#ef4444' : stat.percent > 90 ? '#cda250' : '#10b981'
-                  }} />
-                </div>
-              </div>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-muted)' }}>
+                CATEGORY QUICK FILTERS (CLICK TO TOGGLE MULTIPLE)
+              </span>
+              {selectedCategories.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearCategoryFilters}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    border: '1px solid #ef4444',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.15rem 0.5rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                >
+                  <X size={11} /> CLEAR FILTERS ({selectedCategories.length})
+                </button>
+              )}
+            </div>
+
+            <div style={styles.categoryMeterGrid}>
+              {categoryStats.map(stat => {
+                const isSelected = selectedCategories.includes(stat.category);
+                return (
+                  <div 
+                    key={stat.category} 
+                    className={`category-chip ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => toggleCategoryFilter(stat.category)}
+                    style={{
+                      ...styles.categoryChip,
+                      cursor: 'pointer',
+                      borderColor: isSelected ? 'var(--color-primary)' : (stat.isOver ? '#ef4444' : 'var(--color-muted)'),
+                      backgroundColor: isSelected 
+                        ? (stat.isOver ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-surface, #ffffff)') 
+                        : 'var(--color-bg)',
+                      boxShadow: isSelected ? '0 0 0 2px var(--color-primary)' : 'none',
+                      transform: isSelected ? 'translateY(-1px)' : 'none',
+                      transition: 'all 0.15s ease',
+                      padding: '0.5rem 0.75rem',
+                    }}
+                    title={isSelected ? `Click to remove ${stat.category} filter` : `Click to filter by ${stat.category}`}
+                  >
+                    <div style={styles.categoryChipHeader}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        {isSelected && <Check size={12} style={{ color: 'var(--color-primary)' }} />}
+                        <span style={{ 
+                          ...styles.categoryChipName, 
+                          fontWeight: isSelected ? 800 : 700,
+                          color: isSelected ? 'var(--color-primary)' : 'var(--color-text)' 
+                        }}>
+                          {stat.category}
+                        </span>
+                      </div>
+                      {stat.isOver ? (
+                        <span style={styles.overBadgeMini}>+${stat.overAmount.toLocaleString()}</span>
+                      ) : (
+                        <span style={styles.categoryChipPercent}>{stat.percent}%</span>
+                      )}
+                    </div>
+                    <div style={styles.miniTrack}>
+                      <div style={{
+                        ...styles.miniFill,
+                        width: `${Math.min(stat.percent, 100)}%`,
+                        backgroundColor: stat.isOver ? '#ef4444' : stat.percent > 90 ? '#cda250' : '#10b981'
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -252,11 +335,15 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
 
         <div style={styles.filtersGroup}>
           <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            value={selectedCategories.length === 1 ? selectedCategories[0] : categoryFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              setCategoryFilter(val);
+              setSelectedCategories(val === 'All' ? [] : [val]);
+            }}
             style={styles.filterSelect}
           >
-            <option value="All">ALL CATEGORIES</option>
+            <option value="All">{selectedCategories.length > 1 ? `FILTERED (${selectedCategories.length} SELECTED)` : 'ALL CATEGORIES'}</option>
             {categories.map(cat => (
               <option key={cat} value={cat}>{cat.toUpperCase()}</option>
             ))}

@@ -71,7 +71,7 @@
 ---
 
 ## 💰 8. Ledger Budget Enhancements (`BudgetLedgerManager.tsx`)
-- [ ] **[BUDGET-1] Interactive Multi-Category Quick Filter Cards:** Make each category card clickable as a quick filter in `BudgetLedgerManager.tsx`. Clicking a category filters the ledger table; clicking it again deselects it. Support selecting multiple categories simultaneously for combined filtering.
+- [x] **[BUDGET-1] Interactive Multi-Category Quick Filter Cards:** Make each category card clickable as a quick filter in `BudgetLedgerManager.tsx`. Clicking a category filters the ledger table; clicking it again deselects it. Support selecting multiple categories simultaneously for combined filtering.
 - [ ] **[BUDGET-2] Inline Editable Budget Target:** Introduce an edit icon on the Total Budget KPI card allowing users to define an updated total budget directly, distinct from the Total Estimated cost.
 - [ ] **[BUDGET-3] Optional Unset Budget Tracking Mode:** Provide an option to disable/unset the budget target entirely, shifting the dashboard to track Total Estimates and Actual Outlays without overage warnings.
 
