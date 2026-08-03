@@ -26,9 +26,10 @@ interface DashboardMetricsProps {
   music?: Song[];
   enabledModules?: ModuleConfig;
   currency?: string;
+  onNavigateTab?: (tab: string, filter?: string) => void;
 }
 
-export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD' }: DashboardMetricsProps) {
+export default function DashboardMetrics({ metrics, guests, tasks, music, enabledModules, currency = 'USD', onNavigateTab }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
   
   // Default all to true if enabledModules is not supplied
@@ -65,8 +66,9 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
 
   // Music Calculations
   const allMusic = music || [];
-  const playlistSongsCount = allMusic.filter(s => s.listType !== 'Do Not Play').length;
-  const bannedSongsCount = allMusic.filter(s => s.listType === 'Do Not Play').length;
+  const adminAddedCount = allMusic.filter(s => (!s.requestedBy || s.requestedBy === 'Admin') && !s.songId.startsWith('req-')).length;
+  const guestRequestedCount = allMusic.filter(s => (s.requestedBy && s.requestedBy !== 'Admin') || s.songId.startsWith('req-') || s.approvalStatus === 'Pending Approval').length;
+  const pendingRequestsCount = allMusic.filter(s => s.approvalStatus === 'Pending Approval').length;
   const totalSongsCount = allMusic.length;
 
   return (
@@ -234,22 +236,45 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
       {/* Music Playlist Summary Row */}
       {modules.music && (
         <div style={styles.sectionWrapper}>
-          <h3 style={styles.panelTitle}>Wedding Playlist Summary</h3>
+          <h3 style={styles.panelTitle}>Music Playlist Summary</h3>
           <div className="kpi-grid" style={styles.kpiGrid}>
             <div className="kpi-card" style={styles.kpiCard}>
-              <div style={styles.kpiLabel}>PLAYLIST SONGS</div>
-              <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-                {playlistSongsCount}
+              <div style={styles.kpiLabel}>ADDED BY ADMIN</div>
+              <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
+                {adminAddedCount}
               </div>
-              <div style={styles.kpiSub}>Must Play / Ceremony / Reception</div>
+              <div style={styles.kpiSub}>Curated Track List</div>
             </div>
 
             <div className="kpi-card" style={styles.kpiCard}>
-              <div style={styles.kpiLabel}>BANNED SONGS</div>
-              <div style={{ ...styles.kpiValue, color: bannedSongsCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>
-                {bannedSongsCount}
+              <div style={styles.kpiLabel}>GUEST REQUESTS</div>
+              <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
+                {guestRequestedCount}
               </div>
-              <div style={styles.kpiSub}>Do Not Play Tracks</div>
+              <div style={styles.kpiSub}>Approved + Declined + Pending</div>
+            </div>
+
+            <div 
+              className="kpi-card" 
+              style={{
+                ...styles.kpiCard,
+                cursor: onNavigateTab ? 'pointer' : 'default',
+                borderColor: pendingRequestsCount > 0 ? '#f59e0b' : 'var(--color-muted)',
+                backgroundColor: pendingRequestsCount > 0 ? '#fffbeb' : 'var(--color-surface, #ffffff)',
+                transition: 'all 0.2s ease',
+              }}
+              onClick={() => onNavigateTab && onNavigateTab('music', 'PENDING APPROVAL')}
+              title={onNavigateTab ? 'Click to open Music Manager pending requests view' : ''}
+            >
+              <div style={{ ...styles.kpiLabel, color: pendingRequestsCount > 0 ? '#92400e' : 'var(--color-text)' }}>
+                PENDING REQUESTS
+              </div>
+              <div style={{ ...styles.kpiValue, color: pendingRequestsCount > 0 ? '#f59e0b' : 'var(--color-muted)' }}>
+                {pendingRequestsCount}
+              </div>
+              <div style={{ ...styles.kpiSub, color: pendingRequestsCount > 0 ? '#b45309' : 'var(--color-muted)', fontWeight: pendingRequestsCount > 0 ? 600 : 400 }}>
+                {pendingRequestsCount > 0 ? 'Click to Review & Approve ➔' : 'No Pending Requests'}
+              </div>
             </div>
 
             <div className="kpi-card" style={styles.kpiCard}>
@@ -257,7 +282,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, enable
               <div style={styles.kpiValue}>
                 {totalSongsCount}
               </div>
-              <div style={styles.kpiSub}>Catalog Total</div>
+              <div style={styles.kpiSub}>Full Catalog Total</div>
             </div>
           </div>
         </div>

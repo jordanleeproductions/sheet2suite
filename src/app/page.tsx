@@ -949,6 +949,7 @@ export default function Sheet2VowDashboard() {
                     music={weddingData.music}
                     enabledModules={enabledModules}
                     currency={currency}
+                    onNavigateTab={(tab) => setActiveTab(tab as any)}
                   />
                   <VendorShareLinkManager
                     spreadsheetId={spreadsheetId}
