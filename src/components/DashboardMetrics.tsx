@@ -2,9 +2,8 @@
 
 import React, { useState } from 'react';
 import { DashboardSummary, Guest, Task, Song, PhotoShot } from '@/lib/sheets/types';
-import { Edit2, LayoutGrid, PieChart, BarChart2, ArrowUp, ArrowDown, Eye, EyeOff, Sliders } from 'lucide-react';
+import { Edit2, LayoutGrid, PieChart, BarChart2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
-import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout } from '@/lib/dashboardLayout';
 
 export interface ModuleConfig {
   metrics: boolean;
@@ -265,26 +264,6 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
   const [tableViewMode, setTableViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
   const [photoViewMode, setPhotoViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
 
-  // Dashboard Section Order & Visibility State (DASH-3)
-  const [sections, setSections] = useState<DashboardSectionConfig[]>(() => loadDashboardLayout());
-  const [showLayoutManager, setShowLayoutManager] = useState<boolean>(false);
-
-  const moveSection = (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= sections.length) return;
-    const updated = [...sections];
-    const [moved] = updated.splice(index, 1);
-    updated.splice(targetIndex, 0, moved);
-    setSections(updated);
-    saveDashboardLayout(updated);
-  };
-
-  const toggleSectionVisibility = (key: string) => {
-    const updated = sections.map(sec => sec.key === key ? { ...sec, enabled: !sec.enabled } : sec);
-    setSections(updated);
-    saveDashboardLayout(updated);
-  };
-
   // Default all to true if enabledModules is not supplied
   const modules = enabledModules || {
     metrics: true,
@@ -340,103 +319,6 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
 
   return (
     <div className="metrics-container" style={styles.container}>
-      {/* Top Inline Dashboard Layout Control Bar (DASH-3) */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.25rem' }}>
-        <button
-          type="button"
-          onClick={() => setShowLayoutManager(!showLayoutManager)}
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            backgroundColor: showLayoutManager ? 'var(--color-primary)' : 'var(--color-bg)',
-            color: showLayoutManager ? 'var(--color-on-dark)' : 'var(--color-text)',
-            border: '1px solid var(--color-muted)',
-            borderRadius: 'var(--border-radius-sm)',
-            padding: '0.35rem 0.75rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.35rem'
-          }}
-          title="Customize Summary Dashboard Section Order & Visibility"
-        >
-          <Sliders size={14} /> CUSTOMIZE DASHBOARD LAYOUT
-        </button>
-      </div>
-
-      {/* Inline Layout Reordering Panel */}
-      {showLayoutManager && (
-        <div style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '2px solid var(--color-primary)',
-          borderRadius: 'var(--border-radius-md)',
-          padding: '1rem',
-          marginBottom: '1rem',
-          boxShadow: 'var(--box-shadow-subtle)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, margin: 0 }}>
-              ⚙️ REORDER & TOGGLE DASHBOARD SUMMARY SECTIONS
-            </h4>
-            <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-              Layout changes persist in your local browser settings
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {sections.map((sec, idx) => (
-              <div
-                key={sec.key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: 'var(--color-bg)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.5rem 0.75rem',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleSectionVisibility(sec.key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: sec.enabled ? 'var(--color-primary)' : 'var(--color-muted)', padding: 0 }}
-                    title={sec.enabled ? 'Hide section' : 'Show section'}
-                  >
-                    {sec.enabled ? <Eye size={16} /> : <EyeOff size={16} />}
-                  </button>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: sec.enabled ? 'var(--color-text)' : 'var(--color-muted)' }}>
-                    {sec.label}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => moveSection(idx, 'up')}
-                    disabled={idx === 0}
-                    style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
-                    title="Move up"
-                  >
-                    <ArrowUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveSection(idx, 'down')}
-                    disabled={idx === sections.length - 1}
-                    style={{ background: 'none', border: 'none', cursor: idx === sections.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === sections.length - 1 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
-                    title="Move down"
-                  >
-                    <ArrowDown size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       {/* Financial KPI Cards Grid */}
       {modules.budget && (
         <div className="kpi-grid" style={styles.kpiGrid}>
@@ -1103,253 +985,147 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
             />
           )}
         </div>
-      );
-
-      case 'photos':
-        if (!modules.photos) return null;
-        return (
-          <div key="photos" style={styles.sectionWrapper}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <h3 style={{ ...styles.panelTitle, margin: 0 }}>Photo Shot List & Photography Progress</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
-                <button
-                  type="button"
-                  onClick={() => setPhotoViewMode('cards')}
-                  style={{
-                    background: photoViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                    color: photoViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                    border: 'none',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.25rem 0.45rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                  title="View as KPI Cards"
-                >
-                  <LayoutGrid size={15} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPhotoViewMode('pie')}
-                  style={{
-                    background: photoViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                    color: photoViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                    border: 'none',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.25rem 0.45rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                  title="View as Pie / Donut Chart"
-                >
-                  <PieChart size={15} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPhotoViewMode('progress')}
-                  style={{
-                    background: photoViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                    color: photoViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                    border: 'none',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.25rem 0.45rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                  title="View as Labeled Progress Bar"
-                >
-                  <BarChart2 size={15} />
-                </button>
-              </div>
-            </div>
-
-            {photoViewMode === 'cards' && (
-              <div style={styles.kpiGrid}>
-                <div
-                  className="kpi-card"
-                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                  onClick={() => onNavigateTab && onNavigateTab('photos')}
-                  title={onNavigateTab ? 'Click to view Required Shot List' : ''}
-                >
-                  <div style={styles.kpiLabel}>REQUIRED SHOTS</div>
-                  <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{totalRequiredShots}</div>
-                  <div style={styles.kpiSub}>Total Planned Shots</div>
-                </div>
-
-                <div
-                  className="kpi-card"
-                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                  onClick={() => onNavigateTab && onNavigateTab('photos')}
-                  title={onNavigateTab ? 'Click to view Captured Shots' : ''}
-                >
-                  <div style={styles.kpiLabel}>CAPTURED SHOTS</div>
-                  <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{capturedShotsCount}</div>
-                  <div style={styles.kpiSub}>Photos Captured</div>
-                </div>
-
-                <div
-                  className="kpi-card"
-                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                  onClick={() => onNavigateTab && onNavigateTab('photos')}
-                  title={onNavigateTab ? 'Click to view Pending Shots' : ''}
-                >
-                  <div style={styles.kpiLabel}>PENDING SHOTS</div>
-                  <div style={{ ...styles.kpiValue, color: pendingShotsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-muted)' }}>{pendingShotsCount}</div>
-                  <div style={styles.kpiSub}>Awaiting Capture</div>
-                </div>
-
-                <div
-                  className="kpi-card"
-                  style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                  onClick={() => onNavigateTab && onNavigateTab('photos')}
-                  title={onNavigateTab ? 'Click to open Photography Shot List' : ''}
-                >
-                  <div style={styles.kpiLabel}>% COMPLETE</div>
-                  <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{photoPercentComplete}%</div>
-                  <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
-                    <div style={{ ...styles.progressBarActual, width: `${photoPercentComplete}%` }} />
-                  </div>
-                  <div style={styles.kpiSub}>Captured Ratio ({capturedShotsCount}/{totalRequiredShots})</div>
-                </div>
-              </div>
-            )}
-
-            {photoViewMode === 'pie' && (
-              <DonutChart
-                slices={[
-                  { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
-                  { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
-                  { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
-                ]}
-                centerLabel="Captured"
-                centerValue={`${photoPercentComplete}%`}
-                onSliceClick={() => onNavigateTab && onNavigateTab('photos')}
-              />
-            )}
-
-            {photoViewMode === 'progress' && (
-              <LabeledProgressBar
-                items={[
-                  { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
-                  { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
-                  { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
-                ]}
-                total={totalRequiredShots}
-                onItemClick={() => onNavigateTab && onNavigateTab('photos')}
-              />
-            )}
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div className="metrics-container" style={styles.container}>
-      {/* Top Inline Dashboard Layout Control Bar (DASH-3) */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.25rem' }}>
-        <button
-          type="button"
-          onClick={() => setShowLayoutManager(!showLayoutManager)}
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            backgroundColor: showLayoutManager ? 'var(--color-primary)' : 'var(--color-bg)',
-            color: showLayoutManager ? 'var(--color-on-dark)' : 'var(--color-text)',
-            border: '1px solid var(--color-muted)',
-            borderRadius: 'var(--border-radius-sm)',
-            padding: '0.35rem 0.75rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.35rem'
-          }}
-          title="Customize Summary Dashboard Section Order & Visibility"
-        >
-          <Sliders size={14} /> CUSTOMIZE DASHBOARD LAYOUT
-        </button>
-      </div>
-
-      {/* Inline Layout Reordering Panel */}
-      {showLayoutManager && (
-        <div style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '2px solid var(--color-primary)',
-          borderRadius: 'var(--border-radius-md)',
-          padding: '1rem',
-          marginBottom: '1rem',
-          boxShadow: 'var(--box-shadow-subtle)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, margin: 0 }}>
-              ⚙️ REORDER & TOGGLE DASHBOARD SUMMARY SECTIONS
-            </h4>
-            <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-              Layout changes persist in your local browser settings
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {sections.map((sec, idx) => (
-              <div
-                key={sec.key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: 'var(--color-bg)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.5rem 0.75rem',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleSectionVisibility(sec.key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: sec.enabled ? 'var(--color-primary)' : 'var(--color-muted)', padding: 0 }}
-                    title={sec.enabled ? 'Hide section' : 'Show section'}
-                  >
-                    {sec.enabled ? <Eye size={16} /> : <EyeOff size={16} />}
-                  </button>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: sec.enabled ? 'var(--color-text)' : 'var(--color-muted)' }}>
-                    {sec.label}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => moveSection(idx, 'up')}
-                    disabled={idx === 0}
-                    style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
-                    title="Move up"
-                  >
-                    <ArrowUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveSection(idx, 'down')}
-                    disabled={idx === sections.length - 1}
-                    style={{ background: 'none', border: 'none', cursor: idx === sections.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === sections.length - 1 ? 0.3 : 1, color: 'var(--color-text)', padding: '0.2rem' }}
-                    title="Move down"
-                  >
-                    <ArrowDown size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       )}
 
-      {/* Render Dynamic Ordered Sections */}
-      {sections.map((sec, idx) => sec.enabled ? renderSection(sec.key, idx) : null)}
+      {/* Photography Shot List Summary Row (DASH-6) */}
+      {modules.photos && (
+        <div style={styles.sectionWrapper}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Photo Shot List & Photography Progress</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
+              <button
+                type="button"
+                onClick={() => setPhotoViewMode('cards')}
+                style={{
+                  background: photoViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                  color: photoViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.45rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="View as KPI Cards"
+              >
+                <LayoutGrid size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPhotoViewMode('pie')}
+                style={{
+                  background: photoViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
+                  color: photoViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.45rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="View as Pie / Donut Chart"
+              >
+                <PieChart size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPhotoViewMode('progress')}
+                style={{
+                  background: photoViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
+                  color: photoViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.25rem 0.45rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title="View as Labeled Progress Bar"
+              >
+                <BarChart2 size={15} />
+              </button>
+            </div>
+          </div>
+
+          {photoViewMode === 'cards' && (
+            <div style={styles.kpiGrid}>
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('photos')}
+                title={onNavigateTab ? 'Click to view Required Shot List' : ''}
+              >
+                <div style={styles.kpiLabel}>REQUIRED SHOTS</div>
+                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{totalRequiredShots}</div>
+                <div style={styles.kpiSub}>Total Planned Shots</div>
+              </div>
+
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('photos')}
+                title={onNavigateTab ? 'Click to view Captured Shots' : ''}
+              >
+                <div style={styles.kpiLabel}>CAPTURED SHOTS</div>
+                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{capturedShotsCount}</div>
+                <div style={styles.kpiSub}>Photos Captured</div>
+              </div>
+
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('photos')}
+                title={onNavigateTab ? 'Click to view Pending Shots' : ''}
+              >
+                <div style={styles.kpiLabel}>PENDING SHOTS</div>
+                <div style={{ ...styles.kpiValue, color: pendingShotsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-muted)' }}>{pendingShotsCount}</div>
+                <div style={styles.kpiSub}>Awaiting Capture</div>
+              </div>
+
+              <div
+                className="kpi-card"
+                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
+                onClick={() => onNavigateTab && onNavigateTab('photos')}
+                title={onNavigateTab ? 'Click to open Photography Shot List' : ''}
+              >
+                <div style={styles.kpiLabel}>% COMPLETE</div>
+                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{photoPercentComplete}%</div>
+                <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
+                  <div style={{ ...styles.progressBarActual, width: `${photoPercentComplete}%` }} />
+                </div>
+                <div style={styles.kpiSub}>Captured Ratio ({capturedShotsCount}/{totalRequiredShots})</div>
+              </div>
+            </div>
+          )}
+
+          {photoViewMode === 'pie' && (
+            <DonutChart
+              slices={[
+                { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
+                { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
+                { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
+              ]}
+              centerLabel="Captured"
+              centerValue={`${photoPercentComplete}%`}
+              onSliceClick={() => onNavigateTab && onNavigateTab('photos')}
+            />
+          )}
+
+          {photoViewMode === 'progress' && (
+            <LabeledProgressBar
+              items={[
+                { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
+                { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
+                { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
+              ]}
+              total={totalRequiredShots}
+              onItemClick={() => onNavigateTab && onNavigateTab('photos')}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
