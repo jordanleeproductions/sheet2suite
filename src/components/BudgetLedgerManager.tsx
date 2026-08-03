@@ -729,7 +729,7 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
                     padding: '0.625rem 1.25rem',
                     cursor: 'pointer'
                   }}
-                  onClick={confirmDeleteItem}
+                  onClick={() => itemToDelete && deleteItem(itemToDelete.itemId)}
                   disabled={isSyncing}
                 >
                   {isSyncing ? 'DELETING...' : 'DELETE ITEM'}
