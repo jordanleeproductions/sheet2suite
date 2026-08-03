@@ -187,7 +187,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
       {/* Header Title & Actions */}
       <div style={styles.header}>
         <div>
-          <h2 style={{ ...styles.title, color: '#000000' }}>Photography Shot List</h2>
+          <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>Photography Shot List</h2>
           <p style={styles.subtitle}>
             Manage required photography moments, VIP group poses, and shot progress for your photographer.
           </p>
@@ -283,7 +283,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
               className="photo-shot-card"
               style={{
                 ...styles.shotCard,
-                borderColor: isCaptured ? 'var(--color-green)' : '#000000',
+                borderColor: isCaptured ? 'var(--color-green)' : 'var(--color-text)',
                 borderWidth: '2px',
                 opacity: isCaptured ? 0.85 : 1
               }}
@@ -294,7 +294,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
                   type="button"
                   style={{
                     ...styles.statusCheckBtn,
-                    color: isCaptured ? 'var(--color-green)' : '#000000'
+                    color: isCaptured ? 'var(--color-green)' : 'var(--color-text)'
                   }}
                   onClick={() => toggleShotStatus(shot.shotId)}
                   title={isCaptured ? 'Mark as Pending' : 'Mark as Captured'}
@@ -304,13 +304,13 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                    <span style={{ ...styles.shotIdBadge, color: '#000000', borderColor: '#000000' }}>{shot.shotId}</span>
+                    <span style={{ ...styles.shotIdBadge, color: 'var(--color-text)', borderColor: 'var(--color-text)' }}>{shot.shotId}</span>
                     {shot.priority && (
                       <span style={{
                         ...styles.priorityBadge,
                         backgroundColor: isMustHave ? 'var(--color-gold-muted)' : 'var(--color-bg)',
-                        color: isMustHave ? 'var(--color-gold)' : '#000000',
-                        borderColor: isMustHave ? 'var(--color-gold)' : '#000000'
+                        color: isMustHave ? 'var(--color-gold)' : 'var(--color-text)',
+                        borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-text)'
                       }}>
                         {shot.priority}
                       </span>
@@ -324,7 +324,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
 
                   <h3 style={{
                     ...styles.shotTitle,
-                    color: '#000000',
+                    color: 'var(--color-text)',
                     textDecoration: isCaptured ? 'line-through' : 'none'
                   }}>
                     {shot.description}
@@ -342,7 +342,7 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
               {shot.people ? (
                 <div className="shot-who-group" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: '1 1 200px', padding: '0 0.5rem' }}>
                   <Users size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 800, color: '#000000' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-text)' }}>
                     {shot.people}
                   </span>
                 </div>
@@ -355,9 +355,9 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
                     fontFamily: 'var(--font-mono)',
                     fontSize: '0.75rem',
                     fontWeight: 700,
-                    color: '#000000',
+                    color: 'var(--color-text)',
                     backgroundColor: 'var(--color-bg)',
-                    border: '1px solid #000000',
+                    border: '1px solid var(--color-text)',
                     padding: '0.3rem 0.6rem',
                     borderRadius: 'var(--border-radius-sm)',
                     display: 'inline-flex',
@@ -370,9 +370,9 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
 
                 <div style={styles.actionGroup}>
                   <button style={styles.iconBtn} onClick={() => startEditShot(shot)} title="Edit Shot">
-                    <Edit2 size={15} style={{ color: '#000000' }} />
+                    <Edit2 size={15} style={{ color: 'var(--color-text)' }} />
                   </button>
-                  <button style={{ ...styles.iconBtn, color: '#ef4444' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
+                  <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -412,10 +412,10 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
           `}</style>
           <div className="photo-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
                 {isAddingShot ? 'ADD NEW PHOTO SHOT' : 'EDIT PHOTO SHOT'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
                 <X size={20} />
               </button>
             </div>
