@@ -427,9 +427,10 @@ button[style*="backgroundColor: 'var(--color-bg)'"] {
   }
 }
 
-@media (max-width: 540px) {
+@media (max-width: 640px) {
   .kpi-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.625rem !important;
   }
 }
 
