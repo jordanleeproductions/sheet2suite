@@ -452,7 +452,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   }}
                 >
                   <AlertTriangle size={13} />
-                  <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} TOTAL RESTRICTION(S) ({summary.dietaryBreakdown.map(d => `${d.diet}: ${d.count}`).join(', ')})</span>
+                  <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} TOTAL RESTRICTION(S) ({summary.dietaryBreakdown.map(d => `${d.restriction}: ${d.count}`).join(', ')})</span>
                 </span>
               </div>
             )}
