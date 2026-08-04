@@ -350,14 +350,14 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             </button>
           </div>
 
-          <div style={styles.actionButtonGroup}>
+          <div style={{ ...styles.actionButtonGroup, marginLeft: 'auto' }}>
             <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
               <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
             </button>
             <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Guest Registry">
               <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
             </button>
-            <button style={{ ...styles.addButton, marginLeft: 'auto' }} onClick={startAdd} disabled={isSyncing}>
+            <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
               <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD GUEST
             </button>
           </div>
@@ -904,6 +904,8 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
     transition: 'var(--transition-smooth)',
   },
   filterBar: {
