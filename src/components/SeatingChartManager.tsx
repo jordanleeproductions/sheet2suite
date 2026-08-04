@@ -298,19 +298,19 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
               <X size={16} />
             </button>
           </div>
-          <div style={styles.drawerList}>
+          <div style={styles.unassignedGrid}>
             {unassignedGuests.map(guest => (
               <div 
                 key={guest.guestId} 
-                style={styles.drawerItem}
+                style={styles.unassignedChip}
                 onClick={() => setSelectedGuest(guest)}
               >
                 <div style={styles.initialsAvatar}>
                   {getInitials(guest)}
                 </div>
-                <div style={styles.drawerItemMeta}>
-                  <span style={styles.drawerItemName}>{guest.firstName} {guest.lastName}</span>
-                  <span style={styles.drawerItemGroup}>{guest.partyGroup || 'No Party'} • {guest.rsvpStatus}</span>
+                <div style={styles.unassignedMeta}>
+                  <span style={styles.guestNameText}>{guest.firstName} {guest.lastName}</span>
+                  <span style={styles.partyText}>{guest.partyGroup || 'No Party'} • {guest.rsvpStatus}</span>
                 </div>
               </div>
             ))}
@@ -1529,7 +1529,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-muted)',
   },
   kpiValue: {
-    fontFamily: 'var(--font-serif)',
+    fontFamily: 'var(--font-mono)',
     fontSize: '1.25rem',
     fontWeight: 700,
   },

@@ -125,8 +125,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[SEAT-6]`** | Display guest initial avatar circles to left of names inside Unassigned Guests drawer | `SeatingChartManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
-| **`[SEAT-7]`** | Editorial Font Consistency: Match card value typography with Summary KPI fonts | `SeatingChartManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[SEAT-6]`** | Display guest initial avatar circles to left of names inside Unassigned Guests drawer | `SeatingChartManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
+| **`[SEAT-7]`** | Editorial Font Consistency: Match card value typography with Summary KPI fonts | `SeatingChartManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 💼 Vendor Directory
 
