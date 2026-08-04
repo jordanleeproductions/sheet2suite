@@ -307,7 +307,12 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
     <div style={styles.container}>
       {/* Header Panel */}
       <div style={styles.upNextCard} className="anim-fade-in">
-        <h2 style={styles.title}>Guest Registry</h2>
+        <div>
+          <h2 style={styles.title}>Guest Registry</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+            Manage wedding invitations, track RSVPs, table assignments, and catering dietary preferences.
+          </p>
+        </div>
         <div style={styles.headerActions}>
           <div style={styles.viewToggle}>
             <button
@@ -352,7 +357,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Guest Registry">
               <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
             </button>
-            <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
+            <button style={{ ...styles.addButton, marginLeft: 'auto' }} onClick={startAdd} disabled={isSyncing}>
               <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD GUEST
             </button>
           </div>
@@ -423,8 +428,14 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   </span>
                 ))
               )}
+            </div>
 
-              {summary.dietaryBreakdown.length > 0 && (
+            {/* Dedicated Dietary Restrictions Row (GUEST-4) */}
+            {summary.dietaryBreakdown.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
+                <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                  DIETARY RESTRICTIONS:
+                </span>
                 <span
                   style={{
                     fontFamily: 'var(--font-mono)',
@@ -435,17 +446,16 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                     border: '1px solid #ef4444',
                     borderRadius: '4px',
                     padding: '0.2rem 0.5rem',
-                    marginLeft: 'auto',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.35rem',
                   }}
                 >
                   <AlertTriangle size={13} />
-                  <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} DIETARY RESTRICTION(S)</span>
+                  <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} TOTAL RESTRICTION(S) ({summary.dietaryBreakdown.map(d => `${d.diet}: ${d.count}`).join(', ')})</span>
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         );
       })()}

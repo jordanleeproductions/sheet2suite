@@ -109,10 +109,10 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[GUEST-4]`** | Move Dietary Restrictions to its own dedicated row under Meal Totals inside guest cards | `GuestListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GUEST-4]`** | Move Dietary Restrictions to its own dedicated row under Meal Totals inside guest cards | `GuestListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[GUEST-5]`** | Make Meal Totals & Dietary Restriction badges clickable quick-filters | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | Pending |
 | **`[GUEST-6]`** | Desktop List Row View Toggle: Switch between Card Grid and List Table Rows | `GuestListManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
-| **`[GUEST-7]`** | Move "Add Guest" button to right hand side & add descriptive subtitle under header | `GuestListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[GUEST-7]`** | Move "Add Guest" button to right hand side & add descriptive subtitle under header | `GuestListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[GUEST-8]`** | Dynamic Party Group Combo Dropdown (select existing or type custom) | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 
 ### 🍽️ Catering & Menu Setup
