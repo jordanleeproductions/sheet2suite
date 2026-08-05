@@ -17,6 +17,7 @@ import ShareModal from '@/components/ShareModal';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
+import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, Key, X, Share2, Sliders, Printer } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { getColorPresets } from '@/lib/themePresets';
@@ -32,6 +33,18 @@ export default function Sheet2VowDashboard() {
   const [budgetThreshold, setBudgetThreshold] = useState<number>(35000);
   const [driveFolder, setDriveFolder] = useState<string>('My Drive/Wedding Planning');
   const [selectedTasks, setSelectedTasks] = useState<string[]>(ALL_DEFAULT_TASKS.map(t => t.taskName));
+
+  // Toast Notification System [GEN-3]
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'info' | 'warning' = 'success', duration = 3000) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    setToasts(prev => [...prev, { id, message, type, duration }]);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -398,6 +411,7 @@ export default function Sheet2VowDashboard() {
       if (res.data) {
         setWeddingData(res.data);
       }
+      addToast(`Saved! ${sheetType.toUpperCase()} updated.`, 'success');
     } catch (err: any) {
       console.error(err);
       setSyncError(`Sync error: ${err.message || 'Could not push updates.'}`);
@@ -1168,6 +1182,9 @@ export default function Sheet2VowDashboard() {
           )}
         </div>
       )}
+
+      {/* Toast Notification Container [GEN-3] */}
+      <ToastNotification toasts={toasts} onDismiss={dismissToast} />
 
       {/* Global Spinner Styling helper */}
       <style jsx global>{`
