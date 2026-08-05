@@ -90,6 +90,7 @@
 - [x] **[DASH-4] Reception Table Seating Summary Module:** Added dedicated summary section for Table Seating displaying KPI cards, Pie Chart, and Progress Bar views.
 - [x] **[DASH-5] Browser Back/Forward Tab History Navigation:** Integrated HTML5 History API for seamless browser back/forward navigation.
 - [x] **[DASH-6] Photography Summary Module:** Added dedicated Photography section in Summary with Cards, Donut Chart, and Progress Bar views.
+- [x] **[DASH-7] Edit Icon Summary Layout Control Shortcut:** Prominent `✏️ EDIT LAYOUT CONTROLS` shortcut button on executive summary header to configure visible modules.
 
 ---
 
@@ -180,7 +181,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[DASH-7]`** | Edit Icon Layout Control Shortcut on Summary section headers | `DashboardMetrics.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[DASH-7]`** | Edit Icon summary layout control shortcut | `DashboardMetrics.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 🖨️ Print Studio & Canva Exporter
 

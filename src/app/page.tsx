@@ -1065,6 +1065,7 @@ export default function Sheet2VowDashboard() {
                     enabledModules={enabledModules}
                     currency={currency}
                     onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
+                    onOpenModuleSettings={() => setShowSettingsModal(true)}
                   />
                   <VendorShareLinkManager
                     spreadsheetId={spreadsheetId}
