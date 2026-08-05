@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PhotoShot } from '@/lib/sheets/types';
+import { PhotoShot, Vendor } from '@/lib/sheets/types';
 import { 
   Camera, 
   Plus, 
