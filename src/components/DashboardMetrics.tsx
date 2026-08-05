@@ -323,7 +323,7 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
       {/* Summary Layout Control Header Bar [DASH-7] */}
       <div style={{
         display: 'flex',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
         padding: '0.75rem 1rem',
         backgroundColor: 'var(--color-surface, #ffffff)',
