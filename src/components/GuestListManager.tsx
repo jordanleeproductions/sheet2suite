@@ -393,6 +393,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   padding: '0.75rem 1rem',
                   display: 'flex',
                   flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
                   gap: '0.2rem',
                   cursor: 'pointer',
                   boxShadow: 'var(--box-shadow-subtle)',
@@ -400,10 +403,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 }}
                 title="Click to filter list by Confirmed Attending guests"
               >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
                   CONFIRMED ATTENDING
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-green, #10b981)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-green, #10b981)', textAlign: 'center' }}>
                   {summary.attendingCount}
                 </span>
               </div>
@@ -419,6 +422,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   padding: '0.75rem 1rem',
                   display: 'flex',
                   flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
                   gap: '0.2rem',
                   cursor: 'pointer',
                   boxShadow: 'var(--box-shadow-subtle)',
@@ -426,10 +432,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 }}
                 title="Click to filter list by Pending RSVP guests"
               >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
                   PENDING RESPONSES
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-gold, #f59e0b)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-gold, #f59e0b)', textAlign: 'center' }}>
                   {summary.pendingCount}
                 </span>
               </div>
@@ -445,6 +451,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   padding: '0.75rem 1rem',
                   display: 'flex',
                   flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
                   gap: '0.2rem',
                   cursor: 'pointer',
                   boxShadow: 'var(--box-shadow-subtle)',
@@ -452,10 +461,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 }}
                 title="Click to filter list by Declined guests"
               >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
                   DECLINED
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
                   {summary.declinedCount}
                 </span>
               </div>
