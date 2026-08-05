@@ -133,7 +133,12 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>Vendor Management</h2>
+        <div>
+          <h2 style={styles.title}>Vendor Management</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+            Track vendor contracts, contacts, payment schedules, balance owing, and staff meal requirements.
+          </p>
+        </div>
         <div style={styles.headerActions}>
           <div style={styles.viewToggle}>
             <button
