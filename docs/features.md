@@ -100,6 +100,7 @@
 
 ## 📸 12. Photography & Shot List Manager (`PhotoShotListManager.tsx`)
 - [x] **[PHOTO-1] Photography Shot List Enhancements:** Unchecked cards have solid black borders, section headers black text, and desktop view single-row layout.
+- [x] **[PHOTO-2] Auto-Populate Photographer Email:** Automatically prepopulates the `TO` email address with the Photographer's email from the Vendor Directory when emailing the Shot List.
 
 ---
 
@@ -164,7 +165,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[PHOTO-2]`** | Auto-Populate Photographer Email in `TO` field when emailing Shot List | `PhotoShotListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[PHOTO-2]`** | Auto-Populate Photographer Email in `TO` field when emailing Shot List | `PhotoShotListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 💰 Ledger Budget Manager
 

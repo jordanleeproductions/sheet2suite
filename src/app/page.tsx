@@ -1164,6 +1164,7 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'photos' && weddingData && (
                 <PhotoShotListManager
                   photos={weddingData.photos || []}
+                  vendors={weddingData.vendors || []}
                   onUpdatePhotos={(data: PhotoShot[]) => syncUpdate('photos', data)}
                   isSyncing={isSyncing}
                 />

@@ -23,11 +23,12 @@ import {
 
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
+  vendors?: Vendor[];
   onUpdatePhotos: (updatedPhotos: PhotoShot[]) => Promise<void>;
   isSyncing?: boolean;
 }
 
-export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing }: PhotoShotListManagerProps) {
+export default function PhotoShotListManager({ photos, vendors = [], onUpdatePhotos, isSyncing }: PhotoShotListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -179,7 +180,15 @@ export default function PhotoShotListManager({ photos, onUpdatePhotos, isSyncing
 
     bodyText += `Thank you so much!`;
 
-    window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+    // Lookup Photographer vendor email [PHOTO-2]
+    const photoVendor = vendors.find(v => {
+      const cat = (v.category || '').toLowerCase();
+      const name = (v.vendorName || '').toLowerCase();
+      return cat.includes('photo') || cat.includes('camera') || cat.includes('video') || name.includes('photo') || name.includes('camera');
+    });
+    const recipientEmail = photoVendor?.emailAddress || '';
+
+    window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
   };
 
   return (
