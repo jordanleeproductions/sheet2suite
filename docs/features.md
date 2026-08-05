@@ -35,6 +35,8 @@
 ## 🖨️ 3. Print & Canva Export Studio (`PrintTemplatesModal.tsx`)
 - [x] **[PRINT-1] One-Click Printable PDF Studio:** Escort / Folded Place Cards (with meal choice icons & crop/fold guidelines), Table Tent Cards & Seating Rosters, Day-Of Timeline Itinerary, and Emergency Vendor Directory Contact Sheet.
 - [x] **[PRINT-2] Guest Photo/Video Upload QR Cards:** Printable place cards with custom QR code linking guests directly to the photo upload portal (`/upload/[token]`).
+- [x] **[PRINT-5] Emoji & Decorative Icon Toggles:** Added options toggle in Print Studio for wedding ring and sparkle decorative emojis.
+- [x] **[PRINT-6] Granular Card Field Controls:** Added individual field checkboxes to show/hide Table Number, Meal Selection Icon, Dietary Restrictions, and Plus-One / Party Group names on place cards.
 
 ---
 
@@ -189,8 +191,8 @@
 |---|---|---|---|---|---|
 | **`[PRINT-3]`** | Canva Template Integration Hub & Canva Bulk Create Merge CSV Exporter | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-4]`** | Custom Print Theme & Typography Switcher (Serif, Sans, Script, Mono) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
-| **`[PRINT-5]`** | Emoji & Decorative Icon Toggles (hide food emojis for formal printouts) | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
-| **`[PRINT-6]`** | Granular Card Field Controls (show/hide seat #, meal, dietary tags) | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[PRINT-5]`** | Emoji & decorative icon toggles | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
+| **`[PRINT-6]`** | Granular card field controls (Table #, Meal Icon, Dietary, Plus-One) | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[PRINT-7]`** | Strict Print Boundary & Bleed Guardrails (Avery cardstock grid dimensions) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-8]`** | Full Wedding Planner Binder Printout (combines all modules into bound book) | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[PRINT-9]`** | Printable Ceremony Aisle Seating Chart Template | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |

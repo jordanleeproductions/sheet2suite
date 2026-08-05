@@ -33,13 +33,19 @@ export default function PrintTemplatesModal({
 }: PrintTemplatesModalProps) {
   const [activeTemplate, setActiveTemplate] = useState<PrintTemplateType>(initialTemplate);
 
-  // Filters & Customization Options
+  // Filters & Customization Options [PRINT-5 & PRINT-6]
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('ALL');
   const [selectedVendorCatFilter, setSelectedVendorCatFilter] = useState<string>('ALL');
+  
+  // Field & Aesthetic Controls [PRINT-5 & PRINT-6]
   const [showMealChoiceOnCards, setShowMealChoiceOnCards] = useState<boolean>(true);
+  const [showDietaryBadgesOnCards, setShowDietaryBadgesOnCards] = useState<boolean>(true);
+  const [showPlusOneOnCards, setShowPlusOneOnCards] = useState<boolean>(true);
+  const [showTableNumberOnCards, setShowTableNumberOnCards] = useState<boolean>(true);
   const [showFoldLines, setShowFoldLines] = useState<boolean>(true);
   const [showSeatMaps, setShowSeatMaps] = useState<boolean>(true);
+  const [showDecorativeIcons, setShowDecorativeIcons] = useState<boolean>(true);
 
   // Filtered Lists
   const tablesList = Array.from(new Set(guests.map(g => g.tableAssignment).filter(Boolean)));
@@ -316,11 +322,51 @@ export default function PrintTemplatesModal({
                   <label style={styles.checkLabel}>
                     <input
                       type="checkbox"
+                      checked={showTableNumberOnCards}
+                      onChange={(e) => setShowTableNumberOnCards(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span>SHOW TABLE NUMBER [PRINT-6]</span>
+                  </label>
+
+                  <label style={styles.checkLabel}>
+                    <input
+                      type="checkbox"
                       checked={showMealChoiceOnCards}
                       onChange={(e) => setShowMealChoiceOnCards(e.target.checked)}
                       style={{ cursor: 'pointer' }}
                     />
-                    <span>SHOW MEAL SELECTION ICON</span>
+                    <span>SHOW MEAL SELECTION ICON [PRINT-6]</span>
+                  </label>
+
+                  <label style={styles.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showDietaryBadgesOnCards}
+                      onChange={(e) => setShowDietaryBadgesOnCards(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span>SHOW DIETARY RESTRICTIONS [PRINT-6]</span>
+                  </label>
+
+                  <label style={styles.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showPlusOneOnCards}
+                      onChange={(e) => setShowPlusOneOnCards(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span>SHOW PLUS-ONE / PARTY NAME [PRINT-6]</span>
+                  </label>
+
+                  <label style={styles.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showDecorativeIcons}
+                      onChange={(e) => setShowDecorativeIcons(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span>SHOW DECORATIVE ICONS [PRINT-5]</span>
                   </label>
 
                   <label style={styles.checkLabel}>
@@ -435,15 +481,34 @@ export default function PrintTemplatesModal({
                             </div>
                           )}
                           <div style={styles.placeCardContent}>
-                            <h4 style={styles.placeCardGuestName}>{guest.firstName} {guest.lastName}</h4>
-                            <div style={styles.placeCardTableBadge}>
-                              {guest.tableAssignment ? guest.tableAssignment.toUpperCase() : 'UNASSIGNED TABLE'}
-                            </div>
-                            {showMealChoiceOnCards && (guest.mealChoice || guest.dietaryRestrictions) && (
+                            {showDecorativeIcons && (
+                              <div style={{ fontSize: '0.85rem', marginBottom: '0.2rem', opacity: 0.85 }}>
+                                💍 ✨
+                              </div>
+                            )}
+
+                            <h4 style={styles.placeCardGuestName}>
+                              {guest.firstName} {guest.lastName}
+                              {showPlusOneOnCards && guest.partyGroup && guest.partyGroup !== 'Individual' && (
+                                <span style={{ display: 'block', fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 400, color: '#6b7280', marginTop: '2px' }}>
+                                  ({guest.partyGroup})
+                                </span>
+                              )}
+                            </h4>
+
+                            {showTableNumberOnCards && (
+                              <div style={styles.placeCardTableBadge}>
+                                {guest.tableAssignment ? guest.tableAssignment.toUpperCase() : 'UNASSIGNED TABLE'}
+                              </div>
+                            )}
+
+                            {(showMealChoiceOnCards || showDietaryBadgesOnCards) && (guest.mealChoice || guest.dietaryRestrictions) && (
                               <div style={styles.placeCardMeal}>
-                                <span>{getMealIcon(guest.mealChoice)}</span>
+                                {showMealChoiceOnCards && <span>{getMealIcon(guest.mealChoice)}</span>}
                                 <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>
-                                  {guest.mealChoice || guest.dietaryRestrictions}
+                                  {showMealChoiceOnCards && guest.mealChoice ? guest.mealChoice : ''}
+                                  {showMealChoiceOnCards && guest.mealChoice && showDietaryBadgesOnCards && guest.dietaryRestrictions ? ' • ' : ''}
+                                  {showDietaryBadgesOnCards && guest.dietaryRestrictions ? `⚠️ ${guest.dietaryRestrictions}` : ''}
                                 </span>
                               </div>
                             )}
