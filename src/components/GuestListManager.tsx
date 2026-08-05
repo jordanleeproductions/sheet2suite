@@ -451,29 +451,36 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
                   DIETARY RESTRICTIONS:
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setDietFilter(prev => prev === 'HAS_DIET' ? 'All' : 'HAS_DIET')}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    backgroundColor: dietFilter === 'HAS_DIET' ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
-                    color: dietFilter === 'HAS_DIET' ? '#ffffff' : 'var(--color-red)',
-                    border: '1px solid #ef4444',
-                    borderRadius: '4px',
-                    padding: '0.2rem 0.5rem',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  title="Click to filter guests with dietary restrictions"
-                >
-                  <AlertTriangle size={13} />
-                  <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} TOTAL RESTRICTION(S) ({summary.dietaryBreakdown.map(d => `${d.restriction}: ${d.count}`).join(', ')})</span>
-                </button>
+                {summary.dietaryBreakdown.map((item, idx) => {
+                  const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
+                        color: isSelected ? '#ffffff' : 'var(--color-red)',
+                        border: '1px solid #ef4444',
+                        borderRadius: '4px',
+                        padding: '0.2rem 0.5rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      title={`Click to filter list by ${item.restriction}`}
+                    >
+                      <AlertTriangle size={13} />
+                      <span>{item.restriction.toUpperCase()}:</span>
+                      <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
