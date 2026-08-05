@@ -68,6 +68,7 @@
 
 ## 📋 8. Task Checklist & Kanban (`KanbanBoard.tsx`)
 - [x] **[TASK-1] Clickable Kanban Task Edit Modal:** Clicking any task card on the Kanban board opens its edit modal window.
+- [x] **[TASK-2] Switchable Progress Cards / Progress Bar Header:** Added switchable progress view mode toggle (Progress Cards vs Multi-color Progress Bar) above the Kanban board.
 - [x] **[TASK-3] Header Methodology Description:** Added a descriptive subtitle under the header explaining Kanban task management workflow.
 
 ---
@@ -150,7 +151,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[TASK-2]`** | Switchable Progress Cards / Progress Bar header above Kanban board | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[TASK-2]`** | Switchable Progress Cards / Progress Bar header above Kanban board | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
 
 ### 🎵 Music Playlist
 

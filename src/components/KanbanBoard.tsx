@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Task, KanbanStage } from '@/lib/sheets/types';
-import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2 } from 'lucide-react';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -30,6 +30,9 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   // Sorting state
   const [sortField, setSortField] = useState<'default' | 'priority' | 'dueDate'>('default');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Progress Header View Mode ('cards' | 'bar') [TASK-2]
+  const [progressViewMode, setProgressViewMode] = useState<'cards' | 'bar'>('cards');
 
   const handleSortClick = (field: 'priority' | 'dueDate') => {
     if (sortField === field) {
@@ -218,6 +221,165 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           </button>
         </div>
       </div>
+
+      {/* Switchable Progress Cards / Progress Bar Header [TASK-2] */}
+      {(() => {
+        const total = tasks.length;
+        const toDoCount = tasks.filter(t => t.kanbanStage === 'To Do').length;
+        const inProgressCount = tasks.filter(t => t.kanbanStage === 'In Progress').length;
+        const doneCount = tasks.filter(t => t.kanbanStage === 'Done').length;
+        const percentDone = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+
+        return (
+          <div style={{
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: 'var(--border-radius-md)',
+            padding: '1rem 1.25rem',
+            margin: '1rem 0',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.875rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
+                TASK PROGRESS & COMPLETION METRICS
+              </span>
+              <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--color-bg, #f3f4f6)', padding: '2px', borderRadius: 'var(--border-radius-sm)' }}>
+                <button
+                  type="button"
+                  onClick={() => setProgressViewMode('cards')}
+                  style={{
+                    backgroundColor: progressViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                    color: progressViewMode === 'cards' ? '#ffffff' : 'var(--color-muted)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.25rem 0.5rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    fontSize: '0.7rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                  }}
+                  title="Switch to Progress Cards view"
+                >
+                  <LayoutGrid size={13} /> CARDS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProgressViewMode('bar')}
+                  style={{
+                    backgroundColor: progressViewMode === 'bar' ? 'var(--color-primary)' : 'transparent',
+                    color: progressViewMode === 'bar' ? '#ffffff' : 'var(--color-muted)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.25rem 0.5rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    fontSize: '0.7rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                  }}
+                  title="Switch to Progress Bar view"
+                >
+                  <BarChart2 size={13} /> PROGRESS BAR
+                </button>
+              </div>
+            </div>
+
+            {progressViewMode === 'cards' ? (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '0.75rem',
+              }}>
+                <div 
+                  onClick={() => setActiveMobileStage('To Do')}
+                  style={{
+                    backgroundColor: 'var(--color-bg, #f9fafb)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    gap: '0.2rem',
+                    cursor: 'pointer',
+                  }}
+                  title="Click to view To Do stage"
+                >
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>TO DO</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)' }}>{toDoCount} / {total}</span>
+                </div>
+
+                <div 
+                  onClick={() => setActiveMobileStage('In Progress')}
+                  style={{
+                    backgroundColor: 'var(--color-bg, #f9fafb)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    gap: '0.2rem',
+                    cursor: 'pointer',
+                  }}
+                  title="Click to view In Progress stage"
+                >
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>IN PROGRESS</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-gold, #f59e0b)' }}>{inProgressCount}</span>
+                </div>
+
+                <div 
+                  onClick={() => setActiveMobileStage('Done')}
+                  style={{
+                    backgroundColor: 'var(--color-bg, #f9fafb)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    gap: '0.2rem',
+                    cursor: 'pointer',
+                  }}
+                  title="Click to view Completed stage"
+                >
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>COMPLETED</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-green, #10b981)' }}>{doneCount} ({percentDone}%)</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ color: 'var(--color-text)', fontWeight: 700 }}>Overall Task Completion</span>
+                  <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 800 }}>{percentDone}% ({doneCount} / {total} Tasks Completed)</span>
+                </div>
+                <div style={{ height: '14px', width: '100%', backgroundColor: 'var(--color-bg, #e5e7eb)', borderRadius: '7px', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${percentDone}%`, backgroundColor: 'var(--color-green, #10b981)', height: '100%', transition: 'width 0.4s ease' }} />
+                  <div style={{ width: `${total > 0 ? (inProgressCount / total) * 100 : 0}%`, backgroundColor: 'var(--color-gold, #f59e0b)', height: '100%', transition: 'width 0.4s ease' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                  <span>🟢 Completed: <strong>{doneCount}</strong></span>
+                  <span>🟡 In Progress: <strong>{inProgressCount}</strong></span>
+                  <span>⚪ To Do: <strong>{toDoCount}</strong></span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Editor Modal */}
       {(isAdding || editingTask) && (
