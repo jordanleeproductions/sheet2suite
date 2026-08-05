@@ -27,6 +27,7 @@
   - DJ Vendor Share Portal (`/share/[token]`) status filter pills (`ALL ACTIVE TRACKS`, `✓ APPROVED SONGS`, `⏳ PENDING APPROVAL`, `🚫 BANNED TRACKS`), red `🚫 BANNED` badges, and 15s background auto-polling for live updates.
 - [x] **[MUSIC-5] Descriptive Header Subtitle:** Added an informative subtitle explaining playlist curation and request portal workflow under the Music header.
 - [x] **[MUSIC-6] Direct Portal Quick Action Buttons:** Added active link buttons for Guest Song Request Portal (`📻 REQUEST PORTAL`) and DJ Share Page (`🔗 DJ PORTAL`) on the Music header.
+- [x] **[MUSIC-7] YouTube Music Branding & Player Fallback:** Updated track cards to use YouTube Music red branding and direct links, removed redundant 3rd platform icon, and added fallback audio error handling for mock preview links (`BUG-2`).
 - [x] **[MUSIC-8] Auto-Populate DJ Email:** Automatically prepopulates the `TO` email address with the DJ/Band's email from the Vendor Directory when exporting the Music list.
 
 ---
@@ -157,7 +158,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[MUSIC-7]`** | YouTube Music branding/link, remove 3rd platform icon, fix mock preview playback | `MusicManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[MUSIC-7]`** | YouTube Music branding/link, remove 3rd platform icon, fix mock preview playback | `MusicManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
 
 ### 📸 Photography & Shot List
 
@@ -209,12 +210,12 @@
 
 ---
 
-# SECTION 3: 🐛 BUG & DEFECT BACKLOG
+## SECTION 3: 🐛 BUG & DEFECT BACKLOG
 
 | Defect ID | Module / Component | Issue Description | Severity | Status | Reported Date |
 |---|---|---|---|---|---|
 | **[BUG-1]** | Print Studio (`PrintTemplatesModal.tsx`) | Content bleeds over page borders during printing/PDF generation when table rosters or timeline lists span multiple pages. Needs smart CSS `@page` page breaks (`page-break-inside: avoid; break-inside: avoid;`) and multi-page pagination splitting. | Medium | Open | 2026-08-02 |
-| **[BUG-2]** | Music Manager (`MusicManager.tsx`) | Audio preview playback triggers console/runtime error when playing mock song items. Needs fallback error handling for mock song preview URLs. | Medium | Open | 2026-08-03 |
+| **[BUG-2]** | Music Manager (`MusicManager.tsx`) | Audio preview playback triggers console/runtime error when playing mock song items. Resolved with fallback error banner and YouTube Music link. | Medium | Resolved | 2026-08-03 |
 
 ---
 
