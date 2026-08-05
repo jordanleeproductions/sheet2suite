@@ -8,14 +8,21 @@ import { formatCurrency } from '@/lib/currency';
 
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
+  budgetTarget?: number;
+  onUpdateBudgetTarget?: (newTarget: number) => Promise<void>;
   onUpdate: (updatedBudget: BudgetItem[]) => Promise<void>;
   isSyncing: boolean;
   currency?: string;
 }
 
-export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, currency = 'USD' }: BudgetLedgerManagerProps) {
+export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdateBudgetTarget, onUpdate, isSyncing, currency = 'USD' }: BudgetLedgerManagerProps) {
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
+
+  // Inline Editable Budget Target State [BUDGET-2 & BUDGET-3]
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [customTargetInput, setCustomTargetInput] = useState<string>(budgetTarget > 0 ? budgetTarget.toString() : '');
+  const [isUnsetMode, setIsUnsetMode] = useState<boolean>(budgetTarget === 0);
 
   // Form & Delete Modal state
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
@@ -69,21 +76,23 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  // Totals
+  // Totals & Active Target Baseline
   const totalEstimate = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
   const totalActual = budget.reduce((sum, item) => sum + item.actualCost, 0);
   const totalPaid = budget.reduce((sum, item) => sum + item.amountPaid, 0);
   const totalBalance = budget.reduce((sum, item) => sum + (item.actualCost - item.amountPaid), 0);
 
-  // Utilization & Health Meters
-  const percentUtilized = totalEstimate > 0 ? Math.round((totalActual / totalEstimate) * 100) : 0;
-  const isOverallOverBudget = totalActual > totalEstimate;
-  const overallHeadroom = totalEstimate - totalActual;
+  // Effective Budget Target Baseline (Custom Budget Target vs Sum of Estimates vs Unset Mode)
+  const effectiveTarget = isUnsetMode ? 0 : (Number(customTargetInput) > 0 ? Number(customTargetInput) : totalEstimate);
 
-  const meterBarColor =
-    percentUtilized > 100 ? 'var(--color-red)' :
-      percentUtilized > 90 ? 'var(--color-gold-dark)' :
-        'var(--color-green)';
+  // Utilization & Health Meters
+  const percentUtilized = effectiveTarget > 0 ? Math.round((totalActual / effectiveTarget) * 100) : 0;
+  const isOverallOverBudget = effectiveTarget > 0 && totalActual > effectiveTarget;
+  const overallHeadroom = effectiveTarget - totalActual;
+
+  const meterBarColor = isUnsetMode 
+    ? 'var(--color-primary)' 
+    : (percentUtilized > 100 ? 'var(--color-red)' : percentUtilized > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)');
 
   // Category Health Breakdown
   const categoryStats = categories.map(cat => {
@@ -210,22 +219,123 @@ export default function BudgetLedgerManager({ budget, onUpdate, isSyncing, curre
       <div className={`budget-meter-card ${isOverallOverBudget ? 'is-over-budget' : ''}`} style={styles.meterCard}>
         <div style={styles.meterHeader}>
           <div>
-            <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
+              <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
+              
+              {/* Unset Budget Mode Toggle [BUDGET-3] */}
+              <button
+                type="button"
+                onClick={() => {
+                  const nextUnset = !isUnsetMode;
+                  setIsUnsetMode(nextUnset);
+                  if (nextUnset && onUpdateBudgetTarget) {
+                    onUpdateBudgetTarget(0);
+                  }
+                }}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  backgroundColor: isUnsetMode ? 'var(--color-primary)' : 'transparent',
+                  color: isUnsetMode ? '#ffffff' : 'var(--color-muted)',
+                  border: isUnsetMode ? '1px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-sm, 4px)',
+                  padding: '0.1rem 0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                title={isUnsetMode ? "Click to set a target budget amount" : "Switch to Unset Budget Mode (log expenses without hard target limit)"}
+              >
+                {isUnsetMode ? '✓ UNSET BUDGET MODE ACTIVE' : 'UNSET BUDGET TRACKING'}
+              </button>
+            </div>
+
             <div style={styles.meterTitleRow}>
-              <h3 style={styles.meterTitle}>{formatCurrency(totalActual, currency)} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>of {formatCurrency(totalEstimate, currency)} Estimated</span></h3>
-              {isOverallOverBudget ? (
-                <span style={styles.overBadgeMain}>
-                  <AlertTriangle size={12} style={{ marginRight: '0.25rem' }} /> OVER BUDGET (+{formatCurrency(totalActual - totalEstimate, currency)})
+              <h3 style={styles.meterTitle}>
+                {formatCurrency(totalActual, currency)}{' '}
+                <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>
+                  {isUnsetMode ? (
+                    'Total Actual Logged Expenses'
+                  ) : (
+                    <>
+                      of{' '}
+                      {isEditingTarget ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <input
+                            type="number"
+                            value={customTargetInput}
+                            onChange={(e) => setCustomTargetInput(e.target.value)}
+                            placeholder={totalEstimate.toString()}
+                            style={{
+                              width: '110px',
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
+                              padding: '0.15rem 0.35rem',
+                              border: '2px solid var(--color-primary)',
+                              borderRadius: '4px',
+                            }}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setIsEditingTarget(false);
+                              const newTarget = Number(customTargetInput) || 0;
+                              if (onUpdateBudgetTarget) await onUpdateBudgetTarget(newTarget);
+                            }}
+                            style={{
+                              backgroundColor: 'var(--color-primary)',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '0.2rem 0.4rem',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                            }}
+                          >
+                            <Check size={12} />
+                          </button>
+                        </span>
+                      ) : (
+                        <span 
+                          onClick={() => setIsEditingTarget(true)}
+                          style={{ 
+                            fontWeight: 700, 
+                            color: 'var(--color-primary)', 
+                            cursor: 'pointer', 
+                            borderBottom: '1px dashed var(--color-primary)' 
+                          }}
+                          title="Click to edit target budget limit [BUDGET-2]"
+                        >
+                          {formatCurrency(effectiveTarget, currency)} Target <Edit2 size={12} style={{ display: 'inline', marginLeft: '2px' }} />
+                        </span>
+                      )}
+                    </>
+                  )}
                 </span>
-              ) : (
-                <span style={styles.headroomBadge}>
-                  {formatCurrency(overallHeadroom, currency)} REMAINING
-                </span>
+              </h3>
+
+              {!isUnsetMode && (
+                isOverallOverBudget ? (
+                  <span style={styles.overBadgeMain}>
+                    <AlertTriangle size={12} style={{ marginRight: '0.25rem' }} /> OVER BUDGET (+{formatCurrency(totalActual - effectiveTarget, currency)})
+                  </span>
+                ) : (
+                  <span style={styles.headroomBadge}>
+                    {formatCurrency(overallHeadroom, currency)} REMAINING
+                  </span>
+                )
               )}
             </div>
           </div>
+
           <div style={styles.percentDisplay}>
-            <span style={{ ...styles.percentValue, color: meterBarColor }}>{percentUtilized}%</span>
+            {isUnsetMode ? (
+              <span style={{ ...styles.percentValue, color: 'var(--color-primary)', fontSize: '1rem' }}>NO TARGET LIMIT</span>
+            ) : (
+              <span style={{ ...styles.percentValue, color: meterBarColor }}>{percentUtilized}%</span>
+            )}
           </div>
         </div>
 

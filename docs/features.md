@@ -95,6 +95,8 @@
 
 ## 💰 11. Ledger Budget Enhancements (`BudgetLedgerManager.tsx`)
 - [x] **[BUDGET-1] Interactive Multi-Category Quick Filter Cards:** Made category cards clickable quick filters in `BudgetLedgerManager.tsx`.
+- [x] **[BUDGET-2] Inline Editable Budget Target:** Click-to-edit overall budget target directly in the utilization meter banner.
+- [x] **[BUDGET-3] Optional Unset Budget Tracking Mode:** Toggle mode to track expenses without requiring a fixed overall budget limit.
 
 ---
 
@@ -171,8 +173,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[BUDGET-2]`** | Inline Editable Budget Target on Total Budget KPI card | `BudgetLedgerManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
-| **`[BUDGET-3]`** | Optional Unset Budget Tracking Mode (disable target budget) | `BudgetLedgerManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[BUDGET-2]`** | Inline editable budget target limit | `BudgetLedgerManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
+| **`[BUDGET-3]`** | Optional unset budget tracking mode | `BudgetLedgerManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 📊 Summary Dashboard
 
