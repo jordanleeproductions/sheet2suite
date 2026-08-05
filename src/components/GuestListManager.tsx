@@ -379,7 +379,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             {/* Standalone RSVP Stat Filter Cards */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '0.75rem',
             }}>
               {/* Confirmed Attending Card */}
@@ -404,10 +404,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   CONFIRMED ATTENDING
                 </span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-green, #10b981)' }}>
-                  {summary.attendingCount} / {summary.totalInvited}
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: rsvpFilter === 'Attending' ? 'rgba(255,255,255,0.85)' : 'var(--color-muted)' }}>
-                  {summary.totalInvited > 0 ? Math.round((summary.attendingCount / summary.totalInvited) * 100) : 0}% Confirmed Rate
+                  {summary.attendingCount}
                 </span>
               </div>
 
@@ -435,9 +432,6 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-gold, #f59e0b)' }}>
                   {summary.pendingCount}
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: rsvpFilter === 'No Response' ? 'rgba(255,255,255,0.85)' : 'var(--color-muted)' }}>
-                  Awaiting RSVP Confirmation
-                </span>
               </div>
 
               {/* Declined Card */}
@@ -463,9 +457,6 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 </span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)' }}>
                   {summary.declinedCount}
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: rsvpFilter === 'Declined' ? 'rgba(255,255,255,0.85)' : 'var(--color-muted)' }}>
-                  Unable to Attend
                 </span>
               </div>
             </div>
