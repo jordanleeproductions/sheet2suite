@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Guest, AgeCategory, RSVPStatus } from '@/lib/sheets/types';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
-import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface GuestListManagerProps {
   guests: Guest[];
@@ -21,6 +21,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   const [groupFilter, setGroupFilter] = useState<string>('All');
   const [mealFilter, setMealFilter] = useState<string>('All');
   const [dietFilter, setDietFilter] = useState<string>('All');
+  const [isCateringCollapsed, setIsCateringCollapsed] = useState<boolean>(false);
 
   React.useEffect(() => {
     if (initialRsvpFilter) {
@@ -378,19 +379,40 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             backgroundColor: 'var(--color-surface, #ffffff)',
             border: '1px solid var(--color-muted)',
             borderRadius: 'var(--border-radius-md)',
-            padding: '1rem 1.25rem',
+            padding: isCateringCollapsed ? '0.75rem 1.25rem' : '1rem 1.25rem',
             margin: '1rem 0',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.75rem',
+            gap: isCateringCollapsed ? '0' : '0.75rem',
+            transition: 'all 0.25s ease',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div 
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                onClick={() => setIsCateringCollapsed(!isCateringCollapsed)}
+                title={isCateringCollapsed ? "Click to expand Catering Details" : "Click to collapse Catering Details"}
+              >
                 <Heart size={18} style={{ color: 'var(--color-primary)' }} />
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>
                   RELATIONAL RSVP & CATERING INTELLIGENCE
                 </span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setIsCateringCollapsed(!isCateringCollapsed); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-muted)',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '2px',
+                  }}
+                >
+                  {isCateringCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                </button>
               </div>
+              
               <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
                 <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 700 }}>
                   CONFIRMED ATTENDING: {summary.attendingCount} / {summary.totalInvited}
@@ -404,84 +426,89 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               </div>
             </div>
 
-            {/* Meal Choice Breakdown Pills [GUEST-5] */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-                MEAL TOTALS:
-              </span>
-              {summary.mealChoiceBreakdown.length === 0 ? (
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
-              ) : (
-                summary.mealChoiceBreakdown.map((item, idx) => {
-                  const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
-                        color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
-                        border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
-                        borderRadius: '4px',
-                        padding: '0.2rem 0.5rem',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      title={`Click to filter list by ${item.meal}`}
-                    >
-                      <span>{item.icon}</span>
-                      <span>{item.meal}:</span>
-                      <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
-                    </button>
-                  );
-                })
-              )}
-            </div>
+            {/* Collapsible Content Body */}
+            {!isCateringCollapsed && (
+              <>
+                {/* Meal Choice Breakdown Pills [GUEST-5] */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                    MEAL TOTALS:
+                  </span>
+                  {summary.mealChoiceBreakdown.length === 0 ? (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
+                  ) : (
+                    summary.mealChoiceBreakdown.map((item, idx) => {
+                      const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
+                            color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                            border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                            borderRadius: '4px',
+                            padding: '0.2rem 0.5rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          title={`Click to filter list by ${item.meal}`}
+                        >
+                          <span>{item.icon}</span>
+                          <span>{item.meal}:</span>
+                          <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
 
-            {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
-            {summary.dietaryBreakdown.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
-                <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-                  DIETARY RESTRICTIONS:
-                </span>
-                {summary.dietaryBreakdown.map((item, idx) => {
-                  const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
-                        color: isSelected ? '#ffffff' : 'var(--color-red)',
-                        border: '1px solid #ef4444',
-                        borderRadius: '4px',
-                        padding: '0.2rem 0.5rem',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      title={`Click to filter list by ${item.restriction}`}
-                    >
-                      <AlertTriangle size={13} />
-                      <span>{item.restriction.toUpperCase()}:</span>
-                      <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
-                    </button>
-                  );
-                })}
-              </div>
+                {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
+                {summary.dietaryBreakdown.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
+                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                      DIETARY RESTRICTIONS:
+                    </span>
+                    {summary.dietaryBreakdown.map((item, idx) => {
+                      const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
+                            color: isSelected ? '#ffffff' : 'var(--color-red)',
+                            border: '1px solid #ef4444',
+                            borderRadius: '4px',
+                            padding: '0.2rem 0.5rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          title={`Click to filter list by ${item.restriction}`}
+                        >
+                          <AlertTriangle size={13} />
+                          <span>{item.restriction.toUpperCase()}:</span>
+                          <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         );
