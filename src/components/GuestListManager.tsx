@@ -371,31 +371,131 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
         </div>
       </div>
 
-      {/* Relational RSVP & Catering Intelligence Banner */}
+      {/* RSVP Stats KPI Cards & Collapsible Catering Filters Banner */}
       {(() => {
         const summary = calculateRelationalCateringSummary(guests, []);
         return (
-          <div style={{
-            backgroundColor: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-muted)',
-            borderRadius: 'var(--border-radius-md)',
-            padding: isCateringCollapsed ? '0.75rem 1.25rem' : '1rem 1.25rem',
-            margin: '1rem 0',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: isCateringCollapsed ? '0' : '0.75rem',
-            transition: 'all 0.25s ease',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div 
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
-                onClick={() => setIsCateringCollapsed(!isCateringCollapsed)}
-                title={isCateringCollapsed ? "Click to expand Catering Details" : "Click to collapse Catering Details"}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', margin: '1rem 0' }}>
+            {/* Standalone RSVP Stat Filter Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '0.75rem',
+            }}>
+              {/* Confirmed Attending Card */}
+              <div
+                onClick={() => setRsvpFilter(prev => prev === 'Attending' ? 'All' : 'Attending')}
+                style={{
+                  backgroundColor: rsvpFilter === 'Attending' ? 'var(--color-green, #10b981)' : 'var(--color-surface, #ffffff)',
+                  color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-text)',
+                  border: rsvpFilter === 'Attending' ? '2px solid var(--color-green, #10b981)' : '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-md)',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.2rem',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--box-shadow-subtle)',
+                  transition: 'all 0.2s ease',
+                }}
+                title="Click to filter list by Confirmed Attending guests"
               >
-                <Heart size={18} style={{ color: 'var(--color-primary)' }} />
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                  RELATIONAL RSVP & CATERING INTELLIGENCE
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-muted)' }}>
+                  CONFIRMED ATTENDING
                 </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-green, #10b981)' }}>
+                  {summary.attendingCount} / {summary.totalInvited}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: rsvpFilter === 'Attending' ? 'rgba(255,255,255,0.85)' : 'var(--color-muted)' }}>
+                  {summary.totalInvited > 0 ? Math.round((summary.attendingCount / summary.totalInvited) * 100) : 0}% Confirmed Rate
+                </span>
+              </div>
+
+              {/* Pending Response Card */}
+              <div
+                onClick={() => setRsvpFilter(prev => prev === 'No Response' ? 'All' : 'No Response')}
+                style={{
+                  backgroundColor: rsvpFilter === 'No Response' ? 'var(--color-gold, #f59e0b)' : 'var(--color-surface, #ffffff)',
+                  color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-text)',
+                  border: rsvpFilter === 'No Response' ? '2px solid var(--color-gold, #f59e0b)' : '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-md)',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.2rem',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--box-shadow-subtle)',
+                  transition: 'all 0.2s ease',
+                }}
+                title="Click to filter list by Pending RSVP guests"
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-muted)' }}>
+                  PENDING RESPONSES
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-gold, #f59e0b)' }}>
+                  {summary.pendingCount}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: rsvpFilter === 'No Response' ? 'rgba(255,255,255,0.85)' : 'var(--color-muted)' }}>
+                  Awaiting RSVP Confirmation
+                </span>
+              </div>
+
+              {/* Declined Card */}
+              <div
+                onClick={() => setRsvpFilter(prev => prev === 'Declined' ? 'All' : 'Declined')}
+                style={{
+                  backgroundColor: rsvpFilter === 'Declined' ? 'var(--color-red, #ef4444)' : 'var(--color-surface, #ffffff)',
+                  color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-text)',
+                  border: rsvpFilter === 'Declined' ? '2px solid var(--color-red, #ef4444)' : '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-md)',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.2rem',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--box-shadow-subtle)',
+                  transition: 'all 0.2s ease',
+                }}
+                title="Click to filter list by Declined guests"
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)' }}>
+                  DECLINED
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)' }}>
+                  {summary.declinedCount}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: rsvpFilter === 'Declined' ? 'rgba(255,255,255,0.85)' : 'var(--color-muted)' }}>
+                  Unable to Attend
+                </span>
+              </div>
+            </div>
+
+            {/* Collapsible Catering Filters Banner */}
+            <div style={{
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: isCateringCollapsed ? '0.75rem 1.25rem' : '1rem 1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: isCateringCollapsed ? '0' : '0.75rem',
+              transition: 'all 0.25s ease',
+            }}>
+              <div 
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                onClick={() => setIsCateringCollapsed(!isCateringCollapsed)}
+                title={isCateringCollapsed ? "Click to expand Catering Filters" : "Click to collapse Catering Filters"}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Utensils size={18} style={{ color: 'var(--color-primary)' }} />
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                    CATERING FILTERS
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                    ({summary.mealChoiceBreakdown.reduce((acc, m) => acc + m.count, 0)} meals selected • {summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} dietary tags)
+                  </span>
+                </div>
+                
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setIsCateringCollapsed(!isCateringCollapsed); }}
@@ -412,104 +512,92 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   {isCateringCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                 </button>
               </div>
-              
-              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 700 }}>
-                  CONFIRMED ATTENDING: {summary.attendingCount} / {summary.totalInvited}
-                </span>
-                <span style={{ color: 'var(--color-muted)' }}>
-                  DECLINED: {summary.declinedCount}
-                </span>
-                <span style={{ color: 'var(--color-muted)' }}>
-                  PENDING: {summary.pendingCount}
-                </span>
-              </div>
-            </div>
 
-            {/* Collapsible Content Body */}
-            {!isCateringCollapsed && (
-              <>
-                {/* Meal Choice Breakdown Pills [GUEST-5] */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-                    MEAL TOTALS:
-                  </span>
-                  {summary.mealChoiceBreakdown.length === 0 ? (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
-                  ) : (
-                    summary.mealChoiceBreakdown.map((item, idx) => {
-                      const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
-                          style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
-                            color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
-                            border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
-                            borderRadius: '4px',
-                            padding: '0.2rem 0.5rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          title={`Click to filter list by ${item.meal}`}
-                        >
-                          <span>{item.icon}</span>
-                          <span>{item.meal}:</span>
-                          <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
-                {summary.dietaryBreakdown.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
+              {/* Collapsible Content Body */}
+              {!isCateringCollapsed && (
+                <>
+                  {/* Meal Choice Breakdown Pills [GUEST-5] */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
                     <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-                      DIETARY RESTRICTIONS:
+                      MEAL TOTALS:
                     </span>
-                    {summary.dietaryBreakdown.map((item, idx) => {
-                      const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
-                          style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
-                            color: isSelected ? '#ffffff' : 'var(--color-red)',
-                            border: '1px solid #ef4444',
-                            borderRadius: '4px',
-                            padding: '0.2rem 0.5rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          title={`Click to filter list by ${item.restriction}`}
-                        >
-                          <AlertTriangle size={13} />
-                          <span>{item.restriction.toUpperCase()}:</span>
-                          <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
-                        </button>
-                      );
-                    })}
+                    {summary.mealChoiceBreakdown.length === 0 ? (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
+                    ) : (
+                      summary.mealChoiceBreakdown.map((item, idx) => {
+                        const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
+                              color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                              border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                              borderRadius: '4px',
+                              padding: '0.2rem 0.5rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            title={`Click to filter list by ${item.meal}`}
+                          >
+                            <span>{item.icon}</span>
+                            <span>{item.meal}:</span>
+                            <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
-                )}
-              </>
-            )}
+
+                  {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
+                  {summary.dietaryBreakdown.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
+                      <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                        DIETARY RESTRICTIONS:
+                      </span>
+                      {summary.dietaryBreakdown.map((item, idx) => {
+                        const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
+                              color: isSelected ? '#ffffff' : 'var(--color-red)',
+                              border: '1px solid #ef4444',
+                              borderRadius: '4px',
+                              padding: '0.2rem 0.5rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            title={`Click to filter list by ${item.restriction}`}
+                          >
+                            <AlertTriangle size={13} />
+                            <span>{item.restriction.toUpperCase()}:</span>
+                            <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         );
       })()}
