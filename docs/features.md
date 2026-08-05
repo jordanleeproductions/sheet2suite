@@ -132,7 +132,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[VND-1]`** | Fix Add & Edit Vendor modal header font color to white for contrast | `VendorManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[VND-1]`** | Fix Add & Edit Vendor modal header font color to white for contrast | `VendorManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[VND-2]`** | Google Drive File Picker integration for contracts instead of URL links | `VendorManager.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[VND-3]`** | Category Combo Dropdown pre-seeded with DJ/Band, Photographer, Venue, Catering | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 | **`[VND-4]`** | Multi-Select Dietary Restrictions Tagging (Gluten Free, Vegan, Halal, No Pork...) | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |

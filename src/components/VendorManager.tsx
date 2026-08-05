@@ -354,8 +354,8 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
           `}</style>
           <div className="vendor-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">{isAdding ? 'ADD VENDOR' : 'EDIT VENDOR'}</h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
+              <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">{isAdding ? 'ADD VENDOR' : 'EDIT VENDOR'}</h3>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
             </div>
             <form onSubmit={saveItem} style={styles.form}>
               <div className="vendor-form-grid" style={styles.formGrid}>
