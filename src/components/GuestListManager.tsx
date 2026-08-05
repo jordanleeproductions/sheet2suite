@@ -19,6 +19,8 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
   const [groupFilter, setGroupFilter] = useState<string>('All');
+  const [mealFilter, setMealFilter] = useState<string>('All');
+  const [dietFilter, setDietFilter] = useState<string>('All');
 
   React.useEffect(() => {
     if (initialRsvpFilter) {
@@ -76,8 +78,12 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
 
     const matchesRsvp = rsvpFilter === 'All' || guest.rsvpStatus === rsvpFilter;
     const matchesGroup = groupFilter === 'All' || guest.partyGroup === groupFilter;
+    const matchesMeal = mealFilter === 'All' || (guest.mealChoice || '').toLowerCase() === mealFilter.toLowerCase();
+    const matchesDiet = dietFilter === 'All' || 
+      (dietFilter === 'HAS_DIET' ? Boolean((guest.dietaryRestrictions || '').trim()) : 
+      (guest.dietaryRestrictions || '').toLowerCase().includes(dietFilter.toLowerCase()));
     
-    return matchesSearch && matchesRsvp && matchesGroup;
+    return matchesSearch && matchesRsvp && matchesGroup && matchesMeal && matchesDiet;
   });
 
   // Grouping helper for Seating Tables
@@ -398,7 +404,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               </div>
             </div>
 
-            {/* Meal Choice Breakdown Pills */}
+            {/* Meal Choice Breakdown Pills [GUEST-5] */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
                 MEAL TOTALS:
@@ -406,54 +412,68 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               {summary.mealChoiceBreakdown.length === 0 ? (
                 <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
               ) : (
-                summary.mealChoiceBreakdown.map((item, idx) => (
-                  <span
-                    key={idx}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      backgroundColor: 'var(--color-bg, #f9fafb)',
-                      border: '1px solid var(--color-muted)',
-                      borderRadius: '4px',
-                      padding: '0.2rem 0.5rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                    }}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.meal}:</span>
-                    <strong style={{ color: 'var(--color-primary)' }}>{item.count}</strong>
-                  </span>
-                ))
+                summary.mealChoiceBreakdown.map((item, idx) => {
+                  const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
+                        color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                        border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        borderRadius: '4px',
+                        padding: '0.2rem 0.5rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      title={`Click to filter list by ${item.meal}`}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.meal}:</span>
+                      <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
+                    </button>
+                  );
+                })
               )}
             </div>
 
-            {/* Dedicated Dietary Restrictions Row (GUEST-4) */}
+            {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
             {summary.dietaryBreakdown.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
                 <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
                   DIETARY RESTRICTIONS:
                 </span>
-                <span
+                <button
+                  type="button"
+                  onClick={() => setDietFilter(prev => prev === 'HAS_DIET' ? 'All' : 'HAS_DIET')}
                   style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: '0.75rem',
                     fontWeight: 700,
-                    backgroundColor: 'rgba(239,68,68,0.1)',
-                    color: 'var(--color-red)',
+                    backgroundColor: dietFilter === 'HAS_DIET' ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
+                    color: dietFilter === 'HAS_DIET' ? '#ffffff' : 'var(--color-red)',
                     border: '1px solid #ef4444',
                     borderRadius: '4px',
                     padding: '0.2rem 0.5rem',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.35rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
                   }}
+                  title="Click to filter guests with dietary restrictions"
                 >
                   <AlertTriangle size={13} />
                   <span>{summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} TOTAL RESTRICTION(S) ({summary.dietaryBreakdown.map(d => `${d.restriction}: ${d.count}`).join(', ')})</span>
-                </span>
+                </button>
               </div>
             )}
           </div>
@@ -492,6 +512,30 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               <option key={grp} value={grp}>{grp.toUpperCase()}</option>
             ))}
           </select>
+
+          {(mealFilter !== 'All' || dietFilter !== 'All') && (
+            <button
+              type="button"
+              onClick={() => { setMealFilter('All'); setDietFilter('All'); }}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                backgroundColor: 'var(--color-red-muted, #fee2e2)',
+                color: 'var(--color-red, #ef4444)',
+                border: '1px solid var(--color-red)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.4rem 0.6rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+              }}
+              title="Clear active meal and dietary restriction filters"
+            >
+              <X size={12} /> RESET FILTERS
+            </button>
+          )}
         </div>
       </div>
 
@@ -643,15 +687,27 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   />
                 </div>
 
+                {/* Dynamic Party Group Combo Dropdown [GUEST-8] */}
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>PARTY GROUP</label>
                   <input
                     type="text"
+                    list="party-group-options"
                     value={formState.partyGroup || ''}
-                    placeholder="e.g. Groom Family, Bride Friends"
+                    placeholder="Select existing or type custom group..."
                     onChange={(e) => handleInputChange('partyGroup', e.target.value)}
                     style={styles.input}
                   />
+                  <datalist id="party-group-options">
+                    {groups.map(grp => (
+                      <option key={grp} value={grp} />
+                    ))}
+                    <option value="Bride Family" />
+                    <option value="Groom Family" />
+                    <option value="Wedding Party" />
+                    <option value="Mutual Friends" />
+                    <option value="Co-Workers" />
+                  </datalist>
                 </div>
 
                 <div style={styles.fieldGroup}>
