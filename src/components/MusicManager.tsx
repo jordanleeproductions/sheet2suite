@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Song, SongListType } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2 } from 'lucide-react';
+import { Song, SongListType, Vendor } from '@/lib/sheets/types';
+import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2, QrCode, Radio } from 'lucide-react';
 
 type DeduplicatedSong = Song & { requestCount: number };
 
 interface MusicManagerProps {
   music: Song[];
+  vendors?: Vendor[];
   onUpdate: (updatedMusic: Song[]) => Promise<void>;
   isSyncing: boolean;
   initialFilterPill?: string;
+  onNavigateTab?: (tab: string, filter?: string) => void;
 }
 
-export default function MusicManager({ music, onUpdate, isSyncing, initialFilterPill }: MusicManagerProps) {
+export default function MusicManager({ music, vendors = [], onUpdate, isSyncing, initialFilterPill, onNavigateTab }: MusicManagerProps) {
   const [editingItem, setEditingItem] = useState<Song | null>(null);
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -456,15 +458,76 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
 
     bodyText += `Thank you so much!`;
 
-    window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+    // Lookup DJ/Band vendor email [MUSIC-8]
+    const djVendor = vendors.find(v => {
+      const cat = (v.category || '').toLowerCase();
+      const name = (v.vendorName || '').toLowerCase();
+      return cat.includes('dj') || cat.includes('band') || cat.includes('music') || name.includes('dj') || name.includes('band');
+    });
+    const recipientEmail = djVendor?.emailAddress || '';
+
+    window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
   };
 
   return (
     <div style={styles.container}>
-      {/* Header */}
+      {/* Header [MUSIC-5] */}
       <div style={styles.header}>
-        <h2 style={styles.title}>Wedding Playlist</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div>
+          <h2 style={styles.title}>Wedding Playlist</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+            Curate wedding music, track first dance & special moment songs, and review live guest song requests.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
+          {/* Quick Action Portal Buttons [MUSIC-6] */}
+          <a
+            href="/request-song/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.725rem',
+              fontWeight: 600,
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-sm)',
+              padding: '0.5rem 0.75rem',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+            title="Open Live Guest Song Request Portal"
+          >
+            <Radio size={14} style={{ color: 'var(--color-primary)' }} /> REQUEST PORTAL
+          </a>
+
+          <a
+            href="/share/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.725rem',
+              fontWeight: 600,
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)',
+              borderRadius: 'var(--border-radius-sm)',
+              padding: '0.5rem 0.75rem',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+            title="Open DJ / Vendor Portal"
+          >
+            <Share2 size={14} style={{ color: 'var(--color-primary)' }} /> DJ PORTAL
+          </a>
+
           <button 
             type="button"
             style={{
@@ -478,9 +541,9 @@ export default function MusicManager({ music, onUpdate, isSyncing, initialFilter
           >
             <Mail size={16} style={{ marginRight: '0.35rem' }} /> EMAIL LIST
           </button>
-
+          
           <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD SONG
+            <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD SONG
           </button>
         </div>
       </div>

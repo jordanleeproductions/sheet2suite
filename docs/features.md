@@ -149,10 +149,10 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[MUSIC-5]`** | Descriptive Header Subtitle explaining playlist curation & portal workflow | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
-| **`[MUSIC-6]`** | Direct Portal Quick Action Buttons for Request Portal and DJ Share Page | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[MUSIC-5]`** | Descriptive Header Subtitle explaining playlist curation & portal workflow | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
+| **`[MUSIC-6]`** | Direct Portal Quick Action Buttons for Request Portal and DJ Share Page | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[MUSIC-7]`** | YouTube Music branding/link, remove 3rd platform icon, fix mock preview playback | `MusicManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
-| **`[MUSIC-8]`** | Auto-Populate DJ Email in `TO` field when exporting Music playlist email | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[MUSIC-8]`** | Auto-Populate DJ Email in `TO` field when exporting Music playlist email | `MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 📸 Photography & Shot List
 

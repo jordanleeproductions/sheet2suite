@@ -1139,9 +1139,11 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'music' && weddingData && (
                 <MusicManager
                   music={weddingData.music || []}
+                  vendors={weddingData.vendors || []}
                   onUpdate={(data) => syncUpdate('music', data)}
                   isSyncing={isSyncing}
                   initialFilterPill={musicInitialFilter}
+                  onNavigateTab={(tab) => switchTab(tab as any)}
                 />
               )}
 
