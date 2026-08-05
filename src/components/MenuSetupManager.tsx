@@ -154,7 +154,7 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
           <button
             type="button"
             onClick={handleResetDefault}

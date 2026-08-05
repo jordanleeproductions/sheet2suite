@@ -119,7 +119,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[MENU-1]`** | Move "Add Menu Item" button to the right hand side of the header | `MenuSetupManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[MENU-1]`** | Move "Add Menu Item" button to the right hand side of the header | `MenuSetupManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 🪑 Seating & Floorplan
 
@@ -141,9 +141,9 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[TASK-1]`** | Clickable Kanban Task Edit Modal: Clicking any task card opens its edit modal | `KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[TASK-1]`** | Clickable Kanban Task Edit Modal: Clicking any task card opens its edit modal | `KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[TASK-2]`** | Switchable Progress Cards / Progress Bar header above Kanban board | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
-| **`[TASK-3]`** | Header Methodology Description under Kanban header | `KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[TASK-3]`** | Header Methodology Description under Kanban header | `KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 
 ### 🎵 Music Playlist
 

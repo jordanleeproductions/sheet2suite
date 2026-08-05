@@ -159,7 +159,12 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       {/* Header */}
       <div style={styles.header} className="kanban-header">
         <div className="kanban-header-top">
-          <h2 style={styles.title}>Kanban Checklist</h2>
+          <div>
+            <h2 style={styles.title}>Kanban Checklist</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+              Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
+            </p>
+          </div>
           <button style={styles.addButton} className="kanban-add-btn-mobile" onClick={() => startAdd('To Do')} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD TASK
           </button>
@@ -474,7 +479,12 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   stageTasks.map(task => {
                     const priColors = getPriorityColor(task.priority);
                     return (
-                      <div key={task.taskId} style={styles.taskCard}>
+                      <div 
+                        key={task.taskId} 
+                        style={{ ...styles.taskCard, cursor: 'pointer' }}
+                        onClick={() => startEdit(task)}
+                        title="Click to edit task"
+                      >
                         <div style={styles.cardHeader}>
                           <span className="kanban-category-badge" style={{ ...styles.categoryBadge, backgroundColor: 'var(--color-muted)', color: 'var(--color-on-dark)' }}>{task.category.toUpperCase() || 'GENERAL'}</span>
                           <span style={{ 
