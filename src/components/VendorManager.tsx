@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { Vendor } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Share2, Check, Copy } from 'lucide-react';
-import { generateShareToken, ShareLinkRecord, ShareScope } from '@/lib/share/token';
+import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer } from 'lucide-react';
+import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 
 interface VendorManagerProps {
   vendors: Vendor[];
@@ -26,58 +26,6 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [paymentFilter, setPaymentFilter] = useState<'All' | 'Paid' | 'Balance Due'>('All');
-
-  // Share portal state [VND-4]
-  const [copiedVendorId, setCopiedVendorId] = useState<string | null>(null);
-
-  const handleGenerateVendorPortalLink = (vendor: Vendor) => {
-    const categoryLower = (vendor.category || '').toLowerCase();
-    let scope: ShareScope = 'vendor_hub';
-    if (categoryLower.includes('dj') || categoryLower.includes('music') || categoryLower.includes('band')) {
-      scope = 'music';
-    } else if (categoryLower.includes('photo') || categoryLower.includes('video')) {
-      scope = 'photos';
-    } else if (categoryLower.includes('catering') || categoryLower.includes('food')) {
-      scope = 'catering';
-    } else if (categoryLower.includes('planner') || categoryLower.includes('coordinator')) {
-      scope = 'timeline';
-    }
-
-    const token = generateShareToken({
-      spreadsheetId: spreadsheetId || 'default-wedding',
-      scope,
-      weddingName: weddingName || 'Our Wedding',
-      expiresInDays: 60,
-    });
-
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const shareUrl = `${origin}/share/${token}`;
-
-    const newRecord: ShareLinkRecord = {
-      id: `link-vendor-${vendor.vendorId}-${Date.now()}`,
-      scope,
-      label: `Vendor Portal: ${vendor.vendorName} (${vendor.category})`,
-      token,
-      shareUrl,
-      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      exp: Date.now() + 60 * 24 * 60 * 60 * 1000,
-      shareVersion: 1,
-    };
-
-    try {
-      const saved = localStorage.getItem('s2v_generated_share_links');
-      const currentLinks: ShareLinkRecord[] = saved ? JSON.parse(saved) : [];
-      const updated = [newRecord, ...currentLinks];
-      localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
-      window.dispatchEvent(new Event('storage'));
-    } catch (e) {
-      console.error('Error saving vendor portal link', e);
-    }
-
-    navigator.clipboard.writeText(shareUrl);
-    setCopiedVendorId(vendor.vendorId);
-    setTimeout(() => setCopiedVendorId(null), 3000);
-  };
 
   const categories = Array.from(new Set(vendors.map(v => v.category).filter(Boolean)));
 
@@ -374,13 +322,6 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                     {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meals</span>}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <button 
-                      style={{ ...styles.actionBtn, color: copiedVendorId === item.vendorId ? 'var(--color-green)' : 'var(--color-primary)' }} 
-                      onClick={() => handleGenerateVendorPortalLink(item)} 
-                      title="Generate & Copy Vendor Portal Link"
-                    >
-                      {copiedVendorId === item.vendorId ? <Check size={16} /> : <Share2 size={16} />}
-                    </button>
                     <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Vendor">
                       <Edit2 size={16} />
                     </button>
@@ -458,32 +399,6 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                     )}
                     {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Needs Meal</span>}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateVendorPortalLink(item)}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      backgroundColor: copiedVendorId === item.vendorId ? 'var(--color-green)' : 'transparent',
-                      color: copiedVendorId === item.vendorId ? '#ffffff' : 'var(--color-primary)',
-                      border: copiedVendorId === item.vendorId ? '1px solid var(--color-green)' : '1px solid var(--color-primary)',
-                      borderRadius: 'var(--border-radius-sm)',
-                      padding: '0.25rem 0.5rem',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      transition: 'all 0.15s ease',
-                    }}
-                    title="Generate & Copy Mobile Portal Share Link"
-                  >
-                    {copiedVendorId === item.vendorId ? (
-                      <> <Check size={12} /> PORTAL COPIED! </>
-                    ) : (
-                      <> <Share2 size={12} /> SHARE PORTAL </>
-                    )}
-                  </button>
                 </div>
               </div>
             </div>
@@ -493,6 +408,15 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
           )}
         </div>
       )}
+
+      {/* Embedded Vendor Share Link Manager Section [VND-4] */}
+      <div style={{ marginTop: '2rem' }}>
+        <VendorShareLinkManager
+          spreadsheetId={spreadsheetId || 'default-wedding'}
+          weddingName={weddingName || 'Our Wedding'}
+          onOpenShareModal={onOpenShareModal || (() => {})}
+        />
+      </div>
 
       {/* Modal Overlay for Add/Edit */}
       {(isAdding || editingItem) && (

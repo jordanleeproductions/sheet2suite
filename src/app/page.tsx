@@ -1055,24 +1055,17 @@ export default function Sheet2VowDashboard() {
           ) : (
             <div style={styles.tabContent}>
               {activeTab === 'metrics' && weddingData && (
-                <>
-                  <DashboardMetrics
-                    metrics={weddingData.dashboard}
-                    guests={weddingData.guests}
-                    tasks={weddingData.tasks}
-                    music={weddingData.music}
-                    photos={weddingData.photos}
-                    enabledModules={enabledModules}
-                    currency={currency}
-                    onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
-                    onOpenModuleSettings={() => setShowSettings(true)}
-                  />
-                  <VendorShareLinkManager
-                    spreadsheetId={spreadsheetId}
-                    weddingName={weddingName}
-                    onOpenShareModal={() => setShowShareModal(true)}
-                  />
-                </>
+                <DashboardMetrics
+                  metrics={weddingData.dashboard}
+                  guests={weddingData.guests}
+                  tasks={weddingData.tasks}
+                  music={weddingData.music}
+                  photos={weddingData.photos}
+                  enabledModules={enabledModules}
+                  currency={currency}
+                  onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
+                  onOpenModuleSettings={() => setShowSettings(true)}
+                />
               )}
 
               {activeTab === 'guests' && weddingData && (
