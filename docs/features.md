@@ -130,7 +130,6 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[GEN-3]`** | Toast Notification System: Brief "Saved!" popup on settings/modal save | `ToastNotification.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
 | **`[SYS-4]`** | Production Google OAuth 2.0 & Real Google Sheets Sync (`drive.file` scope) | `googleSheets.ts` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[SYS-5]`** | Unified Product Usage Telemetry (GA4 Event Engine) | `telemetry.ts` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 | **`[SYS-6]`** | Lemon Squeezy Integration & License Entitlements | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
@@ -142,61 +141,12 @@
 |---|---|---|---|---|---|
 | **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
 
-### 👥 Guest Registry
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[GUEST-5]`** | Make Meal Totals & Dietary Restriction badges clickable quick-filters | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | ✅ Complete |
-| **`[GUEST-6]`** | Desktop List Row View Toggle: Switch between Card Grid and List Table Rows | `GuestListManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Complete |
-| **`[GUEST-8]`** | Dynamic Party Group Combo Dropdown (select existing or type custom) | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
-
-### 💼 Vendor Directory
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[VND-2]`** | Payment Due Date Reminder Badges (Highlight balance owing within 30 days) | `VendorManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
-| **`[VND-3]`** | Category Breakdown Stat Badges (Count & total contract cost per category) | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | ✅ Complete |
-| **`[VND-4]`** | Vendor Portal Link Generator (Shareable portal per vendor) | `VendorManager.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Complete |
-
-### 📋 Task Checklist & Kanban
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[TASK-2]`** | Switchable Progress Cards / Progress Bar header above Kanban board | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
-
-### 🎵 Music Playlist
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[MUSIC-7]`** | YouTube Music branding/link, remove 3rd platform icon, fix mock preview playback | `MusicManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
-
-### 📸 Photography & Shot List
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[PHOTO-2]`** | Auto-Populate Photographer Email in `TO` field when emailing Shot List | `PhotoShotListManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
-
-### 💰 Ledger Budget Manager
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[BUDGET-2]`** | Inline editable budget target limit | `BudgetLedgerManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
-| **`[BUDGET-3]`** | Optional unset budget tracking mode | `BudgetLedgerManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
-
-### 📊 Summary Dashboard
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[DASH-7]`** | Edit Icon summary layout control shortcut | `DashboardMetrics.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
-
 ### 🖨️ Print Studio & Canva Exporter
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[PRINT-3]`** | Canva Template Integration Hub & Canva Bulk Create Merge CSV Exporter | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-4]`** | Custom Print Theme & Typography Switcher (Serif, Sans, Script, Mono) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
-| **`[PRINT-5]`** | Emoji & decorative icon toggles | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
-| **`[PRINT-6]`** | Granular card field controls (Table #, Meal Icon, Dietary, Plus-One) | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Complete |
 | **`[PRINT-7]`** | Strict Print Boundary & Bleed Guardrails (Avery cardstock grid dimensions) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-8]`** | Full Wedding Planner Binder Printout (combines all modules into bound book) | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[PRINT-9]`** | Printable Ceremony Aisle Seating Chart Template | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
