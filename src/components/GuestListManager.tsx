@@ -306,7 +306,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               );
             })}
           </div>
-        </div>
+      </div>
+    );
+  };
+
   // Render reusable compact Guest List Table [GUEST-6]
   const renderGuestListTable = (targetGuests: Guest[]) => {
     return (
