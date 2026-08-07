@@ -40,8 +40,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
     ...guests.map(g => (g.tableAssignment || '').trim()).filter(Boolean)
   ])).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
-  // View Display State ('grid' | 'list' | 'seating' | 'party') [GUEST-6]
-  const [displayView, setDisplayView] = useState<'grid' | 'list' | 'seating' | 'party'>('grid');
+  // View Display State: Grouping Mode ('all' | 'seating' | 'party') & Layout Mode ('cards' | 'list') [GUEST-6]
+  const [groupingMode, setGroupingMode] = useState<'all' | 'seating' | 'party'>('all');
+  const [layoutMode, setLayoutMode] = useState<'cards' | 'list'>('cards');
 
   // Dynamic Catering Menu Entree Options
   const [menuOptions, setMenuOptions] = useState<string[]>([]);
@@ -306,6 +307,112 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             })}
           </div>
         </div>
+  // Render reusable compact Guest List Table [GUEST-6]
+  const renderGuestListTable = (targetGuests: Guest[]) => {
+    return (
+      <div style={{ overflowX: 'auto', backgroundColor: 'var(--color-surface, #ffffff)', border: '1px solid var(--color-muted)', borderRadius: 'var(--border-radius-md)', marginTop: '0.5rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', fontFamily: 'var(--font-sans)' }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-bg, #f9fafb)', borderBottom: '2px solid var(--color-muted)' }}>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>GUEST NAME</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>PARTY GROUP</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>AGE</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>RSVP STATUS</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>MEAL CHOICE</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>DIETARY TAGS</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight 700 }}>TABLE</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {targetGuests.map(guest => (
+              <tr key={guest.guestId} style={{ borderBottom: '1px solid var(--color-muted)', transition: 'background-color 0.15s ease' }}>
+                <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>
+                  <div>{guest.firstName} {guest.lastName}</div>
+                  {guest.emailAddress && <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>{guest.emailAddress}</div>}
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                  <span style={{ backgroundColor: 'var(--color-bg)', padding: '0.15rem 0.4rem', borderRadius: '3px', border: '1px solid var(--color-muted)' }}>
+                    {guest.partyGroup}
+                  </span>
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                  {guest.ageCategory}
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem' }}>
+                  <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
+                    {(['No Response', 'Attending', 'Declined'] as RSVPStatus[]).map((status) => {
+                      const isSelected = guest.rsvpStatus === status;
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => handleQuickRsvp(guest, status)}
+                          disabled={isSyncing}
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '3px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            backgroundColor: isSelected 
+                              ? (status === 'Attending' ? 'var(--color-green)' : status === 'Declined' ? 'var(--color-red)' : 'var(--color-gold)')
+                              : 'var(--color-bg, #f3f4f6)',
+                            color: isSelected ? '#ffffff' : 'var(--color-muted)',
+                          }}
+                          title={`Set RSVP to ${status}`}
+                        >
+                          {status === 'No Response' ? 'PENDING' : status.toUpperCase()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-text)' }}>
+                  {guest.mealChoice || '-'}
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                  {guest.dietaryRestrictions ? (
+                    <span style={{ color: 'var(--color-red)', fontWeight: 700, backgroundColor: 'rgba(239,68,68,0.1)', padding: '0.15rem 0.4rem', borderRadius: '3px', border: '1px solid #ef4444' }}>
+                      ⚠️ {guest.dietaryRestrictions}
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--color-muted)' }}>None</span>
+                  )}
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {guest.tableAssignment || 'Unassigned'}
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(guest)}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid var(--color-muted)',
+                      borderRadius: '4px',
+                      padding: '0.25rem 0.5rem',
+                      cursor: 'pointer',
+                      color: 'var(--color-text)',
+                    }}
+                    title="Edit Guest Details"
+                  >
+                    <Edit2 size={13} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {targetGuests.length === 0 && (
+              <tr>
+                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+                  No guests found matching filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     );
   };
@@ -321,50 +428,67 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
           </p>
         </div>
         <div style={styles.headerActions}>
+        <div style={styles.headerActions}>
+          {/* Grouping Mode Toggle (ALL | SEATING | GROUPS) */}
           <div style={styles.viewToggle}>
             <button
               style={{
                 ...styles.toggleBtn,
-                backgroundColor: displayView === 'grid' ? 'var(--color-primary)' : 'transparent',
-                color: displayView === 'grid' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
+                color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
               }}
-              onClick={() => setDisplayView('grid')}
-              title="All Guests Grid View"
+              onClick={() => setGroupingMode('all')}
+              title="All Guests View"
             >
-              <Grid size={14} style={{ marginRight: '0.25rem' }} /> CARDS
+              <Grid size={14} style={{ marginRight: '0.25rem' }} /> ALL
             </button>
             <button
               style={{
                 ...styles.toggleBtn,
-                backgroundColor: displayView === 'list' ? 'var(--color-primary)' : 'transparent',
-                color: displayView === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
+                color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
               }}
-              onClick={() => setDisplayView('list')}
-              title="Compact Desktop List View [GUEST-6]"
-            >
-              <List size={14} style={{ marginRight: '0.25rem' }} /> LIST
-            </button>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: displayView === 'seating' ? 'var(--color-primary)' : 'transparent',
-                color: displayView === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setDisplayView('seating')}
-              title="Seating Chart View"
+              onClick={() => setGroupingMode('seating')}
+              title="Seating Chart Grouping View"
             >
               <Utensils size={14} style={{ marginRight: '0.25rem' }} /> SEATING
             </button>
             <button
               style={{
                 ...styles.toggleBtn,
-                backgroundColor: displayView === 'party' ? 'var(--color-primary)' : 'transparent',
-                color: displayView === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
+                color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
               }}
-              onClick={() => setDisplayView('party')}
-              title="Party Group View"
+              onClick={() => setGroupingMode('party')}
+              title="Party Grouping View"
             >
               <Users size={14} style={{ marginRight: '0.25rem' }} /> GROUPS
+            </button>
+          </div>
+
+          {/* Independent Layout Mode Toggle (CARDS vs LIST) [GUEST-6] */}
+          <div style={styles.viewToggle}>
+            <button
+              style={{
+                ...styles.toggleBtn,
+                backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setLayoutMode('cards')}
+              title="Card Grid Cards Layout"
+            >
+              <Grid size={14} style={{ marginRight: '0.25rem' }} /> CARDS
+            </button>
+            <button
+              style={{
+                ...styles.toggleBtn,
+                backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
+                color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setLayoutMode('list')}
+              title="Compact Desktop List Rows Layout [GUEST-6]"
+            >
+              <List size={14} style={{ marginRight: '0.25rem' }} /> LIST
             </button>
           </div>
 
@@ -680,131 +804,21 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
           DECLINED: <strong>{guests.filter(g => g.rsvpStatus === 'Declined').length}</strong> | 
           PENDING: <strong>{guests.filter(g => g.rsvpStatus === 'No Response').length}</strong>
         </span>
-      </div>
-
-      {/* View Content */}
-      {displayView === 'grid' && (
-        <div style={styles.grid}>
-          {filteredGuests.map(guest => renderGuestCard(guest))}
-          {filteredGuests.length === 0 && (
-            <div style={styles.emptyState}>No guests found matching filters.</div>
-          )}
-        </div>
+      </div>      {/* View Content (ALL | SEATING | GROUPS crossed with CARDS | LIST layout) */}
+      {groupingMode === 'all' && (
+        layoutMode === 'cards' ? (
+          <div style={styles.grid}>
+            {filteredGuests.map(guest => renderGuestCard(guest))}
+            {filteredGuests.length === 0 && (
+              <div style={styles.emptyState}>No guests found matching filters.</div>
+            )}
+          </div>
+        ) : (
+          renderGuestListTable(filteredGuests)
+        )
       )}
 
-      {/* Compact List Row View [GUEST-6] */}
-      {displayView === 'list' && (
-        <div style={{ overflowX: 'auto', backgroundColor: 'var(--color-surface, #ffffff)', border: '1px solid var(--color-muted)', borderRadius: 'var(--border-radius-md)', marginTop: '0.5rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', fontFamily: 'var(--font-sans)' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--color-bg, #f9fafb)', borderBottom: '2px solid var(--color-muted)' }}>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>GUEST NAME</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>PARTY GROUP</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>AGE</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>RSVP STATUS</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>MEAL CHOICE</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>DIETARY TAGS</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>TABLE</th>
-                <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredGuests.map(guest => {
-                const isAttending = guest.rsvpStatus === 'Attending';
-                const isDeclined = guest.rsvpStatus === 'Declined';
-                return (
-                  <tr key={guest.guestId} style={{ borderBottom: '1px solid var(--color-muted)', transition: 'background-color 0.15s ease' }}>
-                    <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600, color: 'var(--color-text)' }}>
-                      <div>{guest.firstName} {guest.lastName}</div>
-                      {guest.emailAddress && <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>{guest.emailAddress}</div>}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                      <span style={{ backgroundColor: 'var(--color-bg)', padding: '0.15rem 0.4rem', borderRadius: '3px', border: '1px solid var(--color-muted)' }}>
-                        {guest.partyGroup}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                      {guest.ageCategory}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
-                        {(['No Response', 'Attending', 'Declined'] as RSVPStatus[]).map((status) => {
-                          const isSelected = guest.rsvpStatus === status;
-                          return (
-                            <button
-                              key={status}
-                              type="button"
-                              onClick={() => handleQuickRsvp(guest, status)}
-                              disabled={isSyncing}
-                              style={{
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: '0.65rem',
-                                fontWeight: 700,
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '3px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                backgroundColor: isSelected 
-                                  ? (status === 'Attending' ? 'var(--color-green)' : status === 'Declined' ? 'var(--color-red)' : 'var(--color-gold)')
-                                  : 'var(--color-bg, #f3f4f6)',
-                                color: isSelected ? '#ffffff' : 'var(--color-muted)',
-                              }}
-                              title={`Set RSVP to ${status}`}
-                            >
-                              {status === 'No Response' ? 'PENDING' : status.toUpperCase()}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-text)' }}>
-                      {guest.mealChoice || '-'}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                      {guest.dietaryRestrictions ? (
-                        <span style={{ color: 'var(--color-red)', fontWeight: 700, backgroundColor: 'rgba(239,68,68,0.1)', padding: '0.15rem 0.4rem', borderRadius: '3px', border: '1px solid #ef4444' }}>
-                          ⚠️ {guest.dietaryRestrictions}
-                        </span>
-                      ) : (
-                        <span style={{ color: 'var(--color-muted)' }}>None</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600 }}>
-                      {guest.tableAssignment || 'Unassigned'}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => startEdit(guest)}
-                        style={{
-                          backgroundColor: 'transparent',
-                          border: '1px solid var(--color-muted)',
-                          borderRadius: '4px',
-                          padding: '0.25rem 0.5rem',
-                          cursor: 'pointer',
-                          color: 'var(--color-text)',
-                        }}
-                        title="Edit Guest Details"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {filteredGuests.length === 0 && (
-                <tr>
-                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                    No guests found matching filters.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {displayView === 'seating' && (
+      {groupingMode === 'seating' && (
         <div style={styles.clustersContainer}>
           {tableKeys.map(table => {
             const tableGuests = tableGroupsMap[table];
@@ -834,9 +848,13 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   </div>
                 </div>
 
-                <div style={styles.grid}>
-                  {tableGuests.map(guest => renderGuestCard(guest))}
-                </div>
+                {layoutMode === 'cards' ? (
+                  <div style={styles.grid}>
+                    {tableGuests.map(guest => renderGuestCard(guest))}
+                  </div>
+                ) : (
+                  renderGuestListTable(tableGuests)
+                )}
               </div>
             );
           })}
@@ -846,7 +864,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
         </div>
       )}
 
-      {displayView === 'party' && (
+      {groupingMode === 'party' && (
         <div style={styles.clustersContainer}>
           {partyKeys.map(party => {
             const partyGuests = partyGroupsMap[party];
@@ -864,15 +882,16 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   </div>
                 </div>
 
-                <div style={styles.grid}>
-                  {partyGuests.map(guest => renderGuestCard(guest))}
-                </div>
+                {layoutMode === 'cards' ? (
+                  <div style={styles.grid}>
+                    {partyGuests.map(guest => renderGuestCard(guest))}
+                  </div>
+                ) : (
+                  renderGuestListTable(partyGuests)
+                )}
               </div>
             );
           })}
-          {partyKeys.length === 0 && (
-            <div style={styles.emptyState}>No guests found matching filters.</div>
-          )}
         </div>
       )}
 
