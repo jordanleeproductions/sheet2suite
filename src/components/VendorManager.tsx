@@ -60,6 +60,26 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     );
   }, [vendors]);
 
+  // Due Date Reminder status calculation helper [VND-2]
+  const getDueDateReminder = (dueDateStr?: string, balanceOwing: number = 0) => {
+    if (!dueDateStr || balanceOwing <= 0) return null;
+    const dueDate = new Date(dueDateStr);
+    if (isNaN(dueDate.getTime())) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diffMs = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { label: `OVERDUE (${Math.abs(diffDays)}d)`, isUrgent: true, days: diffDays };
+    } else if (diffDays <= 30) {
+      return { label: `DUE IN ${diffDays}d`, isUrgent: diffDays <= 7, days: diffDays };
+    }
+    return null;
+  };
+
   const filteredVendors = vendors.filter(v => {
     const matchesSearch = 
       (v.vendorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -382,7 +402,32 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
                     ${item.balanceOwing.toLocaleString()}
                   </td>
-                  <td style={styles.td}>{item.paymentDueDate || '-'}</td>
+                  <td style={styles.td}>
+                    {(() => {
+                      const reminder = getDueDateReminder(item.paymentDueDate, item.balanceOwing);
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <span>{item.paymentDueDate || '-'}</span>
+                          {reminder && (
+                            <span style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              backgroundColor: reminder.isUrgent ? 'var(--color-red, #ef4444)' : 'var(--color-gold, #eab308)',
+                              color: '#ffffff',
+                              padding: '0.1rem 0.4rem',
+                              borderRadius: 'var(--border-radius-sm)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              width: 'fit-content',
+                            }}>
+                              <AlertCircle size={10} style={{ marginRight: '0.2rem' }} /> {reminder.label}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td style={styles.td}>
                     {item.contractLink && <a href={item.contractLink} target="_blank" rel="noopener noreferrer" style={styles.iconLink}><Link2 size={14} /></a>}
                     {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meals</span>}
@@ -455,7 +500,32 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   </div>
                   <div>
                     <div style={styles.cardLabel}>DUE DATE</div>
-                    <div style={styles.cardValue}>{item.paymentDueDate || '-'}</div>
+                    <div style={styles.cardValue}>
+                      {(() => {
+                        const reminder = getDueDateReminder(item.paymentDueDate, item.balanceOwing);
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span>{item.paymentDueDate || '-'}</span>
+                            {reminder && (
+                              <span style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                backgroundColor: reminder.isUrgent ? 'var(--color-red, #ef4444)' : 'var(--color-gold, #eab308)',
+                                color: '#ffffff',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: 'var(--border-radius-sm)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                width: 'fit-content',
+                              }}>
+                                <AlertCircle size={10} style={{ marginRight: '0.2rem' }} /> {reminder.label}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--color-muted)' }}>
