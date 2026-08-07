@@ -67,6 +67,7 @@
 ## 💼 7. Vendor Directory (`VendorManager.tsx`)
 - [x] **[VND-1] Add/Edit Vendor Modal Header Font Fix:** Fixed modal header font color in Add & Edit Vendor modal to high-contrast white (`#ffffff`).
 - [x] **[VND-3] Category Breakdown Stat Badges:** Category summary breakdown displaying vendor count and total contract cost per category with interactive quick-filter toggles.
+- [x] **[VND-4] Vendor Portal Share Link Generator:** Dedicated **SHARE PORTAL** buttons on vendor cards/rows that automatically generate category-scoped signed HMAC access tokens for mobile vendor portals (*Music, Photos, Catering, Timeline*).
 - [x] **[VND-5] Vendor Subtitle Description:** Added a clean descriptive subtitle beneath the Vendor Management header detailing contract, payment, and meal tracking.
 
 ---
@@ -154,7 +155,7 @@
 |---|---|---|---|---|---|
 | **`[VND-2]`** | Payment Due Date Reminder Badges (Highlight balance owing within 30 days) | `VendorManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 | **`[VND-3]`** | Category Breakdown Stat Badges (Count & total contract cost per category) | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | ✅ Complete |
-| **`[VND-4]`** | Vendor Portal Link Generator (Shareable portal per vendor) | `VendorShareLinkManager.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | Pending |
+| **`[VND-4]`** | Vendor Portal Link Generator (Shareable portal per vendor) | `VendorManager.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Complete |
 
 ### 📋 Task Checklist & Kanban
 

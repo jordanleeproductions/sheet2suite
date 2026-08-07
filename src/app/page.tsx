@@ -1135,6 +1135,9 @@ export default function Sheet2VowDashboard() {
                   vendors={weddingData.vendors}
                   onUpdate={(data) => syncUpdate('vendors', data)}
                   isSyncing={isSyncing}
+                  spreadsheetId={spreadsheetId}
+                  weddingName={weddingName}
+                  onOpenShareModal={() => setShowShareModal(true)}
                   onOpenPrintStudio={(tmpl) => {
                     setPrintModalInitialTemplate(tmpl);
                     setShowPrintModal(true);
