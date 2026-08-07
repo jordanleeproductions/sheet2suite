@@ -66,6 +66,7 @@
 
 ## 💼 7. Vendor Directory (`VendorManager.tsx`)
 - [x] **[VND-1] Add/Edit Vendor Modal Header Font Fix:** Fixed modal header font color in Add & Edit Vendor modal to high-contrast white (`#ffffff`).
+- [x] **[VND-3] Category Breakdown Stat Badges:** Category summary breakdown displaying vendor count and total contract cost per category with interactive quick-filter toggles.
 - [x] **[VND-5] Vendor Subtitle Description:** Added a clean descriptive subtitle beneath the Vendor Management header detailing contract, payment, and meal tracking.
 
 ---
@@ -151,9 +152,9 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[VND-2]`** | Google Drive File Picker integration for contracts instead of URL links | `VendorManager.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
-| **`[VND-3]`** | Category Combo Dropdown pre-seeded with DJ/Band, Photographer, Venue, Catering | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
-| **`[VND-4]`** | Multi-Select Dietary Restrictions Tagging (Gluten Free, Vegan, Halal, No Pork...) | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[VND-2]`** | Payment Due Date Reminder Badges (Highlight balance owing within 30 days) | `VendorManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[VND-3]`** | Category Breakdown Stat Badges (Count & total contract cost per category) | `VendorManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | ✅ Complete |
+| **`[VND-4]`** | Vendor Portal Link Generator (Shareable portal per vendor) | `VendorShareLinkManager.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | Pending |
 
 ### 📋 Task Checklist & Kanban
 
