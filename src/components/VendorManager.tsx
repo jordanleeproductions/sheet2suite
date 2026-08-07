@@ -301,14 +301,14 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
         </div>
 
         <div style={{
-          backgroundColor: financialSummary.totalOwing > 0 ? 'var(--color-red-muted, rgba(239,68,68,0.05))' : 'var(--color-surface, #ffffff)',
-          border: financialSummary.totalOwing > 0 ? '2px solid var(--color-red, #ef4444)' : '1px solid var(--color-muted)',
+          backgroundColor: 'var(--color-surface, #ffffff)',
+          border: '1px solid var(--color-muted)',
           borderRadius: 'var(--border-radius-md)',
           padding: '1rem',
           textAlign: 'center',
           boxShadow: 'var(--box-shadow-subtle)',
         }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: financialSummary.totalOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
             TOTAL AMOUNT OWING
           </div>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-red, #ef4444)', marginTop: '0.25rem' }}>
