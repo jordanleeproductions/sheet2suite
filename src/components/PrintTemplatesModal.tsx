@@ -38,7 +38,7 @@ export default function PrintTemplatesModal({
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('ALL');
   const [selectedVendorCatFilter, setSelectedVendorCatFilter] = useState<string>('ALL');
   
-  // Field & Aesthetic Controls [PRINT-5 & PRINT-6]
+  // Field & Aesthetic Controls [PRINT-5 & PRINT-6 & PRINT-12]
   const [showMealChoiceOnCards, setShowMealChoiceOnCards] = useState<boolean>(true);
   const [showDietaryBadgesOnCards, setShowDietaryBadgesOnCards] = useState<boolean>(true);
   const [showPlusOneOnCards, setShowPlusOneOnCards] = useState<boolean>(true);
@@ -46,6 +46,7 @@ export default function PrintTemplatesModal({
   const [showFoldLines, setShowFoldLines] = useState<boolean>(true);
   const [showSeatMaps, setShowSeatMaps] = useState<boolean>(true);
   const [showDecorativeIcons, setShowDecorativeIcons] = useState<boolean>(true);
+  const [enableBinderPunchMargins, setEnableBinderPunchMargins] = useState<boolean>(false);
 
   // Filtered Lists
   const tablesList = Array.from(new Set(guests.map(g => g.tableAssignment).filter(Boolean)));
@@ -224,7 +225,7 @@ export default function PrintTemplatesModal({
             top: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 0 !important;
+            padding: ${enableBinderPunchMargins ? '0 0 0 25mm' : '0'} !important;
             background: #ffffff !important;
             color: #000000 !important;
             box-shadow: none !important;
@@ -235,7 +236,7 @@ export default function PrintTemplatesModal({
           }
           @page {
             size: A4 portrait;
-            margin: 12mm;
+            margin: ${enableBinderPunchMargins ? '12mm 12mm 12mm 25mm' : '12mm'};
           }
         }
       `}</style>
@@ -378,6 +379,16 @@ export default function PrintTemplatesModal({
                     />
                     <span>SHOW FOLD & CROP MARKS</span>
                   </label>
+
+                  <label style={styles.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={enableBinderPunchMargins}
+                      onChange={(e) => setEnableBinderPunchMargins(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span>3-RING BINDER HOLE MARGINS [PRINT-12]</span>
+                  </label>
                 </>
               )}
 
@@ -439,6 +450,16 @@ export default function PrintTemplatesModal({
                     ))}
                   </select>
                 </div>
+              {activeTemplate !== 'place_cards' && (
+                <label style={{ ...styles.checkLabel, marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--color-muted)' }}>
+                  <input
+                    type="checkbox"
+                    checked={enableBinderPunchMargins}
+                    onChange={(e) => setEnableBinderPunchMargins(e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span>3-RING BINDER HOLE MARGINS [PRINT-12]</span>
+                </label>
               )}
             </div>
 
@@ -450,7 +471,15 @@ export default function PrintTemplatesModal({
 
           {/* Right Live Preview Content Sheet */}
           <div style={styles.previewContainer}>
-            <div id="print-studio-paper-content" style={styles.paperSheet}>
+            <div
+              id="print-studio-paper-content"
+              style={{
+                ...styles.paperSheet,
+                paddingLeft: enableBinderPunchMargins ? '2.5rem' : '2rem',
+                borderLeft: enableBinderPunchMargins ? '4px solid var(--color-primary)' : styles.paperSheet.border,
+                transition: 'all 0.2s ease',
+              }}
+            >
               {/* WEDDING HEADER WATERMARK FOR PRINT */}
               <div style={styles.paperHeader}>
                 <div style={{ textAlign: 'center' }}>

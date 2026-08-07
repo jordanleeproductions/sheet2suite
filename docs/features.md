@@ -37,6 +37,7 @@
 - [x] **[PRINT-2] Guest Photo/Video Upload QR Cards:** Printable place cards with custom QR code linking guests directly to the photo upload portal (`/upload/[token]`).
 - [x] **[PRINT-5] Emoji & Decorative Icon Toggles:** Added options toggle in Print Studio for wedding ring and sparkle decorative emojis.
 - [x] **[PRINT-6] Granular Card Field Controls:** Added individual field checkboxes to show/hide Table Number, Meal Selection Icon, Dietary Restrictions, and Plus-One / Party Group names on place cards.
+- [x] **[PRINT-12] Binder Hole Punch Margins Toggle:** Sidebar option to dynamically add a 25mm left gutter margin for 3-ring binder punch clearance during printing.
 
 ---
 
@@ -152,7 +153,6 @@
 | **`[PRINT-9]`** | Printable Ceremony Aisle Seating Chart Template | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-10]`** | Responsive Mobile Print Studio layout redesign | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-11]`** | Separate Binder Planner pages from Guest Printables (place cards, QR cards) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
-| **`[PRINT-12]`** | Binder Hole Punch Margins toggle (space for 3-ring binder punches) | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 | **`[PRINT-13]`** | Batch Combined Binder Export or Individual Section PDF downloads | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[PRINT-14]`** | Table Seating Roster Pagination: Limit to 1-2 tables per page for legibility | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
