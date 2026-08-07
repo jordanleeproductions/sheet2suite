@@ -46,6 +46,7 @@
 - [x] **[GUEST-3] Catering & Menu Setup Page (`MenuSetupManager.tsx`):** Dedicated menu management interface allowing couples to configure custom entree, appetizer, and dessert options, automatically populating meal choices into the Guest Registry Add/Edit modal and tracking live RSVP order counts.
 - [x] **[GUEST-4] Dedicated Dietary Restrictions Summary Row:** Moved Dietary Restrictions to a dedicated row under Meal Totals inside guest cards with total counts and dietary breakdowns.
 - [x] **[GUEST-5] Clickable Meal Totals & Dietary Restriction Badges:** Made meal total choice pills and dietary restriction alert badges interactive quick-filters that filter the guest list on click.
+- [x] **[GUEST-6] Desktop List Row View Toggle:** Switchable compact list table view for dense guest data management alongside card grid view.
 - [x] **[GUEST-7] Header Action Realignment & Subtitle:** Moved "Add Guest" button to right hand side with centered text and added a descriptive subtitle under "Guest Registry".
 - [x] **[GUEST-8] Dynamic Party Group Combo Dropdown:** Converted Party Group text input in guest modal to an interactive HTML5 combo dropdown pre-seeded with existing party groups.
 
@@ -143,7 +144,7 @@
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[GUEST-5]`** | Make Meal Totals & Dietary Restriction badges clickable quick-filters | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~1-2 turns) | ✅ Complete |
-| **`[GUEST-6]`** | Desktop List Row View Toggle: Switch between Card Grid and List Table Rows | `GuestListManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[GUEST-6]`** | Desktop List Row View Toggle: Switch between Card Grid and List Table Rows | `GuestListManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Complete |
 | **`[GUEST-8]`** | Dynamic Party Group Combo Dropdown (select existing or type custom) | `GuestListManager.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Complete |
 
 ### 💼 Vendor Directory
