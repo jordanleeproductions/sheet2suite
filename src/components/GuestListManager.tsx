@@ -324,7 +324,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>RSVP STATUS</th>
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>MEAL CHOICE</th>
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>DIETARY TAGS</th>
-              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight 700 }}>TABLE</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>TABLE</th>
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>ACTIONS</th>
             </tr>
           </thead>
@@ -431,7 +431,6 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             Manage wedding invitations, track RSVPs, table assignments, and catering dietary preferences.
           </p>
         </div>
-        <div style={styles.headerActions}>
         <div style={styles.headerActions}>
           {/* Grouping Mode Toggle (ALL | SEATING | GROUPS) */}
           <div style={styles.viewToggle}>
