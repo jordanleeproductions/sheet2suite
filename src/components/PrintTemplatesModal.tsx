@@ -450,6 +450,8 @@ export default function PrintTemplatesModal({
                     ))}
                   </select>
                 </div>
+              )}
+
               {activeTemplate !== 'place_cards' && (
                 <label style={{ ...styles.checkLabel, marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--color-muted)' }}>
                   <input
