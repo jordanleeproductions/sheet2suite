@@ -47,6 +47,19 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     })).sort((a, b) => b.count - a.count);
   }, [vendors]);
 
+  // Financial summary KPI metrics
+  const financialSummary = React.useMemo(() => {
+    return vendors.reduce(
+      (acc, v) => {
+        acc.totalContracts += v.totalContractValue || 0;
+        acc.totalDeposits += v.depositPaid || 0;
+        acc.totalOwing += v.balanceOwing || 0;
+        return acc;
+      },
+      { totalContracts: 0, totalDeposits: 0, totalOwing: 0 }
+    );
+  }, [vendors]);
+
   const filteredVendors = vendors.filter(v => {
     const matchesSearch = 
       (v.vendorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -253,6 +266,57 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
         </div>
       )}
 
+      {/* Financial KPI Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', margin: '0.75rem 0' }}>
+        <div style={{
+          backgroundColor: 'var(--color-surface, #ffffff)',
+          border: '1px solid var(--color-muted)',
+          borderRadius: 'var(--border-radius-md)',
+          padding: '1rem',
+          textAlign: 'center',
+          boxShadow: 'var(--box-shadow-subtle)',
+        }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
+            TOTAL CONTRACTS
+          </div>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: '0.25rem' }}>
+            ${financialSummary.totalContracts.toLocaleString()}
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: 'var(--color-surface, #ffffff)',
+          border: '1px solid var(--color-muted)',
+          borderRadius: 'var(--border-radius-md)',
+          padding: '1rem',
+          textAlign: 'center',
+          boxShadow: 'var(--box-shadow-subtle)',
+        }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
+            TOTAL DEPOSITS PAID
+          </div>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-green, #10b981)', marginTop: '0.25rem' }}>
+            ${financialSummary.totalDeposits.toLocaleString()}
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: financialSummary.totalOwing > 0 ? 'var(--color-red-muted, rgba(239,68,68,0.05))' : 'var(--color-surface, #ffffff)',
+          border: financialSummary.totalOwing > 0 ? '2px solid var(--color-red, #ef4444)' : '1px solid var(--color-muted)',
+          borderRadius: 'var(--border-radius-md)',
+          padding: '1rem',
+          textAlign: 'center',
+          boxShadow: 'var(--box-shadow-subtle)',
+        }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: financialSummary.totalOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
+            TOTAL AMOUNT OWING
+          </div>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-red, #ef4444)', marginTop: '0.25rem' }}>
+            ${financialSummary.totalOwing.toLocaleString()}
+          </div>
+        </div>
+      </div>
+
       {/* Filter and Search Bar */}
       <div style={styles.filterBar}>
         <input
@@ -315,7 +379,9 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   </td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>${item.totalContractValue.toLocaleString()}</td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>${item.depositPaid.toLocaleString()}</td>
-                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>${item.balanceOwing.toLocaleString()}</td>
+                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
+                    ${item.balanceOwing.toLocaleString()}
+                  </td>
                   <td style={styles.td}>{item.paymentDueDate || '-'}</td>
                   <td style={styles.td}>
                     {item.contractLink && <a href={item.contractLink} target="_blank" rel="noopener noreferrer" style={styles.iconLink}><Link2 size={14} /></a>}
@@ -383,7 +449,9 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   </div>
                   <div>
                     <div style={styles.cardLabel}>OWING</div>
-                    <div style={{ ...styles.cardValue, fontWeight: 700 }}>${item.balanceOwing.toLocaleString()}</div>
+                    <div style={{ ...styles.cardValue, fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
+                      ${item.balanceOwing.toLocaleString()}
+                    </div>
                   </div>
                   <div>
                     <div style={styles.cardLabel}>DUE DATE</div>
