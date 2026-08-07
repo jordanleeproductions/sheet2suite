@@ -306,6 +306,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               );
             })}
           </div>
+        </div>
       </div>
     );
   };
