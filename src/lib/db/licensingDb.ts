@@ -112,4 +112,27 @@ export const LocalLicensingDb = {
     writeJsonFile(LICENSES_FILE, licenses);
     return license;
   },
+
+  // 5. Admin methods: list all workspaces & licenses
+  getAllWorkspaces(): WorkspaceRecord[] {
+    return readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
+  },
+
+  getAllLicenses(): Sheet2SuiteLicense[] {
+    return readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
+  },
+
+  deleteWorkspace(workspaceId: string): boolean {
+    const workspaces = readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
+    const filtered = workspaces.filter((w) => w.workspaceId !== workspaceId);
+    writeJsonFile(WORKSPACES_FILE, filtered);
+    return filtered.length < workspaces.length;
+  },
+
+  deleteLicense(licenseKey: string): boolean {
+    const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
+    const filtered = licenses.filter((l) => l.licenseKey !== licenseKey);
+    writeJsonFile(LICENSES_FILE, filtered);
+    return filtered.length < licenses.length;
+  },
 };
