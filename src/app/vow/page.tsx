@@ -2265,13 +2265,66 @@ export default function Sheet2VowDashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
               {isMockMode ? (
                 <Zap size={18} style={{ color: 'var(--color-amber, #f59e0b)', flexShrink: 0 }} />
-                  }}
-                >
-                  <X size={16} />
-                </button>
+              ) : (
+                <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+              )}
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text)' }}>
+                  {isMockMode ? '⚡ DEMO WORKSPACE ACTIVE (OFFLINE MOCK MODE)' : `🟢 LIVE GOOGLE DRIVE CONNECTED: ${googleUserEmail || 'USER'}`}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
+                  {isMockMode
+                    ? "Exploring sample wedding data (*Alex & Sam's Wedding*). Sign in with Google to sync directly to your personal Google Drive."
+                    : `Direct Google Drive Sync active • Spreadsheet ID: ${spreadsheetId || '1h_RG...4RcI'}`}
+                </div>
               </div>
             </div>
-          )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setShowGoogleAuthModal(true)}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  backgroundColor: '#ffffff',
+                  color: '#111827',
+                  border: '2px solid #111827',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.4rem 0.75rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <HardDrive size={14} style={{ color: '#4285F4' }} />
+                <span>SIGN IN WITH GOOGLE</span>
+              </button>
+
+              <a
+                href="/activate"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-on-primary)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.45rem 0.75rem',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Sparkles size={14} />
+                <span>ACTIVATE NEW PLAN</span>
+              </a>
+            </div>
+          </div>
 
           {/* Navigation tabs (Only rendered when navLayout is 'top') */}
           {navLayout === 'top' && (
