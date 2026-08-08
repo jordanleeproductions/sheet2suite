@@ -709,7 +709,7 @@ export default function Sheet2VowDashboard() {
                 type="button"
                 onClick={() => {
                   setIsMobileDrawerOpen(false);
-                  setShowSettings(true);
+                  setShowAdvancedSettings(true);
                 }}
                 style={{
                   display: 'flex',
@@ -727,7 +727,7 @@ export default function Sheet2VowDashboard() {
                 }}
               >
                 <Settings size={16} style={{ color: 'var(--color-primary)' }} />
-                <span>QUICK SETTINGS</span>
+                <span>SETTINGS</span>
               </button>
             </div>
           </div>
