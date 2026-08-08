@@ -108,15 +108,13 @@ export default function PrintTemplatesModal({
   };
 
   const handleExportCanvaEnvelopesCSV = () => {
-    const headers = ['Guest Name', 'Party Group', 'Address Line 1', 'Address Line 2', 'City', 'State', 'Zip Code', 'RSVP Status'];
+    const headers = ['Guest Name', 'Party Group', 'Mailing Address', 'Phone Number', 'Email Address', 'RSVP Status'];
     const rows = guests.map(g => [
       `"${(`${g.firstName || ''} ${g.lastName || ''}`).trim().replace(/"/g, '""')}"`,
       `"${(g.partyGroup || 'Individual').replace(/"/g, '""')}"`,
-      `"${(g.addressLine1 || '').replace(/"/g, '""')}"`,
-      `"${(g.addressLine2 || '').replace(/"/g, '""')}"`,
-      `"${(g.city || '').replace(/"/g, '""')}"`,
-      `"${(g.state || '').replace(/"/g, '""')}"`,
-      `"${(g.zipCode || '').replace(/"/g, '""')}"`,
+      `"${(g.mailingAddress || '').replace(/"/g, '""')}"`,
+      `"${(g.phoneNumber || '').replace(/"/g, '""')}"`,
+      `"${(g.emailAddress || '').replace(/"/g, '""')}"`,
       `"${(g.rsvpStatus || 'Pending').replace(/"/g, '""')}"`,
     ]);
 
@@ -1240,7 +1238,7 @@ export default function PrintTemplatesModal({
                           ✉️ Envelope Addressing CSV
                         </div>
                         <p style={{ fontSize: '0.7rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>
-                          Includes: Guest Name, Party Group, Street Address Line 1 & 2, City, State, Zip Code.
+                          Includes: Guest Name, Party Group, Mailing Address, Phone Number, Email Address.
                         </p>
                         <button
                           type="button"
