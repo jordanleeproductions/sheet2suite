@@ -272,14 +272,14 @@ button[type="submit"] {
   color: #ffffff !important;
 }
 
-/* In Dark Mode: Modal Headers font color (Title + Close X button) is black */
+/* In Dark Mode: Modal Headers font color uses the theme's on-primary token */
 [data-theme='dark'] [class*="modalHeader"],
 [data-theme='dark'] [class*="modalHeader"] h3,
 [data-theme='dark'] [class*="modalHeader"] button,
 [data-theme='dark'] [class*="modalHeader"] svg,
 [data-theme='dark'] [class*="modalTitle"],
 [data-theme='dark'] [class*="closeBtn"] {
-  color: #000000 !important;
+  color: var(--color-on-primary) !important;
 }
 
 /* Remove background color from Sync / Mock Mode Banner in Dark Mode */
@@ -336,6 +336,11 @@ button[type="submit"] {
 [data-theme='dark'] .settingsDropdown a,
 [data-theme='dark'] .settingsDropdown button {
   color: #ffffff !important;
+}
+
+[data-theme='dark'] [class*="settingsDropdown"] button[style*="var(--color-primary)"],
+[data-theme='dark'] .settingsDropdown button[style*="var(--color-primary)"] {
+  color: var(--color-on-primary) !important;
 }
 
 /* Responsive container */
@@ -474,3 +479,5 @@ button[style*="backgroundColor: 'var(--color-bg)'"] {
     padding-right: 2rem !important;
   }
 }
+
+/* Force Turbopack Cache Invalidation */

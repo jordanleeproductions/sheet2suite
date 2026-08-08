@@ -309,7 +309,7 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
       {(isAdding || editingItem) && (
         <div style={styles.modalOverlay} onClick={() => { setIsAdding(false); setEditingItem(null); }}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
+            <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }}>
                 {isAdding ? 'ADD MENU ITEM' : `EDIT ITEM: ${editingItem?.name}`}
               </h3>

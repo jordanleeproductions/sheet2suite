@@ -47,6 +47,7 @@ export default function PrintTemplatesModal({
   const [showSeatMaps, setShowSeatMaps] = useState<boolean>(true);
   const [showDecorativeIcons, setShowDecorativeIcons] = useState<boolean>(true);
   const [enableBinderPunchMargins, setEnableBinderPunchMargins] = useState<boolean>(false);
+  const [printTypography, setPrintTypography] = useState<'serif' | 'sans' | 'script' | 'mono'>('serif');
 
   // Filtered Lists
   const tablesList = Array.from(new Set(guests.map(g => g.tableAssignment).filter(Boolean)));
@@ -243,7 +244,7 @@ export default function PrintTemplatesModal({
 
       <div className="print-modal-container" style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div style={styles.header} className="print-no-print">
+        <div style={styles.header} className="modalHeader print-no-print">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Printer size={20} style={{ color: 'var(--color-primary)' }} />
             <div>
@@ -300,6 +301,20 @@ export default function PrintTemplatesModal({
 
             {/* Template Filters & Customization Panel */}
             <div style={styles.filterBox}>
+              <div style={{ ...styles.filterGroup, borderBottom: '1px solid var(--color-muted)', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
+                <label style={styles.filterLabel}>PRINT TYPOGRAPHY THEME [PRINT-4]</label>
+                <select
+                  value={printTypography}
+                  onChange={(e) => setPrintTypography(e.target.value as any)}
+                  style={styles.filterSelect}
+                >
+                  <option value="serif">Classic Serif (Default)</option>
+                  <option value="sans">Modern Sans-Serif</option>
+                  <option value="script">Elegant Script / Cursive</option>
+                  <option value="mono">Technical Monospace</option>
+                </select>
+              </div>
+
               <div style={styles.filterTitle}>
                 <Filter size={13} style={{ marginRight: '0.35rem' }} /> OPTIONS & FILTERS
               </div>
@@ -480,6 +495,10 @@ export default function PrintTemplatesModal({
                 paddingLeft: enableBinderPunchMargins ? '2.5rem' : '2rem',
                 borderLeft: enableBinderPunchMargins ? '4px solid var(--color-primary)' : styles.paperSheet.border,
                 transition: 'all 0.2s ease',
+                ...(printTypography === 'sans' ? { '--font-serif': 'var(--font-sans)', '--font-header': 'var(--font-sans)' } :
+                    printTypography === 'mono' ? { '--font-serif': 'var(--font-mono)', '--font-header': 'var(--font-mono)', '--font-sans': 'var(--font-mono)' } :
+                    printTypography === 'script' ? { '--font-serif': '"Great Vibes", "Dancing Script", "Brush Script MT", cursive', '--font-header': '"Great Vibes", "Dancing Script", "Brush Script MT", cursive' } :
+                    {}) as any
               }}
             >
               {/* WEDDING HEADER WATERMARK FOR PRINT */}
@@ -562,56 +581,64 @@ export default function PrintTemplatesModal({
                   {tablesList.length === 0 ? (
                     <div style={styles.emptyNotice}>No seating tables configured yet in Seating Chart.</div>
                   ) : (
-                    <div style={styles.tableCardsGrid}>
-                      {(selectedTableFilter === 'ALL' ? tablesList : [selectedTableFilter]).map((tableName) => {
-                        const tableGuests = attendingGuests.filter(g => (g.tableAssignment || '').toLowerCase() === tableName.toLowerCase());
-                        return (
-                          <div key={tableName} style={styles.tableTentCard}>
-                            <div style={styles.tableTentHeader}>
-                              <h3 style={styles.tableTentTitle}>{tableName.toUpperCase()}</h3>
-                              <span style={styles.tableTentSubtitle}>{tableGuests.length} Guests Assigned</span>
-                            </div>
+                    <div>
+                      {Array.from({ length: Math.ceil((selectedTableFilter === 'ALL' ? tablesList : [selectedTableFilter]).length / 2) }, (_, i) => 
+                        (selectedTableFilter === 'ALL' ? tablesList : [selectedTableFilter]).slice(i * 2, i * 2 + 2)
+                      ).map((tableChunk, chunkIdx, chunksArray) => (
+                        <div key={chunkIdx} style={{ pageBreakAfter: chunkIdx === chunksArray.length - 1 ? 'auto' : 'always', marginBottom: '2rem' }}>
+                          <div style={styles.tableCardsGrid}>
+                            {tableChunk.map((tableName) => {
+                              const tableGuests = attendingGuests.filter(g => (g.tableAssignment || '').toLowerCase() === tableName.toLowerCase());
+                              return (
+                                <div key={tableName} style={styles.tableTentCard}>
+                                  <div style={styles.tableTentHeader}>
+                                    <h3 style={styles.tableTentTitle}>{tableName.toUpperCase()}</h3>
+                                    <span style={styles.tableTentSubtitle}>{tableGuests.length} Guests Assigned</span>
+                                  </div>
 
-                            {/* Coordinator Visual Table Diagram */}
-                            {showSeatMaps && renderTableDiagram(tableName, tableGuests)}
+                                  {/* Coordinator Visual Table Diagram */}
+                                  {showSeatMaps && renderTableDiagram(tableName, tableGuests)}
 
-                            <div style={styles.tableTentGuestList}>
-                              {tableGuests.length === 0 ? (
-                                <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>No guests assigned to this table</span>
-                              ) : (
-                                tableGuests.map((g, idx) => {
-                                  const seatNum = typeof g.seatNumber === 'number' ? g.seatNumber : idx + 1;
-                                  return (
-                                    <div key={g.guestId} style={styles.tableTentGuestRow}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                        <span style={{
-                                          fontFamily: 'var(--font-mono)',
-                                          fontSize: '0.65rem',
-                                          fontWeight: 700,
-                                          backgroundColor: '#111827',
-                                          color: '#ffffff',
-                                          borderRadius: '3px',
-                                          padding: '0.1rem 0.35rem',
-                                        }}>
-                                          #{seatNum}
-                                        </span>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-                                          {g.firstName} {g.lastName}
-                                        </span>
-                                      </div>
-                                      {g.mealChoice && (
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                                          {getMealIcon(g.mealChoice)} {g.mealChoice}
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })
-                              )}
-                            </div>
+                                  <div style={styles.tableTentGuestList}>
+                                    {tableGuests.length === 0 ? (
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>No guests assigned to this table</span>
+                                    ) : (
+                                      tableGuests.map((g, idx) => {
+                                        const seatNum = typeof g.seatNumber === 'number' ? g.seatNumber : idx + 1;
+                                        return (
+                                          <div key={g.guestId} style={styles.tableTentGuestRow}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                              <span style={{
+                                                fontFamily: 'var(--font-mono)',
+                                                fontSize: '0.65rem',
+                                                fontWeight: 700,
+                                                backgroundColor: '#111827',
+                                                color: '#ffffff',
+                                                borderRadius: '3px',
+                                                padding: '0.1rem 0.35rem',
+                                              }}>
+                                                #{seatNum}
+                                              </span>
+                                              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                                                {g.firstName} {g.lastName}
+                                              </span>
+                                            </div>
+                                            {g.mealChoice && (
+                                              <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                                                {getMealIcon(g.mealChoice)} {g.mealChoice}
+                                              </span>
+                                            )}
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

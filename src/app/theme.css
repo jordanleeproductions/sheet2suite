@@ -207,3 +207,204 @@
   --box-shadow-subtle: 3px 3px 0px 0px var(--color-primary);
   --box-shadow-hover: 5px 5px 0px 0px var(--color-primary);
 }
+
+/* Botanical Romance (Light) */
+[data-style='botanical-romance'][data-theme='light'] {
+  --style-name: 'botanical-romance';
+
+  --color-bg: #f9f6f0;
+  --color-surface: #ffffff;
+  --color-primary: #5c715e; /* Deep sage */
+  --color-on-primary: #ffffff;
+  --color-text: #4a4a4a;
+  --color-muted: #8c8c8c;
+  --color-highlight: #d4a373;
+  --color-gold-dark: #b5835a;
+  --color-white: #ffffff;
+
+  /* Accent & Status Tokens */
+  --color-green: #5c715e;
+  --color-green-muted: #e8ede9;
+  --color-gold: #d4a373;
+  --color-gold-muted: #f7eedf;
+  --color-red: #c27a7a;
+  --color-red-muted: #f2e1e1;
+  --color-amber: #cca580;
+  --color-amber-muted: #f5ece4;
+  --color-amber-dark: #a37d5c;
+  --color-purple: #9d8eb5;
+  --color-purple-muted: #ebe8f0;
+  --color-sweetheart: #4a4a4a;
+
+  --color-text-secondary: #6b6b6b;
+  --color-text-tertiary: #a1a1a1;
+  --color-bg-subtle: #f4efeb;
+  --color-bg-hover: #ede7e1;
+  --color-border: #e0dcd3;
+  --color-on-dark: #ffffff;
+  --color-on-light: #4a4a4a;
+
+  --color-btn-selected-bg: #5c715e;
+  --color-btn-selected-text: #ffffff;
+
+  --border-radius-sm: 8px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  --border-width: 1px;
+  --transition-smooth: all 0.4s ease-in-out;
+  --box-shadow-subtle: 0 4px 12px rgba(92, 113, 94, 0.08);
+  --box-shadow-hover: 0 8px 24px rgba(92, 113, 94, 0.12);
+}
+
+/* Botanical Romance Typography */
+[data-style='botanical-romance'] {
+  --font-serif: var(--font-cormorant-google), 'Cormorant Garamond', 'Garamond', serif;
+  --font-sans: var(--font-nunito-google), 'Nunito', 'Avenir', sans-serif;
+  --font-mono: var(--font-mono-google), monospace;
+  --font-header: var(--font-serif);
+}
+
+/* Botanical Romance (Dark) */
+[data-style='botanical-romance'][data-theme='dark'] {
+  --color-bg: #2a2e2a;
+  --color-surface: #333833;
+  --color-primary: #849b87;
+  --color-on-primary: #1a1e1a;
+  --color-text: #e8e3d3;
+  --color-muted: #9fa19a;
+  --color-highlight: #d4a373;
+  --color-gold-dark: #e0be9f;
+  --color-white: #ffffff;
+
+  --color-green: #849b87;
+  --color-green-muted: rgba(132, 155, 135, 0.15);
+  --color-gold: #d4a373;
+  --color-gold-muted: rgba(212, 163, 115, 0.15);
+  --color-red: #d18888;
+  --color-red-muted: rgba(209, 136, 136, 0.15);
+  --color-amber: #cca580;
+  --color-amber-muted: rgba(204, 165, 128, 0.15);
+  --color-amber-dark: #cca580;
+  --color-purple: #b0a3c4;
+  --color-purple-muted: rgba(176, 163, 196, 0.15);
+  --color-sweetheart: #ffffff;
+
+  --color-text-secondary: #c2c0b6;
+  --color-text-tertiary: #9fa19a;
+  --color-bg-subtle: #2d302d;
+  --color-bg-hover: #3b3d3b;
+  --color-border: #4d524d;
+  --color-on-dark: #ffffff;
+  --color-on-light: #2a2e2a;
+
+  --color-btn-selected-bg: #849b87;
+  --color-btn-selected-text: #1a1e1a;
+
+  --border-radius-sm: 8px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  --border-width: 1px;
+  --transition-smooth: all 0.4s ease-in-out;
+  --box-shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --box-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Midnight Tuxedo (Light) */
+[data-style='midnight-tuxedo'][data-theme='light'] {
+  --style-name: 'midnight-tuxedo';
+
+  --color-bg: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-primary: #111111;
+  --color-on-primary: #ffffff;
+  --color-text: #1a202c;
+  --color-muted: #718096;
+  --color-highlight: #d69e2e;
+  --color-gold-dark: #b7791f;
+  --color-white: #ffffff;
+
+  --color-green: #38a169;
+  --color-green-muted: #f0fff4;
+  --color-gold: #d69e2e;
+  --color-gold-muted: #fffff0;
+  --color-red: #e53e3e;
+  --color-red-muted: #fff5f5;
+  --color-amber: #dd6b20;
+  --color-amber-muted: #fffaf0;
+  --color-amber-dark: #c05621;
+  --color-purple: #805ad5;
+  --color-purple-muted: #faf5ff;
+  --color-sweetheart: #1a202c;
+
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary: #a0aec0;
+  --color-bg-subtle: #edf2f7;
+  --color-bg-hover: #e2e8f0;
+  --color-border: #cbd5e0;
+  --color-on-dark: #ffffff;
+  --color-on-light: #1a202c;
+
+  --color-btn-selected-bg: #111111;
+  --color-btn-selected-text: #ffffff;
+
+  --border-radius-sm: 0px;
+  --border-radius-md: 0px;
+  --border-radius-lg: 0px;
+  --border-width: 1px;
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --box-shadow-subtle: 0 1px 0 rgba(0,0,0,0.1);
+  --box-shadow-hover: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Midnight Tuxedo Typography */
+[data-style='midnight-tuxedo'] {
+  --font-serif: var(--font-bodoni-google), 'Bodoni Moda', 'Didot', serif;
+  --font-sans: var(--font-montserrat-google), 'Helvetica Neue', 'Arial', sans-serif;
+  --font-mono: var(--font-mono-google), monospace;
+  --font-header: var(--font-serif);
+}
+
+/* Midnight Tuxedo (Dark) */
+[data-style='midnight-tuxedo'][data-theme='dark'] {
+  --color-bg: #09090b;
+  --color-surface: #121214;
+  --color-primary: #ffffff;
+  --color-on-primary: #000000;
+  --color-text: #f1f5f9;
+  --color-muted: #94a3b8;
+  --color-highlight: #ecc94b;
+  --color-gold-dark: #f6e05e;
+  --color-white: #ffffff;
+
+  --color-green: #48bb78;
+  --color-green-muted: rgba(72, 187, 120, 0.15);
+  --color-gold: #ecc94b;
+  --color-gold-muted: rgba(236, 201, 75, 0.15);
+  --color-red: #fc8181;
+  --color-red-muted: rgba(252, 129, 129, 0.15);
+  --color-amber: #ed8936;
+  --color-amber-muted: rgba(237, 137, 54, 0.15);
+  --color-amber-dark: #ed8936;
+  --color-purple: #9f7aea;
+  --color-purple-muted: rgba(159, 122, 234, 0.15);
+  --color-sweetheart: #ffffff;
+
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #64748b;
+  --color-bg-subtle: #1e293b;
+  --color-bg-hover: #334155;
+  --color-border: #334155;
+  --color-on-dark: #ffffff;
+  --color-on-light: #000000;
+
+  --color-btn-selected-bg: #ffffff;
+  --color-btn-selected-text: #000000;
+
+  --border-radius-sm: 0px;
+  --border-radius-md: 0px;
+  --border-radius-lg: 0px;
+  --border-width: 1px;
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --box-shadow-subtle: 0 1px 0 rgba(255,255,255,0.1);
+  --box-shadow-hover: 0 8px 16px rgba(255,255,255,0.05);
+}

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type StyleTheme = 'editorial' | 'neo-brutalism';
+export type StyleTheme = 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
 export type ColorTheme = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -26,7 +26,7 @@ export function Sheet2ThemeProvider({ children }: { children: React.ReactNode })
     const savedTheme = localStorage.getItem('s2v_theme') as ColorTheme;
     const savedColor = localStorage.getItem('s2v_primary_color');
 
-    if (savedStyle === 'editorial' || savedStyle === 'neo-brutalism') setStyleTheme(savedStyle);
+    if (savedStyle === 'editorial' || savedStyle === 'neo-brutalism' || savedStyle === 'botanical-romance' || savedStyle === 'midnight-tuxedo') setStyleTheme(savedStyle);
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
   }, []);

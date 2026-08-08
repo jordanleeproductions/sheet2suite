@@ -63,6 +63,23 @@ export default function ActivationPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ⚡ Express 1-Click Demo Launch Handler on /activate
+  const handleExpressDemoLaunch = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_spreadsheet_id', 'mock-sheet-id-vow-12345');
+      localStorage.setItem('s2v_google_token', 'mock-token');
+      localStorage.setItem('s2v_is_onboarded', 'true');
+      localStorage.setItem('s2v_is_mock', 'true');
+      localStorage.setItem('s2v_is_demo', 'true');
+      localStorage.setItem('s2v_wedding_name', "Alex & Sam's Wedding");
+      localStorage.setItem('s2v_wedding_date', '2026-09-20');
+      localStorage.setItem('s2v_drive_folder', 'My Drive/Wedding Planning');
+      window.location.href = '/#home';
+    } else {
+      router.push('/');
+    }
+  };
+
   // Step 0: Etsy Order Verification
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,7 +194,73 @@ export default function ActivationPage() {
 
         {/* STEP 0: Etsy Order Activation Form */}
         {step === 0 && (
-          <form onSubmit={handleVerify} style={styles.formSection}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* ⚡ Express Demo Jump In Card on /activate */}
+            <div style={{
+              backgroundColor: 'var(--color-bg-subtle, rgba(255,255,255,0.05))',
+              border: '2px solid var(--color-highlight, #f59e0b)',
+              borderRadius: 'var(--border-radius-md, 8px)',
+              padding: '1.25rem',
+              textAlign: 'center',
+              boxShadow: 'var(--box-shadow-subtle)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <Zap size={22} style={{ color: 'var(--color-highlight, #f59e0b)' }} />
+                <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
+                  EXPLORE DEMO WORKSPACE
+                </h3>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  backgroundColor: 'var(--color-highlight, #f59e0b)',
+                  color: '#000000',
+                  padding: '0.15rem 0.4rem',
+                  borderRadius: 'var(--border-radius-sm, 4px)'
+                }}>
+                  1-CLICK JUMP IN
+                </span>
+              </div>
+
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginBottom: '1rem', lineHeight: 1.4 }}>
+                Want to test-drive Sheet2Vow before entering your Etsy order details? Launch our pre-populated sample wedding workspace (*Alex & Sam's Wedding*) instantly.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleExpressDemoLaunch}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.825rem',
+                  fontWeight: 800,
+                  backgroundColor: 'var(--color-highlight, #f59e0b)',
+                  color: '#000000',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm, 4px)',
+                  padding: '0.75rem 1.25rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  width: '100%',
+                  justifyContent: 'center'
+                }}
+              >
+                <Zap size={18} />
+                <span>⚡ EXPLORE DEMO WORKSPACE (JUMP RIGHT IN)</span>
+                <ArrowRight size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 700 }}>
+                OR VERIFY ETSY ORDER TO ACTIVATE
+              </span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
+            </div>
+
+            <form onSubmit={handleVerify} style={styles.formSection}>
             <div style={styles.activationBadge}>
               <Key size={16} style={{ color: 'var(--color-highlight)', marginRight: '8px' }} />
               <span>Enter Etsy Order Details</span>
@@ -230,7 +313,8 @@ export default function ActivationPage() {
               <span>Instant verification. Works out-of-the-box in Google Sheets & Web Mode.</span>
             </div>
           </form>
-        )}
+        </div>
+      )}
 
         {/* STEP 1: Choose Setup Experience (Quick vs Guided) */}
         {step === 1 && (

@@ -96,7 +96,7 @@ export default function ShareModal({
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div style={styles.header}>
+        <div style={styles.header} className="modalHeader">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Share2 size={20} style={{ color: 'var(--color-primary)' }} />
             <h3 style={styles.title}>GENERATE VENDOR SHARE PORTAL LINK</h3>

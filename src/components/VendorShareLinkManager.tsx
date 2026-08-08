@@ -511,7 +511,7 @@ export default function VendorShareLinkManager({
       {showRevokeAllModal && (
         <div style={styles.modalOverlay} onClick={() => setShowRevokeAllModal(false)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
+            <div style={styles.modalHeader} className="modalHeader">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <AlertCircle size={20} />
                 <h3 style={{ ...styles.modalTitle, color: '#ffffff' }}>REVOKE ALL VENDOR SHARE LINKS</h3>

@@ -84,9 +84,23 @@
 ## 🎨 9. Aesthetic Theme Engine & UI Design System
 - [x] **[THEME-1] Dual Design System:** High-contrast switching between **Editorial Minimalist** (serif typography, soft borders) and **Muted Neo-Brutalism** (3px borders, hard drop shadows, `Geist Mono` typography).
 - [x] **[THEME-2] Light/Dark Mode & Custom Accent Colors:** Global theme toggle with 4 curated primary accent color presets (**Emerald Green** `#13AA52`, **Royal Navy** `#0d1b2a`, **Romantic Rose** `#e11d48`, **Velvet Purple** `#7c3aed`) plus an interactive custom HTML5 native hex color picker in Advanced Settings.
+- [x] **[THEME-3] Expanded Aesthetic Engine (Botanical Romance, Midnight Tuxedo):** Added two new design system themes to the `theme.css` engine with unique color palettes, typography, and styling properties.
 - [x] **[THEME-4] Semantic Color Token Expansion (`theme.css`):** Added CSS custom properties across all theme variants to eliminate hardcoded hex values.
 - [x] **[THEME-5] PhotoShotListManager Dark Mode Fix:** Replaced hardcoded `#000000` inline styles so Photography page renders correctly in dark mode.
 - [x] **[THEME-6] Full Component Color Token Cleanup:** Systematically replaced hardcoded hex color values across components with CSS variables.
+- [x] **[UX-1] Font Variable Chain Verification:** Confirmed Google Fonts variables in `layout.tsx` match `theme.css` font fallbacks across all 4 design styles.
+- [x] **[UX-2] Theme-Aware Modal Header Contrast Fix:** Replaced blanket `#000000 !important` override in `globals.css` with `var(--color-on-primary)` token inheritance, restoring high-contrast white header text in Editorial Dark and Neo-Brutalism Dark modes.
+- [x] **[UX-3] Settings Dropdown Dark Mode Contrast:** Fixed selected button text contrast in Tuxedo Dark mode so white-on-white text is avoided.
+- [x] **[UX-4] Error Box Color Tokens:** Replaced hardcoded `#fee2e2` and `#ef4444` styles in error box with `var(--color-red-muted)` and `var(--color-red)` tokens.
+- [x] **[UX-5] Auth Status Box Tokenization:** Replaced hardcoded `#eef2f7` with `var(--color-bg-subtle)` token.
+- [x] **[UX-6] Sync Banner Background Tokenization:** Replaced hardcoded `#f8f9fa` with `var(--color-bg-subtle)` token.
+- [x] **[UX-8] Dark Theme Token Completeness:** Added missing `--border-radius-*`, `--border-width`, and `--transition-smooth` token declarations to `Botanical Romance Dark` and `Midnight Tuxedo Dark` in `theme.css`.
+- [x] **[UX-9] Modal Header Pattern Standardization:** Standardized header structure across all modal components with uniform icons, titles, close buttons, and `className="modalHeader"`.
+- [x] **[UX-10] Modal Header CSS Class Coverage:** Ensured all modal headers (`MenuSetupManager`, `VendorShareLinkManager`, `ShareModal`, `AdvancedSettingsModal`, `PrintTemplatesModal`) have `className="modalHeader"` attached.
+- [x] **[UX-11] Touch Target Color Preset Swatches:** Expanded quick settings primary color swatches from 20px to 28px for better mobile touch usability.
+- [x] **[UX-12] Design Style Subtitle Descriptions:** Added descriptive hover tooltips and labels to Quick Settings design system selector buttons.
+- [x] **[UX-13] Explicit Color Reset Label:** Updated color reset button label to "RESET TO DEFAULT" with explicit hover tooltip.
+- [x] **[UX-15] Elevated Dark Mode Toast Notifications:** Updated `ToastNotification.tsx` background token to `var(--color-bg-hover)` to ensure clear visual elevation above page canvas in dark mode.
 
 ---
 
@@ -121,6 +135,14 @@
 - [x] **[GEN-1] Dropdown to Checkbox Standard:** Converted binary Yes/No dropdown fields to native checkboxes (e.g. Staff Meals Required).
 - [x] **[GEN-2] Desktop Wide-Screen Layout Optimization:** Expanded max-width container bounds to 1680px for desktop viewports.
 - [x] **[GEN-3] Toast Notification System:** Brief "Saved!" popup on settings/modal saves and data sync updates.
+- [x] **[ONBOARD-1] Express Mode ("Jump Right In") 1-Click Launch:** Added prominent 1-click button (`⚡ EXPLORE DEMO WORKSPACE (JUMP RIGHT IN)`) to instant-load sample wedding workspace without registration forms.
+- [x] **[ONBOARD-3] Visual Task Preset Selector Cards:** Interactive visual cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) featuring category badges, descriptions, and task preview pills.
+- [x] **[ONBOARD-4] Visual Drive Target Directory Selector Cards:** Interactive visual selection cards replacing plain `<select>` dropdown for Drive folder selection (`Default`, `Root`, `Dedicated App`).
+- [x] **[ONBOARD-6] Demo Workspace Status Banner & Conversion Shortcut:** Displays active demo workspace notification bar with 1-click `[CONNECT GOOGLE DRIVE SHEET]` shortcut.
+- [x] **[LIFE-1] Reconnect Existing Sheet Onboarding Hub:** Segmented onboarding selector hub allowing users on new devices to reconnect via Drive auto-detect, Etsy Order ID, or Sheet URL.
+- [x] **[LIFE-2] 1-Click Google Drive Sheet Scanner:** Drive scanner modal presenting detected Sheet2Vow spreadsheets in Google Drive for 1-tap reconnection.
+- [x] **[LIFE-3] Multi-Workspace Switcher Dropdown:** Header & Quick Settings dropdown storing `s2v_workspaces[]` list so pro planners can switch client weddings in 1 click.
+- [x] **[LIFE-4] Post-Activation & Reconnection Guidance Banner:** Reassuring notification banner displaying Google Drive folder path, re-entry bookmark URL, and Spreadsheet ID.
 
 ---
 ---
@@ -142,31 +164,66 @@
 |---|---|---|---|---|---|
 | **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
 
+### 🚀 Onboarding & Registration UX
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[ONBOARD-1]`** | Express Mode ("Jump Right In") 1-Click Launch button for instant demo workspace | `page.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
+| **`[ONBOARD-2]`** | Unified Onboarding Wizard Component (`OnboardingWizard.tsx`) (`express` \| `quick` \| `guided`) | `OnboardingWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[ONBOARD-3]`** | Visual Task Preset Selector Cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) | `page.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
+| **`[ONBOARD-4]`** | Visual Drive Target Directory Selector Cards | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[ONBOARD-5]`** | Partner & Co-Planner Quick Invite Step (Guided Setup Step 4) | `OnboardingWizard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[ONBOARD-6]`** | Demo Workspace Status Banner & 1-Click Google Drive Conversion Shortcut | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+
+### 🔑 User Lifecycle, Multi-Device Re-entry & Pro Switching
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[LIFE-1]`** | "Reconnect Existing Sheet" Onboarding Tab (Google Drive Auto-Detect, Etsy Order ID, Sheet URL) | `page.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Completed |
+| **`[LIFE-2]`** | 1-Click Google Drive Sheet Scanner & Reconnection Modal | `page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
+| **`[LIFE-3]`** | Multi-Workspace Switcher Dropdown (`s2v_workspaces[]`) for Pro Planners | `page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
+| **`[LIFE-4]`** | Post-Activation Guidance Banner (Drive folder path, bookmark link, Sheet ID) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[LIFE-5]`** | Sheet2Suite Shared Activation Engine (`activate.sheet2suite.com` multi-SKU entitlement lookup) | `/api/verify-order` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
+
 ### 🖨️ Print Studio & Canva Exporter
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[PRINT-3]`** | Canva Template Integration Hub & Canva Bulk Create Merge CSV Exporter | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
-| **`[PRINT-4]`** | Custom Print Theme & Typography Switcher (Serif, Sans, Script, Mono) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
+| **`[PRINT-4]`** | Custom Print Theme & Typography Switcher (Serif, Sans, Script, Mono) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Completed |
 | **`[PRINT-7]`** | Strict Print Boundary & Bleed Guardrails (Avery cardstock grid dimensions) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-8]`** | Full Wedding Planner Binder Printout (combines all modules into bound book) | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[PRINT-9]`** | Printable Ceremony Aisle Seating Chart Template | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-10]`** | Responsive Mobile Print Studio layout redesign | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-11]`** | Separate Binder Planner pages from Guest Printables (place cards, QR cards) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-13]`** | Batch Combined Binder Export or Individual Section PDF downloads | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
-| **`[PRINT-14]`** | Table Seating Roster Pagination: Limit to 1-2 tables per page for legibility | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
-
-### 🎨 Theme Engine
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[THEME-3]`** | Expanded Aesthetic Engine (Botanical Romance, Midnight Tuxedo, Cyberpunk) | `theme.css` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[PRINT-14]`** | Table Seating Roster Pagination: Limit to 1-2 tables per page for legibility | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 
 ### 🔗 Public Portals
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[SHARE-4]`** | Spouse & Partner Co-Planning Access (delegate Drive read/write permissions) | `page.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+
+### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[UX-1]`** | Verify & fix Botanical/Tuxedo font variable chain | `layout.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-2]`** | Fix modal header contrast across all 8 theme combos | `globals.css` | 🟡 Medium | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-3]`** | Fix settings dropdown button contrast in Tuxedo/Botanical Dark | `globals.css` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-4]`** | Use color tokens for error boxes (`var(--color-red-muted)`) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-5]`** | Use `var(--color-bg-subtle)` for onboarding auth status box | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-6]`** | Use token for sync banner background (`var(--color-bg-subtle)`) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
+| **`[UX-8]`** | Add missing border-radius tokens to Botanical/Tuxedo Dark | `theme.css` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-9]`** | Standardize modal header pattern across all components | Components | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
+| **`[UX-10]`** | Add `className="modalHeader"` to all modal headers | Components | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-11]`** | Increase color preset swatch dot size to 28px | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-12]`** | Add design style subtitle descriptions in Quick Settings | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-13]`** | Clarify "RESET" button label and behavior to "RESET TO DEFAULT" | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[UX-14]`** | Consider tab grouping to reduce navigation count | `page.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[UX-15]`** | Elevated toast background in dark mode (`var(--color-bg-hover)`) | `ToastNotification.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ---
 

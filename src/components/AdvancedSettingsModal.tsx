@@ -40,14 +40,14 @@ interface AdvancedSettingsModalProps {
   driveFolder: string;
   enabledModules: ModuleConfig;
   isMockMode: boolean;
-  styleTheme: 'editorial' | 'neo-brutalism';
+  styleTheme: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
   theme: 'light' | 'dark';
   primaryColor?: string;
   timeFormat: '12h' | '24h';
   currency?: string;
   onUpdateWeddingDetails: (name: string, date: string, location?: string) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
-  onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism') => void;
+  onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => void;
   onUpdateTheme: (theme: 'light' | 'dark') => void;
   onUpdatePrimaryColor?: (color: string) => void;
   onUpdateTimeFormat: (format: '12h' | '24h') => void;
@@ -153,7 +153,7 @@ export default function AdvancedSettingsModal({
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div style={styles.header}>
+        <div style={styles.header} className="modalHeader">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Sliders size={20} style={{ color: 'var(--color-primary)' }} />
             <div>
@@ -278,6 +278,44 @@ export default function AdvancedSettingsModal({
                     >
                       <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>MUTED NEO-BRUTALISM</div>
                       <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Bold borders, vivid badges & sharp contrast</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStyleTheme('botanical-romance')}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        padding: '0.75rem',
+                        border: styleTheme === 'botanical-romance' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: styleTheme === 'botanical-romance' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>BOTANICAL ROMANCE</div>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Soft, earthy tones and floral aesthetics</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStyleTheme('midnight-tuxedo')}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        padding: '0.75rem',
+                        border: styleTheme === 'midnight-tuxedo' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: styleTheme === 'midnight-tuxedo' ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>MIDNIGHT TUXEDO</div>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Sharp, sleek high-contrast formal elegance</span>
                     </button>
                   </div>
                 </div>

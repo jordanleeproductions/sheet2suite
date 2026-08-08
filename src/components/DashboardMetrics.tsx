@@ -6,6 +6,7 @@ import { Edit2, LayoutGrid, PieChart, BarChart2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 
 export interface ModuleConfig {
+  home?: boolean;
   metrics: boolean;
   guests: boolean;
   budget: boolean;

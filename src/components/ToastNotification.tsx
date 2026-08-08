@@ -62,7 +62,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
         justifyContent: 'space-between',
         gap: '0.75rem',
         padding: '0.75rem 1rem',
-        backgroundColor: 'var(--color-surface, #ffffff)',
+        backgroundColor: 'var(--color-bg-hover, var(--color-surface, #ffffff))',
         color: 'var(--color-text, #1e293b)',
         border: isSuccess 
           ? '2px solid var(--color-green, #10b981)' 
