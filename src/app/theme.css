@@ -69,7 +69,7 @@
   --color-bg: #121212;
   --color-surface: #1e1e1e;
   --color-primary: #2d3748;
-  --color-on-primary: #ffffff;
+  --color-on-primary: #000000;
   --color-text: #e0e0e0;
   --color-muted: #9ca3af;
   --color-highlight: #FFC72C;
@@ -170,7 +170,7 @@
   --color-bg: #0B0F19;
   --color-surface: #121824;
   --color-primary: #11552D;
-  --color-on-primary: #ffffff;
+  --color-on-primary: #000000;
   --color-text: #F4F4F0;
   --color-muted: #ffffff;
   --color-highlight: #00ED64;

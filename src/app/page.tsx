@@ -1265,7 +1265,7 @@ export default function Sheet2VowDashboard() {
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         backgroundColor: 'var(--color-primary)',
-                        color: 'var(--color-on-primary)',
+                        color: theme === 'dark' ? '#000000' : '#ffffff',
                         border: 'none',
                         borderRadius: 'var(--border-radius-sm)',
                         padding: '0.625rem',
