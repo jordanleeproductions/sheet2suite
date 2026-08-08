@@ -87,8 +87,8 @@ export async function GET(req: NextRequest) {
 
       // Check local database for existing registered workspaces for this user email
       const existingDbWorkspaces = LocalLicensingDb.getWorkspacesByEmail(userEmail);
-      let spreadsheetId = existingDbWorkspaces[0]?.spreadsheetId;
-      let webViewLink = existingDbWorkspaces[0]?.webViewLink;
+      let spreadsheetId: string | undefined = existingDbWorkspaces[0]?.spreadsheetId;
+      let webViewLink: string | undefined = existingDbWorkspaces[0]?.webViewLink;
 
       if (!spreadsheetId) {
         // Check Drive folder if not found in DB
@@ -97,8 +97,8 @@ export async function GET(req: NextRequest) {
           fields: 'files(id, name, webViewLink)',
         });
 
-        spreadsheetId = sheetSearch.data.files?.[0]?.id;
-        webViewLink = sheetSearch.data.files?.[0]?.webViewLink;
+        spreadsheetId = sheetSearch.data.files?.[0]?.id || undefined;
+        webViewLink = sheetSearch.data.files?.[0]?.webViewLink || undefined;
       }
 
       if (!spreadsheetId) {
