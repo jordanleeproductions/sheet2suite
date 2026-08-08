@@ -919,7 +919,26 @@ export default function Sheet2VowDashboard() {
       )}
 
       {/* Brand Header */}
-      <header style={{ ...styles.appHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header
+        style={{
+          ...styles.appHeader,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          ...(isMobile
+            ? {
+                position: 'sticky',
+                top: 0,
+                zIndex: 100,
+                backgroundColor: 'var(--color-bg)',
+                paddingTop: '0.75rem',
+                paddingBottom: '0.75rem',
+                marginTop: '-0.5rem',
+                boxShadow: 'var(--box-shadow-subtle)'
+              }
+            : {})
+        }}
+      >
         <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           {isMobile ? (
             <button
