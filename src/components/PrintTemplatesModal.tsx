@@ -6,7 +6,7 @@ import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, 
 import { formatTimeDisplay } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
 
-export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle' | 'guest_contact_roster' | 'reception_seating_chart';
+export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle' | 'guest_contact_roster' | 'reception_seating_chart' | 'canva_exporter';
 
 interface PrintTemplatesModalProps {
   initialTemplate?: PrintTemplateType;
@@ -81,6 +81,53 @@ export default function PrintTemplatesModal({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Canva Bulk Create CSV Exporters [PRINT-3]
+  const handleExportCanvaPlaceCardsCSV = () => {
+    const headers = ['First Name', 'Last Name', 'Full Name', 'Table Assignment', 'Seat Number', 'Meal Selection', 'Dietary Restrictions', 'Party Group'];
+    const rows = attendingGuests.map(g => [
+      `"${(g.firstName || '').replace(/"/g, '""')}"`,
+      `"${(g.lastName || '').replace(/"/g, '""')}"`,
+      `"${(`${g.firstName || ''} ${g.lastName || ''}`).trim().replace(/"/g, '""')}"`,
+      `"${(g.tableAssignment || 'Table TBD').replace(/"/g, '""')}"`,
+      `"${g.seatNumber || ''}"`,
+      `"${(g.mealChoice || '').replace(/"/g, '""')}"`,
+      `"${(g.dietaryRestrictions || '').replace(/"/g, '""')}"`,
+      `"${(g.partyGroup || 'Individual').replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `sheet2vow_canva_place_cards_${weddingName.toLowerCase().replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportCanvaEnvelopesCSV = () => {
+    const headers = ['Guest Name', 'Party Group', 'Address Line 1', 'Address Line 2', 'City', 'State', 'Zip Code', 'RSVP Status'];
+    const rows = guests.map(g => [
+      `"${(`${g.firstName || ''} ${g.lastName || ''}`).trim().replace(/"/g, '""')}"`,
+      `"${(g.partyGroup || 'Individual').replace(/"/g, '""')}"`,
+      `"${(g.addressLine1 || '').replace(/"/g, '""')}"`,
+      `"${(g.addressLine2 || '').replace(/"/g, '""')}"`,
+      `"${(g.city || '').replace(/"/g, '""')}"`,
+      `"${(g.state || '').replace(/"/g, '""')}"`,
+      `"${(g.zipCode || '').replace(/"/g, '""')}"`,
+      `"${(g.rsvpStatus || 'Pending').replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `sheet2vow_canva_envelope_addressing_${weddingName.toLowerCase().replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const getMealIcon = (meal?: string) => {
@@ -339,6 +386,7 @@ export default function PrintTemplatesModal({
             {[
               { id: 'place_cards', label: 'Escort & Place Cards', icon: Users, count: attendingGuests.length },
               { id: 'table_cards', label: 'Table Tent Cards', icon: Heart, count: tablesList.length },
+              { id: 'canva_exporter', label: 'Canva Bulk Create Exporter [PRINT-3]', icon: Sparkles, count: 'CSV' },
               { id: 'upload_qr_cards', label: 'Guest Photo Upload QR Cards', icon: Sparkles, count: 4 },
               { id: 'song_request_qr_cards', label: 'Guest Song Request QR Cards', icon: Music, count: 4 },
             ].map(tab => {
@@ -1120,6 +1168,119 @@ export default function PrintTemplatesModal({
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TEMPLATE: CANVA BULK CREATE EXPORTER HUB [PRINT-3] */}
+              {activeTemplate === 'canva_exporter' && (
+                <div>
+                  <div style={styles.paperSectionTitleRow}>
+                    <h3 style={styles.paperSectionTitle}>CANVA BULK CREATE INTEGRATION HUB & MERGE EXPORTER</h3>
+                    <span style={styles.paperSectionMeta}>Automated Stationery Generation for Canva Designers</span>
+                  </div>
+
+                  <div style={{
+                    border: '2px solid #111827',
+                    borderRadius: '8px',
+                    padding: '1.25rem',
+                    backgroundColor: '#f9fafb',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
+                      <Sparkles size={24} style={{ color: 'var(--color-primary)' }} />
+                      <div>
+                        <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: 0, color: '#111827' }}>
+                          CANVA "BULK CREATE" DATA MERGE EXPORTER
+                        </h4>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: '#6b7280' }}>
+                          Seamlessly import your guest list into 1,000+ luxury Canva wedding stationery templates
+                        </span>
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: '0.8rem', color: '#374151', margin: '0.5rem 0 1rem 0' }}>
+                      Canva's <strong>Bulk Create</strong> feature allows you to merge guest names, table numbers, meal selections, and envelope addresses into any custom Canva template in 3 seconds!
+                    </p>
+
+                    {/* 1-Click CSV Download Actions */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                      <div style={{ border: '1px solid #111827', borderRadius: '6px', padding: '1rem', backgroundColor: '#ffffff' }}>
+                        <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: '0.35rem' }}>
+                          🏷️ Place Cards & Escort Cards CSV
+                        </div>
+                        <p style={{ fontSize: '0.7rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>
+                          Includes: First Name, Last Name, Full Name, Table Number, Seat Number, Meal Selection, Dietary Restrictions.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleExportCanvaPlaceCardsCSV}
+                          style={{
+                            width: '100%',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'var(--color-on-primary)',
+                            border: 'none',
+                            borderRadius: 'var(--border-radius-sm)',
+                            padding: '0.6rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.4rem'
+                          }}
+                        >
+                          <span>DOWNLOAD PLACE CARDS CSV</span>
+                        </button>
+                      </div>
+
+                      <div style={{ border: '1px solid #111827', borderRadius: '6px', padding: '1rem', backgroundColor: '#ffffff' }}>
+                        <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: '0.35rem' }}>
+                          ✉️ Envelope Addressing CSV
+                        </div>
+                        <p style={{ fontSize: '0.7rem', color: '#6b7280', margin: '0 0 0.75rem 0' }}>
+                          Includes: Guest Name, Party Group, Street Address Line 1 & 2, City, State, Zip Code.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleExportCanvaEnvelopesCSV}
+                          style={{
+                            width: '100%',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            backgroundColor: '#111827',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: 'var(--border-radius-sm)',
+                            padding: '0.6rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.4rem'
+                          }}
+                        >
+                          <span>DOWNLOAD ENVELOPES CSV</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Step by Step Canva Guide */}
+                    <div style={{ borderTop: '2px dashed #d1d5db', paddingTop: '1rem' }}>
+                      <h5 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: '#111827', margin: '0 0 0.5rem 0' }}>
+                        HOW TO USE IN CANVA (STEP-BY-STEP):
+                      </h5>
+                      <ol style={{ fontSize: '0.75rem', color: '#374151', paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <li>Open your chosen place card or invitation envelope template in <strong>Canva</strong>.</li>
+                        <li>In Canva's left sidebar, click <strong>Apps</strong> ➔ Search for <strong>"Bulk Create"</strong>.</li>
+                        <li>Click <strong>"Upload CSV"</strong> and select your downloaded Sheet2Vow `.csv` file.</li>
+                        <li>Right-click any text box in Canva ➔ Click <strong>"Connect Data"</strong> ➔ Select target field (e.g. <code>Full Name</code>, <code>Table Assignment</code>).</li>
+                        <li>Click <strong>"Generate Pages"</strong> to instantly generate 100+ personalized printables!</li>
+                      </ol>
+                    </div>
+                  </div>
                 </div>
               )}
 
