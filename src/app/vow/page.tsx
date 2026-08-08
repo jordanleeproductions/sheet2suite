@@ -1555,13 +1555,15 @@ export default function Sheet2VowDashboard() {
             setShowGoogleAuthModal(false);
             addToast(`Welcome back ${user.email}! Reconnected active workspace.`, 'success');
           } else {
-            // First time user with no registered spreadsheet
+            // First time user with no registered spreadsheet -> Redirect directly to /activate setup wizard
             setSpreadsheetId('');
             setIsMockMode(false);
             setIsOnboarded(false);
-            setOnboardTab('new');
             setShowGoogleAuthModal(false);
-            addToast(`Authenticated as ${user.email}. Provision your workspace or activate a license key.`, 'info');
+            addToast(`Authenticated as ${user.email}. Redirecting to Setup Wizard...`, 'info');
+            if (typeof window !== 'undefined') {
+              window.location.href = `/activate?email=${encodeURIComponent(user.email)}`;
+            }
           }
         }}
       />

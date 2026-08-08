@@ -41,6 +41,16 @@ export default function ActivationPage() {
   const [verifyError, setVerifyError] = useState('');
   const [verifiedOrder, setVerifiedOrder] = useState<any>(null);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get('email');
+      if (emailParam) {
+        setEmail(emailParam);
+      }
+    }
+  }, []);
+
   // Setup Form State
   const [weddingName, setWeddingName] = useState('Our Wedding');
   const [budget, setBudget] = useState(30000);
