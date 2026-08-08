@@ -22,6 +22,7 @@ import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Se
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
+import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
 export default function Sheet2VowDashboard() {
   // Authentication & Spreadsheet Settings
@@ -74,6 +75,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Theme and Settings
+  const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
   const [styleTheme, setStyleTheme] = useState<'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [primaryColor, setPrimaryColor] = useState<string>('');
@@ -1180,6 +1182,76 @@ export default function Sheet2VowDashboard() {
                         style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.2rem 0.4rem', background: 'transparent', border: '1px solid var(--color-muted)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text)', marginLeft: 'auto' }}
                       >
                         RESET TO DEFAULT
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Font Size Accessibility Scaler [NAV-2] */}
+                  <div style={styles.settingsSection}>
+                    <label style={styles.settingsLabel}>FONT ACCESSIBILITY SCALER</label>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.4rem 0.65rem',
+                      backgroundColor: 'var(--color-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--border-radius-sm)',
+                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-mono)'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => setFontSizeScale(fontSizeScale - 5)}
+                        disabled={fontSizeScale <= 80}
+                        title="Decrease font size"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.85rem',
+                          fontWeight: 800,
+                          backgroundColor: 'var(--color-bg-subtle)',
+                          color: 'var(--color-text)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          width: '26px',
+                          height: '26px',
+                          cursor: fontSizeScale <= 80 ? 'not-allowed' : 'pointer',
+                          opacity: fontSizeScale <= 80 ? 0.5 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        -
+                      </button>
+
+                      <span style={{ fontWeight: 800, color: 'var(--color-text)' }}>
+                        {fontSizeScale}%
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => setFontSizeScale(fontSizeScale + 5)}
+                        disabled={fontSizeScale >= 120}
+                        title="Increase font size"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.85rem',
+                          fontWeight: 800,
+                          backgroundColor: 'var(--color-bg-subtle)',
+                          color: 'var(--color-text)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          width: '26px',
+                          height: '26px',
+                          cursor: fontSizeScale >= 120 ? 'not-allowed' : 'pointer',
+                          opacity: fontSizeScale >= 120 ? 0.5 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        +
                       </button>
                     </div>
                   </div>

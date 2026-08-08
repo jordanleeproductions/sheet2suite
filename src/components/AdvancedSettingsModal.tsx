@@ -32,6 +32,7 @@ import {
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
 import { getColorPresets } from '@/lib/themePresets';
 import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout } from '@/lib/dashboardLayout';
+import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
 interface AdvancedSettingsModalProps {
   spreadsheetId: string;
@@ -80,6 +81,7 @@ export default function AdvancedSettingsModal({
   onOpenShareModal,
   onClose,
 }: AdvancedSettingsModalProps) {
+  const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
   const [activeTab, setActiveTab] = useState<'details' | 'visual' | 'drive' | 'modules' | 'security' | 'feedback'>('details');
 
   // Form states
@@ -369,6 +371,90 @@ export default function AdvancedSettingsModal({
                     >
                       <span>🌙 DARK MODE</span>
                     </button>
+                  </div>
+                </div>
+
+                {/* Font Size Accessibility Scaler [NAV-2] */}
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>FONT ACCESSIBILITY SCALER</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-bg-subtle)', padding: '0.625rem 0.85rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setFontSizeScale(fontSizeScale - 5)}
+                      disabled={fontSizeScale <= 80}
+                      title="Decrease font size"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '1rem',
+                        fontWeight: 800,
+                        backgroundColor: 'var(--color-bg)',
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        width: '32px',
+                        height: '32px',
+                        cursor: fontSizeScale <= 80 ? 'not-allowed' : 'pointer',
+                        opacity: fontSizeScale <= 80 ? 0.5 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      -
+                    </button>
+
+                    <div style={{ flex: 1, textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)' }}>
+                        {fontSizeScale}%
+                      </div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--color-muted)' }}>
+                        {fontSizeScale === 100 ? 'Default standard font size' : fontSizeScale < 100 ? 'Compact text layout' : 'Enlarged accessibility text'}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setFontSizeScale(fontSizeScale + 5)}
+                      disabled={fontSizeScale >= 120}
+                      title="Increase font size"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '1rem',
+                        fontWeight: 800,
+                        backgroundColor: 'var(--color-bg)',
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        width: '32px',
+                        height: '32px',
+                        cursor: fontSizeScale >= 120 ? 'not-allowed' : 'pointer',
+                        opacity: fontSizeScale >= 120 ? 0.5 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      +
+                    </button>
+
+                    {fontSizeScale !== 100 && (
+                      <button
+                        type="button"
+                        onClick={() => setFontSizeScale(100)}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          backgroundColor: 'transparent',
+                          color: 'var(--color-primary)',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '0.2rem 0.4rem'
+                        }}
+                      >
+                        RESET
+                      </button>
+                    )}
                   </div>
                 </div>
 

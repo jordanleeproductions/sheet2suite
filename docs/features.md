@@ -167,7 +167,7 @@
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
-| **`[NAV-2]`** | Font Size Scaler Controls (`+` and `-` buttons in Quick Settings and Advanced Settings Modal for accessibility scaling 80%-120%) | `vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[NAV-2]`** | Font Size Scaler Controls (`+` and `-` buttons in Quick Settings and Advanced Settings Modal for accessibility scaling 80%-120%) | `vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ### 🚀 Onboarding & Registration UX
 
