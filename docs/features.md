@@ -203,6 +203,11 @@
 | **`[PRINT-11]`** | Separate Binder Planner pages from Guest Printables (place cards, QR cards) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 | **`[PRINT-13]`** | Batch Combined Binder Export or Individual Section PDF downloads | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[PRINT-14]`** | Table Seating Roster Pagination: Limit to 1-2 tables per page for legibility | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
+| **`[PRINT-15]`** | Dedicated Canva Bulk Create Hub Screen with Data Field Selector & Live Sample CSV Preview | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[PRINT-16]`** | Print Studio Top Toolbar (Toggles: Hide Title/Date, Paper Size A4/Letter, Emoji Toggle, B&W/Color) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[PRINT-17]`** | Dynamic QR Code Generator Engine for Photo Upload & Song Request Display Cards | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | Pending |
+| **`[PRINT-18]`** | High-Contrast "EXIT STUDIO" Header Action Button Styling | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[PRINT-19]`** | Top Header Primary `[ 🖨️ PRINT PAGE ]` Action Button Placement | `PrintTemplatesModal.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
 
 ### 🔗 Public Portals
 
