@@ -296,17 +296,14 @@ export default function PrintTemplatesModal({
         <div style={styles.body}>
           {/* Left Navigation Sidebar */}
           <nav style={styles.sidebar} className="print-no-print">
-            <div style={{ padding: '0.5rem', fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-              TEMPLATE SELECTION
+            {/* Category 1: Binder & Coordinator Pages [PRINT-11] */}
+            <div style={{ padding: '0.4rem 0.5rem 0.2rem 0.5rem', fontSize: '0.625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 800, letterSpacing: '0.5px' }}>
+              📖 BINDER PLANNER PAGES
             </div>
             {[
-              { id: 'place_cards', label: 'Escort & Place Cards', icon: Users, count: attendingGuests.length },
-              { id: 'table_cards', label: 'Table Tent Cards', icon: Heart, count: tablesList.length },
-              { id: 'ceremony_aisle', label: 'Ceremony Aisle Seating Chart', icon: MapPin, count: attendingGuests.length },
-              { id: 'upload_qr_cards', label: 'Guest Photo Upload QR Cards', icon: Sparkles, count: 4 },
-              { id: 'song_request_qr_cards', label: 'Guest Song Request QR Cards', icon: Music, count: 4 },
               { id: 'timeline', label: 'Day-Of Timeline Roster', icon: Clock, count: schedule.length },
               { id: 'vendors', label: 'Vendor Directory Sheet', icon: Phone, count: vendors.length },
+              { id: 'ceremony_aisle', label: 'Ceremony Aisle Seating Chart', icon: MapPin, count: attendingGuests.length },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTemplate === tab.id;
@@ -323,10 +320,45 @@ export default function PrintTemplatesModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Icon size={16} />
+                    <Icon size={15} />
                     <span>{tab.label}</span>
                   </div>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.8, fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ fontSize: '0.625rem', opacity: 0.85, fontFamily: 'var(--font-mono)' }}>
+                    ({tab.count})
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* Category 2: Guest & Day-Of Printables [PRINT-11] */}
+            <div style={{ padding: '0.65rem 0.5rem 0.2rem 0.5rem', fontSize: '0.625rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 800, letterSpacing: '0.5px', borderTop: '1px solid var(--color-border)', marginTop: '0.35rem' }}>
+              ✂️ GUEST & DAY-OF PRINTABLES
+            </div>
+            {[
+              { id: 'place_cards', label: 'Escort & Place Cards', icon: Users, count: attendingGuests.length },
+              { id: 'table_cards', label: 'Table Tent Cards', icon: Heart, count: tablesList.length },
+              { id: 'upload_qr_cards', label: 'Guest Photo Upload QR Cards', icon: Sparkles, count: 4 },
+              { id: 'song_request_qr_cards', label: 'Guest Song Request QR Cards', icon: Music, count: 4 },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTemplate === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTemplate(tab.id as PrintTemplateType)}
+                  style={{
+                    ...styles.tabBtn,
+                    backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
+                    color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                    fontWeight: isActive ? 700 : 500,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Icon size={15} />
+                    <span>{tab.label}</span>
+                  </div>
+                  <span style={{ fontSize: '0.625rem', opacity: 0.85, fontFamily: 'var(--font-mono)' }}>
                     ({tab.count})
                   </span>
                 </button>
