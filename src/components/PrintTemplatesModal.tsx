@@ -6,7 +6,7 @@ import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, 
 import { formatTimeDisplay } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
 
-export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards';
+export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle';
 
 interface PrintTemplatesModalProps {
   initialTemplate?: PrintTemplateType;
@@ -302,6 +302,7 @@ export default function PrintTemplatesModal({
             {[
               { id: 'place_cards', label: 'Escort & Place Cards', icon: Users, count: attendingGuests.length },
               { id: 'table_cards', label: 'Table Tent Cards', icon: Heart, count: tablesList.length },
+              { id: 'ceremony_aisle', label: 'Ceremony Aisle Seating Chart', icon: MapPin, count: attendingGuests.length },
               { id: 'upload_qr_cards', label: 'Guest Photo Upload QR Cards', icon: Sparkles, count: 4 },
               { id: 'song_request_qr_cards', label: 'Guest Song Request QR Cards', icon: Music, count: 4 },
               { id: 'timeline', label: 'Day-Of Timeline Roster', icon: Clock, count: schedule.length },
@@ -726,6 +727,200 @@ export default function PrintTemplatesModal({
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TEMPLATE 3: CEREMONY AISLE SEATING CHART [PRINT-9] */}
+              {activeTemplate === 'ceremony_aisle' && (
+                <div>
+                  <div style={styles.paperSectionTitleRow}>
+                    <h3 style={styles.paperSectionTitle}>WEDDING CEREMONY AISLE SEATING DIAGRAM</h3>
+                    <span style={styles.paperSectionMeta}>{attendingGuests.length} Attending Ceremony Guests</span>
+                  </div>
+
+                  {/* Ceremony Altar Header Box */}
+                  <div style={{
+                    textAlign: 'center',
+                    border: '2px solid #111827',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    backgroundColor: '#f9fafb',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>⛪ 💍 🕊️</div>
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', margin: 0, color: '#111827' }}>
+                      CEREMONY ALTAR & ARCH
+                    </h3>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: '#6b7280', margin: '2px 0 0 0' }}>
+                      FRONT OF CEREMONY VENUE • STAGE / ARCH
+                    </p>
+                  </div>
+
+                  {/* Central Aisle Diagram (Left Side vs Right Side) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 1fr', gap: '0.75rem', alignItems: 'stretch', marginBottom: '2rem' }}>
+                    {/* Left Aisle (Partner 1 / Bride Side) */}
+                    <div style={{ border: '2px solid #111827', borderRadius: '6px', padding: '0.85rem', backgroundColor: '#ffffff' }}>
+                      <div style={{ borderBottom: '2px solid #111827', paddingBottom: '0.4rem', marginBottom: '0.65rem', textAlign: 'center' }}>
+                        <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1rem', margin: 0, color: '#111827' }}>
+                          LEFT AISLE (PARTNER 1 SIDE)
+                        </h4>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#6b7280' }}>
+                          RESERVED FAMILY & VIP ROWS
+                        </span>
+                      </div>
+
+                      {/* Row 1 Reserved */}
+                      <div style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.4rem 0.6rem', backgroundColor: '#fffbe8', marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#92400e' }}>
+                            ROW 1: IMMEDIATE FAMILY (RESERVED)
+                          </span>
+                          <span style={{ fontSize: '0.6rem', backgroundColor: '#fef3c7', color: '#78350f', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 700 }}>
+                            FRONT ROW
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600, color: '#111827' }}>
+                          Parents, Grandparents, & Sibling Escorts
+                        </p>
+                      </div>
+
+                      {/* Row 2 Reserved */}
+                      <div style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.4rem 0.6rem', backgroundColor: '#f0fdf4', marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#166534' }}>
+                            ROW 2: WEDDING PARTY & VIPS
+                          </span>
+                          <span style={{ fontSize: '0.6rem', backgroundColor: '#dcfce7', color: '#14532d', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 700 }}>
+                            RESERVED
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600, color: '#111827' }}>
+                          Bridal Party, Maid of Honor, & Officiant Family
+                        </p>
+                      </div>
+
+                      {/* Rows 3+ Open Guest Seating */}
+                      <div style={{ border: '1px dashed #d1d5db', borderRadius: '4px', padding: '0.4rem 0.6rem', backgroundColor: '#f9fafb' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#4b5563' }}>
+                          ROWS 3+: GENERAL GUEST SEATING
+                        </span>
+                        <p style={{ fontSize: '0.7rem', margin: '0.2rem 0 0 0', color: '#6b7280' }}>
+                          Open seating for friends & extended family
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Central Aisle Walkway Visual Strip */}
+                    <div style={{
+                      backgroundColor: '#f3f4f6',
+                      border: '2px dashed #9ca3af',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0.5rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ writingMode: 'vertical-rl', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#4b5563', letterSpacing: '0.1em' }}>
+                        🚶‍♂️ MAIN AISLE WALKWAY 🚶‍♀️
+                      </div>
+                    </div>
+
+                    {/* Right Aisle (Partner 2 / Groom Side) */}
+                    <div style={{ border: '2px solid #111827', borderRadius: '6px', padding: '0.85rem', backgroundColor: '#ffffff' }}>
+                      <div style={{ borderBottom: '2px solid #111827', paddingBottom: '0.4rem', marginBottom: '0.65rem', textAlign: 'center' }}>
+                        <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1rem', margin: 0, color: '#111827' }}>
+                          RIGHT AISLE (PARTNER 2 SIDE)
+                        </h4>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#6b7280' }}>
+                          RESERVED FAMILY & VIP ROWS
+                        </span>
+                      </div>
+
+                      {/* Row 1 Reserved */}
+                      <div style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.4rem 0.6rem', backgroundColor: '#fffbe8', marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#92400e' }}>
+                            ROW 1: IMMEDIATE FAMILY (RESERVED)
+                          </span>
+                          <span style={{ fontSize: '0.6rem', backgroundColor: '#fef3c7', color: '#78350f', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 700 }}>
+                            FRONT ROW
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600, color: '#111827' }}>
+                          Parents, Grandparents, & Sibling Escorts
+                        </p>
+                      </div>
+
+                      {/* Row 2 Reserved */}
+                      <div style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.4rem 0.6rem', backgroundColor: '#f0fdf4', marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#166534' }}>
+                            ROW 2: WEDDING PARTY & VIPS
+                          </span>
+                          <span style={{ fontSize: '0.6rem', backgroundColor: '#dcfce7', color: '#14532d', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 700 }}>
+                            RESERVED
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600, color: '#111827' }}>
+                          Groomsmen, Best Man, & Reader Family
+                        </p>
+                      </div>
+
+                      {/* Rows 3+ Open Guest Seating */}
+                      <div style={{ border: '1px dashed #d1d5db', borderRadius: '4px', padding: '0.4rem 0.6rem', backgroundColor: '#f9fafb' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#4b5563' }}>
+                          ROWS 3+: GENERAL GUEST SEATING
+                        </span>
+                        <p style={{ fontSize: '0.7rem', margin: '0.2rem 0 0 0', color: '#6b7280' }}>
+                          Open seating for friends & extended family
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ceremony Usher Quick Reference Roster Table */}
+                  <div style={{ borderTop: '2px solid #111827', paddingTop: '1rem' }}>
+                    <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', margin: '0 0 0.5rem 0', color: '#111827' }}>
+                      USHER QUICK SEATING ROSTER & ASSIGNMENTS
+                    </h4>
+                    <div style={styles.timelineTableWrapper}>
+                      <table style={styles.paperTable}>
+                        <thead>
+                          <tr>
+                            <th style={styles.paperTh}>GUEST NAME</th>
+                            <th style={styles.paperTh}>PARTY / GROUP</th>
+                            <th style={styles.paperTh}>RECEPTION TABLE</th>
+                            <th style={styles.paperTh}>CEREMONY SEATING GUIDANCE</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredPlaceCardGuests.slice(0, 15).map((guest) => {
+                            const isVIP = (guest.partyGroup || '').toLowerCase().includes('family') || (guest.partyGroup || '').toLowerCase().includes('vip') || (guest.partyGroup || '').toLowerCase().includes('wedding party');
+                            return (
+                              <tr key={guest.guestId}>
+                                <td style={styles.paperTdBold}>{guest.firstName} {guest.lastName}</td>
+                                <td style={styles.paperTd}>{guest.partyGroup || 'General Guest'}</td>
+                                <td style={styles.paperTdMono}>{guest.tableAssignment || 'Table TBD'}</td>
+                                <td style={styles.paperTd}>
+                                  {isVIP ? (
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, backgroundColor: '#fef3c7', color: '#92400e', padding: '0.1rem 0.35rem', borderRadius: '3px' }}>
+                                      ⭐ RESERVED FRONT ROW (ROWS 1-2)
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: '0.7rem', color: '#4b5563' }}>
+                                      General Open Seating (Rows 3+)
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
