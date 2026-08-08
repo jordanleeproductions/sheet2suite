@@ -281,9 +281,26 @@ export default function PrintTemplatesModal({
             color: #000000 !important;
             box-shadow: none !important;
             border: none !important;
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
           }
           .print-no-print {
             display: none !important;
+          }
+          tr, table, blockquote, img, svg {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          thead {
+            display: table-header-group !important;
+          }
+          tbody {
+            display: table-row-group !important;
+          }
+          .print-card-box, .place-card-item, .table-tent-card {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           @page {
             size: A4 portrait;
