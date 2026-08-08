@@ -2,13 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Sheet2Suite Unified Subdomain Middleware Engine [LIFE-5]
- * Handles $0-cost DNS subdomain routing for the Sheet2Suite family:
- * - vow.sheet2suite.com -> Sheet2Vow Digital Wedding Planner
- * - stay.sheet2suite.com -> Sheet2Stay Vacation Rental Tracker
- * - finances.sheet2suite.com -> Sheet2Finances Personal Budget Ledger
- * - events.sheet2suite.com -> Sheet2Events Party & Banquet Planner
- * - activate.sheet2suite.com -> Shared Activation Portal
+ * Sheet2Suite Unified Subdomain & Path Middleware Engine [LIFE-5]
+ * Handles $0-cost DNS subdomain routing & path parity for the Sheet2Suite family:
+ * - vow.sheet2suite.com or /vow -> Sheet2Vow Digital Wedding Planner
+ * - activate.sheet2suite.com or /activate -> Shared Activation Engine
+ * - sheet2suite.com -> Root Parent Platform Showcase & Suite Hub
  */
 export function middleware(req: NextRequest) {
   const url = req.nextUrl;
@@ -30,22 +28,10 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 2. vow.sheet2suite.com -> Route to / (Sheet2Vow core)
+  // 2. vow.sheet2suite.com -> Route to /vow
   if (hostname.startsWith('vow.')) {
-    return NextResponse.next();
-  }
-
-  // 3. stay.sheet2suite.com -> Route to /activate with pre-selected SKU
-  if (hostname.startsWith('stay.')) {
-    if (!url.pathname.startsWith('/activate')) {
-      return NextResponse.rewrite(new URL(`/activate?product=SHEET2HOME`, req.url));
-    }
-  }
-
-  // 4. finances.sheet2suite.com -> Route to /activate with pre-selected SKU
-  if (hostname.startsWith('finances.')) {
-    if (!url.pathname.startsWith('/activate')) {
-      return NextResponse.rewrite(new URL(`/activate?product=SHEET2FINANCE`, req.url));
+    if (!url.pathname.startsWith('/vow')) {
+      return NextResponse.rewrite(new URL(`/vow${url.pathname}`, req.url));
     }
   }
 
