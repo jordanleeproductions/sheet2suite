@@ -49,6 +49,11 @@ export default function PrintTemplatesModal({
   const [enableBinderPunchMargins, setEnableBinderPunchMargins] = useState<boolean>(false);
   const [printTypography, setPrintTypography] = useState<'serif' | 'sans' | 'script' | 'mono'>('serif');
 
+  // Avery Grid & Bleed Guardrails Controls [PRINT-7]
+  const [averyPreset, setAveryPreset] = useState<'avery_5395' | 'avery_8371' | 'avery_5302' | 'custom_2x5'>('avery_5395');
+  const [showCropMarks, setShowCropMarks] = useState<boolean>(true);
+  const [showBleedGuard, setShowBleedGuard] = useState<boolean>(true);
+
   // Filtered Lists
   const tablesList = Array.from(new Set(guests.map(g => g.tableAssignment).filter(Boolean)));
   const rolesList = Array.from(new Set(
@@ -413,6 +418,41 @@ export default function PrintTemplatesModal({
                     <span>SHOW DECORATIVE ICONS [PRINT-5]</span>
                   </label>
 
+                  {/* Avery Template Grid & Bleed Controls [PRINT-7] */}
+                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.65rem', marginTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <label style={styles.filterLabel}>AVERY CARDSTOCK PRESET [PRINT-7]</label>
+                    <select
+                      value={averyPreset}
+                      onChange={(e) => setAveryPreset(e.target.value as any)}
+                      style={styles.filterSelect}
+                    >
+                      <option value="avery_5395">Avery 5395 (8 Tent Badges 2.33" x 3.375")</option>
+                      <option value="avery_8371">Avery 8371 (10 Place Cards 2" x 3.5")</option>
+                      <option value="avery_5302">Avery 5302 (4 Large Tent Cards 3.5" x 4.25")</option>
+                      <option value="custom_2x5">Custom Grid (Standard 2x5 Grid)</option>
+                    </select>
+
+                    <label style={styles.checkLabel}>
+                      <input
+                        type="checkbox"
+                        checked={showCropMarks}
+                        onChange={(e) => setShowCropMarks(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span>CORNER CROP & CUT MARKS [PRINT-7]</span>
+                    </label>
+
+                    <label style={styles.checkLabel}>
+                      <input
+                        type="checkbox"
+                        checked={showBleedGuard}
+                        onChange={(e) => setShowBleedGuard(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span>0.125" BLEED SAFETY ZONE [PRINT-7]</span>
+                    </label>
+                  </div>
+
                   <label style={styles.checkLabel}>
                     <input
                       type="checkbox"
@@ -552,7 +592,24 @@ export default function PrintTemplatesModal({
                   ) : (
                     <div style={styles.placeCardsGrid}>
                       {filteredPlaceCardGuests.map((guest) => (
-                        <div key={guest.guestId} style={{ ...styles.placeCard, borderStyle: showFoldLines ? 'dashed' : 'solid' }}>
+                        <div key={guest.guestId} style={{ ...styles.placeCard, borderStyle: showFoldLines ? 'dashed' : 'solid', position: 'relative' }}>
+                          {/* Corner Crop Marks [PRINT-7] */}
+                          {showCropMarks && (
+                            <>
+                              <div style={{ position: 'absolute', top: '-4px', left: '-4px', width: '8px', height: '8px', borderTop: '1px solid #111827', borderLeft: '1px solid #111827', pointerEvents: 'none' }} className="print-no-print" />
+                              <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '8px', height: '8px', borderTop: '1px solid #111827', borderRight: '1px solid #111827', pointerEvents: 'none' }} className="print-no-print" />
+                              <div style={{ position: 'absolute', bottom: '-4px', left: '-4px', width: '8px', height: '8px', borderBottom: '1px solid #111827', borderLeft: '1px solid #111827', pointerEvents: 'none' }} className="print-no-print" />
+                              <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '8px', height: '8px', borderBottom: '1px solid #111827', borderRight: '1px solid #111827', pointerEvents: 'none' }} className="print-no-print" />
+                            </>
+                          )}
+
+                          {/* 0.125" Bleed Guard Safety Zone [PRINT-7] */}
+                          {showBleedGuard && (
+                            <div style={{ position: 'absolute', inset: '4px', border: '1px dotted #cbd5e1', pointerEvents: 'none', borderRadius: '2px', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '2px' }} className="print-no-print">
+                              <span style={{ fontSize: '0.5rem', fontFamily: 'var(--font-mono)', color: '#94a3b8', opacity: 0.6 }}>0.125" BLEED SAFE</span>
+                            </div>
+                          )}
+
                           {showFoldLines && (
                             <div style={styles.foldIndicator}>
                               <Scissors size={10} style={{ marginRight: '2px' }} /> FOLD LINE
