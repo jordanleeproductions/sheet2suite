@@ -11,6 +11,8 @@ export interface WorkspaceRecord {
   driveFolderPath: string;
   webViewLink: string;
   productName: 'Sheet2Vow' | 'Sheet2Home' | 'Sheet2Finance';
+  orderId?: string;
+  orderVerified?: boolean;
   activatedAt: string;
   lastActiveAt: string;
 }

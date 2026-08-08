@@ -48,6 +48,8 @@ export async function POST(req: NextRequest) {
       driveFolderPath,
       webViewLink,
       productName = 'Sheet2Vow',
+      orderId,
+      orderVerified = true,
     } = body;
 
     if (!userEmail || !spreadsheetId) {
@@ -65,6 +67,8 @@ export async function POST(req: NextRequest) {
       driveFolderPath: driveFolderPath || 'My Drive / Sheet2Suite / Sheet2Vow',
       webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
       productName,
+      orderId: orderId || undefined,
+      orderVerified: Boolean(orderVerified),
     });
 
     return NextResponse.json({

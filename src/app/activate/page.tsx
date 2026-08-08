@@ -167,6 +167,8 @@ export default function ActivationPage() {
           driveFolderPath: driveFolder,
           webViewLink: provData.provisioned?.webViewLink || `https://docs.google.com/spreadsheets/d/${createdSpreadsheetId}/edit`,
           productName: 'Sheet2Vow',
+          orderId: orderId || 'ETSY-DEMO-9876',
+          orderVerified: true,
         }),
       });
 
@@ -286,9 +288,64 @@ export default function ActivationPage() {
             <div style={styles.verifiedBanner}>
               <CheckCircle2 size={18} style={{ color: 'var(--color-green)', marginRight: '8px' }} />
               <div>
-                <div style={{ fontWeight: 700 }}>Verified Order #{verifiedOrder?.orderId || 'ETSY-OK'} &bull; License Activated</div>
+                <div style={{ fontWeight: 700 }}>Verified Order #{orderId || verifiedOrder?.orderId || 'ETSY-OK'} &bull; License Verified</div>
                 <div style={{ fontSize: '0.725rem', opacity: 0.9 }}>{verifiedOrder?.packageTier || 'Sheet2Vow Master Wedding Planner Suite'}</div>
               </div>
+            </div>
+
+            {/* Google Authentication Prompt */}
+            <div style={{
+              backgroundColor: 'var(--color-bg-subtle)',
+              border: '2px solid var(--color-primary)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '1.25rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-text)' }}>
+                  🌐 Connect Google Drive Account
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                  Authorize Google to save your spreadsheet in your personal Google Drive.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/auth/google');
+                    const data = await res.json();
+                    if (data.authUrl) {
+                      window.open(data.authUrl, 'GoogleAuth', 'width=520,height=650');
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#111827',
+                  border: '2px solid #111827',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.65rem 1.1rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <span>SIGN IN WITH GOOGLE</span>
+              </button>
             </div>
 
             {/* Product Hub Entitlements Badge */}

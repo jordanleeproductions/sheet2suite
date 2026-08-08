@@ -158,6 +158,7 @@ export default function AdminDatabasePage() {
                 <thead>
                   <tr style={{ backgroundColor: '#111827', color: '#9ca3af', textTransform: 'uppercase', fontSize: '0.7rem' }}>
                     <th style={{ padding: '0.75rem' }}>User / Partner Email</th>
+                    <th style={{ padding: '0.75rem' }}>Etsy Order ID / Code</th>
                     <th style={{ padding: '0.75rem' }}>Spreadsheet Name</th>
                     <th style={{ padding: '0.75rem' }}>Spreadsheet ID</th>
                     <th style={{ padding: '0.75rem' }}>Drive Folder Path</th>
@@ -173,6 +174,14 @@ export default function AdminDatabasePage() {
                         {ws.partnerEmail && (
                           <div style={{ fontSize: '0.7rem', color: '#a7f3d0' }}>Partner: {ws.partnerEmail}</div>
                         )}
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 700, color: '#f59e0b' }}>
+                          {ws.orderId || 'ETSY-DEMO-9876'}
+                        </div>
+                        <span style={{ backgroundColor: ws.orderVerified !== false ? '#064e3b' : '#7f1d1d', color: ws.orderVerified !== false ? '#34d399' : '#fca5a5', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>
+                          {ws.orderVerified !== false ? 'VERIFIED (MOCKED)' : 'UNVERIFIED'}
+                        </span>
                       </td>
                       <td style={{ padding: '0.75rem', fontWeight: 600, color: '#e5e7eb' }}>
                         {ws.spreadsheetName}
