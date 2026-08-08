@@ -136,11 +136,14 @@ export default function ActivationPage() {
     const selectedPreset = TASK_PRESETS[selectedPresetKey] || TASK_PRESETS.TRADITIONAL;
 
     try {
+      const googleToken = typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null;
+
       // Step 1: Provision Google Drive folder & master spreadsheet
       const provRes = await fetch('/api/provision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          accessToken: googleToken || undefined,
           coupleName: weddingName,
           productName: 'Sheet2Vow',
           driveFolder: driveFolder,
@@ -399,6 +402,43 @@ export default function ActivationPage() {
                 min="0"
                 value={budget}
                 onChange={(e) => setBudget(Number(e.target.value))}
+                style={styles.inputField}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.fieldLabel}>GOOGLE DRIVE TARGET DIRECTORY *</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                {[
+                  { path: 'My Drive / Sheet2Suite / Sheet2Vow', name: 'Sheet2Suite Default' },
+                  { path: 'My Drive / Wedding Planning', name: 'Wedding Planning' },
+                  { path: 'My Drive (Root)', name: 'My Drive Root' }
+                ].map((folder) => {
+                  const isSelected = driveFolder === folder.path;
+                  return (
+                    <div
+                      key={folder.path}
+                      onClick={() => setDriveFolder(folder.path)}
+                      style={{
+                        border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: isSelected ? 'var(--color-bg-subtle)' : 'transparent',
+                        borderRadius: 'var(--border-radius-sm)',
+                        padding: '0.5rem 0.65rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.725rem', fontWeight: isSelected ? 700 : 500, color: 'var(--color-text)' }}>
+                        📁 {folder.name}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                value={driveFolder}
+                onChange={(e) => setDriveFolder(e.target.value)}
+                placeholder="Or enter custom folder path e.g. My Drive / Custom Folder"
                 style={styles.inputField}
               />
             </div>
