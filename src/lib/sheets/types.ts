@@ -139,3 +139,26 @@ export interface WeddingData {
   photos: PhotoShot[];
   gifts: GiftItem[];
 }
+
+export interface Sheet2SuiteLicense {
+  licenseKey: string;
+  orderId: string;
+  purchasePlatform: 'etsy' | 'lemonsqueezy' | 'direct_stripe';
+  purchaserEmail: string;
+  purchaserName?: string;
+  sku: 'sheet2vow' | 'sheet2home' | 'sheet2finance' | 'sheet2suite_bundle';
+  productAccess: {
+    sheet2vow: boolean;
+    sheet2home: boolean;
+    sheet2finance: boolean;
+  };
+  status: 'active' | 'refunded' | 'revoked' | 'expired';
+  createdAt: string;
+  coPlanner?: {
+    partnerEmail?: string;
+    partnerName?: string;
+    inviteSentAt?: string;
+    inviteStatus: 'not_invited' | 'pending_acceptance' | 'activated';
+    activatedAt?: string;
+  };
+}
