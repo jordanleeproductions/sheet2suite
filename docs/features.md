@@ -95,6 +95,7 @@
 - [x] **[THEME-5] PhotoShotListManager Dark Mode Fix:** Replaced hardcoded `#000000` inline styles so Photography page renders correctly in dark mode.
 - [x] **[THEME-6] Full Component Color Token Cleanup:** Systematically replaced hardcoded hex color values across components with CSS variables.
 - [x] **[NAV-2] Font Size Scaler Controls:** Added `+` and `-` buttons in Quick Settings and Advanced Settings Modal for accessibility scaling 80%-120%.
+- [x] **[UX-7] Migrate `!important` Overrides to Semantic CSS Specificity:** Removed unnecessary `!important` from layout classes (`.kpi-grid`, `.photo-shot-card`, `.photo-shots-list`), dark mode color rules (timeline body, kanban columns, category chips, totalCard), badge utilities (`.badge-green`, `.badge-gold`, `.badge-red`), modal headers, sync banner, settings dropdown, and vendor card headers. Replaced over-budget card with `:where()` pseudo-class specificity. Retained `!important` only where React inline `style` props require cascade-trump overrides, annotated with `/* cascade-trump: overrides inline style */` comments.
 - [x] **[UX-1] Font Variable Chain Verification:** Confirmed Google Fonts variables in `layout.tsx` match `theme.css` font fallbacks across all 4 design styles.
 - [x] **[UX-2] Theme-Aware Modal Header Contrast Fix:** Replaced blanket `#000000 !important` override in `globals.css` with `var(--color-on-primary)` token inheritance, restoring high-contrast white header text in Editorial Dark and Neo-Brutalism Dark modes.
 - [x] **[UX-3] Settings Dropdown Dark Mode Contrast:** Fixed selected button text contrast in Tuxedo Dark mode so white-on-white text is avoided.
@@ -194,7 +195,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
+| **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
 | **`[UX-14]`** | Consider tab grouping to reduce navigation count | `page.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 
 ---

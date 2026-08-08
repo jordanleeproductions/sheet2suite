@@ -144,10 +144,10 @@ code, pre, .font-mono {
   color: #ffffff !important;
 }
 
-/* Ledger Totals card white font override for labels & headers */
+/* Ledger Totals card white font — specificity chain sufficient, no !important needed */
 .totalCard h3,
 .totalCard .cardLabel {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 /* Red button black text override for Neo-Brutalism */
@@ -166,34 +166,34 @@ code, pre, .font-mono {
   box-shadow: none !important;
 }
 
-/* Neo-Brutalism Over-Budget Card Red Border & Box-Shadow Override */
-[data-style='neo-brutalism'] .is-over-budget,
-[data-style='neo-brutalism'] [class*="is-over-budget"] {
-  border-color: #ef4444 !important;
-  box-shadow: 5px 5px 0px #ef4444 !important;
+/* Neo-Brutalism Over-Budget Card — :where() lowers specificity cost, no !important needed */
+:where([data-style='neo-brutalism']) .is-over-budget,
+:where([data-style='neo-brutalism']) [class*="is-over-budget"] {
+  border-color: #ef4444;
+  box-shadow: 5px 5px 0px #ef4444;
 }
 
-/* Kanban column panels in any Dark mode (TODO, IN PROGRESS, DONE transparent background) */
+/* Kanban column panels in Dark mode — [data-theme][class] specificity chain sufficient */
 [data-theme='dark'] .kanban-column,
 [data-theme='dark'] [class*="kanban-column"] {
-  background-color: transparent !important;
-  background: transparent !important;
+  background-color: transparent;
+  background: transparent;
 }
 
-/* Budget Utilization Category Chips Sub-Bars in Dark mode: transparent background */
+/* Budget Utilization Category Chips in Dark mode */
 [data-theme='dark'] .category-chip,
 [data-theme='dark'] [class*="category-chip"],
 [data-theme='dark'] [class*="categoryChip"] {
-  background-color: transparent !important;
-  background: transparent !important;
+  background-color: transparent;
+  background: transparent;
 }
 
-/* Budget Ledger Totals Card in Dark mode: transparent background & readable white font */
+/* Budget Ledger Totals Card in Dark mode — border !important retained (competing inline style) */
 [data-theme='dark'] .totalCard,
 [data-theme='dark'] [class*="totalCard"] {
-  background-color: transparent !important;
-  background: transparent !important;
-  border: 2px solid var(--color-muted) !important;
+  background-color: transparent;
+  background: transparent;
+  border: 2px solid var(--color-muted) !important; /* cascade-trump: overrides inline style */
 }
 
 [data-theme='dark'] .totalCard h3,
@@ -202,16 +202,16 @@ code, pre, .font-mono {
 [data-theme='dark'] [class*="totalCard"] h3,
 [data-theme='dark'] [class*="totalCard"] span,
 [data-theme='dark'] [class*="totalCard"] div {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
-/* Timeline Expanded Event Content Body in Dark mode: transparent background */
+/* Timeline Expanded Event Content Body in Dark mode */
 [data-theme='dark'] .timeline-card-body,
 [data-theme='dark'] [class*="timeline-card-body"],
 [data-theme='dark'] .timeline-card.is-expanded .timeline-card-body {
-  background-color: transparent !important;
-  background: transparent !important;
-  color: #ffffff !important;
+  background-color: transparent;
+  background: transparent;
+  color: #ffffff;
 }
 
 [data-theme='dark'] .timeline-card-body span,
@@ -219,7 +219,7 @@ code, pre, .font-mono {
 [data-theme='dark'] .timeline-card-body div,
 [data-theme='dark'] .timeline-card-body strong,
 [data-theme='dark'] .timeline-card-body svg {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 /* Itinerary Timeline Expanded Event Header in Neo-Brutalism Dark Mode */
@@ -234,23 +234,26 @@ code, pre, .font-mono {
 [data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header div,
 [data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header svg,
 [data-style='neo-brutalism'][data-theme='dark'] .timeline-card.is-expanded .timeline-card-header button {
-  color: #000000 !important;
+  color: #000000;
 }
 
-/* Semantic Badge & Status Chip Utility Classes */
-.badge-green, [class*="badge-green"] {
-  background-color: var(--color-green-muted) !important;
-  color: var(--color-green) !important;
+/* Semantic Badge & Status Chip Utility Classes — doubled class raises specificity, !important removed */
+.badge-green.badge-green,
+[class*="badge-green"] {
+  background-color: var(--color-green-muted);
+  color: var(--color-green);
 }
 
-.badge-gold, [class*="badge-gold"] {
-  background-color: var(--color-gold-muted) !important;
-  color: var(--color-gold) !important;
+.badge-gold.badge-gold,
+[class*="badge-gold"] {
+  background-color: var(--color-gold-muted);
+  color: var(--color-gold);
 }
 
-.badge-red, [class*="badge-red"] {
-  background-color: var(--color-red-muted) !important;
-  color: var(--color-red) !important;
+.badge-red.badge-red,
+[class*="badge-red"] {
+  background-color: var(--color-red-muted);
+  color: var(--color-red);
 }
 
 /* Save / Submit Button background rule */
@@ -277,21 +280,21 @@ button[type="submit"] {
   color: #000000 !important;
 }
 
-/* In Dark Mode: Modal Headers font color uses the theme's on-primary token */
+/* In Dark Mode: Modal Headers use on-primary token — specificity chain sufficient, no !important needed */
 [data-theme='dark'] [class*="modalHeader"],
 [data-theme='dark'] [class*="modalHeader"] h3,
 [data-theme='dark'] [class*="modalHeader"] button,
 [data-theme='dark'] [class*="modalHeader"] svg,
 [data-theme='dark'] [class*="modalTitle"],
 [data-theme='dark'] [class*="closeBtn"] {
-  color: var(--color-on-primary) !important;
+  color: var(--color-on-primary);
 }
 
-/* Remove background color from Sync / Mock Mode Banner in Dark Mode */
+/* Remove background from Sync / Mock Mode Banner in Dark Mode */
 [data-theme='dark'] .sync-banner,
 [data-theme='dark'] [class*="syncBanner"] {
-  background-color: transparent !important;
-  background: transparent !important;
+  background-color: transparent;
+  background: transparent;
 }
 
 /* Vendor Card Header in Neo-Brutalism Light mode (var(--color-highlight) background, excluded in Dark mode) */
@@ -305,14 +308,14 @@ button[type="submit"] {
 [data-style='neo-brutalism'][data-theme='light'] .vendor-card-header span,
 [data-style='neo-brutalism'][data-theme='light'] .vendor-card-header div,
 [data-style='neo-brutalism'][data-theme='light'] .vendor-card-header button {
-  color: #000000 !important;
+  color: #000000;
 }
 
-/* Settings Modal Light & Dark Mode Styling Override */
+/* Settings Dropdown — specificity sufficient for light mode; dark !important only on bg (inline style conflict) */
 .settingsDropdown,
 [class*="settingsDropdown"] {
-  background-color: #ffffff !important;
-  color: #121824 !important;
+  background-color: #ffffff;
+  color: #121824;
 }
 
 .settingsDropdown label,
@@ -325,9 +328,9 @@ button[type="submit"] {
 
 [data-theme='dark'] [class*="settingsDropdown"],
 [data-theme='dark'] .settingsDropdown {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-  border: 2px solid var(--color-muted) !important;
+  background-color: #000000 !important; /* cascade-trump: overrides inline style */
+  color: #ffffff;
+  border: 2px solid var(--color-muted);
 }
 
 [data-theme='dark'] [class*="settingsDropdown"] label,
@@ -340,12 +343,12 @@ button[type="submit"] {
 [data-theme='dark'] .settingsDropdown div,
 [data-theme='dark'] .settingsDropdown a,
 [data-theme='dark'] .settingsDropdown button {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 [data-theme='dark'] [class*="settingsDropdown"] button[style*="var(--color-primary)"],
 [data-theme='dark'] .settingsDropdown button[style*="var(--color-primary)"] {
-  color: var(--color-on-primary) !important;
+  color: var(--color-on-primary);
 }
 
 /* Responsive container */
@@ -424,47 +427,47 @@ button[style*="backgroundColor: 'var(--color-bg)'"] {
   color: #000000 !important;
 }
 
-/* Even Card Grid Column Rules for Summary Dashboard (1, 2, or 4 cols per row) */
+/* KPI Grid layout — structural rules; class specificity sufficient, no !important needed */
 .kpi-grid {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 1rem !important;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
 }
 
 @media (max-width: 1024px) {
   .kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 640px) {
   .kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.625rem !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
   }
 }
 
-/* Photography Shot List Desktop Single-Row Card Layout */
+/* Photography Shot List Desktop Single-Row Card Layout — structural rules, no !important needed */
 .photo-shots-list {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 0.75rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .photo-shot-card {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 0.875rem 1.25rem !important;
-  border-width: 2px !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  border-width: 2px;
 }
 
 @media (max-width: 768px) {
   .photo-shot-card {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0.75rem !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 }
 
