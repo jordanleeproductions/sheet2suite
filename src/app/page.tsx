@@ -831,6 +831,84 @@ export default function Sheet2VowDashboard() {
                 })}
             </div>
           </div>
+
+          {/* Desktop Bottom Action Tools (Print, Share & Settings) */}
+          <div style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setPrintModalInitialTemplate('place_cards');
+                setShowPrintModal(true);
+              }}
+              title="Print Studio & Canva Exporter"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+                padding: '0.5rem 0.65rem',
+                borderRadius: 'var(--border-radius-sm)',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start'
+              }}
+            >
+              <Printer size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              {!isSidebarCollapsed && <span>PRINT STUDIO</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              title="Share View-Only Vendor Link"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+                padding: '0.5rem 0.65rem',
+                borderRadius: 'var(--border-radius-sm)',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start'
+              }}
+            >
+              <Share2 size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              {!isSidebarCollapsed && <span>SHARE LINK</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowAdvancedSettings(true)}
+              title="Advanced Settings"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+                padding: '0.5rem 0.65rem',
+                borderRadius: 'var(--border-radius-sm)',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start'
+              }}
+            >
+              <Settings size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              {!isSidebarCollapsed && <span>SETTINGS</span>}
+            </button>
+          </div>
         </aside>
       )}
 
