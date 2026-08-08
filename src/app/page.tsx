@@ -18,7 +18,7 @@ import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -118,6 +118,21 @@ export default function Sheet2VowDashboard() {
   const [isScanningDrive, setIsScanningDrive] = useState<boolean>(false);
   const [scannedSheets, setScannedSheets] = useState<{ id: string; name: string; folder: string }[]>([]);
   const [showPostActivationGuidance, setShowPostActivationGuidance] = useState<boolean>(false);
+
+  // Navigation Layout & Mobile Responsive States [NAV-1]
+  const [navLayout, setNavLayout] = useState<'top' | 'sidebar'>('top');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleUpdateWeddingDetails = async (name: string, date: string) => {
     setWeddingName(name);
@@ -220,6 +235,11 @@ export default function Sheet2VowDashboard() {
     const savedFolder = localStorage.getItem('s2v_drive_folder');
     const savedModules = localStorage.getItem('s2v_enabled_modules');
     const savedWorkspacesStr = localStorage.getItem('s2v_workspaces');
+    const savedNavLayout = localStorage.getItem('s2v_nav_layout');
+
+    if (savedNavLayout === 'top' || savedNavLayout === 'sidebar') {
+      setNavLayout(savedNavLayout);
+    }
 
     if (savedWorkspacesStr) {
       try {
@@ -538,14 +558,287 @@ export default function Sheet2VowDashboard() {
   };
 
   return (
-    <div className="app-viewport-container" style={styles.container}>
+    <div
+      className="app-viewport-container"
+      style={{
+        ...styles.container,
+        marginLeft: (!isMobile && isOnboarded && navLayout === 'sidebar') ? (isSidebarCollapsed ? '64px' : '220px') : 0,
+        transition: 'margin-left 0.2s ease'
+      }}
+    >
+      {/* Mobile Navigation Overlay Drawer */}
+      {isMobile && isMobileDrawerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 200,
+            display: 'flex'
+          }}
+          onClick={() => setIsMobileDrawerOpen(false)}
+        >
+          <div
+            style={{
+              width: '260px',
+              backgroundColor: 'var(--color-surface, #fff)',
+              height: '100%',
+              padding: '1.25rem 1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              boxShadow: 'var(--box-shadow-hover)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <FileSpreadsheet size={22} style={{ color: 'var(--color-primary)' }} />
+                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>Sheet2Vow</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileDrawerOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.5rem', flex: 1, overflowY: 'auto' }}>
+              {[
+                { id: 'home', label: 'Summary', icon: LayoutDashboard },
+                { id: 'guests', label: 'Guest List', icon: Users },
+                { id: 'menu', label: 'Catering', icon: Utensils },
+                { id: 'tables', label: 'Seating', icon: Grid },
+                { id: 'budget', label: 'Ledger', icon: DollarSign },
+                { id: 'schedule', label: 'Timeline', icon: Calendar },
+                { id: 'vendors', label: 'Vendors', icon: Briefcase },
+                { id: 'tasks', label: 'Tasks', icon: ListTodo },
+                { id: 'music', label: 'Music', icon: Music },
+                { id: 'photos', label: 'Photos', icon: Camera },
+                { id: 'thanks', label: 'Thanks', icon: Heart },
+              ]
+                .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
+                .map((tab) => {
+                  const IconComp = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        switchTab(tab.id as any);
+                        setIsMobileDrawerOpen(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        padding: '0.65rem 0.75rem',
+                        borderRadius: 'var(--border-radius-sm)',
+                        backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
+                        color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.8rem',
+                        fontWeight: isActive ? 700 : 500
+                      }}
+                    >
+                      <IconComp size={18} />
+                      <span>{tab.label.toUpperCase()}</span>
+                    </button>
+                  );
+                })}
+            </div>
+
+            {/* Bottom Quick Tools (Print Studio & Share Link) */}
+            <div style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileDrawerOpen(false);
+                  setShowPrintModal(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.625rem',
+                  padding: '0.625rem 0.75rem',
+                  borderRadius: 'var(--border-radius-sm)',
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700
+                }}
+              >
+                <Printer size={16} style={{ color: 'var(--color-primary)' }} />
+                <span>PRINT STUDIO & CANVA</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileDrawerOpen(false);
+                  setShowShareModal(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.625rem',
+                  padding: '0.625rem 0.75rem',
+                  borderRadius: 'var(--border-radius-sm)',
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700
+                }}
+              >
+                <Share2 size={16} style={{ color: 'var(--color-primary)' }} />
+                <span>SHARE VIEW-ONLY LINK</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sticky Collapsible Left Sidebar [NAV-1] */}
+      {!isMobile && isOnboarded && navLayout === 'sidebar' && (
+        <aside
+          className="app-sidebar"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: isSidebarCollapsed ? '64px' : '220px',
+            backgroundColor: 'var(--color-surface, #fff)',
+            borderRight: '2px solid var(--color-border)',
+            padding: '1rem 0.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            transition: 'width 0.2s ease',
+            zIndex: 90,
+            boxShadow: 'var(--box-shadow-hover)'
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', padding: '0 0.25rem' }}>
+              {!isSidebarCollapsed && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <FileSpreadsheet size={20} style={{ color: 'var(--color-primary)' }} />
+                  <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary)' }}>Sheet2Vow</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  cursor: 'pointer',
+                  padding: '0.3rem',
+                  color: 'var(--color-text)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
+              {[
+                { id: 'home', label: 'Summary', icon: LayoutDashboard },
+                { id: 'guests', label: 'Guest List', icon: Users },
+                { id: 'menu', label: 'Catering', icon: Utensils },
+                { id: 'tables', label: 'Seating', icon: Grid },
+                { id: 'budget', label: 'Ledger', icon: DollarSign },
+                { id: 'schedule', label: 'Timeline', icon: Calendar },
+                { id: 'vendors', label: 'Vendors', icon: Briefcase },
+                { id: 'tasks', label: 'Tasks', icon: ListTodo },
+                { id: 'music', label: 'Music', icon: Music },
+                { id: 'photos', label: 'Photos', icon: Camera },
+                { id: 'thanks', label: 'Thanks', icon: Heart },
+              ]
+                .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
+                .map((tab) => {
+                  const IconComp = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => switchTab(tab.id as any)}
+                      title={tab.label}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.625rem',
+                        padding: '0.55rem 0.65rem',
+                        borderRadius: 'var(--border-radius-sm)',
+                        backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
+                        color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.725rem',
+                        fontWeight: isActive ? 700 : 500,
+                        justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+                        transition: 'var(--transition-smooth)'
+                      }}
+                    >
+                      <IconComp size={16} style={{ flexShrink: 0 }} />
+                      {!isSidebarCollapsed && <span>{tab.label.toUpperCase()}</span>}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        </aside>
+      )}
+
       {/* Brand Header */}
-      <header style={styles.appHeader}>
-        <div style={styles.brandGroup}>
-          <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0 }} />
-          <div>
-            <h1 style={styles.brandName}>Sheet2Vow</h1>
-            <p style={styles.brandSubtitle}>Clean digital canvas for spreadsheet purists.</p>
+      <header style={{ ...styles.appHeader, display: 'flex', alignItems: 'center' }}>
+        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {isMobile ? (
+            <button
+              type="button"
+              onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+              title="Open Navigation Menu"
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.4rem',
+                cursor: 'pointer',
+                color: 'var(--color-text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '0.35rem'
+              }}
+            >
+              <Menu size={22} style={{ color: 'var(--color-primary)' }} />
+            </button>
+          ) : (
+            <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0 }} />
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <h1 style={{ ...styles.brandName, fontSize: isMobile ? '1.35rem' : styles.brandName.fontSize, margin: 0, lineHeight: 1 }}>Sheet2Vow</h1>
+            {!isMobile && <p style={styles.brandSubtitle}>Clean digital canvas for spreadsheet purists.</p>}
           </div>
         </div>
 
@@ -759,6 +1052,42 @@ export default function Sheet2VowDashboard() {
                         title="Midnight Tuxedo: Bodoni & Sharp Monochrome"
                       >
                         TUXEDO
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={styles.settingsSection}>
+                    <label style={styles.settingsLabel}>NAVIGATION LAYOUT</label>
+                    <div style={styles.themeToggle}>
+                      <button
+                        style={{
+                          ...styles.themeBtn,
+                          fontWeight: navLayout === 'top' ? 'bold' : 'normal',
+                          backgroundColor: navLayout === 'top' ? 'var(--color-primary)' : 'transparent',
+                          color: navLayout === 'top' ? 'var(--color-on-primary)' : 'var(--color-text)'
+                        }}
+                        onClick={() => {
+                          setNavLayout('top');
+                          localStorage.setItem('s2v_nav_layout', 'top');
+                        }}
+                        title="Top Horizontal Navbar"
+                      >
+                        TOP NAVBAR
+                      </button>
+                      <button
+                        style={{
+                          ...styles.themeBtn,
+                          fontWeight: navLayout === 'sidebar' ? 'bold' : 'normal',
+                          backgroundColor: navLayout === 'sidebar' ? 'var(--color-primary)' : 'transparent',
+                          color: navLayout === 'sidebar' ? 'var(--color-on-primary)' : 'var(--color-text)'
+                        }}
+                        onClick={() => {
+                          setNavLayout('sidebar');
+                          localStorage.setItem('s2v_nav_layout', 'sidebar');
+                        }}
+                        title="Sticky Collapsible Left Sidebar Layout"
+                      >
+                        LEFT SIDEBAR
                       </button>
                     </div>
                   </div>
@@ -1909,37 +2238,39 @@ export default function Sheet2VowDashboard() {
             </div>
           )}
 
-          {/* Navigation tabs */}
-          <nav style={styles.navbar}>
-            {[
-              { id: 'home', label: '[ SUMMARY ]' },
-              { id: 'guests', label: '[ GUEST LIST ]' },
-              { id: 'menu', label: '[ CATERING ]' },
-              { id: 'tables', label: '[ SEATING ]' },
-              { id: 'budget', label: '[ LEDGER ]' },
-              { id: 'schedule', label: '[ TIMELINE ]' },
-              { id: 'vendors', label: '[ VENDORS ]' },
-              { id: 'tasks', label: '[ TASKS ]' },
-              { id: 'music', label: '[ MUSIC ]' },
-              { id: 'photos', label: '[ PHOTOS ]' },
-              { id: 'thanks', label: '[ THANKS ]' },
-            ]
-              .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
-              .map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => switchTab(tab.id as any)}
-                  style={{
-                    ...styles.navTabBtn,
-                    color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-muted)',
-                    fontWeight: activeTab === tab.id ? 700 : 400,
-                    borderBottomColor: activeTab === tab.id ? 'var(--color-primary)' : 'transparent'
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-          </nav>
+          {/* Navigation tabs (Only rendered when navLayout is 'top') */}
+          {navLayout === 'top' && (
+            <nav style={styles.navbar}>
+              {[
+                { id: 'home', label: '[ SUMMARY ]' },
+                { id: 'guests', label: '[ GUEST LIST ]' },
+                { id: 'menu', label: '[ CATERING ]' },
+                { id: 'tables', label: '[ SEATING ]' },
+                { id: 'budget', label: '[ LEDGER ]' },
+                { id: 'schedule', label: '[ TIMELINE ]' },
+                { id: 'vendors', label: '[ VENDORS ]' },
+                { id: 'tasks', label: '[ TASKS ]' },
+                { id: 'music', label: '[ MUSIC ]' },
+                { id: 'photos', label: '[ PHOTOS ]' },
+                { id: 'thanks', label: '[ THANKS ]' },
+              ]
+                .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
+                .map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => switchTab(tab.id as any)}
+                    style={{
+                      ...styles.navTabBtn,
+                      color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-muted)',
+                      fontWeight: activeTab === tab.id ? 700 : 400,
+                      borderBottomColor: activeTab === tab.id ? 'var(--color-primary)' : 'transparent'
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+            </nav>
+          )}
 
           {/* View Router */}
           {isLoading ? (

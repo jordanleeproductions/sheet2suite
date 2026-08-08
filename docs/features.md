@@ -135,9 +135,12 @@
 - [x] **[GEN-1] Dropdown to Checkbox Standard:** Converted binary Yes/No dropdown fields to native checkboxes (e.g. Staff Meals Required).
 - [x] **[GEN-2] Desktop Wide-Screen Layout Optimization:** Expanded max-width container bounds to 1680px for desktop viewports.
 - [x] **[GEN-3] Toast Notification System:** Brief "Saved!" popup on settings/modal saves and data sync updates.
+- [x] **[NAV-1] Sticky Collapsible Left Sidebar Navigation:** Added desktop wide-screen left sidebar layout option alongside top navbar.
 - [x] **[ONBOARD-1] Express Mode ("Jump Right In") 1-Click Launch:** Added prominent 1-click button (`⚡ EXPLORE DEMO WORKSPACE (JUMP RIGHT IN)`) to instant-load sample wedding workspace without registration forms.
+- [x] **[ONBOARD-2] Unified Onboarding Wizard Component:** Created standalone `OnboardingWizard.tsx` component supporting `express`, `quick`, and 4-step `guided` setup modes.
 - [x] **[ONBOARD-3] Visual Task Preset Selector Cards:** Interactive visual cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) featuring category badges, descriptions, and task preview pills.
 - [x] **[ONBOARD-4] Visual Drive Target Directory Selector Cards:** Interactive visual selection cards replacing plain `<select>` dropdown for Drive folder selection (`Default`, `Root`, `Dedicated App`).
+- [x] **[ONBOARD-5] Partner & Spouse Quick Invite Step:** Step 4 inline invite input in `OnboardingWizard.tsx` to pre-configure spouse co-admin permissions.
 - [x] **[ONBOARD-6] Demo Workspace Status Banner & Conversion Shortcut:** Displays active demo workspace notification bar with 1-click `[CONNECT GOOGLE DRIVE SHEET]` shortcut.
 - [x] **[LIFE-1] Reconnect Existing Sheet Onboarding Hub:** Segmented onboarding selector hub allowing users on new devices to reconnect via Drive auto-detect, Etsy Order ID, or Sheet URL.
 - [x] **[LIFE-2] 1-Click Google Drive Sheet Scanner:** Drive scanner modal presenting detected Sheet2Vow spreadsheets in Google Drive for 1-tap reconnection.
@@ -163,17 +166,17 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
+| **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
 
 ### 🚀 Onboarding & Registration UX
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[ONBOARD-1]`** | Express Mode ("Jump Right In") 1-Click Launch button for instant demo workspace | `page.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
-| **`[ONBOARD-2]`** | Unified Onboarding Wizard Component (`OnboardingWizard.tsx`) (`express` \| `quick` \| `guided`) | `OnboardingWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[ONBOARD-2]`** | Unified Onboarding Wizard Component (`OnboardingWizard.tsx`) (`express` \| `quick` \| `guided`) | `OnboardingWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 | **`[ONBOARD-3]`** | Visual Task Preset Selector Cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) | `page.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
 | **`[ONBOARD-4]`** | Visual Drive Target Directory Selector Cards | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[ONBOARD-5]`** | Partner & Co-Planner Quick Invite Step (Guided Setup Step 4) | `OnboardingWizard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Pending |
+| **`[ONBOARD-5]`** | Partner & Co-Planner Quick Invite Step (Guided Setup Step 4) | `OnboardingWizard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 | **`[ONBOARD-6]`** | Demo Workspace Status Banner & 1-Click Google Drive Conversion Shortcut | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ### 🔑 User Lifecycle, Multi-Device Re-entry & Pro Switching
