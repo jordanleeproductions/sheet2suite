@@ -260,6 +260,11 @@ export default function Sheet2VowDashboard() {
     if (savedOnboarded === 'true') setIsOnboarded(true);
     if (savedMock === 'false') setIsMockMode(false);
     if (savedDemo === 'true') setIsDemoMode(true);
+
+    // Auto-prompt Google Auth Modal if no active session or token is present
+    if (!savedOnboarded || (savedMock === 'false' && !savedToken)) {
+      setShowGoogleAuthModal(true);
+    }
     if (savedName) setWeddingName(savedName);
     if (savedDate) setWeddingDate(savedDate);
     if (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') setStyleTheme(savedStyleTheme);
@@ -529,12 +534,14 @@ export default function Sheet2VowDashboard() {
   };
 
   // Disconnect sheet and reset local storage
-  const handleConfirmDisconnect = () => {
+  const handleConfirmDisconnect = async () => {
     setSpreadsheetId('');
     setGoogleToken('');
+    setGoogleUserEmail('');
     setIsOnboarded(false);
+    setIsMockMode(false);
     setIsDemoMode(false);
-    setShowDemoBanner(true);
+    setShowDemoBanner(false);
     setWeddingData(null);
     setWeddingName('');
     setWeddingDate('');
@@ -544,12 +551,17 @@ export default function Sheet2VowDashboard() {
     setSyncError(null);
 
     // Clear all s2v_ items from localStorage
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('s2v_')) {
-        localStorage.removeItem(key);
+    if (typeof window !== 'undefined') {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('s2v_') || key.startsWith('s2s_'))) {
+          localStorage.removeItem(key);
+        }
       }
     }
+
+    // Trigger Google Auth Modal for re-authentication
+    setShowGoogleAuthModal(true);
   };
 
   const getCountdown = () => {
