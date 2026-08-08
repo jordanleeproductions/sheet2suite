@@ -254,8 +254,26 @@ export default function PrintTemplatesModal({
               </span>
             </div>
           </div>
-          <button style={styles.closeBtn} onClick={onClose} title="Close Print Studio">
-            <X size={20} />
+          <button
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              color: 'var(--color-on-primary)',
+              border: '1px solid var(--color-on-primary)',
+              borderRadius: 'var(--border-radius-sm)',
+              padding: '0.4rem 0.75rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+            onClick={onClose}
+            title="Exit Print Studio"
+          >
+            <X size={16} />
+            <span>EXIT STUDIO</span>
           </button>
         </div>
 
@@ -818,24 +836,24 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    backdropFilter: 'blur(4px)',
+    backgroundColor: 'var(--color-bg)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 9999,
-    padding: '1rem',
+    zIndex: 99999,
+    padding: 0,
   },
   modal: {
     backgroundColor: 'var(--color-bg)',
-    border: '2px solid var(--color-primary)',
-    borderRadius: 'var(--border-radius-lg)',
-    width: '100%',
-    maxWidth: '1100px',
-    maxHeight: '90vh',
+    border: 'none',
+    borderRadius: 0,
+    width: '100vw',
+    height: '100vh',
+    maxWidth: '100%',
+    maxHeight: '100%',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    boxShadow: 'none',
     overflow: 'hidden',
   },
   header: {
