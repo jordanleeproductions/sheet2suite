@@ -1278,8 +1278,8 @@ export default function Sheet2VowDashboard() {
                         transition: 'var(--transition-smooth)'
                       }}
                     >
-                      <Sliders size={16} />
-                      <span>ADVANCED SETTINGS</span>
+                      <Sliders size={16} style={{ color: theme === 'dark' ? '#000000' : '#ffffff' }} />
+                      <span style={{ color: theme === 'dark' ? '#000000' : '#ffffff' }}>ADVANCED SETTINGS</span>
                     </button>
 
                     {/* Temporary Testing Button: Re-Enter Onboarding Setup Mode */}

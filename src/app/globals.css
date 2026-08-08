@@ -261,7 +261,7 @@ button[type="submit"] {
   color: var(--color-on-primary, #ffffff) !important;
 }
 
-/* In Dark Mode: buttons with var(--color-primary) background have white font */
+/* In Dark Mode: buttons with var(--color-primary) background have sharp black font */
 [data-theme='dark'] button[style*="backgroundColor: var(--color-primary)"],
 [data-theme='dark'] button[style*="background-color: var(--color-primary)"],
 [data-theme='dark'] button[style*="backgroundColor:var(--color-primary)"],
@@ -269,7 +269,12 @@ button[type="submit"] {
 [data-theme='dark'] [class*="saveBtn"],
 [data-theme='dark'] [class*="submitBtn"],
 [data-theme='dark'] button[type="submit"] {
-  color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-theme='dark'] button[style*="backgroundColor: var(--color-primary)"] *,
+[data-theme='dark'] button[style*="background-color: var(--color-primary)"] * {
+  color: #000000 !important;
 }
 
 /* In Dark Mode: Modal Headers font color uses the theme's on-primary token */
