@@ -653,7 +653,7 @@ export default function Sheet2VowDashboard() {
                 })}
             </div>
 
-            {/* Bottom Quick Tools (Print Studio & Share Link) */}
+            {/* Bottom Quick Tools (Print Studio, Share Link & Settings) */}
             <div style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button
                 type="button"
@@ -703,6 +703,31 @@ export default function Sheet2VowDashboard() {
               >
                 <Share2 size={16} style={{ color: 'var(--color-primary)' }} />
                 <span>SHARE VIEW-ONLY LINK</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileDrawerOpen(false);
+                  setShowSettings(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.625rem',
+                  padding: '0.625rem 0.75rem',
+                  borderRadius: 'var(--border-radius-sm)',
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700
+                }}
+              >
+                <Settings size={16} style={{ color: 'var(--color-primary)' }} />
+                <span>QUICK SETTINGS</span>
               </button>
             </div>
           </div>
@@ -973,24 +998,28 @@ export default function Sheet2VowDashboard() {
               )}
             </div>
 
-            <button
-              style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
-              onClick={() => {
-                setPrintModalInitialTemplate('place_cards');
-                setShowPrintModal(true);
-              }}
-              title="Open Print & Export Studio"
-            >
-              <Printer size={20} />
-            </button>
+            {!isMobile && (
+              <>
+                <button
+                  style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
+                  onClick={() => {
+                    setPrintModalInitialTemplate('place_cards');
+                    setShowPrintModal(true);
+                  }}
+                  title="Open Print & Export Studio"
+                >
+                  <Printer size={20} />
+                </button>
 
-            <button
-              style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
-              onClick={() => setShowShareModal(true)}
-              title="Share Read-Only Vendor Link"
-            >
-              <Share2 size={20} />
-            </button>
+                <button
+                  style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
+                  onClick={() => setShowShareModal(true)}
+                  title="Share Read-Only Vendor Link"
+                >
+                  <Share2 size={20} />
+                </button>
+              </>
+            )}
 
             <div ref={settingsRef} style={{ position: 'relative' }}>
               <button style={styles.iconBtn} onClick={() => setShowSettings(!showSettings)} title="Settings">
