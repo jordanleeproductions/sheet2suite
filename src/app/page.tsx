@@ -945,9 +945,9 @@ export default function Sheet2VowDashboard() {
             <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0 }} />
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <h1 style={{ ...styles.brandName, fontSize: isMobile ? '1.35rem' : styles.brandName.fontSize, margin: 0, lineHeight: 1 }}>Sheet2Vow</h1>
-            {!isMobile && <p style={styles.brandSubtitle}>Clean digital canvas for spreadsheet purists.</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <h1 style={{ ...styles.brandName, fontSize: isMobile ? '1.35rem' : styles.brandName.fontSize, margin: 0, lineHeight: '1.1' }}>Sheet2Vow</h1>
+            {!isMobile && <p style={{ ...styles.brandSubtitle, margin: 0, marginTop: '2px' }}>Clean digital canvas for spreadsheet purists.</p>}
           </div>
         </div>
 
