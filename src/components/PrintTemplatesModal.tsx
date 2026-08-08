@@ -244,11 +244,21 @@ export default function PrintTemplatesModal({
 
       <div className="print-modal-container" style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div style={styles.header} className="modalHeader print-no-print">
+        <div style={{
+          backgroundColor: 'var(--color-bg-subtle)',
+          borderBottom: '2px solid var(--color-primary)',
+          padding: '1rem 1.25rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexShrink: 0
+        }} className="modalHeader print-no-print">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Printer size={20} style={{ color: 'var(--color-primary)' }} />
+            <Printer size={22} style={{ color: 'var(--color-primary)' }} />
             <div>
-              <h3 style={styles.title}>PRINT & EXPORT STUDIO</h3>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-text)', margin: 0, lineHeight: 1.1 }}>
+                PRINT & EXPORT STUDIO
+              </h3>
               <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
                 Professional Print Templates & Escort Cards Generator
               </span>
@@ -259,9 +269,9 @@ export default function PrintTemplatesModal({
               fontFamily: 'var(--font-mono)',
               fontSize: '0.75rem',
               fontWeight: 700,
-              backgroundColor: 'rgba(255, 255, 255, 0.15)',
-              color: 'var(--color-on-primary)',
-              border: '1px solid var(--color-on-primary)',
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
               borderRadius: 'var(--border-radius-sm)',
               padding: '0.4rem 0.75rem',
               cursor: 'pointer',
