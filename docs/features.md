@@ -35,9 +35,15 @@
 ## 🖨️ 3. Print & Canva Export Studio (`PrintTemplatesModal.tsx`)
 - [x] **[PRINT-1] One-Click Printable PDF Studio:** Escort / Folded Place Cards (with meal choice icons & crop/fold guidelines), Table Tent Cards & Seating Rosters, Day-Of Timeline Itinerary, and Emergency Vendor Directory Contact Sheet.
 - [x] **[PRINT-2] Guest Photo/Video Upload QR Cards:** Printable place cards with custom QR code linking guests directly to the photo upload portal (`/upload/[token]`).
+- [x] **[PRINT-3] Canva Template Integration Hub & Canva Bulk Create Merge CSV Exporter:** Exporter tool to download formatted CSV files for Canva's "Bulk Create" data merge feature for place cards, table numbers, and invitation envelopes, with step-by-step Canva tutorial guide.
+- [x] **[PRINT-4] Custom Print Theme & Typography Switcher:** Custom typography selector in Print Studio supporting Classic Serif, Modern Sans, Elegant Script, and Technical Monospace.
 - [x] **[PRINT-5] Emoji & Decorative Icon Toggles:** Added options toggle in Print Studio for wedding ring and sparkle decorative emojis.
 - [x] **[PRINT-6] Granular Card Field Controls:** Added individual field checkboxes to show/hide Table Number, Meal Selection Icon, Dietary Restrictions, and Plus-One / Party Group names on place cards.
+- [x] **[PRINT-7] Strict Print Boundary & Bleed Guardrails:** Avery cardstock grid presets (Avery 5395, Avery 8371, Avery 5302), corner crop/cut markers, and 0.125" bleed safety zone overlays.
+- [x] **[PRINT-9] Printable Ceremony Aisle Seating Chart Template:** Printable ceremony aisle seating diagram displaying altar arch, left/right aisle reserved family & VIP rows, central aisle walkway, and usher seating roster.
+- [x] **[PRINT-11] Separate Binder Planner pages from Guest Printables:** Categorized Print Studio sidebar into 📖 Binder Planner Pages vs ✂️ Guest & Day-of Printables.
 - [x] **[PRINT-12] Binder Hole Punch Margins Toggle:** Sidebar option to dynamically add a 25mm left gutter margin for 3-ring binder punch clearance during printing.
+- [x] **[PRINT-14] Table Seating Roster Pagination:** Limited table rosters to 1-2 tables per page with clean CSS page breaks for legibility.
 
 ---
 
@@ -88,6 +94,7 @@
 - [x] **[THEME-4] Semantic Color Token Expansion (`theme.css`):** Added CSS custom properties across all theme variants to eliminate hardcoded hex values.
 - [x] **[THEME-5] PhotoShotListManager Dark Mode Fix:** Replaced hardcoded `#000000` inline styles so Photography page renders correctly in dark mode.
 - [x] **[THEME-6] Full Component Color Token Cleanup:** Systematically replaced hardcoded hex color values across components with CSS variables.
+- [x] **[NAV-2] Font Size Scaler Controls:** Added `+` and `-` buttons in Quick Settings and Advanced Settings Modal for accessibility scaling 80%-120%.
 - [x] **[UX-1] Font Variable Chain Verification:** Confirmed Google Fonts variables in `layout.tsx` match `theme.css` font fallbacks across all 4 design styles.
 - [x] **[UX-2] Theme-Aware Modal Header Contrast Fix:** Replaced blanket `#000000 !important` override in `globals.css` with `var(--color-on-primary)` token inheritance, restoring high-contrast white header text in Editorial Dark and Neo-Brutalism Dark modes.
 - [x] **[UX-3] Settings Dropdown Dark Mode Contrast:** Fixed selected button text contrast in Tuxedo Dark mode so white-on-white text is avoided.
@@ -164,47 +171,13 @@
 | **`[SYS-6]`** | Lemon Squeezy Integration & License Entitlements | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[SYS-7]`** | Security & Risk Audit (formula injection prevention, HMAC replay guard) | `security.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
-### 🧭 Navigation & Settings
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[NAV-1]`** | Sticky Collapsible Left Sidebar Navigation setting instead of top navbar | `page.tsx` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
-| **`[NAV-2]`** | Font Size Scaler Controls (`+` and `-` buttons in Quick Settings and Advanced Settings Modal for accessibility scaling 80%-120%) | `vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-
-### 🚀 Onboarding & Registration UX
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[ONBOARD-1]`** | Express Mode ("Jump Right In") 1-Click Launch button for instant demo workspace | `page.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
-| **`[ONBOARD-2]`** | Unified Onboarding Wizard Component (`OnboardingWizard.tsx`) (`express` \| `quick` \| `guided`) | `OnboardingWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
-| **`[ONBOARD-3]`** | Visual Task Preset Selector Cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) | `page.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
-| **`[ONBOARD-4]`** | Visual Drive Target Directory Selector Cards | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[ONBOARD-5]`** | Partner & Co-Planner Quick Invite Step (Guided Setup Step 4) | `OnboardingWizard.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[ONBOARD-6]`** | Demo Workspace Status Banner & 1-Click Google Drive Conversion Shortcut | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-
-### 🔑 User Lifecycle, Multi-Device Re-entry & Pro Switching
-
-| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
-|---|---|---|---|---|---|
-| **`[LIFE-1]`** | "Reconnect Existing Sheet" Onboarding Tab (Google Drive Auto-Detect, Etsy Order ID, Sheet URL) | `page.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Completed |
-| **`[LIFE-2]`** | 1-Click Google Drive Sheet Scanner & Reconnection Modal | `page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
-| **`[LIFE-3]`** | Multi-Workspace Switcher Dropdown (`s2v_workspaces[]`) for Pro Planners | `page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
-| **`[LIFE-4]`** | Post-Activation Guidance Banner (Drive folder path, bookmark link, Sheet ID) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[LIFE-5]`** | Sheet2Suite Shared Activation Engine (`activate.sheet2suite.com` multi-SKU entitlement lookup) | `/api/verify-order` | 🔴 High | ⚡ High (~3-4 turns) | ✅ Completed |
-
 ### 🖨️ Print Studio & Canva Exporter
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[PRINT-3]`** | Canva Template Integration Hub & Canva Bulk Create Merge CSV Exporter | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
-| **`[PRINT-4]`** | Custom Print Theme & Typography Switcher (Serif, Sans, Script, Mono) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Low (~2 turns) | ✅ Completed |
-| **`[PRINT-7]`** | Strict Print Boundary & Bleed Guardrails (Avery cardstock grid dimensions) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 | **`[PRINT-8]`** | Full Wedding Planner Binder Printout (combines all modules into bound book) | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
-| **`[PRINT-9]`** | Printable Ceremony Aisle Seating Chart Template | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 | **`[PRINT-10]`** | Responsive Mobile Print Studio layout redesign | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
-| **`[PRINT-11]`** | Separate Binder Planner pages from Guest Printables (place cards, QR cards) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 | **`[PRINT-13]`** | Batch Combined Binder Export or Individual Section PDF downloads | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
-| **`[PRINT-14]`** | Table Seating Roster Pagination: Limit to 1-2 tables per page for legibility | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 | **`[PRINT-15]`** | Dedicated Canva Bulk Create Hub Screen with Data Field Selector & Live Sample CSV Preview | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-16]`** | Print Studio Top Toolbar (Toggles: Hide Title/Date, Paper Size A4/Letter, Emoji Toggle, B&W/Color) | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[PRINT-17]`** | Dynamic QR Code Generator Engine for Photo Upload & Song Request Display Cards | `PrintTemplatesModal.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | Pending |
@@ -221,21 +194,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[UX-1]`** | Verify & fix Botanical/Tuxedo font variable chain | `layout.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-2]`** | Fix modal header contrast across all 8 theme combos | `globals.css` | 🟡 Medium | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-3]`** | Fix settings dropdown button contrast in Tuxedo/Botanical Dark | `globals.css` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-4]`** | Use color tokens for error boxes (`var(--color-red-muted)`) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-5]`** | Use `var(--color-bg-subtle)` for onboarding auth status box | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-6]`** | Use token for sync banner background (`var(--color-bg-subtle)`) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 | **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | Pending |
-| **`[UX-8]`** | Add missing border-radius tokens to Botanical/Tuxedo Dark | `theme.css` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-9]`** | Standardize modal header pattern across all components | Components | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
-| **`[UX-10]`** | Add `className="modalHeader"` to all modal headers | Components | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-11]`** | Increase color preset swatch dot size to 28px | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-12]`** | Add design style subtitle descriptions in Quick Settings | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[UX-13]`** | Clarify "RESET" button label and behavior to "RESET TO DEFAULT" | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 | **`[UX-14]`** | Consider tab grouping to reduce navigation count | `page.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
-| **`[UX-15]`** | Elevated toast background in dark mode (`var(--color-bg-hover)`) | `ToastNotification.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ---
 
