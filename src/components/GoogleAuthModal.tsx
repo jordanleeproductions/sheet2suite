@@ -7,7 +7,7 @@ export interface GoogleAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectDemoMode: () => void;
-  onAuthenticated: (user: { email: string; name?: string; accessToken?: string; spreadsheetId?: string }) => void;
+  onAuthenticated: (user: { email: string; name?: string; accessToken?: string; spreadsheetId?: string; hasExistingWorkspace?: boolean }) => void;
 }
 
 export default function GoogleAuthModal({
@@ -45,6 +45,7 @@ export default function GoogleAuthModal({
               name: user.name,
               accessToken: accessToken,
               spreadsheetId: provision?.spreadsheetId,
+              hasExistingWorkspace: provision?.hasExistingWorkspace ?? Boolean(provision?.spreadsheetId),
             });
             onClose();
           } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {

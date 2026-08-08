@@ -99,37 +99,33 @@ export async function GET(req: NextRequest) {
 
         spreadsheetId = sheetSearch.data.files?.[0]?.id || undefined;
         webViewLink = sheetSearch.data.files?.[0]?.webViewLink || undefined;
+
+        if (spreadsheetId) {
+          // Register discovered Drive sheet in database
+          LocalLicensingDb.saveWorkspace({
+            userEmail,
+            spreadsheetId,
+            spreadsheetName: sheetSearch.data.files?.[0]?.name || `${userName}'s Wedding Database`,
+            driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
+            webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
+            productName: 'Sheet2Vow',
+          });
+        }
       }
 
-      if (!spreadsheetId) {
-        const masterId = process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
-        const copyRes = await drive.files.copy({
-          fileId: masterId,
-          requestBody: {
-            name: `${userName}'s Wedding Database`,
-            parents: [vowFolderId],
-          },
-          fields: 'id, name, webViewLink',
-        });
-        spreadsheetId = copyRes.data.id!;
-        webViewLink = copyRes.data.webViewLink || undefined;
+      if (spreadsheetId) {
+        provisionData = {
+          hasExistingWorkspace: true,
+          spreadsheetId,
+          folderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
+          webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
+        };
+      } else {
+        provisionData = {
+          hasExistingWorkspace: false,
+          folderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
+        };
       }
-
-      // Register or update workspace in Sheet2Suite database
-      LocalLicensingDb.saveWorkspace({
-        userEmail,
-        spreadsheetId,
-        spreadsheetName: `${userName}'s Wedding Database`,
-        driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
-        webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
-        productName: 'Sheet2Vow',
-      });
-
-      provisionData = {
-        spreadsheetId,
-        folderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
-        webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
-      };
     } catch (pErr) {
       console.error('Provisioning step error:', pErr);
     }

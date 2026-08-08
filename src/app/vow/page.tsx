@@ -1548,13 +1548,21 @@ export default function Sheet2VowDashboard() {
           if (user.accessToken) {
             setGoogleToken(user.accessToken);
           }
-          if (user.spreadsheetId) {
+          if (user.hasExistingWorkspace && user.spreadsheetId) {
             setSpreadsheetId(user.spreadsheetId);
+            setIsMockMode(false);
+            setIsOnboarded(true);
+            setShowGoogleAuthModal(false);
+            addToast(`Welcome back ${user.email}! Reconnected active workspace.`, 'success');
+          } else {
+            // First time user with no registered spreadsheet
+            setSpreadsheetId('');
+            setIsMockMode(false);
+            setIsOnboarded(false);
+            setOnboardTab('new');
+            setShowGoogleAuthModal(false);
+            addToast(`Authenticated as ${user.email}. Provision your workspace or activate a license key.`, 'info');
           }
-          setIsMockMode(false);
-          setIsOnboarded(true);
-          setShowGoogleAuthModal(false);
-          addToast(`Signed in as ${user.email}`, 'success');
         }}
       />
 
