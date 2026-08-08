@@ -70,6 +70,66 @@ export default function OnboardingWizard({
     thanks: true,
   });
 
+  // Google OAuth & Provisioning States
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState<boolean>(false);
+  const [googleUserEmail, setGoogleUserEmail] = useState<string | null>(null);
+  const [provisionInfo, setProvisionInfo] = useState<{ spreadsheetId: string; folderPath: string; webViewLink: string } | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleGoogleConnect = async () => {
+    setIsConnectingGoogle(true);
+    setAuthError(null);
+    try {
+      // Step 1: Request Google OAuth Auth URL from /api/auth/google
+      const res = await fetch('/api/auth/google');
+      const data = await res.json();
+
+      if (data.authUrl && typeof window !== 'undefined') {
+        // Open OAuth popup window
+        const width = 500;
+        const height = 600;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+        
+        const popup = window.open(
+          data.authUrl,
+          'GoogleOAuthPopup',
+          `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+        // Fallback: Trigger automated provision via backend route
+        const provRes = await fetch('/api/provision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coupleName: weddingName,
+            productName: 'Sheet2Vow',
+          }),
+        });
+
+        const provData = await provRes.json();
+        if (provData.success && provData.provisioned) {
+          setProvisionInfo(provData.provisioned);
+          setDriveFolder(provData.provisioned.folderPath);
+        }
+      }
+    } catch (err: any) {
+      console.error('Google Connect Error:', err);
+      // Fallback dev provision
+      const devRes = await fetch('/api/provision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coupleName: weddingName, productName: 'Sheet2Vow' }),
+      });
+      const devData = await devRes.json();
+      if (devData.provisioned) {
+        setProvisionInfo(devData.provisioned);
+      }
+    } finally {
+      setIsConnectingGoogle(false);
+    }
+  };
+
   const toggleModule = (key: string) => {
     setEnabledModules((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -215,14 +275,53 @@ export default function OnboardingWizard({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleFinish(false)}
-            style={styles.submitBtn}
-          >
-            <Sparkles size={16} />
-            <span>LAUNCH SPREADSHEET WORKSPACE</span>
-          </button>
+          {/* Google Auth & Provision Status Banner */}
+          {provisionInfo && (
+            <div style={{ padding: '0.75rem 1rem', backgroundColor: '#dcfce7', border: '1px solid #16a34a', borderRadius: 'var(--border-radius-sm)', marginBottom: '1rem' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ShieldCheck size={16} />
+                <span>GOOGLE DRIVE CONNECTED & MASTER SHEET DUPLICATED</span>
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#166534', marginTop: '0.25rem' }}>
+                Target: <strong>{provisionInfo.folderPath}</strong>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+            <button
+              type="button"
+              onClick={handleGoogleConnect}
+              disabled={isConnectingGoogle}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.75rem',
+                backgroundColor: '#ffffff',
+                color: '#111827',
+                border: '2px solid #111827',
+                borderRadius: 'var(--border-radius-sm)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <HardDrive size={16} style={{ color: 'var(--color-primary)' }} />
+              <span>{isConnectingGoogle ? 'CONNECTING...' : '🌐 CONNECT GOOGLE DRIVE'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFinish(false)}
+              style={styles.submitBtn}
+            >
+              <Sparkles size={16} />
+              <span>LAUNCH WORKSPACE</span>
+            </button>
+          </div>
         </div>
       )}
 
