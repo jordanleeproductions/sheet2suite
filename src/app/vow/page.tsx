@@ -18,6 +18,7 @@ import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
+import GoogleAuthModal from '@/components/GoogleAuthModal';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
@@ -28,6 +29,8 @@ export default function Sheet2VowDashboard() {
   // Authentication & Spreadsheet Settings
   const [spreadsheetId, setSpreadsheetId] = useState<string>('');
   const [googleToken, setGoogleToken] = useState<string>('');
+  const [googleUserEmail, setGoogleUserEmail] = useState<string>('');
+  const [showGoogleAuthModal, setShowGoogleAuthModal] = useState<boolean>(false);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
   const [isMockMode, setIsMockMode] = useState<boolean>(true);
   const [weddingName, setWeddingName] = useState<string>('');
@@ -1518,6 +1521,31 @@ export default function Sheet2VowDashboard() {
         />
       )}
 
+      {/* Google Auth Gate Modal */}
+      <GoogleAuthModal
+        isOpen={showGoogleAuthModal}
+        onClose={() => setShowGoogleAuthModal(false)}
+        onSelectDemoMode={() => {
+          setIsMockMode(true);
+          setIsOnboarded(true);
+          setShowGoogleAuthModal(false);
+          addToast('Entered Demo Workspace Mode', 'info');
+        }}
+        onAuthenticated={(user) => {
+          setGoogleUserEmail(user.email);
+          if (user.accessToken) {
+            setGoogleToken(user.accessToken);
+          }
+          if (user.spreadsheetId) {
+            setSpreadsheetId(user.spreadsheetId);
+          }
+          setIsMockMode(false);
+          setIsOnboarded(true);
+          setShowGoogleAuthModal(false);
+          addToast(`Signed in as ${user.email}`, 'success');
+        }}
+      />
+
       {/* Main Core Area */}
       {!isOnboarded ? (
         /* Onboarding Workspace */
@@ -2220,92 +2248,23 @@ export default function Sheet2VowDashboard() {
             <div style={styles.weddingMilestoneDate}>{getCountdown()}</div>
           </div>
 
-          {/* Demo Workspace Banner [ONBOARD-6] */}
-          {isDemoMode && showDemoBanner && (
-            <div style={{
-              backgroundColor: 'var(--color-bg-subtle)',
-              border: '2px solid var(--color-amber, #f59e0b)',
-              borderRadius: 'var(--border-radius-md)',
-              padding: '0.625rem 1rem',
-              marginBottom: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '0.75rem',
-              boxShadow: 'var(--box-shadow-subtle)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          {/* Google Auth Status & Workspace Header Banner */}
+          <div style={{
+            backgroundColor: isMockMode ? 'var(--color-bg-subtle)' : '#ecfdf5',
+            border: `2px solid ${isMockMode ? 'var(--color-amber, #f59e0b)' : '#10b981'}`,
+            borderRadius: 'var(--border-radius-md)',
+            padding: '0.625rem 1rem',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            boxShadow: 'var(--box-shadow-subtle)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              {isMockMode ? (
                 <Zap size={18} style={{ color: 'var(--color-amber, #f59e0b)', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text)' }}>
-                    DEMO WORKSPACE ACTIVE
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
-                    You are viewing pre-populated sample wedding data (*Alex & Sam's Wedding*). All changes are saved locally in mock mode.
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOnboarded(false);
-                    setIsDemoMode(false);
-                  }}
-                  title="Start setting up your personal wedding planner"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.675rem',
-                    fontWeight: 800,
-                    backgroundColor: 'var(--color-primary)',
-                    color: 'var(--color-on-primary)',
-                    border: 'none',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.4rem 0.75rem',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem'
-                  }}
-                >
-                  <Sparkles size={14} />
-                  <span>GET STARTED WITH YOURS!</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleExpressOnboard}
-                  title="Reset to fresh demo sample data"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 600,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-text)',
-                    border: '1px solid var(--color-muted)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.35rem 0.65rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  RESET DEMO DATA
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowDemoBanner(false)}
-                  title="Hide demo banner"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-muted)',
-                    cursor: 'pointer',
-                    padding: '2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
                   }}
                 >
                   <X size={16} />
