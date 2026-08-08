@@ -6,7 +6,7 @@ import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, 
 import { formatTimeDisplay } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
 
-export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle';
+export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle' | 'guest_contact_roster' | 'reception_seating_chart';
 
 interface PrintTemplatesModalProps {
   initialTemplate?: PrintTemplateType;
@@ -304,6 +304,8 @@ export default function PrintTemplatesModal({
               { id: 'timeline', label: 'Day-Of Timeline Roster', icon: Clock, count: schedule.length },
               { id: 'vendors', label: 'Vendor Directory Sheet', icon: Phone, count: vendors.length },
               { id: 'ceremony_aisle', label: 'Ceremony Aisle Seating Chart', icon: MapPin, count: attendingGuests.length },
+              { id: 'guest_contact_roster', label: 'Guest Contact & Menu Roster', icon: Users, count: guests.length },
+              { id: 'reception_seating_chart', label: 'Reception Dinner Seating Chart', icon: Heart, count: tablesList.length },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTemplate === tab.id;
@@ -953,6 +955,171 @@ export default function PrintTemplatesModal({
                       </table>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* TEMPLATE: GUEST MASTER CONTACT & MENU ROSTER */}
+              {activeTemplate === 'guest_contact_roster' && (
+                <div>
+                  <div style={styles.paperSectionTitleRow}>
+                    <h3 style={styles.paperSectionTitle}>GUEST MASTER CONTACT & MENU ROSTER</h3>
+                    <span style={styles.paperSectionMeta}>{guests.length} Total Guests Registered</span>
+                  </div>
+
+                  {guests.length === 0 ? (
+                    <div style={styles.emptyNotice}>No guests registered in Guest List Manager.</div>
+                  ) : (
+                    <div style={styles.timelineTableWrapper}>
+                      <table style={styles.paperTable}>
+                        <thead>
+                          <tr>
+                            <th style={styles.paperTh}>GUEST NAME</th>
+                            <th style={styles.paperTh}>RSVP STATUS</th>
+                            <th style={styles.paperTh}>CONTACT (PHONE / EMAIL)</th>
+                            <th style={styles.paperTh}>MENU SELECTION</th>
+                            <th style={styles.paperTh}>DIETARY RESTRICTIONS</th>
+                            <th style={styles.paperTh}>TABLE & SEAT</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {guests.map((guest) => (
+                            <tr key={guest.guestId}>
+                              <td style={styles.paperTdBold}>
+                                {guest.firstName} {guest.lastName}
+                                {guest.partyGroup && guest.partyGroup !== 'Individual' && (
+                                  <span style={{ display: 'block', fontSize: '0.65rem', color: '#6b7280', fontWeight: 400 }}>
+                                    Party: {guest.partyGroup}
+                                  </span>
+                                )}
+                              </td>
+                              <td style={styles.paperTd}>
+                                <span style={{
+                                  fontFamily: 'var(--font-mono)',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 700,
+                                  padding: '0.15rem 0.4rem',
+                                  borderRadius: '3px',
+                                  backgroundColor: (guest.rsvpStatus || '').toLowerCase() === 'attending' ? '#dcfce7' : (guest.rsvpStatus || '').toLowerCase() === 'declined' ? '#fee2e2' : '#f3f4f6',
+                                  color: (guest.rsvpStatus || '').toLowerCase() === 'attending' ? '#166534' : (guest.rsvpStatus || '').toLowerCase() === 'declined' ? '#991b1b' : '#374151',
+                                }}>
+                                  {(guest.rsvpStatus || 'PENDING').toUpperCase()}
+                                </span>
+                              </td>
+                              <td style={styles.paperTdMono}>
+                                <div>{guest.phoneNumber || '-'}</div>
+                                <div style={{ color: '#6b7280', fontSize: '0.65rem' }}>{guest.emailAddress || '-'}</div>
+                              </td>
+                              <td style={styles.paperTd}>
+                                {guest.mealChoice ? (
+                                  <span>{getMealIcon(guest.mealChoice)} {guest.mealChoice}</span>
+                                ) : (
+                                  <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not specified</span>
+                                )}
+                              </td>
+                              <td style={styles.paperTd}>
+                                {guest.dietaryRestrictions ? (
+                                  <span style={{ color: '#b91c1c', fontWeight: 600 }}>⚠️ {guest.dietaryRestrictions}</span>
+                                ) : (
+                                  <span style={{ color: '#9ca3af' }}>None</span>
+                                )}
+                              </td>
+                              <td style={styles.paperTdMono}>
+                                <strong>{guest.tableAssignment || 'TBD'}</strong>
+                                {typeof guest.seatNumber === 'number' && ` (Seat #${guest.seatNumber})`}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TEMPLATE: RECEPTION DINNER SEATING CHART */}
+              {activeTemplate === 'reception_seating_chart' && (
+                <div>
+                  <div style={styles.paperSectionTitleRow}>
+                    <h3 style={styles.paperSectionTitle}>RECEPTION DINNER SEATING CHART & FLOOR PLAN</h3>
+                    <span style={styles.paperSectionMeta}>{tablesList.length} Reception Tables • {attendingGuests.length} Attending Guests</span>
+                  </div>
+
+                  {tablesList.length === 0 ? (
+                    <div style={styles.emptyNotice}>No tables assigned yet in Seating Chart Manager.</div>
+                  ) : (
+                    <div>
+                      {/* Floor Plan Overview Header */}
+                      <div style={{
+                        border: '2px solid #111827',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        backgroundColor: '#f9fafb',
+                        marginBottom: '1.5rem',
+                        textAlign: 'center'
+                      }}>
+                        <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', margin: '0 0 0.35rem 0', color: '#111827' }}>
+                          RECEPTION HALL FLOOR PLAN OVERVIEW
+                        </h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem', marginTop: '0.75rem' }}>
+                          {tablesList.map((tableName) => {
+                            const count = guests.filter(g => g.tableAssignment?.toLowerCase() === tableName.toLowerCase()).length;
+                            return (
+                              <div key={tableName} style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.5rem', backgroundColor: '#ffffff', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>{tableName.toUpperCase()}</div>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: '#6b7280' }}>{count} Guests Seated</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Detailed Table Roster Cards */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                        {tablesList.map((tableName) => {
+                          const tableGuests = guests.filter(g => (g.tableAssignment || '').toLowerCase() === tableName.toLowerCase());
+                          return (
+                            <div key={tableName} style={{ border: '2px solid #111827', borderRadius: '6px', padding: '1rem', backgroundColor: '#ffffff' }}>
+                              <div style={{ borderBottom: '2px solid #111827', paddingBottom: '0.4rem', marginBottom: '0.65rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', margin: 0, color: '#111827' }}>
+                                  {tableName.toUpperCase()}
+                                </h4>
+                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', backgroundColor: '#f3f4f6', padding: '0.15rem 0.4rem', borderRadius: '3px', fontWeight: 700 }}>
+                                  {tableGuests.length} Seats
+                                </span>
+                              </div>
+
+                              {showSeatMaps && renderTableDiagram(tableName, tableGuests)}
+
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', marginTop: '0.65rem' }}>
+                                <thead>
+                                  <tr>
+                                    <th style={{ ...styles.paperTh, fontSize: '0.6rem', padding: '0.35rem 0.4rem' }}>SEAT</th>
+                                    <th style={{ ...styles.paperTh, fontSize: '0.6rem', padding: '0.35rem 0.4rem' }}>GUEST NAME</th>
+                                    <th style={{ ...styles.paperTh, fontSize: '0.6rem', padding: '0.35rem 0.4rem' }}>MENU SELECTION</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {tableGuests.map((g, idx) => {
+                                    const seatNum = typeof g.seatNumber === 'number' ? g.seatNumber : idx + 1;
+                                    return (
+                                      <tr key={g.guestId} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                        <td style={{ padding: '0.35rem 0.4rem', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>#{seatNum}</td>
+                                        <td style={{ padding: '0.35rem 0.4rem', fontWeight: 600 }}>{g.firstName} {g.lastName}</td>
+                                        <td style={{ padding: '0.35rem 0.4rem', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>
+                                          {g.mealChoice ? `${getMealIcon(g.mealChoice)} ${g.mealChoice}` : '-'}
+                                          {g.dietaryRestrictions && <span style={{ color: '#b91c1c', display: 'block', fontSize: '0.55rem' }}>⚠️ {g.dietaryRestrictions}</span>}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
