@@ -77,7 +77,15 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 
 ---
 
-## 3. Vendor Access Control & Share Architecture
+## 4. Native Sheet2Suite License & Entitlement Architecture
+
+### 4.1 Ecosystem Licensing Model
+Sheet2Suite operates a unified, autonomous entitlement database (`activate.sheet2suite.com` / `/api/verify-order`). License validation is self-contained within the Sheet2Suite product ecosystem, providing instant activation without external system hops.
+
+### 4.2 License Schema & Partner Co-Planning Validation
+- **Single Master License Key:** Unlocks purchased products (`Sheet2Vow`, `Sheet2Home`, `Sheet2Finance`, or `Sheet2Suite Bundle`).
+- **Spouse / Partner Co-Planning Access (`coPlanner`):** Tracks primary buyer email alongside partner/spouse email (`coPlanner.partnerEmail`), allowing dual-household Google OAuth validation across separate devices.
+- **Product Telemetry & Usage Metrics:** Captures active workspace counts, wedding size scale (`totalGuestsCount`), portal adoption metrics (*Vendor Share Links, Song Requests, Photo Uploads*), and event date lifecycle triggers for automated post-wedding **Sheet2Finance** and **Sheet2Home** product transitions.
 
 To provide external vendors (DJs, Photographers, Coordinators, Caterers) with secure, mobile-optimized, read-only portals without forcing them to sign into Google Workspace or access confidential data:
 
