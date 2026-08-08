@@ -15,7 +15,10 @@ import {
   ShieldCheck,
   CheckCircle2,
   HardDrive,
-  Printer
+  Printer,
+  Lock,
+  CreditCard,
+  Unlock
 } from 'lucide-react';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
@@ -181,6 +184,52 @@ export default function Sheet2SuiteParentHub() {
           <Printer size={28} style={{ color: 'var(--color-primary)' }} />
           <h5 style={styles.pillarTitle}>Print Studio & Canva Ready</h5>
           <p style={styles.pillarDesc}>Built-in Canva bulk merge CSV exporter and print studio to create gorgeous place cards, menus, agendas, and seating charts.</p>
+        </div>
+      </section>
+
+      {/* Data Sovereignty, Privacy & Zero Subscriptions Section */}
+      <section style={styles.sovereigntySection}>
+        <div style={styles.sovereigntyHeader}>
+          <div style={styles.sovereigntyBadge}>
+            <Lock size={14} style={{ color: 'var(--color-primary)' }} />
+            <span>DATA SOVEREIGNTY GUARANTEE</span>
+          </div>
+          <h3 style={styles.sovereigntyTitle}>Your Data Stays Yours. Forever.</h3>
+          <p style={styles.sovereigntySubtitle}>
+            Unlike typical SaaS tools that hold your personal records hostage behind monthly paywalls, Sheet2Suite is engineered around complete data ownership.
+          </p>
+        </div>
+
+        <div style={styles.sovereigntyGrid}>
+          <div style={styles.sovereigntyCard}>
+            <div style={styles.sovereigntyIconWrapper}>
+              <Lock size={24} style={{ color: 'var(--color-primary)' }} />
+            </div>
+            <h4 style={styles.sovereigntyCardTitle}>100% Data Sovereignty</h4>
+            <p style={styles.sovereigntyCardDesc}>
+              Your guest lists, budgets, inventory items, and logs live exclusively inside <strong>your personal Google Drive account</strong> using isolated <code>drive.file</code> scope permissions. We never store, process, or sell your personal records on third-party servers.
+            </p>
+          </div>
+
+          <div style={styles.sovereigntyCard}>
+            <div style={styles.sovereigntyIconWrapper}>
+              <CreditCard size={24} style={{ color: 'var(--color-primary)' }} />
+            </div>
+            <h4 style={styles.sovereigntyCardTitle}>Zero Monthly Subscriptions</h4>
+            <p style={styles.sovereigntyCardDesc}>
+              Say goodbye to monthly subscription fatigue ($15–$50/month). You pay <strong>one time</strong> on Etsy or Lemon Squeezy and own your application license for life with free lifetime platform updates.
+            </p>
+          </div>
+
+          <div style={styles.sovereigntyCard}>
+            <div style={styles.sovereigntyIconWrapper}>
+              <Unlock size={24} style={{ color: 'var(--color-primary)' }} />
+            </div>
+            <h4 style={styles.sovereigntyCardTitle}>Zero Vendor Lock-In</h4>
+            <p style={styles.sovereigntyCardDesc}>
+              Because your underlying database is standard Google Sheets (<code>.xlsx</code> format), you can inspect, export, or open your files in Microsoft Excel or Apple Numbers at any second — even if you stop using Sheet2Suite.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -455,6 +504,87 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
   },
   pillarDesc: {
+    fontSize: '0.8rem',
+    color: 'var(--color-muted)',
+    lineHeight: 1.45,
+    margin: 0,
+  },
+  sovereigntySection: {
+    backgroundColor: 'var(--color-surface, #fff)',
+    border: '2px solid var(--color-primary)',
+    borderRadius: 'var(--border-radius-md)',
+    padding: '2.5rem 2rem',
+    marginBottom: '3.5rem',
+    boxShadow: 'var(--box-shadow-subtle)',
+  },
+  sovereigntyHeader: {
+    textAlign: 'center',
+    marginBottom: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  sovereigntyBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.65rem',
+    fontWeight: 800,
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-primary)',
+    border: '1px solid var(--color-primary)',
+    borderRadius: '20px',
+    padding: '0.3rem 0.75rem',
+    marginBottom: '0.75rem',
+  },
+  sovereigntyTitle: {
+    fontFamily: 'var(--font-serif)',
+    fontSize: '1.8rem',
+    fontWeight: 800,
+    color: 'var(--color-text)',
+    margin: '0 0 0.5rem 0',
+  },
+  sovereigntySubtitle: {
+    fontSize: '0.9rem',
+    color: 'var(--color-muted)',
+    maxWidth: '620px',
+    lineHeight: 1.5,
+    margin: 0,
+  },
+  sovereigntyGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '1.5rem',
+  },
+  sovereigntyCard: {
+    backgroundColor: 'var(--color-bg-subtle)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  sovereigntyIconWrapper: {
+    width: '40px',
+    height: '40px',
+    borderRadius: 'var(--border-radius-sm)',
+    backgroundColor: 'var(--color-surface, #fff)',
+    border: '1px solid var(--color-border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '0.25rem',
+  },
+  sovereigntyCardTitle: {
+    fontFamily: 'var(--font-serif)',
+    fontSize: '1.15rem',
+    fontWeight: 800,
+    color: 'var(--color-text)',
+    margin: 0,
+  },
+  sovereigntyCardDesc: {
     fontSize: '0.8rem',
     color: 'var(--color-muted)',
     lineHeight: 1.45,
