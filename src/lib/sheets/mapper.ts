@@ -11,10 +11,15 @@ export const GUEST_HEADERS: Record<string, keyof Guest> = {
   'Dietary Restrictions': 'dietaryRestrictions',
   'Meal Choice': 'mealChoice',
   'Table Assignment': 'tableAssignment',
+  'Seat Number': 'seatNumber',
+  'Seat': 'seatNumber',
+  'Has Plus One': 'hasPlusOne',
+  'Plus One Name': 'plusOneName',
   'Email Address': 'emailAddress',
   'Phone Number': 'phoneNumber',
   'Mailing Address': 'mailingAddress',
   'Thanked': 'thankedSent',
+  'Notes': 'notes',
 };
 
 export const BUDGET_HEADERS: Record<string, keyof BudgetItem> = {
@@ -35,6 +40,8 @@ export const SCHEDULE_HEADERS: Record<string, keyof ScheduleEvent> = {
   'Location': 'location',
   'Responsibility / Vendors': 'responsibility',
   'Notes / Details': 'notes',
+  'Is After Midnight': 'isAfterMidnight',
+  'After Midnight': 'isAfterMidnight',
 };
 
 export const VENDOR_HEADERS: Record<string, keyof Vendor> = {
@@ -101,6 +108,8 @@ export const guestMapper = {
     // Enforce default string values
     const ageCategory = (obj.ageCategory || 'Adult') as AgeCategory;
     const rsvpStatus = (obj.rsvpStatus || 'No Response') as RSVPStatus;
+    const rawThanked = String(obj.thankedSent || '').toLowerCase();
+    const rawPlusOne = String(obj.hasPlusOne || '').toLowerCase();
     return {
       guestId: String(obj.guestId || ''),
       firstName: String(obj.firstName || ''),
@@ -114,6 +123,11 @@ export const guestMapper = {
       emailAddress: String(obj.emailAddress || ''),
       phoneNumber: String(obj.phoneNumber || ''),
       mailingAddress: String(obj.mailingAddress || ''),
+      seatNumber: obj.seatNumber ? Number(obj.seatNumber) : undefined,
+      hasPlusOne: rawPlusOne === 'true' || rawPlusOne === 'yes' || rawPlusOne === '1',
+      plusOneName: String(obj.plusOneName || ''),
+      thankedSent: rawThanked === 'true' || rawThanked === 'yes' || rawThanked === '1',
+      notes: String(obj.notes || ''),
     };
   },
   toRow(headers: string[], guest: Guest): any[] {
@@ -143,6 +157,7 @@ export const budgetMapper = {
 export const scheduleMapper = {
   fromRow(headers: string[], row: any[]): ScheduleEvent {
     const obj = mapRowToObject<ScheduleEvent>(headers, row, SCHEDULE_HEADERS);
+    const rawMidnight = String(obj.isAfterMidnight || '').toLowerCase();
     return {
       startTime: String(obj.startTime || ''),
       endTime: String(obj.endTime || ''),
@@ -150,6 +165,7 @@ export const scheduleMapper = {
       location: String(obj.location || ''),
       responsibility: String(obj.responsibility || ''),
       notes: String(obj.notes || ''),
+      isAfterMidnight: rawMidnight === 'true' || rawMidnight === 'yes' || rawMidnight === '1',
     };
   },
   toRow(headers: string[], event: ScheduleEvent): any[] {
