@@ -44,6 +44,7 @@ export default function ActivationPage() {
   // Setup Form State
   const [weddingName, setWeddingName] = useState('Our Wedding');
   const [budget, setBudget] = useState(30000);
+  const [driveFolder, setDriveFolder] = useState('My Drive / Sheet2Suite / Sheet2Vow');
   const [selectedPresetKey, setSelectedPresetKey] = useState<string>('TRADITIONAL');
   const [spouseEmail, setSpouseEmail] = useState('');
   const [spouseName, setSpouseName] = useState('');
@@ -124,49 +125,64 @@ export default function ActivationPage() {
     setIsSubmitting(true);
     const selectedPreset = TASK_PRESETS[selectedPresetKey] || TASK_PRESETS.TRADITIONAL;
 
-    const payload = {
-      weddingName,
-      budget,
-      selectedTasks: selectedPreset.tasks,
-      enabledModules: modules,
-      spouseEmail,
-      spouseName,
-      enableGuestReadOnly,
-      enableVendorReadOnly,
-      activationOrder: verifiedOrder,
-    };
-
     try {
-      // Post to Onboard API
-      await fetch('/api/onboard', {
+      // Step 1: Provision Google Drive folder & master spreadsheet
+      const provRes = await fetch('/api/provision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          coupleName: weddingName,
+          productName: 'Sheet2Vow',
+          driveFolder: driveFolder,
+        }),
       });
+
+      const provData = await provRes.json();
+      let createdSpreadsheetId = provData.provisioned?.spreadsheetId || 'mock-sheet-id-vow-12345';
+
+      // Step 2: Register workspace in Sheet2Suite database
+      if (provData.provisioned) {
+        await fetch('/api/workspaces', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userEmail: email || 'user@sheet2suite.com',
+            partnerEmail: spouseEmail || undefined,
+            spreadsheetId: createdSpreadsheetId,
+            spreadsheetName: provData.provisioned.title || `${weddingName} Database`,
+            driveFolderPath: driveFolder,
+            webViewLink: provData.provisioned.webViewLink,
+            productName: 'Sheet2Vow',
+          }),
+        });
+      }
 
       // Save to localStorage for client-side persistence
       if (typeof window !== 'undefined') {
-        localStorage.setItem('sheet2vow_activated', 'true');
-        localStorage.setItem('sheet2vow_wedding_name', weddingName);
-        localStorage.setItem('sheet2vow_budget', String(budget));
-        localStorage.setItem('sheet2vow_enabled_modules', JSON.stringify(modules));
-        localStorage.setItem('sheet2vow_spouse_email', spouseEmail);
-        localStorage.setItem('sheet2vow_guest_readonly', String(enableGuestReadOnly));
-        localStorage.setItem('sheet2vow_vendor_readonly', String(enableVendorReadOnly));
+        localStorage.setItem('s2v_spreadsheet_id', createdSpreadsheetId);
+        localStorage.setItem('s2v_is_onboarded', 'true');
+        localStorage.setItem('s2v_is_mock', 'false');
+        localStorage.setItem('s2v_wedding_name', weddingName);
+        localStorage.setItem('s2v_wedding_date', '2026-09-20');
+        localStorage.setItem('s2v_budget', String(budget));
+        localStorage.setItem('s2v_drive_folder', driveFolder);
+        localStorage.setItem('s2v_enabled_modules', JSON.stringify(modules));
+        localStorage.setItem('s2v_spouse_email', spouseEmail);
       }
 
       setIsSubmitting(false);
       setStep(3); // Completion step
 
       setTimeout(() => {
-        router.push('/');
+        router.push('/vow#home');
       }, 1200);
     } catch (err) {
+      console.error('Activation final submit error:', err);
       setIsSubmitting(false);
-      setVerifyError('Error finalizing setup. Redirecting to dashboard...');
+      setStep(3);
       setTimeout(() => {
-        router.push('/');
-      }, 1000);
+        router.push('/vow#home');
+      }, 1200);
     }
   };
 

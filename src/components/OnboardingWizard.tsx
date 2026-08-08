@@ -140,7 +140,45 @@ export default function OnboardingWizard({
     );
   };
 
-  const handleFinish = (isDemo = false) => {
+  const handleFinish = async (isDemo = false) => {
+    if (!isDemo) {
+      setIsConnectingGoogle(true);
+      try {
+        // Step 1: Provision Drive folder & duplicate template at target driveFolder
+        const provRes = await fetch('/api/provision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coupleName: weddingName,
+            productName: 'Sheet2Vow',
+            driveFolder: driveFolder,
+          }),
+        });
+
+        const provData = await provRes.json();
+        if (provData.provisioned) {
+          // Step 2: Register workspace mapping in Sheet2Suite database
+          await fetch('/api/workspaces', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail: googleUserEmail || 'user@sheet2suite.com',
+              partnerEmail: spouseEmail || undefined,
+              spreadsheetId: provData.provisioned.spreadsheetId,
+              spreadsheetName: provData.provisioned.title || `${weddingName} Database`,
+              driveFolderPath: driveFolder,
+              webViewLink: provData.provisioned.webViewLink,
+              productName: 'Sheet2Vow',
+            }),
+          });
+        }
+      } catch (err) {
+        console.error('Provisioning Error during onboarding:', err);
+      } finally {
+        setIsConnectingGoogle(false);
+      }
+    }
+
     onComplete({
       weddingName,
       weddingDate,
@@ -151,7 +189,7 @@ export default function OnboardingWizard({
       spouseName,
       spouseEmail,
       isDemo,
-      isMock: true,
+      isMock: isDemo,
     });
   };
 
@@ -244,14 +282,14 @@ export default function OnboardingWizard({
             </div>
           </div>
 
-          {/* Drive Target Directory Cards */}
+          {/* Google Drive Directory Selector & Custom Path */}
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>GOOGLE DRIVE TARGET DIRECTORY</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+            <label style={styles.label}>GOOGLE DRIVE TARGET DIRECTORY *</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', marginBottom: '0.5rem' }}>
               {[
-                { path: 'My Drive/Wedding Planning', name: 'Wedding Planning' },
-                { path: 'My Drive (Root)', name: 'My Drive Root' },
-                { path: 'My Drive/Sheet2Vow', name: 'Sheet2Vow App' }
+                { path: 'My Drive / Sheet2Suite / Sheet2Vow', name: 'Sheet2Suite Default' },
+                { path: 'My Drive / Wedding Planning', name: 'Wedding Planning' },
+                { path: 'My Drive (Root)', name: 'My Drive Root' }
               ].map((folder) => {
                 const isSelected = driveFolder === folder.path;
                 return (
@@ -273,6 +311,13 @@ export default function OnboardingWizard({
                 );
               })}
             </div>
+            <input
+              type="text"
+              value={driveFolder}
+              onChange={(e) => setDriveFolder(e.target.value)}
+              placeholder="Or enter custom folder path e.g. My Drive/Custom Folder"
+              style={{ ...styles.input, fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+            />
           </div>
 
           {/* Google Auth & Provision Status Banner */}
