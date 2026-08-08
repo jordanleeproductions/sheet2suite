@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
+import { LocalLicensingDb } from '@/lib/db/licensingDb';
 
 function getOAuth2Client(redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
@@ -84,14 +85,21 @@ export async function GET(req: NextRequest) {
         vowFolderId = createVow.data.id!;
       }
 
-      // Check for existing database spreadsheet or copy master
-      const sheetSearch = await drive.files.list({
-        q: `'${vowFolderId}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
-        fields: 'files(id, name, webViewLink)',
-      });
+      // Check local database for existing registered workspaces for this user email
+      const existingDbWorkspaces = LocalLicensingDb.getWorkspacesByEmail(userEmail);
+      let spreadsheetId = existingDbWorkspaces[0]?.spreadsheetId;
+      let webViewLink = existingDbWorkspaces[0]?.webViewLink;
 
-      let spreadsheetId = sheetSearch.data.files?.[0]?.id;
-      let webViewLink = sheetSearch.data.files?.[0]?.webViewLink;
+      if (!spreadsheetId) {
+        // Check Drive folder if not found in DB
+        const sheetSearch = await drive.files.list({
+          q: `'${vowFolderId}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
+          fields: 'files(id, name, webViewLink)',
+        });
+
+        spreadsheetId = sheetSearch.data.files?.[0]?.id;
+        webViewLink = sheetSearch.data.files?.[0]?.webViewLink;
+      }
 
       if (!spreadsheetId) {
         const masterId = process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
@@ -106,6 +114,16 @@ export async function GET(req: NextRequest) {
         spreadsheetId = copyRes.data.id!;
         webViewLink = copyRes.data.webViewLink;
       }
+
+      // Register or update workspace in Sheet2Suite database
+      LocalLicensingDb.saveWorkspace({
+        userEmail,
+        spreadsheetId,
+        spreadsheetName: `${userName}'s Wedding Database`,
+        driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
+        webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
+        productName: 'Sheet2Vow',
+      });
 
       provisionData = {
         spreadsheetId,
