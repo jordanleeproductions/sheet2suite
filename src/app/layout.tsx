@@ -51,8 +51,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Sheet2Vow - Digital Wedding Planner",
-  description: "A sleek, mobile-first dashboard mapping your Google Sheet to a high-end Calm UI.",
+  title: "Sheet2Suite - Digital Canvas Applications for Google Sheets Purists",
+  description: "Transform Google Sheets into high-performance web applications for wedding planning, home inventory, gardening logs, and personal finance.",
 };
 
 export default function RootLayout({

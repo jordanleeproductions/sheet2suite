@@ -101,19 +101,39 @@ export default function Sheet2SuiteParentHub() {
             </Link>
           </div>
 
-          {/* Card 2: Sheet2Stay */}
+          {/* Card 2: Sheet2Home */}
           <div style={styles.productCard}>
             <div style={styles.cardHeader}>
               <div style={styles.iconCircle}>
                 <Home size={24} style={{ color: 'var(--color-muted)' }} />
               </div>
-              <span style={styles.badgeUpcoming}>COMING Q4 2026</span>
+              <span style={styles.badgeUpcoming}>COMING NEXT — Q4 2026</span>
             </div>
 
-            <h4 style={styles.cardTitle}>Sheet2Stay</h4>
-            <span style={styles.cardTagline}>Airbnb & Vacation Rental Tracker</span>
+            <h4 style={styles.cardTitle}>Sheet2Home</h4>
+            <span style={styles.cardTagline}>Personal Property & Inventory System</span>
             <p style={styles.cardDesc}>
-              Property booking ledger, turnover cleaning checklists, guest digital guidebooks, maintenance logs, and rental income analytics.
+              Personal property, valuables, and electronics inventory system for home management, warranty tracking, and insurance claims.
+            </p>
+
+            <button disabled style={styles.cardBtnDisabled}>
+              <span>COMING NEXT</span>
+            </button>
+          </div>
+
+          {/* Card 3: Sheet2Harvest */}
+          <div style={styles.productCard}>
+            <div style={styles.cardHeader}>
+              <div style={styles.iconCircle}>
+                <Sparkles size={24} style={{ color: 'var(--color-muted)' }} />
+              </div>
+              <span style={styles.badgeUpcoming}>COMING Q1 2027</span>
+            </div>
+
+            <h4 style={styles.cardTitle}>Sheet2Harvest</h4>
+            <span style={styles.cardTagline}>Gardener's Seasonal Log Book</span>
+            <p style={styles.cardDesc}>
+              A gardener's seasonal logbook for planting schedules, soil health tracking, crop rotation, pest management, and harvest yields.
             </p>
 
             <button disabled style={styles.cardBtnDisabled}>
@@ -121,39 +141,19 @@ export default function Sheet2SuiteParentHub() {
             </button>
           </div>
 
-          {/* Card 3: Sheet2Finances */}
+          {/* Card 4: Sheet2Finances */}
           <div style={styles.productCard}>
             <div style={styles.cardHeader}>
               <div style={styles.iconCircle}>
                 <DollarSign size={24} style={{ color: 'var(--color-muted)' }} />
               </div>
-              <span style={styles.badgeUpcoming}>COMING Q4 2026</span>
+              <span style={styles.badgeUpcoming}>COMING Q2 2027</span>
             </div>
 
             <h4 style={styles.cardTitle}>Sheet2Finances</h4>
             <span style={styles.cardTagline}>Personal Net Worth & Budget Ledger</span>
             <p style={styles.cardDesc}>
               Zero-based budget ledger, cashflow forecasting, debt payoff snowball calculator, asset allocation, and personal net worth tracker.
-            </p>
-
-            <button disabled style={styles.cardBtnDisabled}>
-              <span>COMING SOON</span>
-            </button>
-          </div>
-
-          {/* Card 4: Sheet2Events */}
-          <div style={styles.productCard}>
-            <div style={styles.cardHeader}>
-              <div style={styles.iconCircle}>
-                <Calendar size={24} style={{ color: 'var(--color-muted)' }} />
-              </div>
-              <span style={styles.badgeUpcoming}>COMING Q1 2027</span>
-            </div>
-
-            <h4 style={styles.cardTitle}>Sheet2Events</h4>
-            <span style={styles.cardTagline}>Party & Banquet Coordinator</span>
-            <p style={styles.cardDesc}>
-              Milestone birthdays, anniversary galas, corporate retreats, RSVP ticket links, banquet table arrangements, and catering setup.
             </p>
 
             <button disabled style={styles.cardBtnDisabled}>
