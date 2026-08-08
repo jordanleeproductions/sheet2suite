@@ -16,6 +16,7 @@ export interface LicenseValidationResponse {
   productCode: ProductCode;
   customerEmail: string;
   licenseTier: 'standard' | 'pro' | 'unlimited';
+  entitledProducts: ProductCode[];
   activatedAt: string;
   errorMessage?: string;
 }
@@ -34,6 +35,7 @@ export class LicenseValidator {
         productCode: req.productCode,
         customerEmail: cleanEmail,
         licenseTier: 'standard',
+        entitledProducts: [],
         activatedAt: '',
         errorMessage: 'Invalid email address provided.'
       };
@@ -45,17 +47,28 @@ export class LicenseValidator {
         productCode: req.productCode,
         customerEmail: cleanEmail,
         licenseTier: 'standard',
+        entitledProducts: [],
         activatedAt: '',
         errorMessage: 'Invalid Order ID format. Please enter a valid Etsy Order ID.'
       };
     }
 
-    // Mock verification payload (can be connected to Lemon Squeezy or Etsy API)
+    // Determine product entitlements based on Order SKU / ID tags
+    let entitledProducts: ProductCode[] = [req.productCode];
+    if (cleanOrderId.includes('BUNDLE') || cleanOrderId.includes('MASTER') || cleanOrderId.includes('SUITE') || cleanOrderId.includes('ALL')) {
+      entitledProducts = ['SHEET2VOW', 'SHEET2FINANCE', 'SHEET2HOME', 'SHEET2CLOSET', 'SHEET2INVENTORY'];
+    } else if (cleanOrderId.includes('FINANCE')) {
+      entitledProducts = ['SHEET2FINANCE'];
+    } else if (cleanOrderId.includes('STAY') || cleanOrderId.includes('HOME')) {
+      entitledProducts = ['SHEET2HOME'];
+    }
+
     return {
       valid: true,
       productCode: req.productCode,
       customerEmail: cleanEmail,
-      licenseTier: 'standard',
+      licenseTier: entitledProducts.length > 1 ? 'pro' : 'standard',
+      entitledProducts,
       activatedAt: new Date().toISOString()
     };
   }

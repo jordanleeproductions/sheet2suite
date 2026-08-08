@@ -316,12 +316,60 @@ export default function ActivationPage() {
         </div>
       )}
 
-        {/* STEP 1: Choose Setup Experience (Quick vs Guided) */}
+        {/* STEP 1: Choose Setup Experience & Licensed App (Sheet2Suite Product Hub) [LIFE-5] */}
         {step === 1 && (
           <div style={styles.choiceSection}>
             <div style={styles.verifiedBanner}>
               <CheckCircle2 size={18} style={{ color: 'var(--color-green)', marginRight: '8px' }} />
-              <span>Verified Order #{verifiedOrder?.orderId || 'ETSY-OK'} &bull; License Activated</span>
+              <div>
+                <div style={{ fontWeight: 700 }}>Verified Order #{verifiedOrder?.orderId || 'ETSY-OK'} &bull; License Activated</div>
+                <div style={{ fontSize: '0.725rem', opacity: 0.9 }}>{verifiedOrder?.packageTier || 'Sheet2Vow Master Wedding Planner Suite'}</div>
+              </div>
+            </div>
+
+            {/* Product Hub Entitlements Badge */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.5px' }}>
+                LICENSED SUITE APPLICATIONS (SELECT PRODUCT TO LAUNCH):
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.625rem' }}>
+                {[
+                  { key: 'vow', name: 'Sheet2Vow', desc: 'Digital Wedding Planner', badge: 'ACTIVATED', active: true, path: '/' },
+                  { key: 'finances', name: 'Sheet2Finances', desc: 'Personal Budget Ledger', badge: verifiedOrder?.packageTier?.includes('Master Pass') ? 'ACTIVATED' : 'UPGRADE', active: !!verifiedOrder?.packageTier?.includes('Master Pass'), path: '/activate?product=SHEET2FINANCE' },
+                  { key: 'stay', name: 'Sheet2Stay', desc: 'Airbnb & Rental Tracker', badge: verifiedOrder?.packageTier?.includes('Master Pass') ? 'ACTIVATED' : 'UPGRADE', active: !!verifiedOrder?.packageTier?.includes('Master Pass'), path: '/activate?product=SHEET2HOME' },
+                ].map((prod) => (
+                  <div
+                    key={prod.key}
+                    style={{
+                      border: prod.active ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                      backgroundColor: prod.active ? 'var(--color-bg-subtle)' : 'var(--color-surface, #fff)',
+                      borderRadius: 'var(--border-radius-sm)',
+                      padding: '0.75rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <strong style={{ fontFamily: 'var(--font-serif)', fontSize: '0.875rem', color: 'var(--color-primary)' }}>
+                        {prod.name}
+                      </strong>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.55rem',
+                        fontWeight: 700,
+                        backgroundColor: prod.active ? 'var(--color-primary)' : 'var(--color-border)',
+                        color: prod.active ? 'var(--color-on-primary)' : 'var(--color-muted)',
+                        padding: '0.1rem 0.35rem',
+                        borderRadius: 'var(--border-radius-sm)'
+                      }}>
+                        {prod.badge}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>{prod.desc}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div style={styles.choiceGrid}>

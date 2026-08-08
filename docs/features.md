@@ -143,6 +143,7 @@
 - [x] **[LIFE-2] 1-Click Google Drive Sheet Scanner:** Drive scanner modal presenting detected Sheet2Vow spreadsheets in Google Drive for 1-tap reconnection.
 - [x] **[LIFE-3] Multi-Workspace Switcher Dropdown:** Header & Quick Settings dropdown storing `s2v_workspaces[]` list so pro planners can switch client weddings in 1 click.
 - [x] **[LIFE-4] Post-Activation & Reconnection Guidance Banner:** Reassuring notification banner displaying Google Drive folder path, re-entry bookmark URL, and Spreadsheet ID.
+- [x] **[LIFE-5] Sheet2Suite Shared Activation Engine:** Subdomain route middleware (`src/middleware.ts`), multi-SKU Order ID verification, and Sheet2Suite Product Hub selector.
 
 ---
 ---
@@ -183,7 +184,7 @@
 | **`[LIFE-2]`** | 1-Click Google Drive Sheet Scanner & Reconnection Modal | `page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
 | **`[LIFE-3]`** | Multi-Workspace Switcher Dropdown (`s2v_workspaces[]`) for Pro Planners | `page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
 | **`[LIFE-4]`** | Post-Activation Guidance Banner (Drive folder path, bookmark link, Sheet ID) | `page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[LIFE-5]`** | Sheet2Suite Shared Activation Engine (`activate.sheet2suite.com` multi-SKU entitlement lookup) | `/api/verify-order` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
+| **`[LIFE-5]`** | Sheet2Suite Shared Activation Engine (`activate.sheet2suite.com` multi-SKU entitlement lookup) | `/api/verify-order` | 🔴 High | ⚡ High (~3-4 turns) | ✅ Completed |
 
 ### 🖨️ Print Studio & Canva Exporter
 
