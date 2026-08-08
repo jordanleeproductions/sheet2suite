@@ -557,13 +557,19 @@ export default function Sheet2VowDashboard() {
     return `${diffDays} DAYS UNTIL THE WEDDING!`;
   };
 
+  const isDesktopSidebarActive = !isMobile && isOnboarded && navLayout === 'sidebar';
+  const sidebarWidthPx = isSidebarCollapsed ? 64 : 220;
+
   return (
     <div
       className="app-viewport-container"
       style={{
         ...styles.container,
-        marginLeft: (!isMobile && isOnboarded && navLayout === 'sidebar') ? (isSidebarCollapsed ? '64px' : '220px') : 0,
-        transition: 'margin-left 0.2s ease'
+        marginLeft: isDesktopSidebarActive ? `${sidebarWidthPx}px` : 'auto',
+        marginRight: isDesktopSidebarActive ? '0' : 'auto',
+        width: isDesktopSidebarActive ? `calc(100% - ${sidebarWidthPx}px)` : '100%',
+        maxWidth: isDesktopSidebarActive ? '100%' : '1680px',
+        transition: 'margin-left 0.2s ease, width 0.2s ease'
       }}
     >
       {/* Mobile Navigation Overlay Drawer */}
