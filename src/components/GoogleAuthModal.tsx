@@ -35,44 +35,36 @@ export default function GoogleAuthModal({
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
 
-        const popup = window.open(
+        const handleAuthMessage = (event: MessageEvent) => {
+          if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+            const { user, accessToken, provision } = event.data;
+            window.removeEventListener('message', handleAuthMessage);
+            setIsLoading(false);
+            onAuthenticated({
+              email: user.email,
+              name: user.name,
+              accessToken: accessToken,
+              spreadsheetId: provision?.spreadsheetId,
+            });
+            onClose();
+          } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
+            window.removeEventListener('message', handleAuthMessage);
+            setIsLoading(false);
+            setErrorMsg(event.data.error || 'Authentication failed');
+          }
+        };
+
+        window.addEventListener('message', handleAuthMessage);
+
+        window.open(
           data.authUrl,
           'Sheet2SuiteGoogleLogin',
           `width=${width},height=${height},top=${top},left=${left}`
         );
-
-        // Fallback simulate login for local dev if OAuth popup is closed or blocked
-        setTimeout(async () => {
-          try {
-            const tokenRes = await fetch('/api/auth/google', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accessToken: 'LOCAL_DEV_USER_TOKEN' }),
-            });
-            const tokenData = await tokenRes.json();
-            if (tokenData.user) {
-              onAuthenticated({
-                email: tokenData.user.email || 'user@sheet2suite.com',
-                name: tokenData.user.name || 'Sheet2Suite User',
-                accessToken: tokenData.accessToken,
-              });
-              onClose();
-            }
-          } catch (e) {
-            // Local dev fallback
-            onAuthenticated({
-              email: 'sarah.planner@gmail.com',
-              name: 'Sarah Jenkins',
-              spreadsheetId: '1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI',
-            });
-            onClose();
-          }
-        }, 1500);
       }
     } catch (err: any) {
       console.error('Google Auth Error:', err);
       setErrorMsg(err.message || 'Failed to authenticate with Google.');
-    } finally {
       setIsLoading(false);
     }
   };
