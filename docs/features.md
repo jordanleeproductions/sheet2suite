@@ -165,8 +165,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[SYS-4A]`** | Production Google OAuth 2.0 & `drive.file` Scope Auth Plumbing | `/api/auth/google` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
-| **`[SYS-4B]`** | Automated Google Drive Folder & Master Template Sheet Provisioning | `/api/provision` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
+| **`[SYS-4A]`** | Production Google OAuth 2.0 & `drive.file` Scope Auth Plumbing | `/api/auth/google` | 🔴 High | ⚡ High (~3-4 turns) | ✅ Completed |
+| **`[SYS-4B]`** | Automated Google Drive Folder & Master Template Sheet Provisioning | `/api/provision` | 🔴 High | ⚡ High (~3-4 turns) | ✅ Completed |
 | **`[SYS-4C]`** | Upload Master Google Sheet Database Template File (`.xlsx` / schema) to Repo | `templates/Sheet2Vow_Master_Template.xlsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 | **`[SYS-5]`** | Unified Product Usage Telemetry (GA4 Event Engine) | `telemetry.ts` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 | **`[SYS-6]`** | Native Sheet2Suite Entitlements & License Database (Lemon Squeezy / Etsy Webhooks, Partner Email Validation, & Telemetry) | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
