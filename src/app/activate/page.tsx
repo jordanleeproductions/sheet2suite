@@ -41,6 +41,11 @@ export default function ActivationPage() {
   const [verifyError, setVerifyError] = useState('');
   const [verifiedOrder, setVerifiedOrder] = useState<any>(null);
 
+  // Google Session State
+  const [googleEmail, setGoogleEmail] = useState<string>('');
+  const [googleToken, setGoogleToken] = useState<string>('');
+  const [isGoogleConnected, setIsGoogleConnected] = useState<boolean>(false);
+
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -48,6 +53,36 @@ export default function ActivationPage() {
       if (emailParam) {
         setEmail(emailParam);
       }
+
+      const savedEmail = localStorage.getItem('s2v_google_email');
+      const savedToken = localStorage.getItem('s2v_google_token');
+      if (savedEmail) {
+        setGoogleEmail(savedEmail);
+        setIsGoogleConnected(true);
+      }
+      if (savedToken) {
+        setGoogleToken(savedToken);
+      }
+
+      // Listen for popup postMessage completion
+      const handleAuthMessage = (event: MessageEvent) => {
+        if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+          const { user, accessToken } = event.data;
+          if (user?.email) {
+            setGoogleEmail(user.email);
+            setEmail(user.email);
+            setIsGoogleConnected(true);
+            localStorage.setItem('s2v_google_email', user.email);
+          }
+          if (accessToken) {
+            setGoogleToken(accessToken);
+            localStorage.setItem('s2v_google_token', accessToken);
+          }
+        }
+      };
+
+      window.addEventListener('message', handleAuthMessage);
+      return () => window.removeEventListener('message', handleAuthMessage);
     }
   }, []);
 
@@ -183,6 +218,8 @@ export default function ActivationPage() {
         localStorage.setItem('s2v_drive_folder', driveFolder);
         localStorage.setItem('s2v_enabled_modules', JSON.stringify(modules));
         localStorage.setItem('s2v_spouse_email', spouseEmail);
+        if (userEmailToSave) localStorage.setItem('s2v_google_email', userEmailToSave);
+        if (googleToken) localStorage.setItem('s2v_google_token', googleToken);
       }
 
       setIsSubmitting(false);
@@ -295,8 +332,8 @@ export default function ActivationPage() {
 
             {/* Google Authentication Prompt */}
             <div style={{
-              backgroundColor: 'var(--color-bg-subtle)',
-              border: '2px solid var(--color-primary)',
+              backgroundColor: isGoogleConnected ? '#dcfce7' : 'var(--color-bg-subtle)',
+              border: isGoogleConnected ? '2px solid #16a34a' : '2px solid var(--color-primary)',
               borderRadius: 'var(--border-radius-md)',
               padding: '1.25rem',
               marginBottom: '1.25rem',
@@ -307,45 +344,63 @@ export default function ActivationPage() {
               flexWrap: 'wrap'
             }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-text)' }}>
-                  🌐 Connect Google Drive Account
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: isGoogleConnected ? '#15803d' : 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {isGoogleConnected ? <ShieldCheck size={18} style={{ color: '#16a34a' }} /> : <span>🌐</span>}
+                  <span>{isGoogleConnected ? `Google Drive Connected (${googleEmail})` : 'Connect Google Drive Account'}</span>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                  Authorize Google to save your spreadsheet in your personal Google Drive.
+                <div style={{ fontSize: '0.75rem', color: isGoogleConnected ? '#166534' : 'var(--color-muted)', marginTop: '0.2rem' }}>
+                  {isGoogleConnected ? 'Spreadsheets will be saved directly into your connected Google Drive.' : 'Authorize Google to save your spreadsheet in your personal Google Drive.'}
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const res = await fetch('/api/auth/google');
-                    const data = await res.json();
-                    if (data.authUrl) {
-                      window.open(data.authUrl, 'GoogleAuth', 'width=520,height=650');
+              {!isGoogleConnected ? (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/auth/google');
+                      const data = await res.json();
+                      if (data.authUrl) {
+                        window.open(data.authUrl, 'GoogleAuth', 'width=520,height=650');
+                      }
+                    } catch (e) {
+                      console.error(e);
                     }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-                style={{
-                  backgroundColor: '#ffffff',
-                  color: '#111827',
-                  border: '2px solid #111827',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.65rem 1.1rem',
+                  }}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#111827',
+                    border: '2px solid #111827',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.65rem 1.1rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                >
+                  <span>SIGN IN WITH GOOGLE</span>
+                </button>
+              ) : (
+                <div style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.75rem',
                   fontWeight: 800,
-                  cursor: 'pointer',
+                  backgroundColor: '#16a34a',
+                  color: '#ffffff',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: 'var(--border-radius-sm)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <span>SIGN IN WITH GOOGLE</span>
-              </button>
+                  gap: '0.3rem'
+                }}>
+                  <span>✔ CONNECTED</span>
+                </div>
+              )}
             </div>
 
             {/* Product Hub Entitlements Badge */}
