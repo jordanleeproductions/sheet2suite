@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
           fields: 'id, name, webViewLink',
         });
         spreadsheetId = copyRes.data.id!;
-        webViewLink = copyRes.data.webViewLink;
+        webViewLink = copyRes.data.webViewLink || undefined;
       }
 
       // Register or update workspace in Sheet2Suite database
