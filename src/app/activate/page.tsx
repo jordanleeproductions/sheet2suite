@@ -154,21 +154,21 @@ export default function ActivationPage() {
       let createdSpreadsheetId = provData.provisioned?.spreadsheetId || 'mock-sheet-id-vow-12345';
 
       // Step 2: Register workspace in Sheet2Suite database
-      if (provData.provisioned) {
-        await fetch('/api/workspaces', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userEmail: email || 'user@sheet2suite.com',
-            partnerEmail: spouseEmail || undefined,
-            spreadsheetId: createdSpreadsheetId,
-            spreadsheetName: provData.provisioned.title || `${weddingName} Database`,
-            driveFolderPath: driveFolder,
-            webViewLink: provData.provisioned.webViewLink,
-            productName: 'Sheet2Vow',
-          }),
-        });
-      }
+      const userEmailToSave = email || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_email') : null) || 'user@sheet2suite.com';
+
+      await fetch('/api/workspaces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: userEmailToSave,
+          partnerEmail: spouseEmail || undefined,
+          spreadsheetId: createdSpreadsheetId,
+          spreadsheetName: provData.provisioned?.title || `${weddingName} Database`,
+          driveFolderPath: driveFolder,
+          webViewLink: provData.provisioned?.webViewLink || `https://docs.google.com/spreadsheets/d/${createdSpreadsheetId}/edit`,
+          productName: 'Sheet2Vow',
+        }),
+      });
 
       // Save to localStorage for client-side persistence
       if (typeof window !== 'undefined') {

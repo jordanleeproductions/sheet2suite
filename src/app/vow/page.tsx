@@ -1545,8 +1545,14 @@ export default function Sheet2VowDashboard() {
         }}
         onAuthenticated={(user) => {
           setGoogleUserEmail(user.email);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('s2v_google_email', user.email);
+          }
           if (user.accessToken) {
             setGoogleToken(user.accessToken);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('s2v_google_token', user.accessToken);
+            }
           }
           if (user.hasExistingWorkspace && user.spreadsheetId) {
             setSpreadsheetId(user.spreadsheetId);
