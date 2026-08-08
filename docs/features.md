@@ -157,7 +157,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[SYS-4]`** | Production Google OAuth 2.0 & Real Google Sheets Sync (`drive.file` scope) | `googleSheets.ts` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[SYS-4A]`** | Production Google OAuth 2.0 & `drive.file` Scope Auth Plumbing | `/api/auth/google` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
+| **`[SYS-4B]`** | Automated Google Drive Folder & Master Template Sheet Provisioning | `/api/provision` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
 | **`[SYS-5]`** | Unified Product Usage Telemetry (GA4 Event Engine) | `telemetry.ts` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 | **`[SYS-6]`** | Lemon Squeezy Integration & License Entitlements | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[SYS-7]`** | Security & Risk Audit (formula injection prevention, HMAC replay guard) | `security.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
