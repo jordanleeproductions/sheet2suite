@@ -919,8 +919,8 @@ export default function Sheet2VowDashboard() {
       )}
 
       {/* Brand Header */}
-      <header style={{ ...styles.appHeader, display: 'flex', alignItems: 'center' }}>
-        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <header style={{ ...styles.appHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           {isMobile ? (
             <button
               type="button"
@@ -942,12 +942,12 @@ export default function Sheet2VowDashboard() {
               <Menu size={22} style={{ color: 'var(--color-primary)' }} />
             </button>
           ) : (
-            <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0 }} />
+            <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0, alignSelf: 'center' }} />
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignSelf: 'center' }}>
             <h1 style={{ ...styles.brandName, fontSize: isMobile ? '1.35rem' : styles.brandName.fontSize, margin: 0, lineHeight: '1.1' }}>Sheet2Vow</h1>
-            {!isMobile && <p style={{ ...styles.brandSubtitle, margin: 0, marginTop: '2px' }}>Clean digital canvas for spreadsheet purists.</p>}
+            {!isMobile && <p style={{ ...styles.brandSubtitle, margin: 0, marginTop: '2px', lineHeight: '1.2' }}>Clean digital canvas for spreadsheet purists.</p>}
           </div>
         </div>
 
