@@ -171,6 +171,8 @@
 | **`[SYS-5]`** | Unified Product Usage Telemetry (GA4 Event Engine) | `telemetry.ts` | 🟡 Medium | ⚡ Low (~2 turns) | Pending |
 | **`[SYS-6]`** | Native Sheet2Suite Entitlements & License Database (Lemon Squeezy / Etsy Webhooks, Partner Email Validation, & Telemetry) | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 | **`[SYS-7]`** | Security & Risk Audit (formula injection prevention, HMAC replay guard) | `security.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[SYS-8]`** | Google Calendar 1-Click Itinerary Sync Engine (`calendar.events` scope) | `TimelineManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[SYS-9]`** | Google Tasks 1-Click Kanban Checklist Sync Engine (`tasks` scope) | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
 ### 🖨️ Print Studio & Canva Exporter
 
