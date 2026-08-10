@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
+import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
 
 export default function ActivationPage() {
   const router = useRouter();
@@ -46,6 +47,7 @@ export default function ActivationPage() {
   const [googleEmail, setGoogleEmail] = useState<string>('');
   const [googleToken, setGoogleToken] = useState<string>('');
   const [isGoogleConnected, setIsGoogleConnected] = useState<boolean>(false);
+  const [showDrivePickerModal, setShowDrivePickerModal] = useState<boolean>(false);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -537,13 +539,37 @@ export default function ActivationPage() {
                   );
                 })}
               </div>
-              <input
-                type="text"
-                value={driveFolder}
-                onChange={(e) => setDriveFolder(e.target.value)}
-                placeholder="Or enter custom folder path e.g. My Drive / Custom Folder"
-                style={styles.inputField}
-              />
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={driveFolder}
+                  onChange={(e) => setDriveFolder(e.target.value)}
+                  placeholder="Or enter custom folder path e.g. My Drive / Custom Folder"
+                  style={{ ...styles.inputField, flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDrivePickerModal(true)}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#111827',
+                    border: '2px solid #111827',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.6rem 0.85rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.725rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    boxShadow: '2px 2px 0px #111827',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span>📁 BROWSE GOOGLE DRIVE...</span>
+                </button>
+              </div>
             </div>
 
             <div style={styles.formGroup}>
@@ -820,6 +846,17 @@ export default function ActivationPage() {
             <p style={styles.completionText}>Redirecting to your digital wedding dashboard...</p>
           </div>
         )}
+
+        {/* Google Drive Picker Modal */}
+        <GoogleDrivePickerModal
+          isOpen={showDrivePickerModal}
+          onClose={() => setShowDrivePickerModal(false)}
+          accessToken={googleToken}
+          initialPath={driveFolder}
+          onSelectFolder={(folder) => {
+            setDriveFolder(folder.path);
+          }}
+        />
       </div>
     </div>
   );

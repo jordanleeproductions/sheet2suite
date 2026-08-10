@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
+import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
 
 export interface OnboardingResult {
   weddingName: string;
@@ -57,6 +58,7 @@ export default function OnboardingWizard({
   const [showCustomTaskChecklist, setShowCustomTaskChecklist] = useState<boolean>(false);
   const [spouseName, setSpouseName] = useState<string>('');
   const [spouseEmail, setSpouseEmail] = useState<string>('');
+  const [showDrivePickerModal, setShowDrivePickerModal] = useState<boolean>(false);
 
   const [enabledModules, setEnabledModules] = useState<Record<string, boolean>>({
     guests: true,
@@ -311,13 +313,37 @@ export default function OnboardingWizard({
                 );
               })}
             </div>
-            <input
-              type="text"
-              value={driveFolder}
-              onChange={(e) => setDriveFolder(e.target.value)}
-              placeholder="Or enter custom folder path e.g. My Drive/Custom Folder"
-              style={{ ...styles.input, fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
-            />
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <input
+                type="text"
+                value={driveFolder}
+                onChange={(e) => setDriveFolder(e.target.value)}
+                placeholder="Or enter custom folder path e.g. My Drive/Custom Folder"
+                style={{ ...styles.input, flex: 1, fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowDrivePickerModal(true)}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#111827',
+                  border: '2px solid #111827',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.5rem 0.85rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.725rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  boxShadow: '2px 2px 0px #111827',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span>📁 BROWSE GOOGLE DRIVE...</span>
+              </button>
+            </div>
           </div>
 
           {/* Google Auth & Provision Status Banner */}
@@ -566,6 +592,16 @@ export default function OnboardingWizard({
           )}
         </div>
       )}
+
+      {/* Google Drive Picker Modal */}
+      <GoogleDrivePickerModal
+        isOpen={showDrivePickerModal}
+        onClose={() => setShowDrivePickerModal(false)}
+        initialPath={driveFolder}
+        onSelectFolder={(folder) => {
+          setDriveFolder(folder.path);
+        }}
+      />
     </div>
   );
 }
