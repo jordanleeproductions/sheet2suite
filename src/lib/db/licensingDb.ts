@@ -103,12 +103,20 @@ export const LocalLicensingDb = {
   getLicenseByKey(licenseKey: string): Sheet2SuiteLicense | null {
     const doc = LocalFirestore.getDoc<LicenseDocument>('licenses', licenseKey);
     if (doc) {
+      const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') ? 'sheet2suite_bundle' : 'sheet2vow') as any;
       return {
         licenseKey: doc.licenseKey,
         orderId: doc.orderId,
+        purchasePlatform: 'etsy',
         purchaserEmail: doc.purchaserEmail,
-        sku: doc.sku,
-        status: doc.status,
+        sku,
+        productAccess: {
+          sheet2vow: true,
+          sheet2home: sku === 'sheet2suite_bundle',
+          sheet2finance: sku === 'sheet2suite_bundle',
+        },
+        status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
+        createdAt: doc.createdAt,
       };
     }
     const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
@@ -124,10 +132,12 @@ export const LocalLicensingDb = {
       purchaserEmail: license.purchaserEmail,
       sku: license.sku,
       status: license.status as any,
-      licenseTier: license.sku.includes('MASTER') ? 'pro' : 'standard',
-      entitledProducts: ['SHEET2VOW'],
+      licenseTier: license.sku.includes('bundle') ? 'pro' : 'standard',
+      entitledProducts: license.sku.includes('bundle')
+        ? ['SHEET2VOW', 'SHEET2FINANCE', 'SHEET2HOME']
+        : ['SHEET2VOW'],
       maxWorkspaces: 2,
-      createdAt: new Date().toISOString(),
+      createdAt: license.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     LocalFirestore.setDoc('licenses', license.licenseKey, doc);
@@ -145,13 +155,23 @@ export const LocalLicensingDb = {
   getAllLicenses(): Sheet2SuiteLicense[] {
     const fsDocs = LocalFirestore.getDocs<LicenseDocument>('licenses');
     if (fsDocs.length > 0) {
-      return fsDocs.map((doc) => ({
-        licenseKey: doc.licenseKey,
-        orderId: doc.orderId,
-        purchaserEmail: doc.purchaserEmail,
-        sku: doc.sku,
-        status: doc.status,
-      }));
+      return fsDocs.map((doc) => {
+        const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') || doc.sku === 'sheet2suite_bundle' ? 'sheet2suite_bundle' : 'sheet2vow') as any;
+        return {
+          licenseKey: doc.licenseKey,
+          orderId: doc.orderId,
+          purchasePlatform: 'etsy' as const,
+          purchaserEmail: doc.purchaserEmail,
+          sku,
+          productAccess: {
+            sheet2vow: true,
+            sheet2home: sku === 'sheet2suite_bundle',
+            sheet2finance: sku === 'sheet2suite_bundle',
+          },
+          status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
+          createdAt: doc.createdAt,
+        };
+      });
     }
     return readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
   },
