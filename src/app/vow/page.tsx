@@ -2258,7 +2258,7 @@ export default function Sheet2VowDashboard() {
                 </div>
                 <div>
                   <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>SPREADSHEET ID:</span>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', wordBreak: 'break-all' }}>🔑 {spreadsheetId || 'mock-sheet-id-vow-12345'}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', wordBreak: 'break-all' }}>🔑 {spreadsheetId || 'Active Google Sheet'}</div>
                 </div>
               </div>
             </div>

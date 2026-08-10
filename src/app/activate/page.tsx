@@ -25,6 +25,7 @@ import {
   Check 
 } from 'lucide-react';
 import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
+import OfficialGoogleButton from '@/components/OfficialGoogleButton';
 
 export default function ActivationPage() {
   const router = useRouter();
@@ -173,10 +174,13 @@ export default function ActivationPage() {
     try {
       const googleToken = typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null;
 
+      const provHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (googleToken) provHeaders['Authorization'] = `Bearer ${googleToken}`;
+
       // Step 1: Provision Google Drive folder & master spreadsheet
       const provRes = await fetch('/api/provision', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: provHeaders,
         body: JSON.stringify({
           accessToken: googleToken || undefined,
           coupleName: weddingName,
@@ -186,7 +190,11 @@ export default function ActivationPage() {
       });
 
       const provData = await provRes.json();
-      let createdSpreadsheetId = provData.provisioned?.spreadsheetId || 'mock-sheet-id-vow-12345';
+      if (!provRes.ok || !provData.success || !provData.provisioned?.spreadsheetId) {
+        throw new Error(provData.error || 'Failed to provision Google Drive spreadsheet. Ensure you are signed into Google.');
+      }
+
+      const createdSpreadsheetId = provData.provisioned.spreadsheetId;
 
       // Step 2: Register workspace in Sheet2Suite database
       const userEmailToSave = email || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_email') : null) || 'user@sheet2suite.com';
@@ -354,8 +362,7 @@ export default function ActivationPage() {
               </div>
 
               {!isGoogleConnected ? (
-                <button
-                  type="button"
+                <OfficialGoogleButton
                   onClick={async () => {
                     try {
                       const res = await fetch('/api/auth/google');
@@ -367,24 +374,8 @@ export default function ActivationPage() {
                       console.error(e);
                     }
                   }}
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#111827',
-                    border: '2px solid #111827',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.65rem 1.1rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: 'var(--shadow-sm)'
-                  }}
-                >
-                  <span>SIGN IN WITH GOOGLE</span>
-                </button>
+                  text="Sign in with Google"
+                />
               ) : (
                 <div style={{
                   fontFamily: 'var(--font-mono)',

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ShieldCheck, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import OfficialGoogleButton from './OfficialGoogleButton';
 
 interface PreAuthTrustCardProps {
   onConsent: () => void;
@@ -77,29 +78,12 @@ export const PreAuthTrustCard: React.FC<PreAuthTrustCardProps> = ({ onConsent, o
             CANCEL
           </button>
         )}
-        <button
-          type="button"
-          onClick={onConsent}
-          style={{
-            flex: 2,
-            padding: '0.65rem 1rem',
-            backgroundColor: '#111827',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: 800,
-            fontSize: '0.8rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.4rem'
-          }}
-        >
-          <Lock size={14} />
-          <span>PROCEED TO GOOGLE SIGN-IN</span>
-          <ArrowRight size={14} />
-        </button>
+        <div style={{ flex: 2 }}>
+          <OfficialGoogleButton
+            onClick={onConsent}
+            text="Continue with Google"
+          />
+        </div>
       </div>
     </div>
   );

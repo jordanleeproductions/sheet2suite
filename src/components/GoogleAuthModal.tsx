@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { LogIn, Sparkles, HardDrive, ShieldCheck, ArrowRight, X, UserCheck } from 'lucide-react';
 import PreAuthTrustCard from './PreAuthTrustCard';
+import OfficialGoogleButton from './OfficialGoogleButton';
 
 export interface GoogleAuthModalProps {
   isOpen: boolean;
@@ -167,31 +168,11 @@ export default function GoogleAuthModal({
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginBottom: '1rem', lineHeight: 1.4 }}>
                   Sign in with your Google Account to automatically load your wedding planner spreadsheet directly from your personal Google Drive.
                 </p>
-                <button
-                  type="button"
+                <OfficialGoogleButton
                   onClick={handleGoogleSignIn}
                   disabled={isLoading}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#ffffff',
-                    color: '#111827',
-                    border: '2px solid #111827',
-                    borderRadius: '6px',
-                    padding: '0.875rem 1rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.85rem',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.625rem',
-                    boxShadow: '3px 3px 0px #111827',
-                  }}
-                >
-                  <HardDrive size={18} style={{ color: '#4285F4' }} />
-                  <span>{isLoading ? 'AUTHENTICATING...' : 'SIGN IN WITH GOOGLE'}</span>
-                </button>
+                  text={isLoading ? 'Connecting to Google...' : 'Sign in with Google'}
+                />
               </div>
 
               {/* Action 2 & 3 Secondary Options */}
