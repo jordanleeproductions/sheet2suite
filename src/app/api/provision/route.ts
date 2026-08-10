@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
+import { CellGuard } from '@/lib/core/CellGuard';
 
 /**
  * Helper to find or create a folder in Google Drive using drive.file scope.
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
 
     // Step 3: Copy Master Template Spreadsheet into user's folder
     const masterSheetId = process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
+    const sanitizedCoupleName = CellGuard.sanitizeCellValue(coupleName || 'Alex & Sam');
     const documentTitle = coupleName ? `${coupleName} Wedding Database` : 'Sheet2Vow Wedding Planner Database';
 
     const copyRes = await drive.files.copy({
@@ -95,6 +97,23 @@ export async function POST(req: NextRequest) {
 
     const newSpreadsheetId = copyRes.data.id;
     const webViewLink = copyRes.data.webViewLink;
+
+    // Step 4: Inject couple title into Dashboard sheet if token is active
+    if (newSpreadsheetId && token) {
+      try {
+        const sheets = google.sheets({ version: 'v4', auth });
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: newSpreadsheetId,
+          range: 'DASHBOARD!B2',
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[sanitizedCoupleName]],
+          },
+        });
+      } catch (sheetsErr) {
+        console.warn('Could not inject couple name into DASHBOARD tab:', sheetsErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,
