@@ -35,15 +35,24 @@ export default function AdminDatabasePage() {
     fetchRecords();
   }, []);
 
-  const handleDeleteWorkspace = async (workspaceId: string) => {
-    if (!confirm(`Are you sure you want to delete workspace ID: ${workspaceId}?`)) return;
+  const handleDeleteWorkspace = async (targetId: string) => {
+    if (!confirm(`Are you sure you want to delete workspace record: ${targetId}?`)) return;
     try {
-      const res = await fetch(`/api/admin/db?workspaceId=${encodeURIComponent(workspaceId)}`, {
+      const res = await fetch(`/api/admin/db?workspaceId=${encodeURIComponent(targetId)}`, {
         method: 'DELETE',
       });
       const data = await res.json();
       if (data.success) {
-        setSuccessMsg(`Deleted workspace: ${workspaceId}`);
+        // Also clear local session storage to reset browser state
+        if (typeof window !== 'undefined') {
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('s2v_') || key.startsWith('s2s_'))) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+        setSuccessMsg(`Deleted workspace: ${targetId} and cleared browser local session.`);
         fetchRecords();
       } else {
         setErrorMsg(data.error || 'Delete failed.');
@@ -71,6 +80,25 @@ export default function AdminDatabasePage() {
     }
   };
 
+  const handleResetAllTestSession = async () => {
+    if (!confirm('Warning: This will delete ALL workspace records from local database and reset your browser session. Continue?')) return;
+    try {
+      for (const ws of workspaces) {
+        await fetch(`/api/admin/db?workspaceId=${encodeURIComponent(ws.workspaceId || ws.spreadsheetId)}`, { method: 'DELETE' });
+      }
+      for (const lic of licenses) {
+        await fetch(`/api/admin/db?licenseKey=${encodeURIComponent(lic.licenseKey)}`, { method: 'DELETE' });
+      }
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
+      setSuccessMsg('Successfully purged all database records and reset browser local storage session!');
+      fetchRecords();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to purge session.');
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#111827', color: '#f9fafb', fontFamily: 'sans-serif', padding: '2rem 1.5rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -83,7 +111,26 @@ export default function AdminDatabasePage() {
               <p style={{ fontSize: '0.8rem', color: '#9ca3af', margin: 0 }}>Inspect & manage local database workspace records</p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleResetAllTestSession}
+              style={{
+                backgroundColor: '#7f1d1d',
+                color: '#fca5a5',
+                border: '1px solid #991b1b',
+                borderRadius: '6px',
+                padding: '0.5rem 0.85rem',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <Trash2 size={14} />
+              <span>PURGE ALL & RESET SESSION</span>
+            </button>
             <button
               onClick={fetchRecords}
               style={{
@@ -209,7 +256,7 @@ export default function AdminDatabasePage() {
                             </a>
                           )}
                           <button
-                            onClick={() => handleDeleteWorkspace(ws.workspaceId)}
+                            onClick={() => handleDeleteWorkspace(ws.workspaceId || ws.spreadsheetId)}
                             style={{
                               backgroundColor: '#7f1d1d',
                               color: '#fca5a5',

@@ -124,9 +124,15 @@ export const LocalLicensingDb = {
     return readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
   },
 
-  deleteWorkspace(workspaceId: string): boolean {
+  deleteWorkspace(targetId: string): boolean {
     const workspaces = readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
-    const filtered = workspaces.filter((w) => w.workspaceId !== workspaceId);
+    const targetNormalized = targetId.trim().toLowerCase();
+    const filtered = workspaces.filter(
+      (w) =>
+        w.workspaceId !== targetId &&
+        w.spreadsheetId !== targetId &&
+        w.userEmail.toLowerCase() !== targetNormalized
+    );
     writeJsonFile(WORKSPACES_FILE, filtered);
     return filtered.length < workspaces.length;
   },
