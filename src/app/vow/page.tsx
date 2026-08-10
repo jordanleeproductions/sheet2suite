@@ -33,7 +33,7 @@ export default function Sheet2VowDashboard() {
   const [googleUserEmail, setGoogleUserEmail] = useState<string>('');
   const [showGoogleAuthModal, setShowGoogleAuthModal] = useState<boolean>(false);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
-  const [isMockMode, setIsMockMode] = useState<boolean>(true);
+  const [isMockMode, setIsMockMode] = useState<boolean>(false);
   const [weddingName, setWeddingName] = useState<string>('');
   const [weddingDate, setWeddingDate] = useState<string>('');
   const [budgetThreshold, setBudgetThreshold] = useState<number>(35000);
@@ -259,11 +259,11 @@ export default function Sheet2VowDashboard() {
     if (savedSheetId) setSpreadsheetId(savedSheetId);
     if (savedToken) setGoogleToken(savedToken);
     if (savedOnboarded === 'true') setIsOnboarded(true);
-    if (savedMock === 'false') setIsMockMode(false);
+    if (savedMock === 'true') setIsMockMode(true);
     if (savedDemo === 'true') setIsDemoMode(true);
 
     // Auto-prompt Google Auth Modal if no active session or token is present
-    if (!savedOnboarded || (savedMock === 'false' && !savedToken)) {
+    if (!savedOnboarded || (!savedToken && savedMock !== 'true')) {
       setShowGoogleAuthModal(true);
     }
     if (savedName) setWeddingName(savedName);

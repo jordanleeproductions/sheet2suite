@@ -12,6 +12,7 @@ import {
 import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
+import { CellGuard } from '@/lib/core/CellGuard';
 
 // Map sheet columns to standard header lists so that we can write files correctly
 const HEADERS_MAP = {
@@ -289,13 +290,15 @@ export async function POST(req: Request) {
         range: clearRange,
       });
 
+      const sanitizedValues = CellGuard.sanitizePayload(values);
+
       // Update values
       await sheetsClient.spreadsheets.values.update({
         spreadsheetId,
         range,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values
+          values: sanitizedValues
         }
       });
     }
