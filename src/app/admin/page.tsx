@@ -83,16 +83,18 @@ export default function AdminDatabasePage() {
   const handleResetAllTestSession = async () => {
     if (!confirm('Warning: This will delete ALL workspace records from local database and reset your browser session. Continue?')) return;
     try {
-      for (const ws of workspaces) {
-        await fetch(`/api/admin/db?workspaceId=${encodeURIComponent(ws.workspaceId || ws.spreadsheetId)}`, { method: 'DELETE' });
-      }
-      for (const lic of licenses) {
-        await fetch(`/api/admin/db?licenseKey=${encodeURIComponent(lic.licenseKey)}`, { method: 'DELETE' });
-      }
+      const res = await fetch('/api/admin/db?all=true', { method: 'DELETE' });
+      const data = await res.json();
+
       if (typeof window !== 'undefined') {
         localStorage.clear();
       }
-      setSuccessMsg('Successfully purged all database records and reset browser local storage session!');
+
+      if (data.success) {
+        setSuccessMsg('Successfully purged all database records and reset browser local storage session!');
+      } else {
+        setErrorMsg(data.error || 'Failed to purge database records.');
+      }
       fetchRecords();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to purge session.');

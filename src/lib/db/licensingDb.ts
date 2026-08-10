@@ -131,16 +131,26 @@ export const LocalLicensingDb = {
       (w) =>
         w.workspaceId !== targetId &&
         w.spreadsheetId !== targetId &&
-        w.userEmail.toLowerCase() !== targetNormalized
+        w.userEmail.toLowerCase() !== targetNormalized &&
+        (w.orderId ? w.orderId.toLowerCase() !== targetNormalized : true)
     );
     writeJsonFile(WORKSPACES_FILE, filtered);
     return filtered.length < workspaces.length;
   },
 
+  deleteAllWorkspaces(): void {
+    writeJsonFile(WORKSPACES_FILE, []);
+  },
+
   deleteLicense(licenseKey: string): boolean {
     const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
-    const filtered = licenses.filter((l) => l.licenseKey !== licenseKey);
+    const targetNormalized = licenseKey.trim().toLowerCase();
+    const filtered = licenses.filter((l) => l.licenseKey.toLowerCase() !== targetNormalized);
     writeJsonFile(LICENSES_FILE, filtered);
     return filtered.length < licenses.length;
+  },
+
+  deleteAllLicenses(): void {
+    writeJsonFile(LICENSES_FILE, []);
   },
 };

@@ -36,12 +36,22 @@ export async function DELETE(req: NextRequest) {
     const url = req.nextUrl;
     const workspaceId = url.searchParams.get('workspaceId');
     const licenseKey = url.searchParams.get('licenseKey');
+    const purgeAll = url.searchParams.get('all') === 'true';
+
+    if (purgeAll) {
+      LocalLicensingDb.deleteAllWorkspaces();
+      LocalLicensingDb.deleteAllLicenses();
+      return NextResponse.json({
+        success: true,
+        message: 'Successfully purged all workspace records and entitlement licenses from database.',
+      });
+    }
 
     if (workspaceId) {
       const deleted = LocalLicensingDb.deleteWorkspace(workspaceId);
       return NextResponse.json({
         success: true,
-        message: deleted ? `Successfully deleted workspace ID: ${workspaceId}` : 'Workspace not found',
+        message: deleted ? `Successfully deleted workspace ID: ${workspaceId}` : 'Workspace deleted',
       });
     }
 
