@@ -21,9 +21,11 @@ export interface LicenseValidationResponse {
   errorMessage?: string;
 }
 
+import { LocalFirestore, LicenseDocument } from '@/lib/db/firestoreDb';
+
 export class LicenseValidator {
   /**
-   * Validates customer license for any target Sheet2 Suite product.
+   * Validates customer license for any target Sheet2 Suite product against local Firestore database.
    */
   static async validateLicense(req: LicenseValidationRequest): Promise<LicenseValidationResponse> {
     const cleanEmail = (req.email || '').trim().toLowerCase();
@@ -53,7 +55,42 @@ export class LicenseValidator {
       };
     }
 
-    // Determine product entitlements based on Order SKU / ID tags
+    // Step 1: Query LocalFirestore 'licenses' collection for exact license document
+    let licenseDoc = LocalFirestore.getDoc<LicenseDocument>('licenses', cleanOrderId);
+
+    if (!licenseDoc) {
+      // Query by licenseKey or purchaserEmail if document ID didn't match directly
+      const byKey = LocalFirestore.query<LicenseDocument>('licenses', 'licenseKey', cleanOrderId);
+      if (byKey.length > 0) {
+        licenseDoc = byKey[0];
+      }
+    }
+
+    // If license exists in Firestore database, enforce active status
+    if (licenseDoc) {
+      if (licenseDoc.status !== 'active') {
+        return {
+          valid: false,
+          productCode: req.productCode,
+          customerEmail: cleanEmail,
+          licenseTier: licenseDoc.licenseTier || 'standard',
+          entitledProducts: (licenseDoc.entitledProducts as ProductCode[]) || [req.productCode],
+          activatedAt: licenseDoc.createdAt,
+          errorMessage: `License status is currently ${licenseDoc.status.toUpperCase()}. Please contact support.`
+        };
+      }
+
+      return {
+        valid: true,
+        productCode: req.productCode,
+        customerEmail: cleanEmail,
+        licenseTier: licenseDoc.licenseTier || 'standard',
+        entitledProducts: (licenseDoc.entitledProducts as ProductCode[]) || [req.productCode],
+        activatedAt: licenseDoc.createdAt
+      };
+    }
+
+    // Step 2: If new Order ID, auto-register license document into LocalFirestore
     let entitledProducts: ProductCode[] = [req.productCode];
     if (cleanOrderId.includes('BUNDLE') || cleanOrderId.includes('MASTER') || cleanOrderId.includes('SUITE') || cleanOrderId.includes('ALL')) {
       entitledProducts = ['SHEET2VOW', 'SHEET2FINANCE', 'SHEET2HOME', 'SHEET2CLOSET', 'SHEET2INVENTORY'];
@@ -63,13 +100,29 @@ export class LicenseValidator {
       entitledProducts = ['SHEET2HOME'];
     }
 
+    const newLicense: LicenseDocument = {
+      id: cleanOrderId,
+      licenseKey: cleanOrderId,
+      orderId: cleanOrderId,
+      purchaserEmail: cleanEmail,
+      sku: entitledProducts.length > 1 ? 'ETSY-MASTER-SUITE-BUNDLE' : `ETSY-${req.productCode}-PRO`,
+      status: 'active',
+      licenseTier: entitledProducts.length > 1 ? 'pro' : 'standard',
+      entitledProducts,
+      maxWorkspaces: entitledProducts.length > 1 ? 10 : 2,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    LocalFirestore.setDoc('licenses', cleanOrderId, newLicense);
+
     return {
       valid: true,
       productCode: req.productCode,
       customerEmail: cleanEmail,
-      licenseTier: entitledProducts.length > 1 ? 'pro' : 'standard',
+      licenseTier: newLicense.licenseTier,
       entitledProducts,
-      activatedAt: new Date().toISOString()
+      activatedAt: newLicense.createdAt
     };
   }
 }

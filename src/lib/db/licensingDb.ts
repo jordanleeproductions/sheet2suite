@@ -50,14 +50,16 @@ function writeJsonFile<T>(filePath: string, data: T): void {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+import { LocalFirestore, WorkspaceDocument, LicenseDocument } from '@/lib/db/firestoreDb';
+
 /**
- * Local Data Store Engine (Can swap to Firebase / Firestore cleanly)
+ * Local Data Store Engine (Delegates to Firestore-compatible LocalFirestore document store)
  */
 export const LocalLicensingDb = {
   // 1. Get all workspaces for a user or partner email
   getWorkspacesByEmail(email: string): WorkspaceRecord[] {
     const normalized = email.trim().toLowerCase();
-    const workspaces = readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
+    const workspaces = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
     return workspaces.filter(
       (w) =>
         w.userEmail.toLowerCase() === normalized ||
@@ -67,7 +69,7 @@ export const LocalLicensingDb = {
 
   // 2. Save or update a workspace record
   saveWorkspace(record: Omit<WorkspaceRecord, 'workspaceId' | 'activatedAt' | 'lastActiveAt'> & { workspaceId?: string }): WorkspaceRecord {
-    const workspaces = readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
+    const workspaces = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
     const now = new Date().toISOString();
 
     const existingIndex = workspaces.findIndex(
@@ -80,51 +82,82 @@ export const LocalLicensingDb = {
         ...record,
         lastActiveAt: now,
       };
-      workspaces[existingIndex] = updated;
-      writeJsonFile(WORKSPACES_FILE, workspaces);
+      LocalFirestore.setDoc('workspaces', updated.workspaceId, updated);
+      writeJsonFile(WORKSPACES_FILE, LocalFirestore.getDocs('workspaces'));
       return updated;
     } else {
+      const workspaceId = record.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       const newRecord: WorkspaceRecord = {
-        workspaceId: record.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        workspaceId,
         activatedAt: now,
         lastActiveAt: now,
         ...record,
       };
-      workspaces.push(newRecord);
-      writeJsonFile(WORKSPACES_FILE, workspaces);
+      LocalFirestore.setDoc('workspaces', workspaceId, newRecord);
+      writeJsonFile(WORKSPACES_FILE, LocalFirestore.getDocs('workspaces'));
       return newRecord;
     }
   },
 
   // 3. License verification helper
   getLicenseByKey(licenseKey: string): Sheet2SuiteLicense | null {
+    const doc = LocalFirestore.getDoc<LicenseDocument>('licenses', licenseKey);
+    if (doc) {
+      return {
+        licenseKey: doc.licenseKey,
+        orderId: doc.orderId,
+        purchaserEmail: doc.purchaserEmail,
+        sku: doc.sku,
+        status: doc.status,
+      };
+    }
     const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
     return licenses.find((l) => l.licenseKey.toLowerCase() === licenseKey.trim().toLowerCase()) || null;
   },
 
   // 4. Register new license
   saveLicense(license: Sheet2SuiteLicense): Sheet2SuiteLicense {
-    const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
-    const index = licenses.findIndex((l) => l.licenseKey === license.licenseKey);
-    if (index >= 0) {
-      licenses[index] = license;
-    } else {
-      licenses.push(license);
-    }
-    writeJsonFile(LICENSES_FILE, licenses);
+    const doc: LicenseDocument = {
+      id: license.licenseKey,
+      licenseKey: license.licenseKey,
+      orderId: license.orderId,
+      purchaserEmail: license.purchaserEmail,
+      sku: license.sku,
+      status: license.status as any,
+      licenseTier: license.sku.includes('MASTER') ? 'pro' : 'standard',
+      entitledProducts: ['SHEET2VOW'],
+      maxWorkspaces: 2,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    LocalFirestore.setDoc('licenses', license.licenseKey, doc);
+    writeJsonFile(LICENSES_FILE, LocalFirestore.getDocs('licenses'));
     return license;
   },
 
   // 5. Admin methods: list all workspaces & licenses
   getAllWorkspaces(): WorkspaceRecord[] {
+    const fsWorkspaces = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
+    if (fsWorkspaces.length > 0) return fsWorkspaces;
     return readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
   },
 
   getAllLicenses(): Sheet2SuiteLicense[] {
+    const fsDocs = LocalFirestore.getDocs<LicenseDocument>('licenses');
+    if (fsDocs.length > 0) {
+      return fsDocs.map((doc) => ({
+        licenseKey: doc.licenseKey,
+        orderId: doc.orderId,
+        purchaserEmail: doc.purchaserEmail,
+        sku: doc.sku,
+        status: doc.status,
+      }));
+    }
     return readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
   },
 
   deleteWorkspace(targetId: string): boolean {
+    const deletedFs = LocalFirestore.deleteDoc('workspaces', targetId);
     const workspaces = readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
     const targetNormalized = targetId.trim().toLowerCase();
     const filtered = workspaces.filter(
@@ -135,22 +168,28 @@ export const LocalLicensingDb = {
         (w.orderId ? w.orderId.toLowerCase() !== targetNormalized : true)
     );
     writeJsonFile(WORKSPACES_FILE, filtered);
-    return filtered.length < workspaces.length;
+    return deletedFs || filtered.length < workspaces.length;
   },
 
   deleteAllWorkspaces(): void {
+    const collectionDir = path.join(DATA_DIR, 'firestore', 'workspaces');
+    if (fs.existsSync(collectionDir)) {
+      fs.rmSync(collectionDir, { recursive: true, force: true });
+    }
     writeJsonFile(WORKSPACES_FILE, []);
   },
 
   deleteLicense(licenseKey: string): boolean {
+    const deletedFs = LocalFirestore.deleteDoc('licenses', licenseKey);
     const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
     const targetNormalized = licenseKey.trim().toLowerCase();
     const filtered = licenses.filter((l) => l.licenseKey.toLowerCase() !== targetNormalized);
     writeJsonFile(LICENSES_FILE, filtered);
-    return filtered.length < licenses.length;
+    return deletedFs || filtered.length < licenses.length;
   },
 
   deleteAllLicenses(): void {
+    LocalFirestore.purgeAll();
     writeJsonFile(LICENSES_FILE, []);
   },
 };
