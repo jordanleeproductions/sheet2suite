@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { LogIn, Sparkles, HardDrive, ShieldCheck, ArrowRight, X, UserCheck } from 'lucide-react';
+import PreAuthTrustCard from './PreAuthTrustCard';
 
 export interface GoogleAuthModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function GoogleAuthModal({
 }: GoogleAuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showTrustCard, setShowTrustCard] = useState(true);
 
   if (!isOpen) return null;
 
@@ -25,7 +27,6 @@ export default function GoogleAuthModal({
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      // Step 1: Fetch Google OAuth login URL from backend API
       const res = await fetch('/api/auth/google');
       const data = await res.json();
 
@@ -74,14 +75,17 @@ export default function GoogleAuthModal({
     <div
       style={{
         position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 9999,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 999,
         padding: '1rem',
+        backdropFilter: 'blur(4px)',
       }}
       onClick={onClose}
     >
@@ -142,106 +146,106 @@ export default function GoogleAuthModal({
             </div>
           )}
 
-          {/* Primary Action 1: Sign in with Google */}
-          <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '1.25rem', backgroundColor: 'var(--color-bg-subtle)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <ShieldCheck size={18} style={{ color: 'var(--color-primary)' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                RETURNING USER / PLANNER
-              </span>
-            </div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginBottom: '1rem', lineHeight: 1.4 }}>
-              Sign in with your Google Account to automatically load your wedding planner spreadsheet directly from your personal Google Drive.
-            </p>
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                backgroundColor: '#ffffff',
-                color: '#111827',
-                border: '2px solid #111827',
-                borderRadius: '6px',
-                padding: '0.875rem 1rem',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.85rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.625rem',
-                boxShadow: '3px 3px 0px #111827',
+          {showTrustCard ? (
+            <PreAuthTrustCard
+              onConsent={() => {
+                setShowTrustCard(false);
+                handleGoogleSignIn();
               }}
-            >
-              <HardDrive size={18} style={{ color: '#4285F4' }} />
-              <span>{isLoading ? 'AUTHENTICATING...' : 'SIGN IN WITH GOOGLE'}</span>
-            </button>
-          </div>
+              onCancel={onClose}
+            />
+          ) : (
+            <>
+              {/* Primary Action 1: Sign in with Google */}
+              <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '1.25rem', backgroundColor: 'var(--color-bg-subtle)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <ShieldCheck size={18} style={{ color: 'var(--color-primary)' }} />
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                    RETURNING USER / PLANNER
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginBottom: '1rem', lineHeight: 1.4 }}>
+                  Sign in with your Google Account to automatically load your wedding planner spreadsheet directly from your personal Google Drive.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#ffffff',
+                    color: '#111827',
+                    border: '2px solid #111827',
+                    borderRadius: '6px',
+                    padding: '0.875rem 1rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.625rem',
+                    boxShadow: '3px 3px 0px #111827',
+                  }}
+                >
+                  <HardDrive size={18} style={{ color: '#4285F4' }} />
+                  <span>{isLoading ? 'AUTHENTICATING...' : 'SIGN IN WITH GOOGLE'}</span>
+                </button>
+              </div>
 
-          {/* Action 2 & 3 Secondary Options */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-            {/* Option 2: Activate New Plan */}
-            <a
-              href="/activate"
-              style={{
-                textDecoration: 'none',
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                padding: '1rem',
-                backgroundColor: 'var(--color-surface)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Sparkles size={16} style={{ color: 'var(--color-gold, #f59e0b)' }} />
-                <ArrowRight size={14} style={{ color: 'var(--color-muted)' }} />
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.775rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                  Activate New Plan
-                </div>
-                <div style={{ fontSize: '0.675rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                  Create new Drive folder & master sheet
-                </div>
-              </div>
-            </a>
+              {/* Action 2 & 3 Secondary Options */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                {/* Option 2: Activate New Plan */}
+                <a
+                  href="/activate"
+                  style={{
+                    textDecoration: 'none',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '6px',
+                    padding: '1rem',
+                    backgroundColor: 'var(--color-surface)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Sparkles size={16} style={{ color: 'var(--color-gold, #f59e0b)' }} />
+                    <ArrowRight size={14} style={{ color: 'var(--color-muted)' }} />
+                  </div>
+                  <strong style={{ fontSize: '0.8rem', color: 'var(--color-text)' }}>Activate New Plan</strong>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>Enter Etsy Order ID</span>
+                </a>
 
-            {/* Option 3: Explore Demo */}
-            <div
-              onClick={() => {
-                onSelectDemoMode();
-                onClose();
-              }}
-              style={{
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                padding: '1rem',
-                backgroundColor: 'var(--color-surface)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <UserCheck size={16} style={{ color: 'var(--color-primary)' }} />
-                <ArrowRight size={14} style={{ color: 'var(--color-muted)' }} />
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.775rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                  Explore Demo Mode
-                </div>
-                <div style={{ fontSize: '0.675rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                  Try offline with pre-seeded sample data
+                {/* Option 3: Explore Demo Mode */}
+                <div
+                  onClick={() => {
+                    onSelectDemoMode();
+                    onClose();
+                  }}
+                  style={{
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '6px',
+                    padding: '1rem',
+                    backgroundColor: 'var(--color-surface)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <UserCheck size={16} style={{ color: 'var(--color-primary)' }} />
+                    <ArrowRight size={14} style={{ color: 'var(--color-muted)' }} />
+                  </div>
+                  <strong style={{ fontSize: '0.8rem', color: 'var(--color-text)' }}>Explore Demo</strong>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>Interactive Sample</span>
                 </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

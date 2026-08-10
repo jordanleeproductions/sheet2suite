@@ -19,6 +19,7 @@ import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
 import GoogleAuthModal from '@/components/GoogleAuthModal';
+import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
@@ -2309,6 +2310,11 @@ export default function Sheet2VowDashboard() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <SafetyShieldSyncBadge
+                status={isMockMode ? 'offline' : (syncError ? 'error' : (isLoading ? 'syncing' : 'synced'))}
+                userEmail={googleUserEmail || undefined}
+                spreadsheetId={spreadsheetId || undefined}
+              />
               <button
                 type="button"
                 onClick={() => setShowGoogleAuthModal(true)}
