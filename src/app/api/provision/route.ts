@@ -81,22 +81,63 @@ export async function POST(req: NextRequest) {
     // Step 2: Create product subfolder e.g. "Sheet2Suite / Sheet2Vow"
     const productFolderId = await getOrCreateFolder(drive, productName, rootFolderId);
 
-    // Step 3: Copy Master Template Spreadsheet into user's folder
+    // Step 3: Copy Master Template Spreadsheet or Create Fresh Template
     const masterSheetId = process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
     const sanitizedCoupleName = CellGuard.sanitizeCellValue(coupleName || 'Alex & Sam');
     const documentTitle = coupleName ? `${coupleName} Wedding Database` : 'Sheet2Vow Wedding Planner Database';
 
-    const copyRes = await drive.files.copy({
-      fileId: masterSheetId,
-      requestBody: {
-        name: documentTitle,
-        parents: [productFolderId],
-      },
-      fields: 'id, name, webViewLink, webContentLink',
-    });
+    let newSpreadsheetId: string | undefined;
+    let webViewLink: string | undefined;
 
-    const newSpreadsheetId = copyRes.data.id;
-    const webViewLink = copyRes.data.webViewLink;
+    try {
+      const copyRes = await drive.files.copy({
+        fileId: masterSheetId,
+        requestBody: {
+          name: documentTitle,
+          parents: [productFolderId],
+        },
+        fields: 'id, name, webViewLink, webContentLink',
+      });
+
+      newSpreadsheetId = copyRes.data.id || undefined;
+      webViewLink = copyRes.data.webViewLink || undefined;
+    } catch (copyErr: any) {
+      console.warn('Master template copy failed (file not accessible under scope). Creating fresh spreadsheet template:', copyErr?.message);
+
+      const sheets = google.sheets({ version: 'v4', auth });
+      const createRes = await sheets.spreadsheets.create({
+        requestBody: {
+          properties: { title: documentTitle },
+          sheets: [
+            { properties: { title: 'DASHBOARD' } },
+            { properties: { title: 'GUESTS' } },
+            { properties: { title: 'BUDGET' } },
+            { properties: { title: 'SCHEDULE' } },
+            { properties: { title: 'TASKS' } },
+            { properties: { title: 'VENDORS' } },
+            { properties: { title: 'MUSIC' } },
+            { properties: { title: 'PHOTOS' } },
+            { properties: { title: 'GIFTS' } },
+            { properties: { title: 'Settings' } },
+          ],
+        },
+      });
+
+      newSpreadsheetId = createRes.data.spreadsheetId || undefined;
+      webViewLink = createRes.data.spreadsheetUrl || (newSpreadsheetId ? `https://docs.google.com/spreadsheets/d/${newSpreadsheetId}/edit` : undefined);
+
+      if (newSpreadsheetId) {
+        try {
+          await drive.files.update({
+            fileId: newSpreadsheetId,
+            addParents: productFolderId,
+            fields: 'id, parents',
+          });
+        } catch (mErr) {
+          console.warn('Could not move created sheet to product folder:', mErr);
+        }
+      }
+    }
 
     // Step 4: Inject couple title into Dashboard sheet if token is active
     if (newSpreadsheetId && token) {
