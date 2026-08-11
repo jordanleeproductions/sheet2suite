@@ -37,7 +37,6 @@ export default function AdminDatabasePage() {
   }, []);
 
   const handleDeleteWorkspace = async (targetId: string) => {
-    if (!confirm(`Are you sure you want to delete workspace record: ${targetId}?`)) return;
     try {
       const res = await fetch(`/api/admin/db?workspaceId=${encodeURIComponent(targetId)}`, {
         method: 'DELETE',
@@ -64,7 +63,6 @@ export default function AdminDatabasePage() {
   };
 
   const handleDeleteLicense = async (licenseKey: string) => {
-    if (!confirm(`Are you sure you want to delete license key: ${licenseKey}?`)) return;
     try {
       const res = await fetch(`/api/admin/db?licenseKey=${encodeURIComponent(licenseKey)}`, {
         method: 'DELETE',
@@ -82,7 +80,6 @@ export default function AdminDatabasePage() {
   };
 
   const handleResetAllTestSession = async () => {
-    if (!confirm('Warning: This will delete ALL workspace records from local database and reset your browser session. Continue?')) return;
     try {
       const res = await fetch('/api/admin/db?all=true', { method: 'DELETE' });
       const data = await res.json();
