@@ -118,16 +118,49 @@ export const LocalFirestore = {
   },
 
   /**
-   * Deletes a document by Collection Name & Document ID (Firestore deleteDoc())
+   * Deletes a document by Collection Name & Document ID / matching property (Firestore deleteDoc())
    */
   deleteDoc(collectionName: string, docId: string): boolean {
     const dirPath = ensureCollectionDir(collectionName);
-    const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
+    const targetNorm = docId.toLowerCase().trim();
+    const filePath = path.join(dirPath, `${targetNorm}.json`);
+
+    let hasDeleted = false;
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      return true;
+      hasDeleted = true;
     }
-    return false;
+
+    // Also scan all JSON files in the collection directory to match any document field
+    try {
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          const fullPath = path.join(dirPath, file);
+          if (fs.existsSync(fullPath)) {
+            const raw = fs.readFileSync(fullPath, 'utf-8');
+            const doc = JSON.parse(raw);
+            if (
+              String(doc.id || '').toLowerCase() === targetNorm ||
+              String(doc.workspaceId || '').toLowerCase() === targetNorm ||
+              String(doc.spreadsheetId || '').toLowerCase() === targetNorm ||
+              String(doc.licenseKey || '').toLowerCase() === targetNorm ||
+              String(doc.orderId || '').toLowerCase() === targetNorm ||
+              String(doc.userEmail || '').toLowerCase() === targetNorm ||
+              String(doc.purchaserEmail || '').toLowerCase() === targetNorm
+            ) {
+              fs.unlinkSync(fullPath);
+              hasDeleted = true;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`LocalFirestore error during scan delete in ${collectionName}:`, err);
+    }
+
+    return hasDeleted;
   },
 
   /**

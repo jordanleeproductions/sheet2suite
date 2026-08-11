@@ -11,6 +11,7 @@ export default function AdminDatabasePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [rawJsonRecord, setRawJsonRecord] = useState<any | null>(null);
 
   const fetchRecords = async () => {
     setIsLoading(true);
@@ -245,13 +246,28 @@ export default function AdminDatabasePage() {
                         {new Date(ws.activatedAt).toLocaleString()}
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                          <button
+                            onClick={() => setRawJsonRecord(ws)}
+                            style={{
+                              backgroundColor: '#374151',
+                              color: '#60a5fa',
+                              border: '1px solid #4b5563',
+                              borderRadius: '4px',
+                              padding: '0.35rem 0.5rem',
+                              cursor: 'pointer',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                            }}
+                          >
+                            👁️ JSON
+                          </button>
                           {ws.webViewLink && (
                             <a
                               href={ws.webViewLink}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: '#60a5fa', textDecoration: 'none', padding: '0.3rem 0.5rem', backgroundColor: '#374151', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                              style={{ color: '#34d399', textDecoration: 'none', padding: '0.35rem 0.5rem', backgroundColor: '#064e3b', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.7rem', fontWeight: 700 }}
                             >
                               <ExternalLink size={12} />
                               <span>Sheet</span>
@@ -327,25 +343,42 @@ export default function AdminDatabasePage() {
                         </span>
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <button
-                          onClick={() => handleDeleteLicense(lic.licenseKey)}
-                          style={{
-                            backgroundColor: '#7f1d1d',
-                            color: '#fca5a5',
-                            border: '1px solid #991b1b',
-                            borderRadius: '4px',
-                            padding: '0.35rem 0.6rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                          }}
-                        >
-                          <Trash2 size={12} />
-                          <span>Delete</span>
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                          <button
+                            onClick={() => setRawJsonRecord(lic)}
+                            style={{
+                              backgroundColor: '#374151',
+                              color: '#60a5fa',
+                              border: '1px solid #4b5563',
+                              borderRadius: '4px',
+                              padding: '0.35rem 0.5rem',
+                              cursor: 'pointer',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                            }}
+                          >
+                            👁️ JSON
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLicense(lic.licenseKey)}
+                            style={{
+                              backgroundColor: '#7f1d1d',
+                              color: '#fca5a5',
+                              border: '1px solid #991b1b',
+                              borderRadius: '4px',
+                              padding: '0.35rem 0.6rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                            }}
+                          >
+                            <Trash2 size={12} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -355,6 +388,99 @@ export default function AdminDatabasePage() {
           )}
         </div>
       </div>
+
+      {/* Raw JSON Record Viewer Modal */}
+      {rawJsonRecord && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1.5rem',
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setRawJsonRecord(null)}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '640px',
+              maxHeight: '85vh',
+              backgroundColor: '#1f2937',
+              border: '1px solid #374151',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              color: '#f9fafb',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #374151', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Database size={20} style={{ color: '#00ED64' }} />
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Raw Database Document Record (JSON)</h3>
+              </div>
+              <button
+                onClick={() => setRawJsonRecord(null)}
+                style={{ backgroundColor: '#374151', color: '#9ca3af', border: 'none', borderRadius: '4px', padding: '0.35rem 0.65rem', cursor: 'pointer', fontWeight: 700 }}
+              >
+                ✕ CLOSE
+              </button>
+            </div>
+
+            <pre
+              style={{
+                backgroundColor: '#111827',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                padding: '1.25rem',
+                fontSize: '0.825rem',
+                fontFamily: 'monospace',
+                color: '#a7f3d0',
+                overflow: 'auto',
+                maxHeight: '55vh',
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-all',
+              }}
+            >
+              {JSON.stringify(rawJsonRecord, null, 2)}
+            </pre>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(rawJsonRecord, null, 2));
+                  alert('Copied JSON record to clipboard!');
+                }}
+                style={{
+                  backgroundColor: '#00ED64',
+                  color: '#000000',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                📋 COPY JSON TO CLIPBOARD
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
