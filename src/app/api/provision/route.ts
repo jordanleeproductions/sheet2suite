@@ -109,15 +109,15 @@ export async function POST(req: NextRequest) {
         requestBody: {
           properties: { title: documentTitle },
           sheets: [
-            { properties: { title: 'DASHBOARD' } },
-            { properties: { title: 'GUESTS' } },
-            { properties: { title: 'BUDGET' } },
-            { properties: { title: 'SCHEDULE' } },
-            { properties: { title: 'TASKS' } },
-            { properties: { title: 'VENDORS' } },
+            { properties: { title: 'Dashboard' } },
+            { properties: { title: 'Guest List' } },
+            { properties: { title: 'Budget Ledger' } },
+            { properties: { title: 'Day-Of-Schedule' } },
+            { properties: { title: 'Vendors' } },
+            { properties: { title: 'To-Do List' } },
             { properties: { title: 'MUSIC' } },
             { properties: { title: 'PHOTOS' } },
-            { properties: { title: 'GIFTS' } },
+            { properties: { title: 'GIFT REGISTRY' } },
             { properties: { title: 'Settings' } },
           ],
         },
@@ -133,8 +133,27 @@ export async function POST(req: NextRequest) {
             addParents: productFolderId,
             fields: 'id, parents',
           });
+
+          // Inject standard headers into row 1 of each tab
+          await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: newSpreadsheetId,
+            requestBody: {
+              valueInputOption: 'USER_ENTERED',
+              data: [
+                { range: "'Dashboard'!B2", values: [[sanitizedCoupleName]] },
+                { range: "'Guest List'!A1:L1", values: [['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked']] },
+                { range: "'Budget Ledger'!A1:H1", values: [['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status']] },
+                { range: "'Day-Of-Schedule'!A1:F1", values: [['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details']] },
+                { range: "'Vendors'!A1:L1", values: [['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required']] },
+                { range: "'To-Do List'!A1:H1", values: [['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links']] },
+                { range: "'PHOTOS'!A1:H1", values: [['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes']] },
+                { range: "'GIFT REGISTRY'!A1:G1", values: [['Item ID', 'Gift Description / Name', 'Giver / From', 'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes']] },
+                { range: "'Settings'!B2", values: [[JSON.stringify({ budget: 35000, weddingName: coupleName || 'Alex & Sam' })]] },
+              ],
+            },
+          });
         } catch (mErr) {
-          console.warn('Could not move created sheet to product folder:', mErr);
+          console.warn('Could not update headers or move created sheet to product folder:', mErr);
         }
       }
     }

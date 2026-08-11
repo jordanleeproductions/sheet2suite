@@ -62,19 +62,37 @@ export async function GET(req: Request) {
 
     const sheetsClient = getSheetsClient(accessToken);
 
+    // Step 1: Fetch spreadsheet metadata to get exact available sheet titles
+    const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+    const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
+
+    const findTitle = (candidates: string[]) => {
+      return candidates.find(c => availableTitles.includes(c)) || candidates[0];
+    };
+
+    const settingsTitle = findTitle(['Settings', 'DASHBOARD', 'Dashboard']);
+    const guestsTitle = findTitle(['Guest List', 'GUESTS', 'Guests']);
+    const budgetTitle = findTitle(['Budget Ledger', 'BUDGET', 'Budget']);
+    const scheduleTitle = findTitle(['Day-Of-Schedule', 'SCHEDULE', 'Schedule']);
+    const vendorsTitle = findTitle(['Vendors', 'VENDORS']);
+    const tasksTitle = findTitle(['To-Do List', 'TASKS', 'Tasks']);
+    const photosTitle = findTitle(['PHOTOS', 'Photos']);
+    const giftsTitle = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts']);
+    const dashboardTitle = findTitle(['Dashboard', 'DASHBOARD']);
+
     // Fetch all spreadsheet tabs in a single atomic batch get
     const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
       spreadsheetId,
       ranges: [
-        "'Settings'!B2",
-        "'Guest List'!A1:L1000",
-        "'Budget Ledger'!A1:H1000",
-        "'Day-Of-Schedule'!A1:F1000",
-        "'Vendors'!A1:L1000",
-        "'To-Do List'!A1:H1000",
-        "'PHOTOS'!A1:H1000",
-        "'GIFT REGISTRY'!A1:G1000",
-        "'Dashboard'!B2"
+        `'${settingsTitle}'!B2`,
+        `'${guestsTitle}'!A1:L1000`,
+        `'${budgetTitle}'!A1:H1000`,
+        `'${scheduleTitle}'!A1:F1000`,
+        `'${vendorsTitle}'!A1:L1000`,
+        `'${tasksTitle}'!A1:H1000`,
+        `'${photosTitle}'!A1:H1000`,
+        `'${giftsTitle}'!A1:G1000`,
+        `'${dashboardTitle}'!B2`
       ]
     });
 
@@ -239,6 +257,14 @@ export async function POST(req: Request) {
       });
     } else {
       // Overwrite the sheet rows
+      // Fetch spreadsheet metadata to get exact available sheet titles
+      const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+      const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
+
+      const findTitle = (candidates: string[]) => {
+        return candidates.find(c => availableTitles.includes(c)) || candidates[0];
+      };
+
       let range = '';
       let values: any[][] = [];
       const headers = HEADERS_MAP[sheetType as keyof typeof HEADERS_MAP];
@@ -247,37 +273,44 @@ export async function POST(req: Request) {
       values.push(headers);
 
       if (sheetType === 'guests') {
-        range = "'Guest List'!A1:L1000";
+        const title = findTitle(['Guest List', 'GUESTS', 'Guests']);
+        range = `'${title}'!A1:L1000`;
         (data as Guest[]).forEach(item => {
           values.push(guestMapper.toRow(headers, item));
         });
       } else if (sheetType === 'budget') {
-        range = "'Budget Ledger'!A1:H1000";
+        const title = findTitle(['Budget Ledger', 'BUDGET', 'Budget']);
+        range = `'${title}'!A1:H1000`;
         (data as BudgetItem[]).forEach(item => {
           values.push(budgetMapper.toRow(headers, item));
         });
       } else if (sheetType === 'schedule') {
-        range = "'Day-Of-Schedule'!A1:F1000";
+        const title = findTitle(['Day-Of-Schedule', 'SCHEDULE', 'Schedule']);
+        range = `'${title}'!A1:F1000`;
         (data as ScheduleEvent[]).forEach(item => {
           values.push(scheduleMapper.toRow(headers, item));
         });
       } else if (sheetType === 'vendors') {
-        range = "'Vendors'!A1:L1000";
+        const title = findTitle(['Vendors', 'VENDORS']);
+        range = `'${title}'!A1:L1000`;
         (data as Vendor[]).forEach(item => {
           values.push(vendorMapper.toRow(headers, item));
         });
       } else if (sheetType === 'tasks') {
-        range = "'To-Do List'!A1:H1000";
+        const title = findTitle(['To-Do List', 'TASKS', 'Tasks']);
+        range = `'${title}'!A1:H1000`;
         (data as Task[]).forEach(item => {
           values.push(taskMapper.toRow(headers, item));
         });
       } else if (sheetType === 'photos') {
-        range = "'PHOTOS'!A1:H1000";
+        const title = findTitle(['PHOTOS', 'Photos']);
+        range = `'${title}'!A1:H1000`;
         (data as PhotoShot[]).forEach(item => {
           values.push(photoMapper.toRow(headers, item));
         });
       } else if (sheetType === 'gifts') {
-        range = "'GIFT REGISTRY'!A1:G1000";
+        const title = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts']);
+        range = `'${title}'!A1:G1000`;
         (data as GiftItem[]).forEach(item => {
           values.push(giftMapper.toRow(headers, item));
         });
