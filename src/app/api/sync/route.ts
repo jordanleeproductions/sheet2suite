@@ -181,7 +181,15 @@ export async function GET(req: Request) {
 
   } catch (error: any) {
     console.error('Error fetching sheet data in /api/sync:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Sync load failed' }, { status: 500 });
+    const isAuthError = error?.code === 401 || error?.status === 401 || String(error?.message).toLowerCase().includes('invalid authentication credentials');
+    return NextResponse.json(
+      {
+        success: false,
+        isAuthError: Boolean(isAuthError),
+        error: isAuthError ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' : (error.message || 'Sync load failed')
+      },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }
 
@@ -343,6 +351,14 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('Error synchronizing sheet data in /api/sync:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Sync save failed' }, { status: 500 });
+    const isAuthError = error?.code === 401 || error?.status === 401 || String(error?.message).toLowerCase().includes('invalid authentication credentials');
+    return NextResponse.json(
+      {
+        success: false,
+        isAuthError: Boolean(isAuthError),
+        error: isAuthError ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' : (error.message || 'Sync save failed')
+      },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }

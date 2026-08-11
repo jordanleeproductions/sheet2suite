@@ -382,6 +382,11 @@ export default function Sheet2VowDashboard() {
       });
 
       const res = await response.json();
+      if (response.status === 401 || res.isAuthError) {
+        setShowGoogleAuthModal(true);
+        addToast('Google OAuth session expired. Please sign in to reconnect your Drive sheet.', 'warning');
+        return;
+      }
       if (res.success) {
         setWeddingData(res.data);
         if (res.weddingName) {
@@ -515,6 +520,11 @@ export default function Sheet2VowDashboard() {
       });
 
       const res = await response.json();
+      if (response.status === 401 || res.isAuthError) {
+        setShowGoogleAuthModal(true);
+        addToast('Google OAuth session expired. Please sign in to reconnect your Drive sheet.', 'warning');
+        return;
+      }
       if (!res.success) {
         throw new Error(res.error || `Failed to sync ${sheetType}`);
       }
