@@ -2209,9 +2209,19 @@ export default function Sheet2VowDashboard() {
             </div>
 
             {syncError && (
-              <div style={styles.errorBox}>
-                <AlertCircle size={16} />
-                <span>{syncError}</span>
+              <div style={{ ...styles.errorBox, justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                  <AlertCircle size={16} />
+                  <span>{syncError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSyncError(null)}
+                  style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.1rem 0.2rem' }}
+                  title="Dismiss error"
+                >
+                  <X size={16} />
+                </button>
               </div>
             )}
 
@@ -2275,9 +2285,19 @@ export default function Sheet2VowDashboard() {
           )}
 
           {syncError && (
-            <div style={{ ...styles.errorBox, marginBottom: '1rem' }}>
-              <AlertCircle size={16} />
-              <span>{syncError}</span>
+            <div style={{ ...styles.errorBox, marginBottom: '1rem', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                <AlertCircle size={16} />
+                <span>{syncError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSyncError(null)}
+                style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.1rem 0.2rem' }}
+                title="Dismiss error"
+              >
+                <X size={16} />
+              </button>
             </div>
           )}
 

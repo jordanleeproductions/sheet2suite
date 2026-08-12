@@ -174,13 +174,27 @@ export default function AdminDatabasePage() {
 
         {/* Notifications */}
         {successMsg && (
-          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#064e3b', border: '1px solid #10b981', color: '#34d399', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
-            ✔ {successMsg}
+          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#064e3b', border: '1px solid #10b981', color: '#34d399', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>✔ {successMsg}</span>
+            <button
+              onClick={() => setSuccessMsg(null)}
+              style={{ background: 'none', border: 'none', color: '#34d399', cursor: 'pointer', fontSize: '1rem', fontWeight: 700, padding: '0 0.25rem' }}
+              title="Dismiss message"
+            >
+              ✕
+            </button>
           </div>
         )}
         {errorMsg && (
-          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#7f1d1d', border: '1px solid #ef4444', color: '#fca5a5', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
-            ✖ {errorMsg}
+          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#7f1d1d', border: '1px solid #ef4444', color: '#fca5a5', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>✖ {errorMsg}</span>
+            <button
+              onClick={() => setErrorMsg(null)}
+              style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: '1rem', fontWeight: 700, padding: '0 0.25rem' }}
+              title="Dismiss message"
+            >
+              ✕
+            </button>
           </div>
         )}
 

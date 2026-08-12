@@ -281,8 +281,16 @@ export default function ActivationPage() {
             </div>
 
             {verifyError && (
-              <div style={styles.errorBanner}>
-                {verifyError}
+              <div style={{ ...styles.errorBanner, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>{verifyError}</span>
+                <button
+                  type="button"
+                  onClick={() => setVerifyError('')}
+                  style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.1rem 0.2rem' }}
+                  title="Dismiss error"
+                >
+                  <X size={16} />
+                </button>
               </div>
             )}
 
