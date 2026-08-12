@@ -24,7 +24,8 @@ import {
   Lock, 
   Check,
   Download,
-  X
+  X,
+  HardDrive
 } from 'lucide-react';
 import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
