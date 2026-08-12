@@ -30,6 +30,7 @@ import {
 import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
 import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
+import InfoDisclosure from '@/components/InfoDisclosure';
 
 export default function ActivationPage() {
   const router = useRouter();
@@ -368,6 +369,9 @@ export default function ActivationPage() {
                 <div style={{ fontWeight: 800, fontSize: '0.9rem', color: isGoogleConnected ? '#15803d' : 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   {isGoogleConnected ? <ShieldCheck size={18} style={{ color: '#16a34a' }} /> : <span>🌐</span>}
                   <span>{isGoogleConnected ? `Google Drive Connected (${googleEmail})` : 'Connect Google Drive Account'}</span>
+                  <InfoDisclosure title="Google Drive Security & Scope">
+                    Sheet2Vow uses Google's minimal <code>drive.file</code> restricted scope. We can ONLY see and manage the spreadsheets created directly by this app inside your Drive. We never have access to any other files or personal data.
+                  </InfoDisclosure>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: isGoogleConnected ? '#166534' : 'var(--color-muted)', marginTop: '0.2rem' }}>
                   {isGoogleConnected ? 'Spreadsheets will be saved directly into your connected Google Drive.' : 'Authorize Google to save your spreadsheet in your personal Google Drive.'}
@@ -493,9 +497,14 @@ export default function ActivationPage() {
                   <Zap size={24} style={{ color: 'var(--color-highlight)' }} />
                   <span style={styles.choiceBadge}>1 MINUTE</span>
                 </div>
-                <h3 style={styles.choiceTitle}>Quick Setup</h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h3 style={styles.choiceTitle}>Quick Setup</h3>
+                  <InfoDisclosure title="Quick Setup Details">
+                    Quick setup creates your Google Sheet workspace instantly using sensible defaults. You can always customize budget, currency, and modules later in Settings.
+                  </InfoDisclosure>
+                </div>
                 <p style={styles.choiceDesc}>
-                  One-screen questionnaire to launch your planner in seconds with sensible defaults.
+                  One-screen questionnaire to launch your planner in seconds.
                 </p>
                 <button style={{ ...styles.secondaryBtn, width: '100%', marginTop: '1rem' }}>
                   START QUICK SETUP
@@ -513,9 +522,14 @@ export default function ActivationPage() {
                   <Sliders size={24} style={{ color: 'var(--color-highlight)' }} />
                   <span style={styles.choiceBadge}>RECOMMENDED</span>
                 </div>
-                <h3 style={styles.choiceTitle}>Guided Setup</h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h3 style={styles.choiceTitle}>Guided Setup</h3>
+                  <InfoDisclosure title="Guided Setup Features">
+                    Step-by-step 4-screen wizard to select enabled planning modules, invite your partner/co-planner, pick pre-built task checklists, and configure vendor permissions.
+                  </InfoDisclosure>
+                </div>
                 <p style={styles.choiceDesc}>
-                  Interactive 4-screen wizard to choose active features, invite spouse admin, configure permissions, and pick task presets.
+                  Customize active features, spouse co-admin, and task presets.
                 </p>
                 <button style={{ ...styles.primaryBtn, width: '100%', marginTop: '1rem' }}>
                   START GUIDED SETUP

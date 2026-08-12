@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     const xlsxBuffer = await generateMasterXlsxBuffer(coupleName);
 
-    return new NextResponse(xlsxBuffer, {
+    return new NextResponse(new Uint8Array(xlsxBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

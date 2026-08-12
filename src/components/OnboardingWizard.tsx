@@ -18,6 +18,7 @@ import {
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
+import InfoDisclosure from '@/components/InfoDisclosure';
 
 export interface OnboardingResult {
   weddingName: string;
@@ -286,7 +287,12 @@ export default function OnboardingWizard({
 
           {/* Google Drive Directory Selector & Custom Path */}
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>GOOGLE DRIVE TARGET DIRECTORY *</label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label style={styles.label}>GOOGLE DRIVE TARGET DIRECTORY *</label>
+              <InfoDisclosure title="Target Directory">
+                Your master wedding spreadsheet file is stored directly in this Google Drive folder. You can change folders anytime or open it natively in Google Drive.
+              </InfoDisclosure>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', marginBottom: '0.5rem' }}>
               {[
                 { path: 'My Drive / Sheet2Suite / Sheet2Vow', name: 'Sheet2Suite Default' },
