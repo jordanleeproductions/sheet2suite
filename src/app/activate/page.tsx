@@ -23,7 +23,8 @@ import {
   Package, 
   Lock, 
   Check,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
