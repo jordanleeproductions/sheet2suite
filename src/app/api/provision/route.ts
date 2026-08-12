@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
 import { CellGuard } from '@/lib/core/CellGuard';
+import { generateMasterXlsxBuffer } from '@/lib/core/templates/xlsxGenerator';
 
 /**
  * Helper to find or create a folder in Google Drive using drive.file scope.
@@ -102,59 +104,70 @@ export async function POST(req: NextRequest) {
       newSpreadsheetId = copyRes.data.id || undefined;
       webViewLink = copyRes.data.webViewLink || undefined;
     } catch (copyErr: any) {
-      console.warn('Master template copy failed (file not accessible under scope). Creating fresh spreadsheet template:', copyErr?.message);
+      console.warn('Master template copy failed (404/403 or inaccessible). Executing Tier 2 XLSX conversion fallback:', copyErr?.message);
 
-      const sheets = google.sheets({ version: 'v4', auth });
-      const createRes = await sheets.spreadsheets.create({
-        requestBody: {
-          properties: { title: documentTitle },
-          sheets: [
-            { properties: { title: 'Dashboard' } },
-            { properties: { title: 'Guest List' } },
-            { properties: { title: 'Budget Ledger' } },
-            { properties: { title: 'Day-Of-Schedule' } },
-            { properties: { title: 'Vendors' } },
-            { properties: { title: 'To-Do List' } },
-            { properties: { title: 'MUSIC' } },
-            { properties: { title: 'PHOTOS' } },
-            { properties: { title: 'GIFT REGISTRY' } },
-            { properties: { title: 'Settings' } },
-          ],
-        },
-      });
+      try {
+        // Tier 2: Upload local pre-formatted .xlsx template & convert to native Google Sheet
+        const xlsxBuffer = await generateMasterXlsxBuffer(sanitizedCoupleName);
+        const stream = Readable.from(xlsxBuffer);
 
-      newSpreadsheetId = createRes.data.spreadsheetId || undefined;
-      webViewLink = createRes.data.spreadsheetUrl || (newSpreadsheetId ? `https://docs.google.com/spreadsheets/d/${newSpreadsheetId}/edit` : undefined);
+        const uploadRes = await drive.files.create({
+          requestBody: {
+            name: documentTitle,
+            parents: [productFolderId],
+            mimeType: 'application/vnd.google-apps.spreadsheet', // Auto-convert .xlsx to Google Sheet
+          },
+          media: {
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            body: stream,
+          },
+          fields: 'id, name, webViewLink',
+        });
 
-      if (newSpreadsheetId) {
-        try {
+        newSpreadsheetId = uploadRes.data.id || undefined;
+        webViewLink = uploadRes.data.webViewLink || undefined;
+      } catch (xlsxErr: any) {
+        console.warn('Tier 2 XLSX conversion upload failed. Executing Tier 3 fresh Sheets API fallback:', xlsxErr?.message);
+
+        // Tier 3: Create fresh spreadsheet via Sheets API
+        const sheets = google.sheets({ version: 'v4', auth });
+        const createRes = await sheets.spreadsheets.create({
+          requestBody: {
+            properties: { title: documentTitle },
+            sheets: [
+              { properties: { title: 'Dashboard' } },
+              { properties: { title: 'Guest List' } },
+              { properties: { title: 'Budget Ledger' } },
+              { properties: { title: 'Day-Of-Schedule' } },
+              { properties: { title: 'Vendors' } },
+              { properties: { title: 'To-Do List' } },
+              { properties: { title: 'MUSIC' } },
+              { properties: { title: 'PHOTOS' } },
+              { properties: { title: 'GIFT REGISTRY' } },
+              { properties: { title: 'Settings' } },
+            ],
+          },
+        });
+
+        newSpreadsheetId = createRes.data.spreadsheetId || undefined;
+        webViewLink = createRes.data.spreadsheetUrl || (newSpreadsheetId ? `https://docs.google.com/spreadsheets/d/${newSpreadsheetId}/edit` : undefined);
+      }
+    }
+
+    if (newSpreadsheetId) {
+      try {
+        const file = await drive.files.get({ fileId: newSpreadsheetId, fields: 'parents' });
+        const parents = file.data.parents || [];
+        if (!parents.includes(productFolderId)) {
           await drive.files.update({
             fileId: newSpreadsheetId,
             addParents: productFolderId,
+            removeParents: parents.join(','),
             fields: 'id, parents',
           });
-
-          // Inject standard headers into row 1 of each tab
-          await sheets.spreadsheets.values.batchUpdate({
-            spreadsheetId: newSpreadsheetId,
-            requestBody: {
-              valueInputOption: 'USER_ENTERED',
-              data: [
-                { range: "'Dashboard'!B2", values: [[sanitizedCoupleName]] },
-                { range: "'Guest List'!A1:L1", values: [['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked']] },
-                { range: "'Budget Ledger'!A1:H1", values: [['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status']] },
-                { range: "'Day-Of-Schedule'!A1:F1", values: [['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details']] },
-                { range: "'Vendors'!A1:L1", values: [['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required']] },
-                { range: "'To-Do List'!A1:H1", values: [['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links']] },
-                { range: "'PHOTOS'!A1:H1", values: [['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes']] },
-                { range: "'GIFT REGISTRY'!A1:G1", values: [['Item ID', 'Gift Description / Name', 'Giver / From', 'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes']] },
-                { range: "'Settings'!B2", values: [[JSON.stringify({ budget: 35000, weddingName: coupleName || 'Alex & Sam' })]] },
-              ],
-            },
-          });
-        } catch (mErr) {
-          console.warn('Could not update headers or move created sheet to product folder:', mErr);
         }
+      } catch (mErr) {
+        console.warn('Could not update parent folder for provisioned file:', mErr);
       }
     }
 

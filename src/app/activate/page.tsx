@@ -22,7 +22,8 @@ import {
   Briefcase, 
   Package, 
   Lock, 
-  Check 
+  Check,
+  Download
 } from 'lucide-react';
 import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
@@ -438,6 +439,35 @@ export default function ActivationPage() {
                     <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>{prod.desc}</span>
                   </div>
                 ))}
+              </div>
+              <div style={{ marginTop: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <HardDrive size={18} style={{ color: '#16a34a' }} />
+                  <div>
+                    <strong style={{ fontSize: '0.775rem', color: '#0f172a' }}>Microsoft Excel / Non-Google Users</strong>
+                    <div style={{ fontSize: '0.675rem', color: '#64748b' }}>Download a pre-formatted native .xlsx workbook to use offline in Excel</div>
+                  </div>
+                </div>
+                <a
+                  href="/api/template/xlsx"
+                  download
+                  style={{
+                    backgroundColor: '#16a34a',
+                    color: '#ffffff',
+                    padding: '0.4rem 0.85rem',
+                    borderRadius: '6px',
+                    fontSize: '0.725rem',
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <Download size={14} />
+                  <span>DOWNLOAD .XLSX</span>
+                </a>
               </div>
             </div>
 
