@@ -31,6 +31,7 @@ import { TASK_PRESETS, TaskPreset } from '@/lib/presets/taskPresets';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
 import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
 import InfoDisclosure from '@/components/InfoDisclosure';
+import StepOrderVerification from '@/components/activate/StepOrderVerification';
 
 export default function ActivationPage() {
   const router = useRouter();
@@ -276,70 +277,17 @@ export default function ActivationPage() {
 
         {/* STEP 0: Etsy Order Activation Form */}
         {step === 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <form onSubmit={handleVerify} style={styles.formSection}>
-            <div style={styles.activationBadge}>
-              <Key size={16} style={{ color: 'var(--color-highlight)', marginRight: '8px' }} />
-              <span>Enter Etsy Order Details</span>
-            </div>
-
-            {verifyError && (
-              <div style={{ ...styles.errorBanner, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span>{verifyError}</span>
-                <button
-                  type="button"
-                  onClick={() => setVerifyError('')}
-                  style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.1rem 0.2rem' }}
-                  title="Dismiss error"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-
-            <div style={styles.formGroup}>
-              <label style={styles.fieldLabel}>ESTY PURCHASE EMAIL *</label>
-              <input
-                type="email"
-                required
-                placeholder="e.g. jane@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={styles.inputField}
-              />
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.fieldLabel}>ETSY ORDER ID *</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. ETSY-98765432"
-                value={orderId}
-                onChange={(e) => setOrderId(e.target.value)}
-                style={styles.inputField}
-              />
-              <span style={styles.hintText}>Find your Order ID in your Etsy purchase confirmation email or receipt.</span>
-            </div>
-
-            <button type="submit" disabled={isVerifying} style={styles.primaryBtn} className="activation-primary-btn">
-              {isVerifying ? (
-                <span>Verifying with Etsy...</span>
-              ) : (
-                <>
-                  <span>VERIFY & ACTIVATE PLANNER</span>
-                  <ArrowRight size={18} style={{ marginLeft: '8px' }} />
-                </>
-              )}
-            </button>
-
-            <div style={styles.securityNote}>
-              <ShieldCheck size={14} style={{ marginRight: '6px', color: 'var(--color-green)' }} />
-              <span>Instant verification. Works out-of-the-box in Google Sheets & Web Mode.</span>
-            </div>
-          </form>
-        </div>
-      )}
+          <StepOrderVerification
+            email={email}
+            orderId={orderId}
+            isVerifying={isVerifying}
+            verifyError={verifyError}
+            setEmail={setEmail}
+            setOrderId={setOrderId}
+            setVerifyError={setVerifyError}
+            onVerify={handleVerify}
+          />
+        )}
 
         {/* STEP 1: Choose Setup Experience & Licensed App (Sheet2Suite Product Hub) [LIFE-5] */}
         {step === 1 && (
