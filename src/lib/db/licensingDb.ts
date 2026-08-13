@@ -1,6 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-import { Sheet2SuiteLicense } from '@/lib/sheets/types';
+import { Sheet2SuiteLicense } from '@/types/licensing';
+import { LocalFirestore, LicenseDocument } from '@/lib/db/firestoreDb';
 
 export interface WorkspaceRecord {
   workspaceId: string;
@@ -17,43 +16,8 @@ export interface WorkspaceRecord {
   lastActiveAt: string;
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const WORKSPACES_FILE = path.join(DATA_DIR, 'workspaces.json');
-const LICENSES_FILE = path.join(DATA_DIR, 'licenses.json');
-
-// Ensure data directory exists
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
-// Read JSON helper
-function readJsonFile<T>(filePath: string, defaultValue: T): T {
-  ensureDataDir();
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
-    return defaultValue;
-  }
-  try {
-    const raw = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(raw) as T;
-  } catch (e) {
-    console.error(`Error reading ${filePath}:`, e);
-    return defaultValue;
-  }
-}
-
-// Write JSON helper
-function writeJsonFile<T>(filePath: string, data: T): void {
-  ensureDataDir();
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-import { LocalFirestore, WorkspaceDocument, LicenseDocument } from '@/lib/db/firestoreDb';
-
 /**
- * Local Data Store Engine (Delegates to Firestore-compatible LocalFirestore document store)
+ * Local Data Store Engine (Unified strictly on LocalFirestore document engine)
  */
 export const LocalLicensingDb = {
   // 1. Get all workspaces for a user or partner email
@@ -83,10 +47,9 @@ export const LocalLicensingDb = {
         lastActiveAt: now,
       };
       LocalFirestore.setDoc('workspaces', updated.workspaceId, updated);
-      writeJsonFile(WORKSPACES_FILE, LocalFirestore.getDocs('workspaces'));
       return updated;
     } else {
-      const workspaceId = record.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+      const workspaceId = record.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       const newRecord: WorkspaceRecord = {
         workspaceId,
         activatedAt: now,
@@ -94,7 +57,6 @@ export const LocalLicensingDb = {
         ...record,
       };
       LocalFirestore.setDoc('workspaces', workspaceId, newRecord);
-      writeJsonFile(WORKSPACES_FILE, LocalFirestore.getDocs('workspaces'));
       return newRecord;
     }
   },
@@ -102,25 +64,23 @@ export const LocalLicensingDb = {
   // 3. License verification helper
   getLicenseByKey(licenseKey: string): Sheet2SuiteLicense | null {
     const doc = LocalFirestore.getDoc<LicenseDocument>('licenses', licenseKey);
-    if (doc) {
-      const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') ? 'sheet2suite_bundle' : 'sheet2vow') as any;
-      return {
-        licenseKey: doc.licenseKey,
-        orderId: doc.orderId,
-        purchasePlatform: 'etsy',
-        purchaserEmail: doc.purchaserEmail,
-        sku,
-        productAccess: {
-          sheet2vow: true,
-          sheet2home: sku === 'sheet2suite_bundle',
-          sheet2finance: sku === 'sheet2suite_bundle',
-        },
-        status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
-        createdAt: doc.createdAt,
-      };
-    }
-    const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
-    return licenses.find((l) => l.licenseKey.toLowerCase() === licenseKey.trim().toLowerCase()) || null;
+    if (!doc) return null;
+
+    const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') ? 'sheet2suite_bundle' : 'sheet2vow') as any;
+    return {
+      licenseKey: doc.licenseKey,
+      orderId: doc.orderId,
+      purchasePlatform: 'etsy',
+      purchaserEmail: doc.purchaserEmail,
+      sku,
+      productAccess: {
+        sheet2vow: true,
+        sheet2home: sku === 'sheet2suite_bundle',
+        sheet2finance: sku === 'sheet2suite_bundle',
+      },
+      status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
+      createdAt: doc.createdAt,
+    };
   },
 
   // 4. Register new license
@@ -141,75 +101,51 @@ export const LocalLicensingDb = {
       updatedAt: new Date().toISOString(),
     };
     LocalFirestore.setDoc('licenses', license.licenseKey, doc);
-    writeJsonFile(LICENSES_FILE, LocalFirestore.getDocs('licenses'));
     return license;
   },
 
   // 5. Admin methods: list all workspaces & licenses
   getAllWorkspaces(): WorkspaceRecord[] {
-    const fsWorkspaces = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
-    if (fsWorkspaces.length > 0) return fsWorkspaces;
-    return readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
+    return LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
   },
 
   getAllLicenses(): Sheet2SuiteLicense[] {
     const fsDocs = LocalFirestore.getDocs<LicenseDocument>('licenses');
-    if (fsDocs.length > 0) {
-      return fsDocs.map((doc) => {
-        const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') || doc.sku === 'sheet2suite_bundle' ? 'sheet2suite_bundle' : 'sheet2vow') as any;
-        return {
-          licenseKey: doc.licenseKey,
-          orderId: doc.orderId,
-          purchasePlatform: 'etsy' as const,
-          purchaserEmail: doc.purchaserEmail,
-          sku,
-          productAccess: {
-            sheet2vow: true,
-            sheet2home: sku === 'sheet2suite_bundle',
-            sheet2finance: sku === 'sheet2suite_bundle',
-          },
-          status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
-          createdAt: doc.createdAt,
-        };
-      });
-    }
-    return readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
+    return fsDocs.map((doc) => {
+      const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') || doc.sku === 'sheet2suite_bundle' ? 'sheet2suite_bundle' : 'sheet2vow') as any;
+      return {
+        licenseKey: doc.licenseKey,
+        orderId: doc.orderId,
+        purchasePlatform: 'etsy' as const,
+        purchaserEmail: doc.purchaserEmail,
+        sku,
+        productAccess: {
+          sheet2vow: true,
+          sheet2home: sku === 'sheet2suite_bundle',
+          sheet2finance: sku === 'sheet2suite_bundle',
+        },
+        status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
+        createdAt: doc.createdAt,
+      };
+    });
   },
 
   deleteWorkspace(targetId: string): boolean {
-    const deletedFs = LocalFirestore.deleteDoc('workspaces', targetId);
-    const workspaces = readJsonFile<WorkspaceRecord[]>(WORKSPACES_FILE, []);
-    const targetNormalized = targetId.trim().toLowerCase();
-    const filtered = workspaces.filter(
-      (w) =>
-        w.workspaceId !== targetId &&
-        w.spreadsheetId !== targetId &&
-        w.userEmail.toLowerCase() !== targetNormalized &&
-        (w.orderId ? w.orderId.toLowerCase() !== targetNormalized : true)
-    );
-    writeJsonFile(WORKSPACES_FILE, filtered);
-    return deletedFs || filtered.length < workspaces.length;
+    return LocalFirestore.deleteDoc('workspaces', targetId);
   },
 
   deleteAllWorkspaces(): void {
-    const collectionDir = path.join(DATA_DIR, 'firestore', 'workspaces');
-    if (fs.existsSync(collectionDir)) {
-      fs.rmSync(collectionDir, { recursive: true, force: true });
+    const fsWorkspaces = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
+    for (const ws of fsWorkspaces) {
+      LocalFirestore.deleteDoc('workspaces', ws.workspaceId);
     }
-    writeJsonFile(WORKSPACES_FILE, []);
   },
 
   deleteLicense(licenseKey: string): boolean {
-    const deletedFs = LocalFirestore.deleteDoc('licenses', licenseKey);
-    const licenses = readJsonFile<Sheet2SuiteLicense[]>(LICENSES_FILE, []);
-    const targetNormalized = licenseKey.trim().toLowerCase();
-    const filtered = licenses.filter((l) => l.licenseKey.toLowerCase() !== targetNormalized);
-    writeJsonFile(LICENSES_FILE, filtered);
-    return deletedFs || filtered.length < licenses.length;
+    return LocalFirestore.deleteDoc('licenses', licenseKey);
   },
 
   deleteAllLicenses(): void {
     LocalFirestore.purgeAll();
-    writeJsonFile(LICENSES_FILE, []);
   },
 };
