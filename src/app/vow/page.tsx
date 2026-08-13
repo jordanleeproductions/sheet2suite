@@ -20,6 +20,7 @@ import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTempla
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
 import GoogleAuthModal from '@/components/GoogleAuthModal';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
+import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
@@ -1394,98 +1395,11 @@ export default function Sheet2VowDashboard() {
       </header>
 
       {/* IN-APP DISCONNECT CONFIRMATION MODAL */}
-      {showDisconnectModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 99999,
-          padding: '1rem'
-        }} onClick={() => setShowDisconnectModal(false)}>
-          <div style={{
-            backgroundColor: 'var(--color-surface, #ffffff)',
-            border: '2px solid var(--color-red)',
-            borderRadius: 'var(--border-radius-md)',
-            width: '100%',
-            maxWidth: '440px',
-            boxShadow: 'var(--box-shadow-heavy)',
-            overflow: 'hidden'
-          }} onClick={(e) => e.stopPropagation()}>
-            <div style={{
-              backgroundColor: 'var(--color-red)',
-              color: '#ffffff',
-              padding: '0.875rem 1.25rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <AlertCircle size={20} />
-                <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', fontWeight: 700, margin: 0, color: '#ffffff' }}>
-                  DISCONNECT CONFIRMATION
-                </h3>
-              </div>
-              <button style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }} onClick={() => setShowDisconnectModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ padding: '1.25rem' }}>
-              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
-                Are you sure you want to disconnect from your Google Sheet workspace?
-              </p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: '0.5rem 0 0 0' }}>
-                Your local session cache will be cleared. You can reconnect anytime using your Google credentials or spreadsheet URL.
-              </p>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
-                <button
-                  type="button"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-text)',
-                    border: '1px solid var(--color-muted)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.625rem 1.25rem',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setShowDisconnectModal(false)}
-                >
-                  CANCEL
-                </button>
-
-                <button
-                  type="button"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    backgroundColor: 'var(--color-red)',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.625rem 1.25rem',
-                    cursor: 'pointer'
-                  }}
-                  onClick={handleConfirmDisconnect}
-                >
-                  DISCONNECT
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <VowDisconnectModal
+        isOpen={showDisconnectModal}
+        onClose={() => setShowDisconnectModal(false)}
+        onConfirmDisconnect={handleConfirmDisconnect}
+      />
 
       {/* Vendor Share Link Modal */}
       {showShareModal && (

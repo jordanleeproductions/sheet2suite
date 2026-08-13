@@ -227,7 +227,7 @@
 
 | Item ID | Task Category | Description & Refactoring Strategy | Target Files | Priority | Status |
 |---|---|---|---|---|---|
-| **`[CLEAN-1]`** | Component Monolith Decomposition | Decompose `src/app/vow/page.tsx` (~2,900 lines) into modular subcomponents: `VowHeader.tsx` (top navigation bar), `VowSidebarNav.tsx` (sidebar & drawer navigation), and `VowDisconnectModal.tsx` (disconnect dialog). | `src/app/vow/page.tsx`, `src/components/vow/` | 🔴 High | Pending |
+| **`[CLEAN-1]`** | Component Monolith Decomposition | Decompose `src/app/vow/page.tsx` (~2,900 lines) into modular subcomponents: `VowHeader.tsx` (top navigation bar), `VowSidebarNav.tsx` (sidebar & drawer navigation), and `VowDisconnectModal.tsx` (disconnect dialog). | `src/app/vow/page.tsx`, `src/components/vow/` | 🔴 High | ✅ Completed |
 | **`[CLEAN-2]`** | Activation Wizard Decomposition | Decompose `src/app/activate/page.tsx` (~1,285 lines) into modular step components: `StepOrderVerification.tsx` (Step 0), `StepPackageHub.tsx` (Step 1), and `StepSetupForm.tsx` (Step 2). | `src/app/activate/page.tsx`, `src/components/activate/` | 🔴 High | ✅ Completed |
 | **`[CLEAN-3]`** | Database Layer Unification | Eliminate legacy dual-writes to raw `licenses.json`/`workspaces.json` files and unify all DB operations strictly onto `LocalFirestore` (`firestoreDb.ts`). | `src/lib/db/licensingDb.ts`, `src/lib/db/firestoreDb.ts` | 🟡 Medium | ✅ Completed |
 | **`[CLEAN-4]`** | Domain Schema Centralization | Consolidate fragmented TypeScript interfaces (`Guest`, `Vendor`, `BudgetItem`, `TaskItem`, `WorkspaceRecord`, `LicenseRecord`) into `src/types/wedding.ts` and `src/types/licensing.ts`. | `src/types/wedding.ts`, `src/types/licensing.ts` | 🟡 Medium | ✅ Completed |
