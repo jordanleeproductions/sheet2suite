@@ -487,3 +487,58 @@ button[style*="backgroundColor: 'var(--color-bg)'"] {
 }
 
 /* Force Turbopack Cache Invalidation */
+
+/* Utility Classes for Deduplicated Styling [CLEAN-6] */
+.s2s-card {
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--border-radius-md, 12px);
+  padding: 1.25rem;
+  box-shadow: var(--box-shadow-subtle, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.s2s-card:hover {
+  box-shadow: var(--box-shadow-hover, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+}
+
+.s2s-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.725rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius-sm, 6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.s2s-btn-primary {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.825rem;
+  font-weight: 800;
+  background-color: var(--color-primary, #0b57d0);
+  color: var(--color-on-primary, #ffffff);
+  border: none;
+  border-radius: var(--border-radius-sm, 6px);
+  padding: 0.65rem 1.25rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: opacity 0.15s ease;
+}
+
+.s2s-btn-primary:hover {
+  opacity: 0.92;
+}
+
+.s2s-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
