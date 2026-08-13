@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { LicenseValidator } from '@/lib/core/activation/licenseValidator';
+import { apiResponse } from '@/lib/core/apiResponse';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const { email, orderId } = body;
@@ -9,21 +10,17 @@ export async function POST(req: Request) {
     const validation = await LicenseValidator.validateLicense({
       email,
       orderId,
-      productCode: 'SHEET2VOW'
+      productCode: 'SHEET2VOW',
     });
 
     if (!validation.valid) {
-      return NextResponse.json(
-        { success: false, error: validation.errorMessage || 'Validation failed.' },
-        { status: 400 }
-      );
+      return apiResponse.badRequest(validation.errorMessage || 'Validation failed.');
     }
 
     // Simulate 350ms Etsy API verification network latency
     await new Promise((resolve) => setTimeout(resolve, 350));
 
-    return NextResponse.json({
-      success: true,
+    return apiResponse.success({
       orderId: orderId.trim().toUpperCase(),
       email: email.trim().toLowerCase(),
       customerName: email.split('@')[0].replace('.', ' ').replace(/^./, (c: string) => c.toUpperCase()),
@@ -32,13 +29,10 @@ export async function POST(req: Request) {
       entitledProducts: validation.entitledProducts,
       licensedSheets: validation.entitledProducts.length,
       isVerified: true,
-      message: 'Etsy purchase verified successfully!'
+      message: 'Etsy purchase verified successfully!',
     });
   } catch (error: any) {
     console.error('Error in /api/verify-order:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to verify Etsy order. Please try again.' },
-      { status: 500 }
-    );
+    return apiResponse.error('Failed to verify Etsy order. Please try again.');
   }
 }
