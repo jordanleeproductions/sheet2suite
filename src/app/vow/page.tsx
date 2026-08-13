@@ -32,6 +32,8 @@ export default function Sheet2VowDashboard() {
   const [spreadsheetId, setSpreadsheetId] = useState<string>('');
   const [googleToken, setGoogleToken] = useState<string>('');
   const [googleUserEmail, setGoogleUserEmail] = useState<string>('');
+  const [googleUserAvatar, setGoogleUserAvatar] = useState<string>('');
+  const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false);
   const [showGoogleAuthModal, setShowGoogleAuthModal] = useState<boolean>(false);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
   const [isMockMode, setIsMockMode] = useState<boolean>(false);
@@ -54,6 +56,7 @@ export default function Sheet2VowDashboard() {
   };
 
   const settingsRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Active Feature Modules Configuration
   const [enabledModules, setEnabledModules] = useState<ModuleConfig>({
@@ -311,20 +314,23 @@ export default function Sheet2VowDashboard() {
     }
   }, [enabledModules, activeTab]);
 
-  // Close settings dropdown on click outside
+  // Close settings and profile dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
         setShowSettings(false);
       }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
     };
-    if (showSettings) {
+    if (showSettings || showProfileMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showSettings]);
+  }, [showSettings, showProfileMenu]);
 
   // Apply style theme and color mode when they change
   useEffect(() => {
@@ -1390,6 +1396,147 @@ export default function Sheet2VowDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Google Profile Picture Avatar Button & Popover */}
+            <div ref={profileRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                title={googleUserEmail ? `Authenticated as ${googleUserEmail}` : 'Account & Session'}
+                style={{
+                  background: 'none',
+                  border: '2px solid var(--color-primary, #0b57d0)',
+                  borderRadius: '50%',
+                  padding: 0,
+                  width: '32px',
+                  height: '32px',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: 'var(--color-bg-subtle, #f1f5f9)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.15s ease',
+                }}
+              >
+                {googleUserAvatar ? (
+                  <img
+                    src={googleUserAvatar}
+                    alt={googleUserEmail || 'Google User'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      color: 'var(--color-primary, #0b57d0)',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {googleUserEmail ? googleUserEmail[0] : 'G'}
+                  </div>
+                )}
+              </button>
+
+              {showProfileMenu && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '0.5rem',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    width: '300px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    zIndex: 1000,
+                    animation: 'fadeIn 0.15s ease-out',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border, #f1f5f9)' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {googleUserAvatar ? (
+                        <img src={googleUserAvatar} alt="Google Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{googleUserEmail ? googleUserEmail[0].toUpperCase() : 'G'}</span>
+                      )}
+                    </div>
+                    <div style={{ overflow: 'hidden' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {googleUserEmail || 'Google User'}
+                      </div>
+                      <div style={{ fontSize: '0.675rem', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                        <span>AUTHENTICATED VIA GOOGLE</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ margin: '0.75rem 0', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.725rem' }}>
+                    <div>
+                      <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>ACTIVE SPREADSHEET ID:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-bg-subtle, #f8fafc)', border: '1px solid var(--color-border, #e2e8f0)', padding: '0.35rem 0.5rem', borderRadius: '6px', marginTop: '0.2rem' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', color: 'var(--color-text)', wordBreak: 'break-all', maxWidth: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {spreadsheetId || 'Not connected'}
+                        </span>
+                        {spreadsheetId && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(spreadsheetId);
+                              addToast('Spreadsheet ID copied to clipboard!', 'info');
+                            }}
+                            style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800 }}
+                          >
+                            COPY
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>TARGET DRIVE FOLDER:</span>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)', marginTop: '0.1rem' }}>
+                        📁 {driveFolder || 'My Drive / Sheet2Suite / Sheet2Vow'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-border, #f1f5f9)' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        setShowDisconnectModal(true);
+                      }}
+                      style={{
+                        width: '100%',
+                        backgroundColor: '#fee2e2',
+                        color: '#b91c1c',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
+                        padding: '0.45rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 800,
+                        fontFamily: 'var(--font-mono)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <span>🔴 DISCONNECT / LOGOUT</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -1470,6 +1617,12 @@ export default function Sheet2VowDashboard() {
         }}
         onAuthenticated={(user) => {
           setGoogleUserEmail(user.email);
+          if (user.picture) {
+            setGoogleUserAvatar(user.picture);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('s2v_google_avatar', user.picture);
+            }
+          }
           if (typeof window !== 'undefined') {
             localStorage.setItem('s2v_google_email', user.email);
           }

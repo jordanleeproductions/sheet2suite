@@ -130,21 +130,98 @@ export async function GET(req: NextRequest) {
       console.error('Provisioning step error:', pErr);
     }
 
+    const userPicture = userInfo.data.picture || undefined;
+
     const payload = JSON.stringify({
       type: 'GOOGLE_AUTH_SUCCESS',
-      user: { email: userEmail, name: userName },
+      user: { email: userEmail, name: userName, picture: userPicture },
       accessToken: tokens.access_token,
       provision: provisionData,
     });
 
     const htmlResponse = `
       <!DOCTYPE html>
-      <html>
-        <head><title>Sheet2Suite Google Auth</title></head>
-        <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #111827; color: #ffffff;">
-          <div style="text-align: center;">
-            <h2 style="color: #00ED64;">✔ Google Drive Connected!</h2>
-            <p>Closing window and loading your workspace...</p>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Connected to Google Drive &bull; Sheet2Suite</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+            
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+              background-color: #f8fafd;
+              color: #0f172a;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              padding: 1.5rem;
+            }
+            .card {
+              background: #ffffff;
+              border: 1px solid #e2e8f0;
+              border-radius: 16px;
+              padding: 2.25rem 2rem;
+              text-align: center;
+              max-width: 380px;
+              width: 100%;
+              box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+              animation: fadeIn 0.3s ease-out;
+            }
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(8px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            .icon-ring {
+              width: 56px;
+              height: 56px;
+              border-radius: 50%;
+              background: #e8f0fe;
+              color: #0b57d0;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 1.25rem;
+            }
+            h2 {
+              font-family: 'Playfair Display', Georgia, serif;
+              font-size: 1.35rem;
+              font-weight: 700;
+              color: #0f172a;
+              margin-bottom: 0.5rem;
+              letter-spacing: -0.01em;
+            }
+            p {
+              font-size: 0.825rem;
+              color: #64748b;
+              line-height: 1.5;
+            }
+            .badge {
+              display: inline-block;
+              margin-top: 1rem;
+              padding: 0.3rem 0.75rem;
+              background: #f1f5f9;
+              border-radius: 20px;
+              font-family: monospace;
+              font-size: 0.7rem;
+              font-weight: 700;
+              color: #0b57d0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon-ring">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <h2>Google Drive Connected</h2>
+            <p>Authentication successful. Synchronizing your wedding database spreadsheet...</p>
+            <div class="badge">${userEmail}</div>
           </div>
           <script>
             try {
@@ -152,7 +229,7 @@ export async function GET(req: NextRequest) {
                 window.opener.postMessage(${payload}, '*');
               }
             } catch (e) { console.error(e); }
-            setTimeout(() => { window.close(); }, 800);
+            setTimeout(() => { window.close(); }, 900);
           </script>
         </body>
       </html>
