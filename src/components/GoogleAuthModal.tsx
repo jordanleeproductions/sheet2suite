@@ -9,7 +9,7 @@ export interface GoogleAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectDemoMode: () => void;
-  onAuthenticated: (user: { email: string; name?: string; accessToken?: string; spreadsheetId?: string; hasExistingWorkspace?: boolean }) => void;
+  onAuthenticated: (user: { email: string; name?: string; picture?: string; accessToken?: string; spreadsheetId?: string; hasExistingWorkspace?: boolean }) => void;
 }
 
 export default function GoogleAuthModal({
