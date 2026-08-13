@@ -1,0 +1,15 @@
+{
+  "id": "ETSY-98765432",
+  "licenseKey": "ETSY-98765432",
+  "orderId": "ETSY-98765432",
+  "purchaserEmail": "jordanleeproductions@gmail.com",
+  "sku": "ETSY-SHEET2VOW-PRO",
+  "status": "active",
+  "licenseTier": "standard",
+  "entitledProducts": [
+    "SHEET2VOW"
+  ],
+  "maxWorkspaces": 2,
+  "createdAt": "2026-08-12T19:13:22.681Z",
+  "updatedAt": "2026-08-12T19:13:22.682Z"
+}

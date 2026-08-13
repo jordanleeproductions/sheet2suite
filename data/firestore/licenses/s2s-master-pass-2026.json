@@ -1,0 +1,19 @@
+{
+  "id": "S2S-MASTER-PASS-2026",
+  "licenseKey": "S2S-MASTER-PASS-2026",
+  "orderId": "S2S-MASTER-PASS-2026",
+  "purchaserEmail": "jordanleeproductions@gmail.com",
+  "sku": "ETSY-MASTER-SUITE-BUNDLE",
+  "status": "active",
+  "licenseTier": "pro",
+  "entitledProducts": [
+    "SHEET2VOW",
+    "SHEET2FINANCE",
+    "SHEET2HOME",
+    "SHEET2CLOSET",
+    "SHEET2INVENTORY"
+  ],
+  "maxWorkspaces": 10,
+  "createdAt": "2026-08-12T19:13:22.708Z",
+  "updatedAt": "2026-08-12T19:13:22.709Z"
+}
