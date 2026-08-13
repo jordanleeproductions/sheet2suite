@@ -22,7 +22,8 @@ import GoogleAuthModal from '@/components/GoogleAuthModal';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
+import Link from 'next/link';
+import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -987,6 +988,30 @@ export default function Sheet2VowDashboard() {
         }}
       >
         <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <Link
+            href="/"
+            title="Return to Sheet2Suite Homepage"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              color: 'var(--color-muted, #64748b)',
+              textDecoration: 'none',
+              fontSize: '0.775rem',
+              fontWeight: 700,
+              fontFamily: 'var(--font-mono, monospace)',
+              marginRight: '0.35rem',
+              padding: '0.35rem 0.65rem',
+              borderRadius: '8px',
+              border: '1px solid var(--color-border, #cbd5e1)',
+              backgroundColor: 'var(--color-bg-subtle, #f8fafd)',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <ArrowLeft size={16} />
+            {!isMobile && <span>Sheet2Suite Home</span>}
+          </Link>
+
           {isMobile ? (
             <button
               type="button"
@@ -1670,38 +1695,6 @@ export default function Sheet2VowDashboard() {
         <UnauthenticatedLanding
           onOpenGoogleAuth={() => setShowGoogleAuthModal(true)}
           onExploreDemo={handleExpressOnboard}
-          onScanDrive={handleScanDrive}
-          isScanningDrive={isScanningDrive}
-          scannedSheets={scannedSheets}
-          onSelectScannedSheet={(id, name) => {
-            setSpreadsheetId(id);
-            setWeddingName(name);
-            setIsMockMode(false);
-            setIsOnboarded(true);
-            addToast(`Reconnected workspace: ${name}`, 'success');
-          }}
-          onVerifyOrder={(email, orderId) => {
-            const sheetName = email ? `${email.split('@')[0]}'s Wedding` : "Alex & Sam's Wedding";
-            const sheetId = 'mock-sheet-id-vow-12345';
-            setSpreadsheetId(sheetId);
-            setWeddingName(sheetName);
-            setIsMockMode(true);
-            setIsOnboarded(true);
-            setShowPostActivationGuidance(true);
-            addToast(`Reconnected order #${orderId || 'ETSY-VERIFIED'}`, 'success');
-          }}
-          onReconnectUrl={(url) => {
-            let extractedId = url.trim();
-            if (url.includes('/d/')) {
-              extractedId = url.split('/d/')[1].split('/')[0];
-            }
-            setSpreadsheetId(extractedId);
-            setWeddingName("Reconnected Wedding");
-            setIsMockMode(false);
-            setIsOnboarded(true);
-            setShowPostActivationGuidance(true);
-            addToast(`Reconnected sheet ID: ${extractedId}`, 'success');
-          }}
         />
       ) : (
         /* Logged In Dashboard View */
