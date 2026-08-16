@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Song, SongListType, Vendor } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2, QrCode, Radio } from 'lucide-react';
+import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2, QrCode, Radio, ChevronDown } from 'lucide-react';
 
 type DeduplicatedSong = Song & { requestCount: number };
 
@@ -21,6 +21,20 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Song>>({});
+
+  // Consolidated Share & Portals Dropdown State
+  const [showPortalsMenu, setShowPortalsMenu] = useState(false);
+  const portalsMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (portalsMenuRef.current && !portalsMenuRef.current.contains(event.target as Node)) {
+        setShowPortalsMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState<string | null>(null);
@@ -446,8 +460,49 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
 
   return (
     <div style={styles.container}>
+      {/* Scoped CSS for Responsive Music Header & Portals Menu */}
+      <style>{`
+        .music-header-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+          flex-wrap: wrap;
+        }
+        .music-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          margin-left: auto;
+          position: relative;
+        }
+        @media (max-width: 640px) {
+          .music-header-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.85rem !important;
+            margin-bottom: 1.25rem !important;
+          }
+          .music-header-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+            gap: 0.5rem !important;
+          }
+          .music-header-actions button,
+          .music-header-actions a {
+            justify-content: center !important;
+            padding: 0.6rem 0.5rem !important;
+            width: 100% !important;
+            font-size: 0.72rem !important;
+          }
+        }
+      `}</style>
+
       {/* Header [MUSIC-5] */}
-      <div style={styles.header}>
+      <div className="music-header-container">
         <div>
           <h2 style={styles.title}>Wedding Playlist</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
@@ -455,69 +510,143 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
-          {/* Quick Action Portal Buttons [MUSIC-6] */}
-          <a
-            href="/request-song/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.725rem',
-              fontWeight: 600,
-              backgroundColor: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)',
-              borderRadius: 'var(--border-radius-sm)',
-              padding: '0.5rem 0.75rem',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}
-            title="Open Live Guest Song Request Portal"
-          >
-            <Radio size={14} style={{ color: 'var(--color-primary)' }} /> REQUEST PORTAL
-          </a>
+        <div className="music-header-actions">
+          {/* Consolidated Share & Portals Dropdown [MUSIC-6] */}
+          <div ref={portalsMenuRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setShowPortalsMenu(!showPortalsMenu)}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.725rem',
+                fontWeight: 700,
+                backgroundColor: showPortalsMenu ? 'var(--color-primary)' : 'var(--color-bg)',
+                color: showPortalsMenu ? 'var(--color-on-primary)' : 'var(--color-text)',
+                border: '1px solid var(--color-muted)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.5rem 0.75rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.35rem',
+                width: '100%',
+                transition: 'var(--transition-smooth)'
+              }}
+              title="Portals & Sharing Actions"
+            >
+              <Radio size={14} style={{ color: showPortalsMenu ? 'currentColor' : 'var(--color-primary)' }} />
+              <span>PORTALS & SHARE</span>
+              <ChevronDown size={14} style={{ transform: showPortalsMenu ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
+            </button>
 
-          <a
-            href="/share/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.725rem',
-              fontWeight: 600,
-              backgroundColor: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)',
-              borderRadius: 'var(--border-radius-sm)',
-              padding: '0.5rem 0.75rem',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}
-            title="Open DJ / Vendor Portal"
-          >
-            <Share2 size={14} style={{ color: 'var(--color-primary)' }} /> DJ PORTAL
-          </a>
+            {showPortalsMenu && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '0.4rem',
+                  backgroundColor: 'var(--color-surface, #fff)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--border-radius-md)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                  padding: '0.5rem',
+                  minWidth: '220px',
+                  zIndex: 80,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.35rem',
+                  animation: 'fadeIn 0.15s ease-out'
+                }}
+              >
+                <a
+                  href="/request-song/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowPortalsMenu(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.6rem',
+                    borderRadius: 'var(--border-radius-sm)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.725rem',
+                    fontWeight: 600,
+                    transition: 'var(--transition-smooth)'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <Radio size={14} style={{ color: 'var(--color-primary)' }} />
+                  <span>Guest Request Portal</span>
+                </a>
 
-          <button 
-            type="button"
-            style={{
-              ...styles.addButton,
-              backgroundColor: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)'
-            }} 
-            onClick={handleShareMusic}
-            title="Email music playlist to DJ or Band"
-          >
-            <Mail size={16} style={{ marginRight: '0.35rem' }} /> EMAIL LIST
-          </button>
-          
-          <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
+                <a
+                  href="/share/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowPortalsMenu(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.6rem',
+                    borderRadius: 'var(--border-radius-sm)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.725rem',
+                    fontWeight: 600,
+                    transition: 'var(--transition-smooth)'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <Share2 size={14} style={{ color: 'var(--color-primary)' }} />
+                  <span>DJ / Vendor Share Page</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPortalsMenu(false);
+                    handleShareMusic();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.6rem',
+                    borderRadius: 'var(--border-radius-sm)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.725rem',
+                    fontWeight: 600,
+                    textAlign: 'left',
+                    width: '100%',
+                    transition: 'var(--transition-smooth)'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <Mail size={14} style={{ color: 'var(--color-primary)' }} />
+                  <span>Email Playlist to DJ</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Primary Action Button */}
+          <button style={{ ...styles.addButton, width: '100%', justifyContent: 'center' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD SONG
           </button>
         </div>

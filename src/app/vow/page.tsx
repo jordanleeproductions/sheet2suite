@@ -2030,19 +2030,56 @@ export default function Sheet2VowDashboard() {
 
           {/* Demo Workspace Header Banner (Only shown in offline Mock/Demo Mode) */}
           {isMockMode && (
-            <div style={{
-              backgroundColor: 'var(--color-bg-subtle)',
-              border: '2px solid var(--color-amber, #f59e0b)',
-              borderRadius: 'var(--border-radius-md)',
-              padding: '0.625rem 1rem',
-              marginBottom: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '0.75rem',
-              boxShadow: 'var(--box-shadow-subtle)'
-            }}>
+            <div
+              className="demo-workspace-banner"
+              style={{
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '2px solid var(--color-amber, #f59e0b)',
+                borderRadius: 'var(--border-radius-md)',
+                padding: '0.75rem 1rem',
+                marginBottom: '1.25rem',
+                boxShadow: 'var(--box-shadow-subtle)'
+              }}
+            >
+              <style>{`
+                .demo-workspace-banner {
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  flex-wrap: wrap;
+                  gap: 0.75rem;
+                }
+                .demo-workspace-actions {
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                  flex-wrap: wrap;
+                }
+                @media (max-width: 640px) {
+                  .demo-workspace-banner {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 0.65rem !important;
+                  }
+                  .demo-workspace-actions {
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr !important;
+                    width: 100% !important;
+                    gap: 0.5rem !important;
+                  }
+                  .demo-workspace-actions > *:first-child {
+                    grid-column: 1 / -1 !important;
+                  }
+                  .demo-workspace-actions button,
+                  .demo-workspace-actions a {
+                    width: 100% !important;
+                    justify-content: center !important;
+                    padding: 0.5rem 0.4rem !important;
+                    font-size: 0.68rem !important;
+                  }
+                }
+              `}</style>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <Zap size={18} style={{ color: 'var(--color-amber, #f59e0b)', flexShrink: 0 }} />
                 <div>
@@ -2055,7 +2092,7 @@ export default function Sheet2VowDashboard() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="demo-workspace-actions">
                 <SafetyShieldSyncBadge
                   status="offline"
                   userEmail={googleUserEmail || undefined}
@@ -2080,7 +2117,7 @@ export default function Sheet2VowDashboard() {
                   }}
                 >
                   <HardDrive size={14} style={{ color: '#4285F4' }} />
-                  <span>SIGN IN WITH GOOGLE</span>
+                  <span>SIGN IN GOOGLE</span>
                 </button>
 
                 <a
@@ -2101,7 +2138,7 @@ export default function Sheet2VowDashboard() {
                   }}
                 >
                   <Sparkles size={14} />
-                  <span>ACTIVATE NEW PLAN</span>
+                  <span>ACTIVATE PLAN</span>
                 </a>
               </div>
             </div>
