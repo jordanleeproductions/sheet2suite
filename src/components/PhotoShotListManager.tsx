@@ -214,8 +214,181 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
 
   return (
     <div style={styles.container}>
+      {/* Scoped Responsive CSS for Mobile Optimization */}
+      <style>{`
+        .photo-header-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+        .photo-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+        }
+        .photo-kpi-bar {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 0.875rem;
+        }
+        .photo-kpi-item {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-md);
+          padding: 0.875rem 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          box-shadow: var(--box-shadow-subtle);
+        }
+        .photo-kpi-value {
+          font-family: var(--font-serif);
+          font-size: 1.25rem;
+          font-weight: 700;
+        }
+        .photo-filter-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .photo-search-wrapper {
+          position: relative;
+          flex: 1 1 240px;
+        }
+        .photo-filter-group {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .photo-shots-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 1rem;
+        }
+        .photo-shot-card {
+          background-color: var(--color-surface);
+          border: 1.5px solid var(--color-muted);
+          border-radius: var(--border-radius-md);
+          padding: 0.875rem 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          box-shadow: var(--box-shadow-subtle);
+          transition: var(--transition-smooth);
+        }
+        .photo-shot-card:hover {
+          border-color: var(--color-primary);
+          box-shadow: var(--box-shadow-medium);
+        }
+        .photo-shot-top-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+        }
+        .photo-shot-badges {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          flex-wrap: wrap;
+          min-width: 0;
+        }
+        .photo-shot-main-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.65rem;
+        }
+        .photo-shot-content {
+          flex: 1;
+          min-width: 0;
+        }
+        .photo-shot-title {
+          font-family: var(--font-serif);
+          font-size: 0.95rem;
+          font-weight: 700;
+          line-height: 1.35;
+          margin: 0;
+          color: var(--color-text);
+          word-break: break-word;
+        }
+        .photo-shot-meta-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+          padding-top: 0.35rem;
+          border-top: 1px dashed var(--color-muted);
+          font-size: 0.75rem;
+        }
+        @media (max-width: 640px) {
+          .photo-header-container {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+          }
+          .photo-header-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+          }
+          .photo-header-actions button {
+            justify-content: center !important;
+            width: 100% !important;
+          }
+          .photo-kpi-bar {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.5rem !important;
+          }
+          .photo-kpi-item {
+            padding: 0.6rem 0.75rem !important;
+          }
+          .photo-kpi-value {
+            font-size: 1.1rem !important;
+          }
+          .photo-filter-bar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+          }
+          .photo-search-wrapper {
+            width: 100% !important;
+            flex: 1 1 auto !important;
+          }
+          .photo-filter-group {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+          }
+          .photo-filter-group select {
+            width: 100% !important;
+          }
+          .photo-shots-list {
+            grid-template-columns: 1fr !important;
+            gap: 0.625rem !important;
+          }
+          .photo-shot-card {
+            padding: 0.7rem 0.8rem !important;
+            gap: 0.4rem !important;
+          }
+          .photo-shot-title {
+            font-size: 0.88rem !important;
+          }
+          .photo-shot-meta-row {
+            font-size: 0.72rem !important;
+            gap: 0.35rem !important;
+          }
+        }
+      `}</style>
+
       {/* Header Title & Actions */}
-      <div style={styles.header}>
+      <div className="photo-header-container">
         <div>
           <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>Photography Shot List</h2>
           <p style={styles.subtitle}>
@@ -223,7 +396,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div className="photo-header-actions">
           <button 
             type="button"
             style={{
@@ -245,28 +418,28 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
       </div>
 
       {/* KPI Bar */}
-      <div style={styles.kpiBar}>
-        <div style={styles.kpiItem}>
+      <div className="photo-kpi-bar">
+        <div className="photo-kpi-item">
           <span style={styles.kpiLabel}>TOTAL REQUIRED SHOTS</span>
-          <span style={styles.kpiValue}>{totalShots}</span>
+          <span className="photo-kpi-value">{totalShots}</span>
         </div>
-        <div style={styles.kpiItem}>
+        <div className="photo-kpi-item">
           <span style={styles.kpiLabel}>CAPTURED SHOTS</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{capturedShots}</span>
+          <span className="photo-kpi-value" style={{ color: 'var(--color-green)' }}>{capturedShots}</span>
         </div>
-        <div style={styles.kpiItem}>
+        <div className="photo-kpi-item">
           <span style={styles.kpiLabel}>PENDING SHOTS</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-gold)' }}>{pendingShots}</span>
+          <span className="photo-kpi-value" style={{ color: 'var(--color-gold)' }}>{pendingShots}</span>
         </div>
-        <div style={styles.kpiItem}>
+        <div className="photo-kpi-item">
           <span style={styles.kpiLabel}>MUST HAVE SHOTS</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{mustHaveShots}</span>
+          <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{mustHaveShots}</span>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div style={styles.filterBar}>
-        <div style={styles.searchWrapper}>
+      <div className="photo-filter-bar">
+        <div className="photo-search-wrapper">
           <Search size={16} style={styles.searchIcon} />
           <input
             type="text"
@@ -277,8 +450,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           />
         </div>
 
-        <div style={styles.filterGroup}>
-          <Filter size={16} style={{ color: 'var(--color-muted)' }} />
+        <div className="photo-filter-group">
           <select 
             value={statusFilter} 
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -302,7 +474,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
       </div>
 
       {/* Photo Shot List Grid */}
-      <div className="photo-shots-list" style={styles.shotsGrid}>
+      <div className="photo-shots-list">
         {filteredPhotos.map(shot => {
           const isCaptured = (shot.status || '').toLowerCase() === 'captured' || (shot.status || '').toLowerCase() === 'completed';
           const isMustHave = shot.priority === 'Must Have';
@@ -312,101 +484,110 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
               key={shot.shotId} 
               className="photo-shot-card"
               style={{
-                ...styles.shotCard,
-                borderColor: isCaptured ? 'var(--color-green)' : 'var(--color-text)',
-                borderWidth: '2px',
-                opacity: isCaptured ? 0.85 : 1
+                borderColor: isCaptured ? 'var(--color-green)' : 'var(--color-muted)',
+                opacity: isCaptured ? 0.8 : 1
               }}
             >
-              {/* Left Group: Checkbox + Badges + Title */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 320px', minWidth: 0 }}>
+              {/* Top Row: Badges (ID, Priority, Location) & Actions */}
+              <div className="photo-shot-top-row">
+                <div className="photo-shot-badges">
+                  <span style={{ ...styles.shotIdBadge, color: 'var(--color-text)', borderColor: 'var(--color-muted)' }}>
+                    {shot.shotId}
+                  </span>
+                  {shot.priority && (
+                    <span style={{
+                      ...styles.priorityBadge,
+                      backgroundColor: isMustHave ? 'var(--color-gold-muted)' : 'var(--color-bg)',
+                      color: isMustHave ? 'var(--color-gold)' : 'var(--color-text)',
+                      borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-muted)'
+                    }}>
+                      {shot.priority}
+                    </span>
+                  )}
+                  {shot.location && (
+                    <span style={{ ...styles.metaBadge, border: '1px solid var(--color-muted)', padding: '0.15rem 0.4rem' }}>
+                      <MapPin size={11} style={{ marginRight: '3px', flexShrink: 0 }} /> {shot.location}
+                    </span>
+                  )}
+                </div>
+
+                <div style={styles.actionGroup}>
+                  <button style={styles.iconBtn} onClick={() => startEditShot(shot)} title="Edit Shot">
+                    <Edit2 size={14} style={{ color: 'var(--color-text)' }} />
+                  </button>
+                  <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Row: Checkbox + Description */}
+              <div className="photo-shot-main-row">
                 <button 
                   type="button"
                   style={{
                     ...styles.statusCheckBtn,
-                    color: isCaptured ? 'var(--color-green)' : 'var(--color-text)'
+                    color: isCaptured ? 'var(--color-green)' : 'var(--color-text)',
+                    flexShrink: 0,
+                    marginTop: '2px'
                   }}
                   onClick={() => toggleShotStatus(shot.shotId)}
                   title={isCaptured ? 'Mark as Pending' : 'Mark as Captured'}
                 >
-                  {isCaptured ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                  {isCaptured ? <CheckCircle2 size={20} /> : <Circle size={20} />}
                 </button>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                    <span style={{ ...styles.shotIdBadge, color: 'var(--color-text)', borderColor: 'var(--color-text)' }}>{shot.shotId}</span>
-                    {shot.priority && (
-                      <span style={{
-                        ...styles.priorityBadge,
-                        backgroundColor: isMustHave ? 'var(--color-gold-muted)' : 'var(--color-bg)',
-                        color: isMustHave ? 'var(--color-gold)' : 'var(--color-text)',
-                        borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-text)'
-                      }}>
-                        {shot.priority}
-                      </span>
-                    )}
-                    {shot.location && (
-                      <span style={{ ...styles.metaBadge, border: '1px solid var(--color-muted)' }}>
-                        <MapPin size={12} style={{ marginRight: '4px' }} /> {shot.location}
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 style={{
-                    ...styles.shotTitle,
-                    color: 'var(--color-text)',
-                    textDecoration: isCaptured ? 'line-through' : 'none'
-                  }}>
+                <div className="photo-shot-content">
+                  <h3 
+                    className="photo-shot-title"
+                    style={{
+                      textDecoration: isCaptured ? 'line-through' : 'none',
+                      opacity: isCaptured ? 0.7 : 1
+                    }}
+                  >
                     {shot.description}
                   </h3>
 
                   {shot.notes && (
-                    <p style={styles.notesText}>
+                    <p style={{ ...styles.notesText, marginTop: '0.35rem', paddingTop: '0.35rem', fontSize: '0.72rem' }}>
                       💡 {shot.notes}
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Middle Group: Who / People Included (Bolder so it sticks out!) */}
-              {shot.people ? (
-                <div className="shot-who-group" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: '1 1 200px', padding: '0 0.5rem' }}>
-                  <Users size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-text)' }}>
-                    {shot.people}
-                  </span>
-                </div>
-              ) : <div style={{ flex: '1 1 100px' }} />}
+              {/* Bottom Meta Row: People & Time (if either exists) */}
+              {(shot.people || shot.shotTime) && (
+                <div className="photo-shot-meta-row">
+                  {shot.people ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0, flex: '1 1 auto' }}>
+                      <Users size={13} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {shot.people}
+                      </span>
+                    </div>
+                  ) : <div />}
 
-              {/* Right Group: Aligned Further Right Time & Actions */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, marginLeft: 'auto' }}>
-                {shot.shotTime && (
-                  <span style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    color: 'var(--color-text)',
-                    backgroundColor: 'var(--color-bg)',
-                    border: '1px solid var(--color-text)',
-                    padding: '0.3rem 0.6rem',
-                    borderRadius: 'var(--border-radius-sm)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    <Clock size={13} style={{ marginRight: '5px' }} /> {shot.shotTime}
-                  </span>
-                )}
-
-                <div style={styles.actionGroup}>
-                  <button style={styles.iconBtn} onClick={() => startEditShot(shot)} title="Edit Shot">
-                    <Edit2 size={15} style={{ color: 'var(--color-text)' }} />
-                  </button>
-                  <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
-                    <Trash2 size={15} />
-                  </button>
+                  {shot.shotTime && (
+                    <div style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
+                      backgroundColor: 'var(--color-bg)',
+                      border: '1px solid var(--color-muted)',
+                      padding: '0.15rem 0.45rem',
+                      borderRadius: 'var(--border-radius-sm)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      whiteSpace: 'nowrap',
+                      marginLeft: 'auto',
+                      flexShrink: 0
+                    }}>
+                      <Clock size={11} style={{ marginRight: '4px' }} /> {shot.shotTime}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           );
         })}
