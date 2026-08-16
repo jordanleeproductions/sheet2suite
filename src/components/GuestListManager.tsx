@@ -541,7 +541,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
       {/* Header Panel */}
       <div className="guest-header-card anim-fade-in">
         <div>
-          <h2 style={styles.title}>Guest Registry</h2>
+          <h2 style={styles.title}>Guest List</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
             Manage wedding invitations, track RSVPs, table assignments, and catering dietary preferences.
           </p>
@@ -1132,7 +1132,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                     </select>
                   ) : (
                     <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', padding: '0.5rem 0.625rem', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-muted)', borderRadius: 'var(--border-radius-sm)' }}>
-                      ⚠️ No tables created yet. Add tables in the <strong>Seating Chart</strong> tab before assigning.
+                      No tables set up yet. Go to <strong>Seating Chart</strong> to add tables first.
                     </div>
                   )}
                 </div>

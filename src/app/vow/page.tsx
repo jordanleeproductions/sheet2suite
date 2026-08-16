@@ -872,7 +872,7 @@ export default function Sheet2VowDashboard() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
                   {[
-                    { id: 'home', label: 'Executive Summary', icon: LayoutDashboard },
+                    { id: 'home', label: 'Wedding Plan Summary', icon: LayoutDashboard },
                     { id: 'budget', label: 'Budget Ledger', icon: DollarSign },
                     { id: 'schedule', label: 'Day-Of Timeline', icon: Calendar },
                     { id: 'vendors', label: 'Vendor Directory', icon: Briefcase },
@@ -1038,7 +1038,7 @@ export default function Sheet2VowDashboard() {
                 }}
               >
                 <Settings size={14} style={{ color: 'var(--color-primary)' }} />
-                <span>CONFIG</span>
+                <span>SETTINGS</span>
               </button>
             </div>
           </div>
@@ -1169,7 +1169,7 @@ export default function Sheet2VowDashboard() {
               }}
             >
               <Printer size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-              {!isSidebarCollapsed && <span>PRINT STUDIO</span>}
+              {!isSidebarCollapsed && <span>PRINT & EXPORT</span>}
             </button>
 
             <button
@@ -1193,7 +1193,7 @@ export default function Sheet2VowDashboard() {
               }}
             >
               <Share2 size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-              {!isSidebarCollapsed && <span>SHARE LINK</span>}
+              {!isSidebarCollapsed && <span>SHARE</span>}
             </button>
 
             <button
@@ -1788,7 +1788,7 @@ export default function Sheet2VowDashboard() {
                       )}
                       <div style={{ fontSize: '0.675rem', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
-                        <span>AUTHENTICATED VIA GOOGLE</span>
+                        <span>Connected to Google</span>
                       </div>
                     </div>
                   </div>
@@ -1878,7 +1878,7 @@ export default function Sheet2VowDashboard() {
                         gap: '0.35rem',
                       }}
                     >
-                      <span>🔴 DISCONNECT / LOGOUT</span>
+                      <span>Sign Out</span>
                     </button>
                   </div>
                 </div>
@@ -2117,7 +2117,7 @@ export default function Sheet2VowDashboard() {
                   }}
                 >
                   <HardDrive size={14} style={{ color: '#4285F4' }} />
-                  <span>SIGN IN GOOGLE</span>
+                  <span>Sign In with Google</span>
                 </button>
 
                 <a
@@ -2138,7 +2138,7 @@ export default function Sheet2VowDashboard() {
                   }}
                 >
                   <Sparkles size={14} />
-                  <span>ACTIVATE PLAN</span>
+                  <span>Upgrade to Full Access</span>
                 </a>
               </div>
             </div>
@@ -2345,10 +2345,10 @@ export default function Sheet2VowDashboard() {
           }}
         >
           {[
-            { id: 'home', label: 'Summary', icon: LayoutDashboard },
+            { id: 'home', label: 'Home', icon: LayoutDashboard },
             { id: 'guests', label: 'Guests', icon: Users },
             { id: 'budget', label: 'Budget', icon: DollarSign },
-            { id: 'schedule', label: 'Timeline', icon: Calendar },
+            { id: 'schedule', label: 'Schedule', icon: Calendar },
           ].map((tab) => {
             const IconComp = tab.icon;
             const isActive = activeTab === tab.id;
@@ -2387,7 +2387,7 @@ export default function Sheet2VowDashboard() {
                 >
                   <IconComp size={20} style={{ strokeWidth: isActive ? 2.5 : 1.8 }} />
                 </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: isActive ? 800 : 500 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: isActive ? 800 : 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {tab.label}
                 </span>
               </button>
@@ -2444,7 +2444,7 @@ export default function Sheet2VowDashboard() {
                   )}
                 </div>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: (isSecondaryTabActive || isMobileDrawerOpen) ? 800 : 500 }}>
-                  MORE {isSecondaryTabActive ? `· ${activeTab.toUpperCase()}` : ''}
+                  MORE
                 </span>
               </button>
             );

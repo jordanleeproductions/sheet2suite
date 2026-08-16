@@ -384,7 +384,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                  <span style={{ color: 'var(--color-text)', fontWeight: 700 }}>Overall Task Completion</span>
+                  <span style={{ color: 'var(--color-text)', fontWeight: 700 }}>Planning Progress</span>
                   <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 800 }}>{percentDone}% ({doneCount} / {total} Tasks Completed)</span>
                 </div>
                 <div style={{ height: '14px', width: '100%', backgroundColor: 'var(--color-bg, #e5e7eb)', borderRadius: '7px', overflow: 'hidden', display: 'flex' }}>

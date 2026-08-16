@@ -244,7 +244,7 @@ export default function VendorShareLinkManager({
         </div>
 
         <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>ACTIVE VENDOR PORTALS</span>
+          <span style={styles.kpiLabel}>ACTIVE SHARE LINKS</span>
           <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
             {activeLinks.length} Active
           </span>
@@ -514,7 +514,7 @@ export default function VendorShareLinkManager({
             <div style={styles.modalHeader} className="modalHeader">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <AlertCircle size={20} />
-                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }}>REVOKE ALL VENDOR SHARE LINKS</h3>
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }}>DEACTIVATE ALL SHARE LINKS</h3>
               </div>
               <button style={{ ...styles.closeBtn, color: '#ffffff' }} onClick={() => setShowRevokeAllModal(false)}>
                 <X size={20} />

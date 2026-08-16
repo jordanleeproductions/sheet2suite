@@ -242,7 +242,7 @@ export default function AdvancedSettingsModal({
 
                 {/* Design System Aesthetic */}
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>DESIGN SYSTEM AESTHETIC</label>
+                  <label style={styles.label}>THEME</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                     <button
                       type="button"
@@ -376,7 +376,7 @@ export default function AdvancedSettingsModal({
 
                 {/* Font Size Accessibility Scaler [NAV-2] */}
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>FONT ACCESSIBILITY SCALER</label>
+                  <label style={styles.label}>TEXT SIZE</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-bg-subtle)', padding: '0.625rem 0.85rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
                     <button
                       type="button"
@@ -678,7 +678,7 @@ export default function AdvancedSettingsModal({
                 </p>
 
                 <div style={styles.infoCard}>
-                  <span style={styles.infoLabel}>DATA SOURCE STATUS</span>
+                  <span style={styles.infoLabel}>GOOGLE SHEETS CONNECTION</span>
                   <strong style={{ fontSize: '0.9rem', color: isMockMode ? '#f59e0b' : 'var(--color-green)' }}>
                     {isMockMode ? 'MOCK MODE (LOCAL DB)' : 'LIVE GOOGLE SHEETS SYNCED'}
                   </strong>
@@ -690,7 +690,7 @@ export default function AdvancedSettingsModal({
                 </div>
 
                 <div style={styles.infoCard}>
-                  <span style={styles.infoLabel}>GOOGLE DRIVE FOLDER DIRECTORY</span>
+                  <span style={styles.infoLabel}>GOOGLE DRIVE FOLDER</span>
                   <span style={{ fontSize: '0.85rem', color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>
                     {driveFolder}
                   </span>

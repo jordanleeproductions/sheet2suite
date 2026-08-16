@@ -190,7 +190,7 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
       {/* KPI Overview Summary Bar */}
       <div style={styles.kpiBar}>
         <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>TOTAL ENTREES</span>
+          <span style={styles.kpiLabel}>MAIN COURSE OPTIONS</span>
           <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{entrees.length}</span>
           <span style={styles.kpiSub}>Custom Main Courses</span>
         </div>
@@ -205,7 +205,7 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
           <span style={styles.kpiSub}>Cakes & Sweet Treats</span>
         </div>
         <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>ATTENDING RSVP ORDERS</span>
+          <span style={styles.kpiLabel}>MEAL ORDERS</span>
           <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
             {guests.filter(g => g.rsvpStatus === 'Attending').length}
           </span>

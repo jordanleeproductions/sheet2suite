@@ -390,7 +390,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
       {/* Header Title & Actions */}
       <div className="photo-header-container">
         <div>
-          <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>Photography Shot List</h2>
+          <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>Shot List</h2>
           <p style={styles.subtitle}>
             Manage required photography moments, VIP group poses, and shot progress for your photographer.
           </p>
@@ -432,7 +432,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           <span className="photo-kpi-value" style={{ color: 'var(--color-gold)' }}>{pendingShots}</span>
         </div>
         <div className="photo-kpi-item">
-          <span style={styles.kpiLabel}>MUST HAVE SHOTS</span>
+          <span style={styles.kpiLabel}>ESSENTIAL SHOTS</span>
           <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{mustHaveShots}</span>
         </div>
       </div>

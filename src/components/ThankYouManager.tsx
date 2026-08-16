@@ -270,7 +270,7 @@ export default function ThankYouManager({
           </span>
         </div>
         <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>ATTENDANCE CARDS SENT</span>
+          <span style={styles.kpiLabel}>ATTENDANCE NOTES SENT</span>
           <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
             {attendanceThankedCount} / {attendingParties.length} ({attendanceThankedPercent}%)
           </span>
@@ -565,7 +565,7 @@ export default function ThankYouManager({
                         onChange={(e) => setFormData({ ...formData, thankYouSent: e.target.checked })}
                         style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                       />
-                      <span>THANK YOU CARD SENT?</span>
+                      <span>Thank You Sent?</span>
                     </label>
                   </div>
                 </div>

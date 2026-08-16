@@ -344,7 +344,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
           {/* Ceremony KPI Summary Strip */}
           <div style={styles.kpiBar}>
             <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>REQUIRED CEREMONY SEATS</span>
+              <span style={styles.kpiLabel}>CEREMONY SEATS NEEDED</span>
               <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
                 {ceremonyRequiredGuests.length}
               </span>
@@ -371,7 +371,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
               </span>
             </div>
             <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>CONFIGURED LAYOUT</span>
+              <span style={styles.kpiLabel}>CURRENT LAYOUT</span>
               <span style={styles.kpiValue}>
                 {ceremonyConfig.rowsCount} Rows
               </span>

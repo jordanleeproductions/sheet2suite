@@ -150,7 +150,7 @@ export const SafetyShieldSyncBadge: React.FC<SafetyShieldSyncBadgeProps> = ({
                   }}
                 >
                   <ExternalLink size={14} />
-                  <span>Open Sheet in Google Drive</span>
+                  <span>View in Google Sheets</span>
                 </a>
               )}
               <button

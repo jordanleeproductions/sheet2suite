@@ -225,7 +225,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>Day-Of Schedule</h2>
+        <h2 style={styles.title}>Wedding Day Timeline</h2>
         <div style={styles.actionButtonGroup}>
           <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
             <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
@@ -462,7 +462,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                     <div style={styles.midnightAlertBox}>
                       <div style={styles.midnightAlertHeader}>
                         <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem' }} />
-                        <span style={styles.midnightAlertTitle}>AFTER MIDNIGHT TIME DETECTED</span>
+                        <span style={styles.midnightAlertTitle}>THIS EVENT RUNS PAST MIDNIGHT</span>
                       </div>
                       <p style={styles.midnightAlertDesc}>
                         You entered a time between 12:00 AM and 4:00 AM. Is this moment at the end of the wedding night (e.g. 1:00 AM shuttle bus after midnight)?
@@ -694,7 +694,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                       
                       {event.notes && (
                         <div style={styles.notesSection}>
-                          <div style={styles.notesLabel}>COORDINATION NOTES</div>
+                          <div style={styles.notesLabel}>NOTES FOR COORDINATOR</div>
                           <p style={styles.notesText}>{event.notes}</p>
                         </div>
                       )}

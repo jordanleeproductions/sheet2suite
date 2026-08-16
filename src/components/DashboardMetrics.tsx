@@ -424,7 +424,7 @@ export default function DashboardMetrics({
               <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? 'var(--color-red)' : 'var(--color-green)' }}>
                 {formatCurrency(remainingBudget, currency)}
               </div>
-              <div style={styles.kpiSub}>Budget Minus Actual Spent</div>
+              <div style={styles.kpiSub}>Budget Minus Spent</div>
             </div>
           </div>
         </div>
@@ -822,9 +822,9 @@ export default function DashboardMetrics({
                 onClick={() => onNavigateTab && onNavigateTab('music', 'ALL')}
                 title={onNavigateTab ? 'Click to view Admin songs' : ''}
               >
-                <div style={styles.kpiLabel}>ADDED BY ADMIN</div>
+                <div style={styles.kpiLabel}>YOUR SONGS</div>
                 <div style={{ ...styles.kpiValue, color: adminAddedCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>{adminAddedCount}</div>
-                <div style={styles.kpiSub}>Curated Track List</div>
+                <div style={styles.kpiSub}>Your Curated Tracks</div>
               </div>
 
               <div
@@ -835,7 +835,7 @@ export default function DashboardMetrics({
               >
                 <div style={styles.kpiLabel}>GUEST REQUESTS</div>
                 <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{guestRequestedCount}</div>
-                <div style={styles.kpiSub}>Approved + Declined + Pending</div>
+                <div style={styles.kpiSub}>Pending + Approved + Declined</div>
               </div>
 
               <div
@@ -993,11 +993,11 @@ export default function DashboardMetrics({
                 onClick={() => onNavigateTab && onNavigateTab('tables')}
                 title={onNavigateTab ? 'Click to view Unseated Guests' : ''}
               >
-                <div style={styles.kpiLabel}>UNSEATED GUESTS</div>
+                <div style={styles.kpiLabel}>NEEDS A TABLE</div>
                 <div style={{ ...styles.kpiValue, color: unassignedAttendingGuestsCount > 0 ? 'var(--color-gold-dark)' : 'var(--color-muted)' }}>
                   {unassignedAttendingGuestsCount}
                 </div>
-                <div style={styles.kpiSub}>Pending Table Assignment</div>
+                <div style={styles.kpiSub}>Without Table Assignment</div>
               </div>
 
               <div

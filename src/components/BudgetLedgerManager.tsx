@@ -304,7 +304,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         <div style={styles.meterHeader}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
-              <span style={styles.meterSubtext}>BUDGET UTILIZATION</span>
+              <span style={styles.meterSubtext}>BUDGET USED</span>
               
               {/* Unset Budget Mode Toggle [BUDGET-3] */}
               <button
@@ -416,7 +416,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
 
           <div style={styles.percentDisplay}>
             {isUnsetMode ? (
-              <span style={{ ...styles.percentValue, color: 'var(--color-primary)', fontSize: '1rem' }}>NO TARGET LIMIT</span>
+              <span style={{ ...styles.percentValue, color: 'var(--color-primary)', fontSize: '1rem' }}>No Budget Set</span>
             ) : (
               <span style={{ ...styles.percentValue, color: meterBarColor }}>{percentUtilized}%</span>
             )}
@@ -674,7 +674,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalPaid.toLocaleString()}</span>
               </div>
               <div style={{ ...styles.cardRow, borderTop: '1px dotted var(--color-on-dark-subtle)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>OWING</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>BALANCE DUE</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalBalance.toLocaleString()}</span>
               </div>
             </div>
@@ -727,7 +727,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     <span style={styles.cardValue}>${item.amountPaid.toLocaleString()}</span>
                   </div>
                   <div style={{ ...styles.cardRow, fontWeight: 600 }}>
-                    <span style={styles.cardLabel}>OWING</span>
+                    <span style={styles.cardLabel}>BALANCE DUE</span>
                     <span style={{ ...styles.cardValue, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-text)' }}>${owing.toLocaleString()}</span>
                   </div>
                 </div>
@@ -751,7 +751,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
       {/* Summary Mini Box */}
       <div style={styles.summaryBox}>
         <div style={styles.summaryItem}>
-          <span style={styles.summaryLabel}>TOTAL OUTSTANDING DEBT</span>
+          <span style={styles.summaryLabel}>TOTAL STILL OWING</span>
           <span style={styles.summaryValue}>${totalBalance.toLocaleString()}</span>
         </div>
         <div style={styles.summaryItem}>

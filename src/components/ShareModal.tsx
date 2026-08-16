@@ -99,7 +99,7 @@ export default function ShareModal({
         <div style={styles.header} className="modalHeader">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Share2 size={20} style={{ color: 'var(--color-primary)' }} />
-            <h3 style={styles.title}>GENERATE VENDOR SHARE PORTAL LINK</h3>
+            <h3 style={styles.title}>Create Vendor Share Link</h3>
           </div>
           <button style={styles.closeBtn} onClick={onClose} title="Cancel and close">
             <X size={20} />
@@ -120,13 +120,13 @@ export default function ShareModal({
           }}>
             <AlertCircle size={16} style={{ color: '#eab308', flexShrink: 0 }} />
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
-              <strong>Draft Link Mode:</strong> This link will only become active and valid after you click <strong>CONFIRM SHARE LINK</strong> below.
+              <strong>Draft Link Mode:</strong> This link will only become active and valid after you click <strong>Activate Link</strong> below.
             </span>
           </div>
 
           {/* Scope Selector */}
           <div style={styles.section}>
-            <label style={styles.label}>1. SELECT VENDOR PORTAL SCOPE</label>
+            <label style={styles.label}>1. SELECT SHARE SCOPE</label>
             <div style={styles.scopeGrid}>
               {[
                 { id: 'vendor_hub', title: 'Full Vendor Hub', desc: 'All-in-One: Timeline, Music, Photos & Catering', icon: Sparkles },

@@ -271,7 +271,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
       {/* Header */}
       <div className="vendor-header-container">
         <div>
-          <h2 style={styles.title}>Vendor Management</h2>
+          <h2 style={styles.title}>Vendors</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
             Track vendor contracts, contacts, payment schedules, balance owing, and staff meal requirements.
           </p>
@@ -576,7 +576,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                     <div style={styles.cardValue}>${item.depositPaid.toLocaleString()}</div>
                   </div>
                   <div>
-                    <div style={styles.cardLabel}>OWING</div>
+                    <div style={styles.cardLabel}>BALANCE DUE</div>
                     <div style={{ ...styles.cardValue, fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
                       ${item.balanceOwing.toLocaleString()}
                     </div>
@@ -618,7 +618,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                         <Link2 size={12} style={{ marginRight: '4px' }} /> Contract
                       </a>
                     )}
-                    {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Needs Meal</span>}
+                    {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meal Required</span>}
                   </div>
                 </div>
               </div>
@@ -762,12 +762,12 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                       onChange={(e) => handleFormChange('staffMealsRequired', e.target.checked ? 'Yes' : 'No')}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                     />
-                    <span>Staff Meals Required</span>
+                    <span>Staff Meal Needed</span>
                   </label>
                 </div>
               </div>
               <div style={styles.modalFooter}>
-                <button type="button" style={styles.cancelBtn} onClick={closeModal}>CANCEL</button>
+                <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
                 {isAdding && (
                   <button
                     type="button"

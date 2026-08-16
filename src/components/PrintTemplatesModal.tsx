@@ -350,7 +350,7 @@ export default function PrintTemplatesModal({
             title="Exit Print Studio"
           >
             <X size={16} />
-            <span>EXIT STUDIO</span>
+            <span>CLOSE</span>
           </button>
         </div>
 
@@ -596,7 +596,7 @@ export default function PrintTemplatesModal({
                       onChange={(e) => setShowSeatMaps(e.target.checked)}
                       style={{ cursor: 'pointer' }}
                     />
-                    <span>SHOW COORDINATOR SEAT MAPS</span>
+                    <span>SHOW COORDINATOR VIEW</span>
                   </label>
                 </>
               )}

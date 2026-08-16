@@ -466,7 +466,7 @@ export default function OnboardingWizard({
               <h3 style={styles.stepTitle}>Step 2: Drive Target & Enabled Feature Modules</h3>
 
               <div style={styles.fieldGroup}>
-                <label style={styles.label}>ENABLE FEATURE MODULES</label>
+                <label style={styles.label}>CHOOSE YOUR PLANNING TOOLS</label>
                 <div style={styles.modulesGrid}>
                   {[
                     { key: 'guests', label: 'Guest Registry & Seating Charts' },

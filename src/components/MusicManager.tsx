@@ -504,7 +504,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
       {/* Header [MUSIC-5] */}
       <div className="music-header-container">
         <div>
-          <h2 style={styles.title}>Wedding Playlist</h2>
+          <h2 style={styles.title}>Playlist</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
             Curate wedding music, track first dance & special moment songs, and review live guest song requests.
           </p>
@@ -583,7 +583,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                   <Radio size={14} style={{ color: 'var(--color-primary)' }} />
-                  <span>Guest Request Portal</span>
+                  <span>Guest Song Requests</span>
                 </a>
 
                 <a
@@ -639,7 +639,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                   <Mail size={14} style={{ color: 'var(--color-primary)' }} />
-                  <span>Email Playlist to DJ</span>
+                  <span>Send Playlist to DJ</span>
                 </button>
               </div>
             )}
@@ -1054,7 +1054,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                 </div>
                 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>List Type</label>
+                  <label style={styles.label}>Playlist Type</label>
                   <select
                     style={styles.select}
                     value={formState.listType || 'Play List'}
@@ -1082,7 +1082,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                 
               </div>
               <div style={styles.modalFooter}>
-                <button type="button" style={styles.cancelBtn} onClick={closeModal}>CANCEL</button>
+                <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
                 {isAdding && (
                   <button
                     type="button"
