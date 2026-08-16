@@ -205,25 +205,88 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
 
   return (
     <div style={styles.container}>
+      {/* Scoped CSS for Mobile Header and View Toggle */}
+      <style>{`
+        .vendor-header-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .vendor-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+        .vendor-view-toggle {
+          display: flex;
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-sm);
+          overflow: hidden;
+          background-color: var(--color-surface);
+          flex-shrink: 0;
+        }
+        .vendor-view-toggle button {
+          border: none;
+          padding: 0.375rem 0.625rem;
+          cursor: pointer;
+          transition: var(--transition-smooth);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 36px;
+          min-height: 34px;
+        }
+        @media (max-width: 640px) {
+          .vendor-header-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+          }
+          .vendor-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+          }
+          .vendor-view-toggle {
+            flex-shrink: 0 !important;
+          }
+          .vendor-view-toggle button {
+            padding: 0.45rem 0.75rem !important;
+            min-width: 42px !important;
+            min-height: 38px !important;
+          }
+          .vendor-action-btn {
+            flex: 1 1 calc(50% - 0.25rem) !important;
+            justify-content: center !important;
+            min-height: 38px !important;
+            padding: 0.5rem 0.75rem !important;
+          }
+        }
+      `}</style>
+
       {/* Header */}
-      <div style={styles.header}>
+      <div className="vendor-header-container">
         <div>
           <h2 style={styles.title}>Vendor Management</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
             Track vendor contracts, contacts, payment schedules, balance owing, and staff meal requirements.
           </p>
         </div>
-        <div style={styles.headerActions}>
-          <div style={styles.viewToggle}>
+        <div className="vendor-header-actions">
+          <div className="vendor-view-toggle">
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? '#000000' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)' }}
               onClick={() => setViewMode('table')}
               title="Table View"
             >
               <List size={16} />
             </button>
             <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? '#000000' : 'var(--color-muted)' }}
+              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)' }}
               onClick={() => setViewMode('card')}
               title="Card View"
             >
@@ -232,6 +295,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
           </div>
           {onOpenPrintStudio && (
             <button 
+              className="vendor-action-btn"
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '0.75rem',
@@ -251,7 +315,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
               <Printer size={15} style={{ marginRight: '0.35rem' }} /> PRINT ROSTER
             </button>
           )}
-          <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
+          <button className="vendor-action-btn" style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD VENDOR
           </button>
         </div>

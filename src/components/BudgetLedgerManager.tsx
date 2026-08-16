@@ -204,14 +204,80 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
 
   return (
     <div className="budget-manager-container" style={styles.container}>
+      {/* Scoped CSS for Header and Mobile View Toggle */}
+      <style>{`
+        .budget-header-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--color-muted);
+          padding-bottom: 0.75rem;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .budget-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+        .budget-view-toggle {
+          display: flex;
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-sm);
+          overflow: hidden;
+          background-color: var(--color-surface);
+          flex-shrink: 0;
+        }
+        .budget-view-toggle button {
+          border: none;
+          padding: 0.375rem 0.625rem;
+          cursor: pointer;
+          transition: var(--transition-smooth);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 36px;
+          min-height: 34px;
+        }
+        @media (max-width: 640px) {
+          .budget-header-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+          }
+          .budget-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 0.625rem !important;
+            width: 100% !important;
+          }
+          .budget-view-toggle {
+            flex-shrink: 0 !important;
+          }
+          .budget-view-toggle button {
+            padding: 0.45rem 0.75rem !important;
+            min-width: 42px !important;
+            min-height: 38px !important;
+          }
+          .budget-add-btn {
+            flex: 1 1 auto !important;
+            justify-content: center !important;
+            min-height: 38px !important;
+            padding: 0.5rem 0.85rem !important;
+            font-size: 0.78rem !important;
+          }
+        }
+      `}</style>
+
       {/* Header */}
-      <div style={styles.header}>
+      <div className="budget-header-container">
         <div>
           <h2 style={styles.title}>EXPENSE & BUDGET LEDGER</h2>
           <p style={styles.subtitle}>Track estimated vs actual costs and log payments</p>
         </div>
-        <div style={styles.headerActions}>
-          <div style={styles.viewToggle}>
+        <div className="budget-header-actions">
+          <div className="budget-view-toggle">
             <button
               style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-dark)' : 'var(--color-text)' }}
               onClick={() => setViewMode('table')}
@@ -227,7 +293,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
               <Grid size={16} />
             </button>
           </div>
-          <button style={{ ...styles.addButton, color: 'var(--color-on-dark)' }} onClick={startAdd} disabled={isSyncing}>
+          <button className="budget-add-btn" style={{ ...styles.addButton, color: 'var(--color-on-dark)' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> LOG NEW EXPENSE
           </button>
         </div>

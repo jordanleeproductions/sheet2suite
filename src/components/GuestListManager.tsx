@@ -449,79 +449,163 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
 
   return (
     <div style={styles.container}>
+      {/* Scoped Responsive CSS for Guest Registry Header */}
+      <style>{`
+        .guest-header-card {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-md);
+          padding: 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+          box-shadow: var(--box-shadow-subtle);
+        }
+        .guest-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+        .guest-view-toggle {
+          display: flex;
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-sm);
+          overflow: hidden;
+          background-color: var(--color-surface);
+          flex-shrink: 0;
+        }
+        .guest-view-toggle button {
+          border: none;
+          padding: 0.35rem 0.6rem;
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: var(--transition-smooth);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 34px;
+        }
+        @media (max-width: 768px) {
+          .guest-header-card {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 1rem !important;
+            gap: 0.75rem !important;
+          }
+          .guest-header-actions {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+          }
+          .guest-toggles-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+          }
+          .guest-view-toggle {
+            width: 100% !important;
+            display: flex !important;
+          }
+          .guest-view-toggle button {
+            flex: 1 1 auto !important;
+            padding: 0.45rem 0.35rem !important;
+            min-height: 38px !important;
+            font-size: 0.68rem !important;
+          }
+          .guest-action-buttons-row {
+            display: grid !important;
+            grid-template-columns: auto auto 1fr !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+          }
+          .guest-action-buttons-row button {
+            min-height: 38px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+        }
+      `}</style>
+
       {/* Header Panel */}
-      <div style={styles.upNextCard} className="anim-fade-in">
+      <div className="guest-header-card anim-fade-in">
         <div>
           <h2 style={styles.title}>Guest Registry</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
             Manage wedding invitations, track RSVPs, table assignments, and catering dietary preferences.
           </p>
         </div>
-        <div style={styles.headerActions}>
-          {/* Grouping Mode Toggle (ALL | SEATING | GROUPS) */}
-          <div style={styles.viewToggle}>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
-                color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setGroupingMode('all')}
-              title="All Guests View"
-            >
-              <Grid size={14} style={{ marginRight: '0.25rem' }} /> ALL
-            </button>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
-                color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setGroupingMode('seating')}
-              title="Seating Chart Grouping View"
-            >
-              <Utensils size={14} style={{ marginRight: '0.25rem' }} /> SEATING
-            </button>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
-                color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setGroupingMode('party')}
-              title="Party Grouping View"
-            >
-              <Users size={14} style={{ marginRight: '0.25rem' }} /> GROUPS
-            </button>
+        <div className="guest-header-actions">
+          <div className="guest-toggles-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Grouping Mode Toggle (ALL | SEATING | GROUPS) */}
+            <div className="guest-view-toggle">
+              <button
+                style={{
+                  backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
+                  color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setGroupingMode('all')}
+                title="All Guests View"
+              >
+                <Grid size={13} style={{ marginRight: '0.2rem' }} /> ALL
+              </button>
+              <button
+                style={{
+                  backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
+                  color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setGroupingMode('seating')}
+                title="Seating Chart Grouping View"
+              >
+                <Utensils size={13} style={{ marginRight: '0.2rem' }} /> SEATING
+              </button>
+              <button
+                style={{
+                  backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
+                  color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setGroupingMode('party')}
+                title="Party Grouping View"
+              >
+                <Users size={13} style={{ marginRight: '0.2rem' }} /> GROUPS
+              </button>
+            </div>
+
+            {/* Independent Layout Mode Toggle (CARDS vs LIST) [GUEST-6] */}
+            <div className="guest-view-toggle">
+              <button
+                style={{
+                  backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                  color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setLayoutMode('cards')}
+                title="Card Grid Cards Layout"
+              >
+                <Grid size={13} style={{ marginRight: '0.2rem' }} /> CARDS
+              </button>
+              <button
+                style={{
+                  backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
+                  color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setLayoutMode('list')}
+                title="Compact Desktop List Rows Layout [GUEST-6]"
+              >
+                <List size={13} style={{ marginRight: '0.2rem' }} /> LIST
+              </button>
+            </div>
           </div>
 
-          {/* Independent Layout Mode Toggle (CARDS vs LIST) [GUEST-6] */}
-          <div style={styles.viewToggle}>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setLayoutMode('cards')}
-              title="Card Grid Cards Layout"
-            >
-              <Grid size={14} style={{ marginRight: '0.25rem' }} /> CARDS
-            </button>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
-                color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setLayoutMode('list')}
-              title="Compact Desktop List Rows Layout [GUEST-6]"
-            >
-              <List size={14} style={{ marginRight: '0.25rem' }} /> LIST
-            </button>
-          </div>
-
-          <div style={{ ...styles.actionButtonGroup, marginLeft: 'auto' }}>
+          <div className="guest-action-buttons-row" style={{ ...styles.actionButtonGroup, marginLeft: 'auto' }}>
             <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
               <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
             </button>
