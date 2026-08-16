@@ -61,8 +61,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
         }
       }
     } catch (e) {}
-    setMenuOptions(['Filet Mignon', 'Pan-Seared Salmon', 'Vegan Risotto', 'Kids Chicken Tenders']);
-  }, []);
+    // If no menu configured, collect distinct meal choices from existing guests
+    const distinctGuestMeals = Array.from(new Set(guests.map(g => (g.mealChoice || '').trim()).filter(Boolean)));
+    setMenuOptions(distinctGuestMeals);
+  }, [guests]);
 
   // Unique list of groups for filtering
   const groups = Array.from(new Set(guests.map(g => g.partyGroup).filter(Boolean)));
