@@ -761,7 +761,7 @@ export default function Sheet2VowDashboard() {
         transition: 'margin-left 0.2s ease, width 0.2s ease'
       }}
     >
-      {/* Mobile Navigation Overlay Drawer */}
+      {/* Mobile Ergonomic Bottom Sheet Drawer [NAV-MOBILE-THUMB] */}
       {isMobile && isMobileDrawerOpen && (
         <div
           style={{
@@ -769,87 +769,200 @@ export default function Sheet2VowDashboard() {
             inset: 0,
             backgroundColor: 'rgba(0,0,0,0.5)',
             zIndex: 200,
-            display: 'flex'
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            animation: 'fadeIn 0.2s ease-out'
           }}
           onClick={() => setIsMobileDrawerOpen(false)}
         >
           <div
+            className="mobile-bottom-sheet-content"
             style={{
-              width: '260px',
+              width: '100%',
               backgroundColor: 'var(--color-surface, #fff)',
-              height: '100%',
-              padding: '1.25rem 1rem',
+              borderTopLeftRadius: '1.25rem',
+              borderTopRightRadius: '1.25rem',
+              maxHeight: '85vh',
+              padding: '0.75rem 1rem 1.75rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem',
-              boxShadow: 'var(--box-shadow-hover)'
+              gap: '0.75rem',
+              boxShadow: '0 -10px 25px rgba(0,0,0,0.2)',
+              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {/* Top Drag Handle Indicator */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '0.25rem 0' }}>
+              <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--color-muted)', borderRadius: '999px', opacity: 0.5 }} />
+            </div>
+
+            {/* Bottom Sheet Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FileSpreadsheet size={22} style={{ color: 'var(--color-primary)' }} />
-                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>Sheet2Vow</span>
+                <FileSpreadsheet size={20} style={{ color: 'var(--color-primary)' }} />
+                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary)' }}>Sheet2Vow Modules</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--color-text)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text)', cursor: 'pointer', padding: '0.25rem' }}
+                title="Close"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.5rem', flex: 1, overflowY: 'auto' }}>
-              {[
-                { id: 'home', label: 'Summary', icon: LayoutDashboard },
-                { id: 'guests', label: 'Guest List', icon: Users },
-                { id: 'menu', label: 'Catering', icon: Utensils },
-                { id: 'tables', label: 'Seating', icon: Grid },
-                { id: 'budget', label: 'Ledger', icon: DollarSign },
-                { id: 'schedule', label: 'Timeline', icon: Calendar },
-                { id: 'vendors', label: 'Vendors', icon: Briefcase },
-                { id: 'tasks', label: 'Tasks', icon: ListTodo },
-                { id: 'music', label: 'Music', icon: Music },
-                { id: 'photos', label: 'Photos', icon: Camera },
-                { id: 'thanks', label: 'Thanks', icon: Heart },
-              ]
-                .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
-                .map((tab) => {
-                  const IconComp = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => {
-                        switchTab(tab.id as any);
-                        setIsMobileDrawerOpen(false);
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        padding: '0.65rem 0.75rem',
-                        borderRadius: 'var(--border-radius-sm)',
-                        backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
-                        color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.8rem',
-                        fontWeight: isActive ? 700 : 500
-                      }}
-                    >
-                      <IconComp size={18} />
-                      <span>{tab.label.toUpperCase()}</span>
-                    </button>
-                  );
-                })}
+            {/* Categorized Module Groups */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', marginTop: '0.25rem' }}>
+              {/* Group 1: Guests & Reception */}
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+                  👥 GUESTS & HOSPITALITY
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
+                  {[
+                    { id: 'guests', label: 'Guest Registry', icon: Users },
+                    { id: 'menu', label: 'Catering Menu', icon: Utensils },
+                    { id: 'tables', label: 'Seating Chart', icon: Grid },
+                    { id: 'thanks', label: 'Thank You Gifts', icon: Heart },
+                  ]
+                    .filter(tab => (enabledModules as any)[tab.id] ?? true)
+                    .map((tab) => {
+                      const IconComp = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            switchTab(tab.id as any);
+                            setIsMobileDrawerOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.55rem 0.65rem',
+                            borderRadius: 'var(--border-radius-sm)',
+                            backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f8f9fa)',
+                            color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                            border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                            cursor: 'pointer',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.72rem',
+                            fontWeight: isActive ? 800 : 600,
+                            textAlign: 'left'
+                          }}
+                        >
+                          <IconComp size={15} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Group 2: Logistics & Budget */}
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+                  💼 LOGISTICS & BUDGET
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
+                  {[
+                    { id: 'home', label: 'Executive Summary', icon: LayoutDashboard },
+                    { id: 'budget', label: 'Budget Ledger', icon: DollarSign },
+                    { id: 'schedule', label: 'Day-Of Timeline', icon: Calendar },
+                    { id: 'vendors', label: 'Vendor Directory', icon: Briefcase },
+                  ]
+                    .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
+                    .map((tab) => {
+                      const IconComp = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            switchTab(tab.id as any);
+                            setIsMobileDrawerOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.55rem 0.65rem',
+                            borderRadius: 'var(--border-radius-sm)',
+                            backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f8f9fa)',
+                            color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                            border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                            cursor: 'pointer',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.72rem',
+                            fontWeight: isActive ? 800 : 600,
+                            textAlign: 'left'
+                          }}
+                        >
+                          <IconComp size={15} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Group 3: Day-Of Media & Tasks */}
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
+                  🎨 DAY-OF MEDIA & TASKS
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+                  {[
+                    { id: 'tasks', label: 'Tasks', icon: ListTodo },
+                    { id: 'music', label: 'Music & DJ', icon: Music },
+                    { id: 'photos', label: 'Photos', icon: Camera },
+                  ]
+                    .filter(tab => (enabledModules as any)[tab.id] ?? true)
+                    .map((tab) => {
+                      const IconComp = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            switchTab(tab.id as any);
+                            setIsMobileDrawerOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.55rem 0.5rem',
+                            borderRadius: 'var(--border-radius-sm)',
+                            backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f8f9fa)',
+                            color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                            border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                            cursor: 'pointer',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.72rem',
+                            fontWeight: isActive ? 800 : 600,
+                            textAlign: 'left'
+                          }}
+                        >
+                          <IconComp size={14} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
             </div>
 
             {/* Bottom Quick Tools (Print Studio, Share Link & Settings) */}
-            <div style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ marginTop: '0.35rem', paddingTop: '0.65rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.4rem' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -859,20 +972,21 @@ export default function Sheet2VowDashboard() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.625rem',
-                  padding: '0.625rem 0.75rem',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.55rem 0.4rem',
                   borderRadius: 'var(--border-radius-sm)',
                   backgroundColor: 'var(--color-bg-subtle)',
                   color: 'var(--color-text)',
                   border: '1px solid var(--color-border)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700
                 }}
               >
-                <Printer size={16} style={{ color: 'var(--color-primary)' }} />
-                <span>PRINT STUDIO & CANVA</span>
+                <Printer size={14} style={{ color: 'var(--color-primary)' }} />
+                <span>PRINT</span>
               </button>
 
               <button
@@ -884,20 +998,21 @@ export default function Sheet2VowDashboard() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.625rem',
-                  padding: '0.625rem 0.75rem',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.55rem 0.4rem',
                   borderRadius: 'var(--border-radius-sm)',
                   backgroundColor: 'var(--color-bg-subtle)',
                   color: 'var(--color-text)',
                   border: '1px solid var(--color-border)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700
                 }}
               >
-                <Share2 size={16} style={{ color: 'var(--color-primary)' }} />
-                <span>SHARE VIEW-ONLY LINK</span>
+                <Share2 size={14} style={{ color: 'var(--color-primary)' }} />
+                <span>SHARE</span>
               </button>
 
               <button
@@ -909,20 +1024,21 @@ export default function Sheet2VowDashboard() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.625rem',
-                  padding: '0.625rem 0.75rem',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.55rem 0.4rem',
                   borderRadius: 'var(--border-radius-sm)',
                   backgroundColor: 'var(--color-bg-subtle)',
                   color: 'var(--color-text)',
                   border: '1px solid var(--color-border)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700
                 }}
               >
-                <Settings size={16} style={{ color: 'var(--color-primary)' }} />
-                <span>SETTINGS</span>
+                <Settings size={14} style={{ color: 'var(--color-primary)' }} />
+                <span>CONFIG</span>
               </button>
             </div>
           </div>
@@ -2170,10 +2286,139 @@ export default function Sheet2VowDashboard() {
         </div>
       )}
 
+      {/* Mobile Ergonomic Bottom Tab Navigation Bar [NAV-MOBILE-THUMB] */}
+      {isMobile && isOnboarded && (
+        <nav
+          className="mobile-bottom-nav-bar"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '62px',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            borderTop: '1px solid var(--color-border)',
+            boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            zIndex: 150,
+            padding: '0 0.5rem',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          {[
+            { id: 'home', label: 'Summary', icon: LayoutDashboard },
+            { id: 'guests', label: 'Guests', icon: Users },
+            { id: 'budget', label: 'Budget', icon: DollarSign },
+            { id: 'schedule', label: 'Timeline', icon: Calendar },
+          ].map((tab) => {
+            const IconComp = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  switchTab(tab.id as any);
+                  setIsMobileDrawerOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'none',
+                  border: 'none',
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-muted)',
+                  cursor: 'pointer',
+                  padding: '0.35rem 0.5rem',
+                  gap: '0.15rem',
+                  flex: 1,
+                  transition: 'var(--transition-smooth)',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: 'var(--border-radius-sm, 12px)',
+                    backgroundColor: isActive ? 'var(--color-bg-subtle, rgba(0,0,0,0.05))' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconComp size={20} style={{ strokeWidth: isActive ? 2.5 : 1.8 }} />
+                </div>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: isActive ? 800 : 500 }}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* "More" Trigger Button */}
+          {(() => {
+            const isSecondaryTabActive = !['home', 'guests', 'budget', 'schedule'].includes(activeTab);
+            return (
+              <button
+                type="button"
+                onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'none',
+                  border: 'none',
+                  color: (isSecondaryTabActive || isMobileDrawerOpen) ? 'var(--color-primary)' : 'var(--color-muted)',
+                  cursor: 'pointer',
+                  padding: '0.35rem 0.5rem',
+                  gap: '0.15rem',
+                  flex: 1,
+                  position: 'relative',
+                  transition: 'var(--transition-smooth)',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: 'var(--border-radius-sm, 12px)',
+                    backgroundColor: (isSecondaryTabActive || isMobileDrawerOpen) ? 'var(--color-bg-subtle, rgba(0,0,0,0.05))' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  <Menu size={20} style={{ strokeWidth: (isSecondaryTabActive || isMobileDrawerOpen) ? 2.5 : 1.8 }} />
+                  {isSecondaryTabActive && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '1px',
+                        right: '4px',
+                        width: '7px',
+                        height: '7px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--color-primary)',
+                      }}
+                    />
+                  )}
+                </div>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: (isSecondaryTabActive || isMobileDrawerOpen) ? 800 : 500 }}>
+                  MORE {isSecondaryTabActive ? `· ${activeTab.toUpperCase()}` : ''}
+                </span>
+              </button>
+            );
+          })()}
+        </nav>
+      )}
+
       {/* Toast Notification Container [GEN-3] */}
       <ToastNotification toasts={toasts} onDismiss={dismissToast} />
 
-      {/* Global Spinner Styling helper */}
+      {/* Global Spinner & Animation Styling helpers */}
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -2181,6 +2426,29 @@ export default function Sheet2VowDashboard() {
         }
         .spin {
           animation: spin 1.5s linear infinite;
+        }
+        @keyframes slideUp {
+          from {
+            transform: translateY(100%);
+            opacity: 0.8;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @media (max-width: 768px) {
+          .app-viewport-container {
+            padding-bottom: 5.5rem !important;
+          }
         }
       `}</style>
     </div>

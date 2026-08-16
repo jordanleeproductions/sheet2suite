@@ -8,8 +8,13 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 
 ## 2. Core Modules & Component Architecture
 
-### 2.1 Navigation & Shell (`src/app/page.tsx` & `AdvancedSettingsModal.tsx`)
+### 2.1 Navigation & Shell (`src/app/vow/page.tsx` & `AdvancedSettingsModal.tsx`)
 - **Multi-Theme Aesthetic Engine:** Currently supports **Editorial Minimalist** (serif typography, subtle warm tones) and **Muted Neo-Brutalism** (3px slate borders, hard directional drop shadows, `Geist Mono` typography), with **Botanical Romance**, **Midnight Tuxedo**, and **Retro Cyberpunk** planned for Phase 2 expansion.
+- **Desktop Navigation Switcher (`navLayout: 'sidebar' | 'top'`):** Supports sticky collapsible left-hand sidebar navigation (with 64px collapsed icon-only vs 220px expanded labels) as well as classic top header navigation bar.
+- **Mobile Ergonomic Thumb-Zone Navigation (`[NAV-MOBILE-THUMB]`):**
+  - **Persistent Glassmorphism Bottom Tab Bar:** Fixed to the bottom viewport on mobile screens ($\le 768\text{px}$) offering 1-tap thumb access to the 4 core daily modules (*Summary*, *Guests*, *Budget*, *Timeline*) plus an active **`MORE (☰)`** trigger button with live active dot indicators.
+  - **Categorized Bottom Sheet Action Drawer:** Tapping *More* or the header menu button slides up a full-width bottom sheet drawer from the bottom of the screen (within natural thumb reach) featuring a drag handle, 3 organized module clusters (*Guests & Hospitality*, *Logistics & Budget*, *Day-Of Media & Tasks*), and quick access actions (*Print Studio*, *Share Link*, *Configuration*).
+  - **Safe Bottom Padding:** Automatically applies `padding-bottom: 5.5rem` on mobile viewports to prevent content clipping behind the fixed floating tab bar.
 - **Streamlined Quick Settings Dropdown:** Header settings icon triggers a lightweight dropdown for fast visual tweaks: Design Style (`Editorial` vs `Neo-Brutalism`), Color Mode (`Light` vs `Dark`), Primary Accent Color picker, and a direct launch button for **`ADVANCED SETTINGS`**.
 - **Advanced Settings & Configuration Portal (`AdvancedSettingsModal.tsx`):**
   - 💒 **Wedding Details & Location:** Edit Wedding Title, Event Date (with live countdown sync), and Venue/Location details (synced to `Settings!B2`).

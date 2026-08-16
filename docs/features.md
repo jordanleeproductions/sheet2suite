@@ -144,6 +144,7 @@
 - [x] **[GEN-2] Desktop Wide-Screen Layout Optimization:** Expanded max-width container bounds to 1680px for desktop viewports.
 - [x] **[GEN-3] Toast Notification System:** Brief "Saved!" popup on settings/modal saves and data sync updates.
 - [x] **[NAV-1] Sticky Collapsible Left Sidebar Navigation:** Added desktop wide-screen left sidebar layout option alongside top navbar.
+- [x] **[NAV-MOBILE-THUMB] Mobile Ergonomic Thumb-Zone Navigation & Categorized Bottom Sheet Drawer (`src/app/vow/page.tsx`):** Added a persistent glassmorphism bottom navigation bar pinned to the bottom of mobile screens ($\le 768\text{px}$) with 1-tap thumb access to the 4 core daily modules (*Summary*, *Guests*, *Budget*, *Timeline*) plus an active `MORE (☰)` trigger button with live active dot indicators. Upgraded the mobile drawer into an ergonomic bottom sheet drawer sliding up from the bottom with a drag handle, 3 categorized module groups (*Guests & Hospitality*, *Logistics & Budget*, *Day-Of Media & Tasks*), quick action buttons (*Print*, *Share*, *Config*), and 5.5rem safe-area padding.
 - [x] **[ONBOARD-1] Express Mode ("Jump Right In") 1-Click Launch:** Added prominent 1-click button (`⚡ EXPLORE DEMO WORKSPACE (JUMP RIGHT IN)`) to instant-load sample wedding workspace without registration forms.
 - [x] **[ONBOARD-2] Unified Onboarding Wizard Component:** Created standalone `OnboardingWizard.tsx` component supporting `express`, `quick`, and 4-step `guided` setup modes.
 - [x] **[ONBOARD-3] Visual Task Preset Selector Cards:** Interactive visual cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) featuring category badges, descriptions, and task preview pills.
@@ -224,12 +225,19 @@
 |---|---|---|---|---|---|
 | **`[VND-6]`** | Vendor Contract Upload & Google Drive "Contracts" Folder Storage (Upload vendor PDF/image contracts when adding or editing a vendor in `VendorManager.tsx`; automatically provisions a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the contract Drive URL to the vendor entry) | `src/components/VendorManager.tsx`, `src/app/api/upload/contract/route.ts`, `src/types/wedding.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Backlog |
 
+### 📱 Mobile Navigation & Gestures
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[NAV-SWIPE]`** | Mobile Swipe-to-Open & Swipe-Down-to-Dismiss Bottom Sheet Gestures (Touch event listener on mobile screen edge to drag-reveal and drag-dismiss the navigation bottom sheet) | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | Backlog |
+| **`[NAV-HAPTIC]`** | Mobile Web Haptic Feedback on Tab Selection (`navigator.vibrate`) | `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Backlog |
+
 ### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
-| **`[UX-14]`** | Consider tab grouping to reduce navigation count | `page.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[UX-14]`** | Group modules into intuitive clusters on mobile | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed (`[NAV-MOBILE-THUMB]`) |
 
 ---
 
