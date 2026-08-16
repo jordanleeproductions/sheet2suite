@@ -238,6 +238,7 @@
 |---|---|---|---|---|---|
 | **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
 | **`[UX-14]`** | Group modules into intuitive clusters on mobile | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed (`[NAV-MOBILE-THUMB]`) |
+| **`[UX-15]`** | Mobile Header Action Consolidation & Demo Banner Grid Optimization | `src/components/MusicManager.tsx`, `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ---
 
