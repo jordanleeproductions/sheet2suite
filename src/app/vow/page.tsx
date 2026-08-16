@@ -18,12 +18,11 @@ import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
-import GoogleAuthModal from '@/components/GoogleAuthModal';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -33,10 +32,11 @@ export default function Sheet2VowDashboard() {
   // Authentication & Spreadsheet Settings
   const [spreadsheetId, setSpreadsheetId] = useState<string>('');
   const [googleToken, setGoogleToken] = useState<string>('');
+  const [googleUserName, setGoogleUserName] = useState<string>('');
   const [googleUserEmail, setGoogleUserEmail] = useState<string>('');
   const [googleUserAvatar, setGoogleUserAvatar] = useState<string>('');
   const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false);
-  const [showGoogleAuthModal, setShowGoogleAuthModal] = useState<boolean>(false);
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
   const [isMockMode, setIsMockMode] = useState<boolean>(false);
   const [weddingName, setWeddingName] = useState<string>('');
@@ -44,6 +44,102 @@ export default function Sheet2VowDashboard() {
   const [budgetThreshold, setBudgetThreshold] = useState<number>(35000);
   const [driveFolder, setDriveFolder] = useState<string>('My Drive/Wedding Planning');
   const [selectedTasks, setSelectedTasks] = useState<string[]>(ALL_DEFAULT_TASKS.map(t => t.taskName));
+
+  // Direct 1-Click Google OAuth Kickoff [AUTH-FAST]
+  const handleDirectGoogleAuth = async () => {
+    setIsAuthenticating(true);
+    try {
+      const res = await fetch('/api/auth/google');
+      const data = await res.json();
+
+      if (data.authUrl && typeof window !== 'undefined') {
+        const width = 520;
+        const height = 650;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
+        const handleAuthMessage = (event: MessageEvent) => {
+          if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+            const { user, accessToken, provision } = event.data;
+            window.removeEventListener('message', handleAuthMessage);
+            setIsAuthenticating(false);
+
+            if (user?.name) {
+              setGoogleUserName(user.name);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_google_name', user.name);
+              }
+            }
+            if (user?.email) {
+              setGoogleUserEmail(user.email);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_google_email', user.email);
+              }
+            }
+            if (user?.picture) {
+              setGoogleUserAvatar(user.picture);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_google_avatar', user.picture);
+              }
+            }
+            if (accessToken) {
+              setGoogleToken(accessToken);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_google_token', accessToken);
+              }
+            }
+
+            const hasExistingWorkspace = provision?.hasExistingWorkspace ?? Boolean(provision?.spreadsheetId);
+            if (hasExistingWorkspace && provision?.spreadsheetId) {
+              setSpreadsheetId(provision.spreadsheetId);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_spreadsheet_id', provision.spreadsheetId);
+                localStorage.setItem('s2v_is_onboarded', 'true');
+              }
+              setIsMockMode(false);
+              setIsOnboarded(true);
+              addToast(`Welcome back ${user.email}! Reconnected active workspace.`, 'success');
+            } else {
+              setSpreadsheetId('');
+              setIsMockMode(false);
+              setIsOnboarded(false);
+              addToast(`Authenticated as ${user.email}. Redirecting to Setup Wizard...`, 'info');
+              if (typeof window !== 'undefined') {
+                window.location.href = `/activate?email=${encodeURIComponent(user.email)}`;
+              }
+            }
+          } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
+            window.removeEventListener('message', handleAuthMessage);
+            setIsAuthenticating(false);
+            addToast(event.data.error || 'Google authentication failed', 'warning');
+          }
+        };
+
+        window.addEventListener('message', handleAuthMessage);
+
+        const authWindow = window.open(
+          data.authUrl,
+          'Sheet2SuiteGoogleLogin',
+          `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+        // Fallback timeout checker if user closes popup without authenticating
+        const checkClosedInterval = setInterval(() => {
+          if (authWindow?.closed) {
+            clearInterval(checkClosedInterval);
+            setIsAuthenticating(false);
+          }
+        }, 1000);
+      } else {
+        setIsAuthenticating(false);
+        addToast(data.error || 'Failed to initialize Google authentication.', 'warning');
+      }
+    } catch (err: any) {
+      console.error('Direct Google Auth Error:', err);
+      setIsAuthenticating(false);
+      addToast(err.message || 'Failed to connect with Google.', 'warning');
+    }
+  };
 
   // Toast Notification System [GEN-3]
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -168,6 +264,39 @@ export default function Sheet2VowDashboard() {
     }
   };
 
+  // Welcome Guide Dismissal State
+  const [hasDismissedWelcomeCard, setHasDismissedWelcomeCard] = useState<boolean>(true);
+
+  const handleDismissWelcomeGuide = async () => {
+    setHasDismissedWelcomeCard(true);
+    if (spreadsheetId && typeof window !== 'undefined') {
+      localStorage.setItem(`s2v_welcome_dismissed_${spreadsheetId}`, 'true');
+    }
+    if (weddingData && spreadsheetId && !isMockMode) {
+      try {
+        await syncUpdate('dashboard', {
+          budget: weddingData.dashboard.totalBudget,
+          weddingName: weddingName || 'Our Wedding',
+          hasDismissedWelcomeCard: true,
+        });
+      } catch (e) {
+        console.warn('Could not persist welcome guide dismissal to Google Sheets:', e);
+      }
+    }
+  };
+
+  const handleToggleTheme = () => {
+    handleThemeChange(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleToggleNavLayout = () => {
+    const next = navLayout === 'sidebar' ? 'top' : 'sidebar';
+    setNavLayout(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_nav_layout', next);
+    }
+  };
+
   // App Data & Loading states
   const [weddingData, setWeddingData] = useState<WeddingData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -273,16 +402,26 @@ export default function Sheet2VowDashboard() {
       }
     }
 
-    if (savedSheetId) setSpreadsheetId(savedSheetId);
+    if (savedSheetId) {
+      setSpreadsheetId(savedSheetId);
+      const localDismissed = localStorage.getItem(`s2v_welcome_dismissed_${savedSheetId}`);
+      if (localDismissed === 'true') {
+        setHasDismissedWelcomeCard(true);
+      } else {
+        setHasDismissedWelcomeCard(false);
+      }
+    }
     if (savedToken) setGoogleToken(savedToken);
+    const savedEmail = localStorage.getItem('s2v_google_email');
+    const savedAvatar = localStorage.getItem('s2v_google_avatar');
+    const savedUserName = localStorage.getItem('s2v_google_name');
+    if (savedEmail) setGoogleUserEmail(savedEmail);
+    if (savedAvatar) setGoogleUserAvatar(savedAvatar);
+    if (savedUserName) setGoogleUserName(savedUserName);
     if (savedOnboarded === 'true') setIsOnboarded(true);
     if (savedMock === 'true') setIsMockMode(true);
     if (savedDemo === 'true') setIsDemoMode(true);
 
-    // Auto-prompt Google Auth Modal if no active session or token is present
-    if (!savedOnboarded || (!savedToken && savedMock !== 'true')) {
-      setShowGoogleAuthModal(true);
-    }
     if (savedName) setWeddingName(savedName);
     if (savedDate) setWeddingDate(savedDate);
     if (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') setStyleTheme(savedStyleTheme);
@@ -403,14 +542,20 @@ export default function Sheet2VowDashboard() {
 
       const res = await response.json();
       if (response.status === 401 || res.isAuthError) {
-        setShowGoogleAuthModal(true);
-        addToast('Google OAuth session expired. Please sign in to reconnect your Drive sheet.', 'warning');
+        addToast('Google OAuth session expired. Please reconnect your Drive sheet.', 'warning');
         return;
       }
       if (res.success) {
         setWeddingData(res.data);
         if (res.weddingName) {
           setWeddingName(res.weddingName);
+        }
+        // Sync welcome card dismissal state
+        const localDismissed = typeof window !== 'undefined' ? localStorage.getItem(`s2v_welcome_dismissed_${spreadsheetId}`) : null;
+        if (localDismissed === 'true' || res.hasDismissedWelcomeCard === true) {
+          setHasDismissedWelcomeCard(true);
+        } else {
+          setHasDismissedWelcomeCard(false);
         }
       } else {
         throw new Error(res.error || 'Failed to fetch spreadsheet data');
@@ -541,8 +686,7 @@ export default function Sheet2VowDashboard() {
 
       const res = await response.json();
       if (response.status === 401 || res.isAuthError) {
-        setShowGoogleAuthModal(true);
-        addToast('Google OAuth session expired. Please sign in to reconnect your Drive sheet.', 'warning');
+        addToast('Google OAuth session expired. Please reconnect your Drive sheet.', 'warning');
         return;
       }
       if (!res.success) {
@@ -590,9 +734,6 @@ export default function Sheet2VowDashboard() {
         }
       }
     }
-
-    // Trigger Google Auth Modal for re-authentication
-    setShowGoogleAuthModal(true);
   };
 
   const getCountdown = () => {
@@ -973,46 +1114,24 @@ export default function Sheet2VowDashboard() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          ...(isMobile
-            ? {
-                position: 'sticky',
-                top: 0,
-                zIndex: 100,
-                backgroundColor: 'var(--color-bg)',
-                paddingTop: '0.75rem',
-                paddingBottom: '0.75rem',
-                marginTop: '-0.5rem',
-                boxShadow: 'var(--box-shadow-subtle)'
-              }
-            : {})
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          backgroundColor: 'var(--color-bg)',
+          paddingTop: '0.75rem',
+          paddingBottom: '0.75rem',
+          marginTop: isMobile ? '-0.5rem' : 0,
+          border: 'none',
+          borderLeft: 'none',
+          borderRight: 'none',
+          borderTop: 'none',
+          borderBottom: '2px solid var(--color-primary)',
+          boxShadow: 'none',
+          outline: 'none',
         }}
       >
         <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <Link
-            href="/"
-            title="Return to Sheet2Suite Homepage"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              color: 'var(--color-muted, #64748b)',
-              textDecoration: 'none',
-              fontSize: '0.775rem',
-              fontWeight: 700,
-              fontFamily: 'var(--font-mono, monospace)',
-              marginRight: '0.35rem',
-              padding: '0.35rem 0.65rem',
-              borderRadius: '8px',
-              border: '1px solid var(--color-border, #cbd5e1)',
-              backgroundColor: 'var(--color-bg-subtle, #f8fafd)',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <ArrowLeft size={16} />
-            {!isMobile && <span>Sheet2Suite Home</span>}
-          </Link>
-
-          {isMobile ? (
+          {isMobile && isOnboarded ? (
             <button
               type="button"
               onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
@@ -1042,7 +1161,46 @@ export default function Sheet2VowDashboard() {
           </div>
         </div>
 
-        {isOnboarded && (
+        {!isOnboarded ? (
+          <Link
+            href="/"
+            title="Return to Sheet2Suite Hub"
+            className="s2s-home-nav-btn"
+            style={{
+              padding: isMobile ? '0.35rem 0.65rem' : '0.35rem 0.85rem 0.35rem 0.45rem',
+            }}
+          >
+            <div
+              className="s2s-home-nav-icon"
+              style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(11, 87, 208, 0.08)',
+                color: 'var(--color-primary, #0b57d0)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Home size={13} strokeWidth={2.5} />
+            </div>
+            <span>{!isMobile ? 'Sheet2Suite Hub' : 'Suite Hub'}</span>
+            {!isMobile && (
+              <ArrowRight
+                size={13}
+                className="s2s-home-nav-arrow"
+                style={{
+                  color: 'var(--color-muted, #64748b)',
+                  marginLeft: '-0.1rem',
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            )}
+          </Link>
+        ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
 
             {!isMobile && (
@@ -1504,9 +1662,14 @@ export default function Sheet2VowDashboard() {
                       )}
                     </div>
                     <div style={{ overflow: 'hidden' }}>
-                      <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {googleUserEmail || 'Google User'}
+                      <div style={{ fontWeight: 800, fontSize: '0.875rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {googleUserName || googleUserEmail?.split('@')[0] || 'Google User'}
                       </div>
+                      {googleUserEmail && (
+                        <div style={{ fontSize: '0.725rem', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '0.2rem' }}>
+                          {googleUserEmail}
+                        </div>
+                      )}
                       <div style={{ fontSize: '0.675rem', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
                         <span>AUTHENTICATED VIA GOOGLE</span>
@@ -1515,6 +1678,37 @@ export default function Sheet2VowDashboard() {
                   </div>
 
                   <div style={{ margin: '0.75rem 0', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.725rem' }}>
+                    {spreadsheetId && (
+                      <a
+                        href={spreadsheetId.startsWith('mock') ? 'https://docs.google.com' : `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.45rem',
+                          backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                          border: '1px solid var(--color-border, #e2e8f0)',
+                          borderRadius: '6px',
+                          padding: '0.5rem 0.75rem',
+                          color: 'var(--color-primary, #0b57d0)',
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontSize: '0.725rem',
+                          fontWeight: 800,
+                          textDecoration: 'none',
+                          marginBottom: '0.35rem',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-border, #e2e8f0)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle, #f8fafc)')}
+                      >
+                        <FileSpreadsheet size={15} style={{ color: '#16a34a' }} />
+                        <span>OPEN GOOGLE SPREADSHEET</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+
                     <div>
                       <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>ACTIVE SPREADSHEET ID:</span>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-bg-subtle, #f8fafc)', border: '1px solid var(--color-border, #e2e8f0)', padding: '0.35rem 0.5rem', borderRadius: '6px', marginTop: '0.2rem' }}>
@@ -1642,59 +1836,13 @@ export default function Sheet2VowDashboard() {
         />
       )}
 
-      {/* Google Auth Gate Modal */}
-      <GoogleAuthModal
-        isOpen={showGoogleAuthModal}
-        onClose={() => setShowGoogleAuthModal(false)}
-        onSelectDemoMode={() => {
-          setIsMockMode(true);
-          setIsOnboarded(true);
-          setShowGoogleAuthModal(false);
-          addToast('Entered Demo Workspace Mode', 'info');
-        }}
-        onAuthenticated={(user) => {
-          setGoogleUserEmail(user.email);
-          if (user.picture) {
-            setGoogleUserAvatar(user.picture);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('s2v_google_avatar', user.picture);
-            }
-          }
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('s2v_google_email', user.email);
-          }
-          if (user.accessToken) {
-            setGoogleToken(user.accessToken);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('s2v_google_token', user.accessToken);
-            }
-          }
-          if (user.hasExistingWorkspace && user.spreadsheetId) {
-            setSpreadsheetId(user.spreadsheetId);
-            setIsMockMode(false);
-            setIsOnboarded(true);
-            setShowGoogleAuthModal(false);
-            addToast(`Welcome back ${user.email}! Reconnected active workspace.`, 'success');
-          } else {
-            // First time user with no registered spreadsheet -> Redirect directly to /activate setup wizard
-            setSpreadsheetId('');
-            setIsMockMode(false);
-            setIsOnboarded(false);
-            setShowGoogleAuthModal(false);
-            addToast(`Authenticated as ${user.email}. Redirecting to Setup Wizard...`, 'info');
-            if (typeof window !== 'undefined') {
-              window.location.href = `/activate?email=${encodeURIComponent(user.email)}`;
-            }
-          }
-        }}
-      />
-
       {/* Main Core Area */}
       {!isOnboarded ? (
         /* Unauthenticated Landing Experience */
         <UnauthenticatedLanding
-          onOpenGoogleAuth={() => setShowGoogleAuthModal(true)}
+          onOpenGoogleAuth={handleDirectGoogleAuth}
           onExploreDemo={handleExpressOnboard}
+          isAuthenticating={isAuthenticating}
         />
       ) : (
         /* Logged In Dashboard View */
@@ -1764,88 +1912,84 @@ export default function Sheet2VowDashboard() {
             <div style={styles.weddingMilestoneDate}>{getCountdown()}</div>
           </div>
 
-          {/* Google Auth Status & Workspace Header Banner */}
-          <div style={{
-            backgroundColor: isMockMode ? 'var(--color-bg-subtle)' : '#ecfdf5',
-            border: `2px solid ${isMockMode ? 'var(--color-amber, #f59e0b)' : '#10b981'}`,
-            borderRadius: 'var(--border-radius-md)',
-            padding: '0.625rem 1rem',
-            marginBottom: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-            boxShadow: 'var(--box-shadow-subtle)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              {isMockMode ? (
+          {/* Demo Workspace Header Banner (Only shown in offline Mock/Demo Mode) */}
+          {isMockMode && (
+            <div style={{
+              backgroundColor: 'var(--color-bg-subtle)',
+              border: '2px solid var(--color-amber, #f59e0b)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '0.625rem 1rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+              boxShadow: 'var(--box-shadow-subtle)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <Zap size={18} style={{ color: 'var(--color-amber, #f59e0b)', flexShrink: 0 }} />
-              ) : (
-                <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0 }} />
-              )}
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text)' }}>
-                  {isMockMode ? '⚡ DEMO WORKSPACE ACTIVE (OFFLINE MOCK MODE)' : `🟢 LIVE GOOGLE DRIVE CONNECTED: ${googleUserEmail || 'USER'}`}
-                </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
-                  {isMockMode
-                    ? "Exploring sample wedding data (*Alex & Sam's Wedding*). Sign in with Google to sync directly to your personal Google Drive."
-                    : `Direct Google Drive Sync active • Spreadsheet ID: ${spreadsheetId || '1h_RG...4RcI'}`}
+                <div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text)' }}>
+                    ⚡ DEMO WORKSPACE ACTIVE (OFFLINE MOCK MODE)
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
+                    Exploring sample wedding data (*Alex & Sam's Wedding*). Sign in with Google to sync directly to your personal Google Drive.
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <SafetyShieldSyncBadge
-                status={isMockMode ? 'offline' : (syncError ? 'error' : (isLoading ? 'syncing' : 'synced'))}
-                userEmail={googleUserEmail || undefined}
-                spreadsheetId={spreadsheetId || undefined}
-              />
-              <button
-                type="button"
-                onClick={() => setShowGoogleAuthModal(true)}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  backgroundColor: '#ffffff',
-                  color: '#111827',
-                  border: '2px solid #111827',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.4rem 0.75rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
-                }}
-              >
-                <HardDrive size={14} style={{ color: '#4285F4' }} />
-                <span>SIGN IN WITH GOOGLE</span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <SafetyShieldSyncBadge
+                  status="offline"
+                  userEmail={googleUserEmail || undefined}
+                  spreadsheetId={spreadsheetId || undefined}
+                />
+                <button
+                  type="button"
+                  onClick={handleDirectGoogleAuth}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    backgroundColor: '#ffffff',
+                    color: '#111827',
+                    border: '2px solid #111827',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.4rem 0.75rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <HardDrive size={14} style={{ color: '#4285F4' }} />
+                  <span>SIGN IN WITH GOOGLE</span>
+                </button>
 
-              <a
-                href="/activate"
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  backgroundColor: 'var(--color-primary)',
-                  color: 'var(--color-on-primary)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.45rem 0.75rem',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
-                }}
-              >
-                <Sparkles size={14} />
-                <span>ACTIVATE NEW PLAN</span>
-              </a>
+                <a
+                  href="/activate"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-on-primary)',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.45rem 0.75rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <Sparkles size={14} />
+                  <span>ACTIVATE NEW PLAN</span>
+                </a>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Navigation tabs (Only rendered when navLayout is 'top') */}
           {navLayout === 'top' && (
@@ -1900,6 +2044,16 @@ export default function Sheet2VowDashboard() {
                   currency={currency}
                   onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
                   onOpenModuleSettings={() => setShowSettings(true)}
+                  showWelcomeGuide={!hasDismissedWelcomeCard}
+                  onDismissWelcomeGuide={handleDismissWelcomeGuide}
+                  weddingName={weddingName}
+                  spreadsheetId={spreadsheetId}
+                  styleTheme={styleTheme}
+                  colorTheme={theme}
+                  navLayout={navLayout}
+                  onSelectStyleTheme={handleStyleThemeChange}
+                  onToggleColorTheme={handleToggleTheme}
+                  onToggleNavLayout={handleToggleNavLayout}
                 />
               )}
 
@@ -2041,7 +2195,9 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    border: 'none',
     borderBottom: '2px solid var(--color-primary)',
+    boxShadow: 'none',
     paddingBottom: '1rem',
     marginBottom: '1.5rem',
   },
@@ -2054,8 +2210,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-primary)',
   },
   brandName: {
-    fontFamily: 'var(--font-serif)',
+    fontFamily: 'var(--font-sans)',
     fontSize: '1.75rem',
+    fontWeight: 800,
+    letterSpacing: '-0.03em',
     color: 'var(--color-primary)',
     lineHeight: '1.1',
   },
@@ -2091,8 +2249,10 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '2rem',
   },
   onboardTitle: {
-    fontFamily: 'var(--font-serif)',
+    fontFamily: 'var(--font-sans)',
     fontSize: '1.75rem',
+    fontWeight: 800,
+    letterSpacing: '-0.03em',
     marginBottom: '0.5rem',
     color: 'var(--color-primary)',
   },
@@ -2264,7 +2424,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '2rem',
   },
   weddingNameText: {
-    fontFamily: 'var(--font-header, var(--font-serif))',
+    fontFamily: 'var(--font-header, var(--font-sans))',
     fontSize: '2rem',
     color: 'var(--color-primary)',
     fontWeight: 800,

@@ -146,7 +146,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     });
   };
 
-  const saveItem = async (e: React.FormEvent) => {
+  const saveItem = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
     if (isSyncing) return;
 
@@ -174,7 +174,26 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     }
 
     await onUpdate(updatedVendors);
-    closeModal();
+    
+    if (continueAdding) {
+      setFormState({
+        vendorName: '',
+        category: formState.category || 'General',
+        contactName: '',
+        emailAddress: '',
+        phoneNumber: '',
+        totalContractValue: 0,
+        depositPaid: 0,
+        balanceOwing: 0,
+        paymentDueDate: '',
+        contractLink: '',
+        staffMealsRequired: 'No',
+      });
+      setIsAdding(true);
+      setEditingItem(null);
+    } else {
+      closeModal();
+    }
   };
 
   const confirmDeleteVendor = async () => {
@@ -685,8 +704,23 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
               </div>
               <div style={styles.modalFooter}>
                 <button type="button" style={styles.cancelBtn} onClick={closeModal}>CANCEL</button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    disabled={isSyncing}
+                    onClick={(e) => saveItem(e, true)}
+                  >
+                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE VENDOR'}
+                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE VENDOR' : 'SAVE CHANGES')}
                 </button>
               </div>
             </form>

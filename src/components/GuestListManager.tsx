@@ -155,9 +155,14 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   };
 
   // Save changes
-  const saveGuest = async (e: React.FormEvent) => {
+  const saveGuest = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
     if (isSyncing) return;
+
+    if (!formState.firstName || !formState.lastName) {
+      alert('Please enter both First Name and Last Name.');
+      return;
+    }
 
     let updatedGuests: Guest[];
     if (isAdding) {
@@ -169,8 +174,29 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
     }
 
     await onUpdate(updatedGuests);
-    setEditingGuest(null);
-    setIsAdding(false);
+
+    if (continueAdding) {
+      const nextId = `G${updatedGuests.length + 1}`;
+      setFormState({
+        guestId: nextId,
+        firstName: '',
+        lastName: '',
+        partyGroup: formState.partyGroup || groups[0] || 'Friends',
+        ageCategory: formState.ageCategory || 'Adult',
+        rsvpStatus: 'No Response',
+        dietaryRestrictions: '',
+        tableAssignment: '',
+        mealChoice: 'Unassigned / Pending',
+        emailAddress: '',
+        phoneNumber: '',
+        mailingAddress: '',
+      });
+      setIsAdding(true);
+      setEditingGuest(null);
+    } else {
+      setEditingGuest(null);
+      setIsAdding(false);
+    }
   };
 
   const exportToCSV = () => {
@@ -1089,8 +1115,23 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 >
                   CANCEL
                 </button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    disabled={isSyncing}
+                    onClick={(e) => saveGuest(e, true)}
+                  >
+                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE CHANGES'}
+                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE GUEST' : 'SAVE CHANGES')}
                 </button>
               </div>
             </form>

@@ -155,6 +155,25 @@
 - [x] **[LIFE-3] Multi-Workspace Switcher Dropdown:** Header & Quick Settings dropdown storing `s2v_workspaces[]` list so pro planners can switch client weddings in 1 click.
 - [x] **[LIFE-4] Post-Activation & Reconnection Guidance Banner:** Reassuring notification banner displaying Google Drive folder path, re-entry bookmark URL, and Spreadsheet ID.
 - [x] **[LIFE-5] Sheet2Suite Shared Activation Engine:** Subdomain route middleware (`src/middleware.ts`), multi-SKU Order ID verification, and Sheet2Suite Product Hub selector.
+- [x] **[ACTIVATION-1] Mobile-Optimized Order Verification & Step 1 Setup Flow (`/activate`):** Fluid responsive card padding, 16px iOS auto-zoom prevention inputs, 48px touch targets, full-width Google Drive target directory pills, and stacked Quick vs. Guided cards with selectable states.
+- [x] **[ACTIVATION-3] Redesigned 4-Screen Guided Setup Wizard Flow (`/activate`):**
+  - **Screen 1**: Wedding Details (Couple Name/Title, Wedding Date) + Up to 2 Additional Co-Admin User Access.
+  - **Screen 2**: Feature & Module Enablement (Financials, Guests, Itinerary, Tasks, Vendors, Music) with settings reassurance note.
+  - **Screen 3**: Feature Details (Budget & Currency if Financials enabled; Preset Pack vs Clean Slate + granular Task Checklist item preview with check/uncheck toggles if Tasks enabled).
+  - **Screen 4**: Workspace Experience & UI Customization (Theme: Editorial Elegance, Neo-Brutalism, Botanical Romance, Midnight Tuxedo; Light/Dark Mode; Nav Layout: Left-Hand Sidebar vs Top Header, defaulting to Left-Hand Nav).
+- [x] **[ACTIVATION-4] Mobile-Friendly Setup Shortcuts, Action Button Elevation & Google Drive Picker Modal:**
+  - **Full-Width Mobile Preselected Shortcuts**: Preselected Drive shortcut buttons span full container width on mobile breakpoints (`.preselected-shortcuts-grid`) instead of squeezing on one row.
+  - **Google Drive Authentication Gating for Picker**: Disabled and visually gated the "Browse Google Drive" button until user completes Google OAuth sign-in.
+  - **Action Button Visual Contrast & Colors**: Upgraded primary, secondary, and utility buttons with distinct background fills, elevated borders, and crisp contrast so interactive actions stand out immediately from form cards.
+  - **Responsive Mobile Google Drive Picker Modal (`GoogleDrivePickerModal.tsx`)**: Upgraded Drive picker modal with responsive viewport height bounds, horizontal scrollable navigation pill tabs on mobile (<640px) replacing desktop sidebar, full-touch rows (48px+), and stacked action footer with prominent blue confirmation buttons.
+- [x] **[ACTIVATION-5] Live Master Google Sheet Real-Time Exporter & Setup Form Ergonomics:**
+  - **Real-Time Master Sheet Cloner (`src/lib/sheets/masterTemplateExporter.ts`)**: Server-side exporter streaming the exact live binary export buffer of the official Master Google Sheet into the customer's Google Drive via `drive.files.create({ mimeType: 'application/vnd.google-apps.spreadsheet' })`, providing 100% template fidelity under the minimal `drive.file` scope without cross-tenant Google Drive API copy permission blocks.
+  - **Clean-Slate Wedding Title Input**: Removed prefilled `"Our Wedding"` default across Step 1 and Quick Setup, allowing users to type immediately without backspacing.
+  - **Zero-Clearing Financial Budget Field**: Budget input initializes to `0`, clears completely on focus/click, and seamlessly handles backspacing/deletion of leading zeros.
+- [x] **[ACTIVATION-6] Automated Dropdown Validation Preservation & Settings Tab Range Linking:**
+  - **Dynamic In-Cell Dropdown Preserver (`src/lib/sheets/dropdownValidator.ts`)**: Automated Google Sheets API `setDataValidation` engine that scans table headers across all 10 tabs and applies `ONE_OF_RANGE` validation linked to the `'Settings'` lookup columns (`=Settings!$A$2:$A$50`, `=Settings!$D$2:$D$50`, etc.) with `showCustomUi: true` interactive dropdown arrow pills.
+  - **Settings Dropdown Cell Protection**: Relocated system JSON configuration storage from `Settings!B2` (which conflicted with `Table Shapes`) to `Settings!Z1`, preserving 100% of Settings lookup lists and preventing formula `#REF!` degradation.
+  - **Post-Provision & Sync Dropdown Repair (`/api/provision`, `/api/sync`)**: Automatically applies dropdown validations during provisioning and exposes `sheetType: 'repair_dropdowns'` for on-demand table validation restoration.
 
 ---
 ---
@@ -193,6 +212,12 @@
 |---|---|---|---|---|---|
 | **`[SHARE-4]`** | Spouse & Partner Co-Planning Access (delegate Drive read/write permissions) | `page.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
+### 📦 Suite Multi-Product Architecture & Entitlements
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[SUITE-1]`** | Multi-Product Licensed Suite Applications Hub & Switcher (Support for Sheet2Finances, Sheet2Stay, Sheet2Closet, Sheet2Inventory multi-product bundle activation & cross-app workspace switching) | `src/app/activate/page.tsx`, `src/components/SuiteProductSwitcher.tsx`, `/api/workspaces` | 🔴 High | ⚡ High (~4-5 turns) | Backlog |
+
 ### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
@@ -222,15 +247,18 @@
 | **Audio Spinner** | Music Preview Player | Smooth rotating loading indicator while fetching iTunes audio previews. |
 
 ---
-
 ## SECTION 5: 🧹 CODEBASE CLEANUP, SIMPLIFICATION & REFACTORING BACKLOG
 
 | Item ID | Task Category | Description & Refactoring Strategy | Target Files | Priority | Status |
 |---|---|---|---|---|---|
+| **`[ACTIVATION-5]`** | Workaround 1: Live Real-Time Master Template Exporter & Google Drive Conversion Engine (Fetches binary XLSX from `DEFAULT_MASTER_SHEET_ID` and converts directly via `drive.files.create` under `drive.file` scope) | `masterTemplateExporter.ts`, `/api/provision/route.ts` | 🔴 High | ⚡ High | ✅ Completed |
+| **`[ACTIVATION-6]`** | Automatic Dropdown Validation Preservation Engine (Applies Google Sheets API `setDataValidation` with `ONE_OF_RANGE` rules linking table columns to `Settings` tab dropdown ranges across all 14 tabs) | `dropdownValidator.ts`, `/api/provision/route.ts`, `/api/sync/route.ts` | 🔴 High | ⚡ High | ✅ Completed |
+| **`[ACTIVATION-7]`** | First-Time Workspace Welcome & UX Education Info Card (High-contrast indigo/violet info card replacing Executive Summary for new workspaces; teaches Themes, Light/Dark Mode, and Left Sidebar vs Top Nav; persists dismissal state in `Settings!Z1` and `localStorage`) | `WelcomeGuideCard.tsx`, `DashboardMetrics.tsx`, `vow/page.tsx`, `/api/sync/route.ts` | 🟡 Medium | ⚡ Med | ✅ Completed |
+| **`[ACTIVATION-8]`** | Workspace User Profile & Typography Polish (Restores persistent Google profile picture & user display name from localStorage; adds 1-click 'Open Google Spreadsheet' button in profile menu; enforces #0D1B2A Royal Navy default for Editorial light theme; preserves authentic Playfair Display newspaper serif headers for Editorial workspace while keeping Hub/Activation fixed modern sans) | `src/app/vow/page.tsx`, `src/app/activate/page.tsx`, `src/lib/themePresets.ts`, `src/app/theme.css` | 🟡 Medium | ⚡ Low | ✅ Completed |
+| **`[UX-BULK-LOAD]`** | Rapid Data Entry 3-Button Modal Workflow ("Save & Add New" bulk loading action across Guests, Vendors, Music, Tasks, Photos, Budget, Timeline, Gifts, Menu, and Seating Table modals; persists the record and instantly cycles the form for the next record) | `GuestListManager.tsx`, `VendorManager.tsx`, `MusicManager.tsx`, `KanbanBoard.tsx`, `PhotoShotListManager.tsx`, `BudgetLedgerManager.tsx`, `TimelineManager.tsx`, `ThankYouManager.tsx`, `MenuSetupManager.tsx`, `SeatingChartManager.tsx` | 🔴 High | ⚡ High | ✅ Completed |
 | **`[CLEAN-1]`** | Component Monolith Decomposition | Decompose `src/app/vow/page.tsx` (~2,900 lines) into modular subcomponents: `VowHeader.tsx` (top navigation bar), `VowSidebarNav.tsx` (sidebar & drawer navigation), and `VowDisconnectModal.tsx` (disconnect dialog). | `src/app/vow/page.tsx`, `src/components/vow/` | 🔴 High | ✅ Completed |
 | **`[CLEAN-2]`** | Activation Wizard Decomposition | Decompose `src/app/activate/page.tsx` (~1,285 lines) into modular step components: `StepOrderVerification.tsx` (Step 0), `StepPackageHub.tsx` (Step 1), and `StepSetupForm.tsx` (Step 2). | `src/app/activate/page.tsx`, `src/components/activate/` | 🔴 High | ✅ Completed |
 | **`[CLEAN-3]`** | Database Layer Unification | Eliminate legacy dual-writes to raw `licenses.json`/`workspaces.json` files and unify all DB operations strictly onto `LocalFirestore` (`firestoreDb.ts`). | `src/lib/db/licensingDb.ts`, `src/lib/db/firestoreDb.ts` | 🟡 Medium | ✅ Completed |
 | **`[CLEAN-4]`** | Domain Schema Centralization | Consolidate fragmented TypeScript interfaces (`Guest`, `Vendor`, `BudgetItem`, `TaskItem`, `WorkspaceRecord`, `LicenseRecord`) into `src/types/wedding.ts` and `src/types/licensing.ts`. | `src/types/wedding.ts`, `src/types/licensing.ts` | 🟡 Medium | ✅ Completed |
 | **`[CLEAN-5]`** | API Response Normalization | Create standard API helper functions (`apiResponse.success()`, `apiResponse.unauthorized()`, `apiResponse.error()`) to standardize error and status payloads across API endpoints. | `src/lib/core/apiResponse.ts`, `src/app/api/` | 🟡 Medium | ✅ Completed |
 | **`[CLEAN-6]`** | CSS Utility Token Cleanup | Extract recurring inline React `style={{ ... }}` patterns (modal headers, badge pills, card containers) into reusable CSS utility classes in `globals.css`. | `src/app/globals.css`, `src/app/theme.css` | 🟢 Low | ✅ Completed |
-

@@ -177,10 +177,14 @@ export default function ThankYouManager({
   };
 
   // Save Gift Handler
-  const handleSaveGift = async (e: React.FormEvent) => {
+  const handleSaveGift = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
-    if (!formData.description || !formData.giverName) return;
+    if (!formData.description || !formData.giverName) {
+      alert('Please provide Gift Description and Giver Name.');
+      return;
+    }
 
+    let updated: GiftItem[];
     if (isAddingGift) {
       const newGift: GiftItem = {
         giftId: `G${Date.now().toString().slice(-4)}`,
@@ -191,16 +195,32 @@ export default function ThankYouManager({
         thankYouSent: Boolean(formData.thankYouSent),
         notes: formData.notes || '',
       };
-      await onUpdateGifts([...gifts, newGift]);
+      updated = [...gifts, newGift];
     } else if (editingGift) {
-      const updated = gifts.map(g => 
+      updated = gifts.map(g => 
         g.giftId === editingGift.giftId ? { ...g, ...formData, amount: Number(formData.amount) || 0 } as GiftItem : g
       );
-      await onUpdateGifts(updated);
+    } else {
+      return;
     }
 
-    setIsAddingGift(false);
-    setEditingGift(null);
+    await onUpdateGifts(updated);
+
+    if (continueAdding) {
+      setFormData({
+        description: '',
+        giverName: '',
+        category: formData.category || 'General',
+        amount: 0,
+        thankYouSent: false,
+        notes: '',
+      });
+      setIsAddingGift(true);
+      setEditingGift(null);
+    } else {
+      setIsAddingGift(false);
+      setEditingGift(null);
+    }
   };
 
   // Confirm Delete Gift
@@ -570,8 +590,22 @@ export default function ThankYouManager({
                 >
                   CANCEL
                 </button>
+                {isAddingGift && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    onClick={(e) => handleSaveGift(e, true)}
+                  >
+                    SAVE & ADD NEW
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} className="saveBtn">
-                  SAVE GIFT RECORD
+                  {isAddingGift ? 'SAVE GIFT RECORD' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>

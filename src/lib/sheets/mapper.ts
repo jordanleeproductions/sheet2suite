@@ -15,8 +15,10 @@ export const GUEST_HEADERS: Record<string, keyof Guest> = {
   'Seat': 'seatNumber',
   'Has Plus One': 'hasPlusOne',
   'Plus One Name': 'plusOneName',
+  'Email': 'emailAddress',
   'Email Address': 'emailAddress',
   'Phone Number': 'phoneNumber',
+  'Phone': 'phoneNumber',
   'Mailing Address': 'mailingAddress',
   'Thanked': 'thankedSent',
   'Notes': 'notes',
@@ -39,7 +41,9 @@ export const SCHEDULE_HEADERS: Record<string, keyof ScheduleEvent> = {
   'Event Moment': 'eventMoment',
   'Location': 'location',
   'Responsibility / Vendors': 'responsibility',
+  'Responsibility': 'responsibility',
   'Notes / Details': 'notes',
+  'Notes': 'notes',
   'Is After Midnight': 'isAfterMidnight',
   'After Midnight': 'isAfterMidnight',
 };
@@ -50,10 +54,13 @@ export const VENDOR_HEADERS: Record<string, keyof Vendor> = {
   'Category': 'category',
   'Contact Name': 'contactName',
   'Email Address': 'emailAddress',
+  'Email': 'emailAddress',
   'Phone Number': 'phoneNumber',
+  'Phone': 'phoneNumber',
   'Total Contract Value': 'totalContractValue',
   'Deposit Paid': 'depositPaid',
   'Balance Owing': 'balanceOwing',
+  'Payment Due': 'paymentDueDate',
   'Payment Due Date': 'paymentDueDate',
   'Contract Link': 'contractLink',
   'Staff Meals Required': 'staffMealsRequired',
@@ -62,12 +69,15 @@ export const VENDOR_HEADERS: Record<string, keyof Vendor> = {
 export const TASK_HEADERS: Record<string, keyof Task> = {
   'Task ID': 'taskId',
   'Task Name': 'taskName',
+  'Status': 'kanbanStage',
   'Kanban Stage': 'kanbanStage',
+  'Stage': 'kanbanStage',
   'Category': 'category',
   'Priority': 'priority',
   'Assigned To': 'assignedTo',
   'Due Date': 'dueDate',
   'Notes / Links': 'notes',
+  'Notes': 'notes',
 };
 
 // Generic mapping utilities
@@ -218,7 +228,9 @@ export const taskMapper = {
 
 export const PHOTO_HEADERS: Record<string, keyof PhotoShot> = {
   'Shot ID': 'shotId',
+  'Shot Order': 'shotId',
   'Description': 'description',
+  'Description or People': 'description',
   'Location': 'location',
   'Shot Time': 'shotTime',
   'Included People': 'people',
@@ -248,11 +260,17 @@ export const photoMapper = {
 
 export const GIFT_HEADERS: Record<string, keyof GiftItem> = {
   'Item ID': 'giftId',
+  'Gift ID': 'giftId',
+  'Gift Description': 'description',
   'Gift Description / Name': 'description',
+  'Guest / Party Name': 'giverName',
   'Giver / From': 'giverName',
+  'Gift Type': 'category',
   'Category / Store': 'category',
+  'Amount': 'amount',
   'Estimated Value / Cash Amount': 'amount',
   'Thank You Sent': 'thankYouSent',
+  'Received Date': 'notes',
   'Notes': 'notes',
 };
 

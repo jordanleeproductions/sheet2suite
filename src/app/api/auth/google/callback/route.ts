@@ -87,31 +87,8 @@ export async function GET(req: NextRequest) {
 
       // Check local database for existing registered workspaces for this user email
       const existingDbWorkspaces = LocalLicensingDb.getWorkspacesByEmail(userEmail);
-      let spreadsheetId: string | undefined = existingDbWorkspaces[0]?.spreadsheetId;
-      let webViewLink: string | undefined = existingDbWorkspaces[0]?.webViewLink;
-
-      if (!spreadsheetId) {
-        // Check Drive folder if not found in DB
-        const sheetSearch = await drive.files.list({
-          q: `'${vowFolderId}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
-          fields: 'files(id, name, webViewLink)',
-        });
-
-        spreadsheetId = sheetSearch.data.files?.[0]?.id || undefined;
-        webViewLink = sheetSearch.data.files?.[0]?.webViewLink || undefined;
-
-        if (spreadsheetId) {
-          // Register discovered Drive sheet in database
-          LocalLicensingDb.saveWorkspace({
-            userEmail,
-            spreadsheetId,
-            spreadsheetName: sheetSearch.data.files?.[0]?.name || `${userName}'s Wedding Database`,
-            driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
-            webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
-            productName: 'Sheet2Vow',
-          });
-        }
-      }
+      const spreadsheetId: string | undefined = existingDbWorkspaces[0]?.spreadsheetId;
+      const webViewLink: string | undefined = existingDbWorkspaces[0]?.webViewLink;
 
       if (spreadsheetId) {
         provisionData = {

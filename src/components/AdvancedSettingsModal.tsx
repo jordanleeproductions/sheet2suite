@@ -504,7 +504,7 @@ export default function AdvancedSettingsModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-bg-subtle)', padding: '0.5rem 0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
                     <input
                       type="color"
-                      value={primaryColor || '#11552D'}
+                      value={primaryColor || '#0D1B2A'}
                       onChange={(e) => onUpdatePrimaryColor && onUpdatePrimaryColor(e.target.value)}
                       style={{
                         width: '32px',

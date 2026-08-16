@@ -93,12 +93,41 @@ export async function GET(
     try {
       const sheetsClient = getSheetsClient(undefined);
 
+      // Fetch spreadsheet metadata to get exact available sheet titles
+      const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+      const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
+
+      const findTitle = (candidates: string[]) => {
+        const exact = candidates.find(c => availableTitles.includes(c));
+        if (exact) return exact;
+        for (const c of candidates) {
+          const normCandidate = c.toLowerCase().replace(/[\s_\-]+/g, '');
+          const matched = availableTitles.find(t => t.toLowerCase().replace(/[\s_\-]+/g, '') === normCandidate);
+          if (matched) return matched;
+        }
+        for (const c of candidates) {
+          const normCandidate = c.toLowerCase().replace(/[\s_\-]+/g, '');
+          if (!normCandidate) continue;
+          const matched = availableTitles.find(t => {
+            const normTitle = t.toLowerCase().replace(/[\s_\-]+/g, '');
+            return normTitle.includes(normCandidate) || normCandidate.includes(normTitle);
+          });
+          if (matched) return matched;
+        }
+        return candidates[0];
+      };
+
+      const musicTitle = findTitle(['MUSIC', 'Music Playlist', 'Music', 'Playlists']);
+      const photosTitle = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
+      const scheduleTitle = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);
+      const guestsTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
+
       // Define tab ranges depending on scope
       const ranges: string[] = [];
-      if (scope === 'music' || scope === 'vendor_hub') ranges.push("'Music Playlist'!A1:F1000");
-      if (scope === 'photos' || scope === 'vendor_hub') ranges.push("'PHOTOS'!A1:H1000");
-      if (scope === 'timeline' || scope === 'vendor_hub') ranges.push("'Day-Of-Schedule'!A1:F1000");
-      if (scope === 'catering' || scope === 'vendor_hub') ranges.push("'Guest List'!A1:L1000");
+      if (scope === 'music' || scope === 'vendor_hub') ranges.push(`'${musicTitle}'!A1:I1000`);
+      if (scope === 'photos' || scope === 'vendor_hub') ranges.push(`'${photosTitle}'!A1:H1000`);
+      if (scope === 'timeline' || scope === 'vendor_hub') ranges.push(`'${scheduleTitle}'!A1:F1000`);
+      if (scope === 'catering' || scope === 'vendor_hub') ranges.push(`'${guestsTitle}'!A1:L1000`);
 
       const batchResponse = await sheetsClient.spreadsheets.values.batchGet({
         spreadsheetId,

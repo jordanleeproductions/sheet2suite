@@ -14,7 +14,7 @@ export async function generateMasterXlsxBuffer(coupleName: string = 'Alex & Sam'
     { header: '', key: 'colB', width: 35 },
     { header: '', key: 'colC', width: 25 },
   ];
-  dashboardSheet.getCell('B2').value = `${coupleName} Wedding Database`;
+  dashboardSheet.getCell('B2').value = coupleName.toLowerCase().includes('wedding') ? `${coupleName} Database` : `${coupleName} Wedding Database`;
   dashboardSheet.getCell('B2').font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF0F172A' } };
   dashboardSheet.getCell('B4').value = 'Total Budget ($USD):';
   dashboardSheet.getCell('C4').value = 35000;
@@ -180,7 +180,7 @@ export async function generateMasterXlsxBuffer(coupleName: string = 'Alex & Sam'
   styleHeaderRow(settingsSheet);
   settingsSheet.addRow({
     prop: 'CONFIG_JSON',
-    val: JSON.stringify({ budget: 35000, weddingName: `${coupleName} Wedding` }),
+    val: JSON.stringify({ budget: 35000, weddingName: coupleName }),
   });
 
   const arrayBuffer = await workbook.xlsx.writeBuffer();

@@ -90,9 +90,12 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
-    if (!formState.name?.trim()) return;
+    if (!formState.name?.trim()) {
+      alert('Please enter a Menu Item Name.');
+      return;
+    }
 
     const newItem: MenuItem = {
       id: formState.id || `menu-${Date.now()}`,
@@ -130,8 +133,23 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
       saveMenuItemsToStorage([...menuItems, newItem]);
     }
 
-    setIsAdding(false);
-    setEditingItem(null);
+    if (continueAdding) {
+      setFormState({
+        category: formState.category || 'entree',
+        name: '',
+        description: '',
+        isVegetarian: false,
+        isVegan: false,
+        isGlutenFree: false,
+        isNutFree: false,
+        isGuestChoice: true,
+      });
+      setIsAdding(true);
+      setEditingItem(null);
+    } else {
+      setIsAdding(false);
+      setEditingItem(null);
+    }
   };
 
   const filteredItems = menuItems.filter(item => activeCategory === 'all' || item.category === activeCategory);
@@ -321,7 +339,7 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
               </button>
             </div>
 
-            <form onSubmit={handleFormSubmit} style={styles.form}>
+            <form onSubmit={handleSave} style={styles.form}>
               <div style={styles.fieldGroup}>
                 <label style={styles.label}>COURSE CATEGORY *</label>
                 <select
@@ -420,8 +438,22 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
                 >
                   CANCEL
                 </button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleSave(e, true)}
+                    style={{
+                      ...styles.submitBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                  >
+                    SAVE & ADD NEW
+                  </button>
+                )}
                 <button type="submit" style={styles.submitBtn}>
-                  <Check size={16} style={{ marginRight: '4px' }} /> SAVE MENU ITEM
+                  <Check size={16} style={{ marginRight: '4px' }} /> {isAdding ? 'SAVE MENU ITEM' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>

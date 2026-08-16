@@ -76,11 +76,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
   const [pathHistory, setPathHistory] = useState<{ id: string; name: string }[]>([
     { id: 'root', name: 'My Drive' }
   ]);
-  const [selectedFolder, setSelectedFolder] = useState<DriveFolderItem | null>({
-    id: 'f_sheet2vow',
-    name: 'Sheet2Vow',
-    path: initialPath
-  });
+  const [selectedFolder, setSelectedFolder] = useState<DriveFolderItem | null>(null);
 
   const [folders, setFolders] = useState<DriveFolderItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -90,6 +86,26 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
   // New inline folder creation state
   const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
+
+  const getCurrentBreadcrumbPath = useCallback(() => {
+    return pathHistory.map(p => p.name).join(' / ');
+  }, [pathHistory]);
+
+  const getEffectiveSelection = useCallback((): { id: string; name: string; path: string } => {
+    const currentPath = pathHistory.map(p => p.name).join(' / ');
+    if (selectedFolder && selectedFolder.id !== currentFolderId) {
+      return {
+        id: selectedFolder.id,
+        name: selectedFolder.name,
+        path: `${currentPath} / ${selectedFolder.name}`,
+      };
+    }
+    return {
+      id: currentFolderId,
+      name: pathHistory[pathHistory.length - 1]?.name || 'My Drive',
+      path: currentPath,
+    };
+  }, [pathHistory, selectedFolder, currentFolderId]);
 
   // Fetch folders from Google Drive API v3 or fallback mock database
   const fetchDriveFolders = useCallback(async (folderId: string) => {
@@ -146,7 +162,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
   const handleOpenFolder = (folder: DriveFolderItem) => {
     setCurrentFolderId(folder.id);
     setPathHistory(prev => [...prev, { id: folder.id, name: folder.name }]);
-    setSelectedFolder(folder);
+    setSelectedFolder(null);
   };
 
   // Handle click breadcrumb level
@@ -155,6 +171,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
     const target = newHistory[newHistory.length - 1];
     setPathHistory(newHistory);
     setCurrentFolderId(target.id);
+    setSelectedFolder(null);
   };
 
   // Handle Back (←) button
@@ -191,31 +208,34 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
 
   return (
     <div
+      className="picker-modal-overlay"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
+        backgroundColor: 'rgba(15, 23, 42, 0.7)',
         backdropFilter: 'blur(6px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        padding: '1.25rem',
+        padding: '1rem',
         fontFamily: "'Google Sans', Roboto, -apple-system, sans-serif",
       }}
       onClick={onClose}
     >
       <div
+        className="picker-modal-card"
         style={{
           width: '100%',
-          maxWidth: '820px',
+          maxWidth: '840px',
           height: '620px',
+          maxHeight: '92vh',
           backgroundColor: '#FFFFFF',
           borderRadius: '16px',
-          boxShadow: '0 24px 48px -12px rgba(11, 87, 208, 0.18), 0 8px 16px -4px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 24px 48px -12px rgba(11, 87, 208, 0.25), 0 8px 16px -4px rgba(0, 0, 0, 0.1)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -228,70 +248,70 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
         <div
           style={{
             backgroundColor: '#F8FAFD',
-            padding: '1rem 1.5rem',
+            padding: '0.875rem 1.25rem',
             borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1rem',
+            gap: '0.75rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden' }}>
             <div
               style={{
-                width: '40px',
-                height: '40px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 backgroundColor: '#D3E3FD',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#0B57D0',
+                flexShrink: 0,
               }}
             >
-              <HardDrive size={22} />
+              <HardDrive size={20} />
             </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#1F1F1F', letterSpacing: '-0.01em' }}>
+            <div style={{ overflow: 'hidden' }}>
+              <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1F1F1F', letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Select Google Drive Target Folder
               </h2>
-              <p style={{ margin: 0, fontSize: '0.775rem', color: '#444746' }}>
-                Choose where your Sheet2Vow wedding database spreadsheet is stored
+              <p style={{ margin: 0, fontSize: '0.725rem', color: '#444746', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Pick folder to save your Sheet2Vow database
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
             <button
               type="button"
               onClick={() => setIsCreatingFolder(true)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                backgroundColor: '#EDF2FA',
-                color: '#0B57D0',
+                gap: '0.35rem',
+                backgroundColor: '#0B57D0',
+                color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '20px',
-                padding: '0.45rem 0.9rem',
-                fontSize: '0.8rem',
+                padding: '0.4rem 0.8rem',
+                fontSize: '0.775rem',
                 fontWeight: 700,
                 cursor: 'pointer',
-                transition: 'background-color 0.15s ease',
+                boxShadow: '0 1px 3px rgba(11, 87, 208, 0.25)',
+                transition: 'all 0.15s ease',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#D3E3FD'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#EDF2FA'}
             >
-              <FolderPlus size={16} />
-              <span>New folder</span>
+              <FolderPlus size={15} />
+              <span>+ New folder</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
               style={{
-                width: '36px',
-                height: '36px',
+                width: '34px',
+                height: '34px',
                 borderRadius: '50%',
                 border: 'none',
                 backgroundColor: 'transparent',
@@ -309,7 +329,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
           </div>
         </div>
 
-        {/* Loading Progress Bar (Google Material Style) */}
+        {/* Loading Progress Bar */}
         {isLoading && (
           <div style={{ height: '3px', width: '100%', backgroundColor: '#E8F0FE', overflow: 'hidden' }}>
             <div
@@ -324,17 +344,19 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
         )}
 
         {/* Main Body Layout (Sidebar + Content View) */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Left Navigation Sidebar (Drive Scopes) */}
+        <div className="picker-layout-container" style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Navigation Sidebar / Horizontal Pill Bar on mobile */}
           <div
+            className="picker-sidebar"
             style={{
-              width: '190px',
+              width: '180px',
               backgroundColor: '#F8FAFD',
               borderRight: '1px solid #E2E8F0',
-              padding: '1rem 0.65rem',
+              padding: '0.85rem 0.5rem',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.25rem',
+              flexShrink: 0,
             }}
           >
             {[
@@ -358,20 +380,20 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.6rem 0.85rem',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
                     borderRadius: '20px',
                     border: 'none',
                     backgroundColor: isActive ? '#D3E3FD' : 'transparent',
                     color: isActive ? '#041E49' : '#444746',
                     fontWeight: isActive ? 700 : 500,
-                    fontSize: '0.825rem',
+                    fontSize: '0.8rem',
                     cursor: 'pointer',
-                    textAlign: 'left',
+                    whiteSpace: 'nowrap',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <IconComp size={18} style={{ color: isActive ? '#0B57D0' : '#444746' }} />
+                  <IconComp size={16} style={{ color: isActive ? '#0B57D0' : '#444746' }} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -383,43 +405,45 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
             {/* Top Toolbar (Breadcrumbs + Search + View Controls) */}
             <div
               style={{
-                padding: '0.75rem 1.25rem',
+                padding: '0.6rem 1rem',
                 borderBottom: '1px solid #F1F5F9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '1rem',
+                gap: '0.75rem',
                 backgroundColor: '#FFFFFF',
+                flexWrap: 'wrap',
               }}
             >
-              {/* Live Interactive Breadcrumbs & Back Navigation */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', flex: 1 }}>
+              {/* Breadcrumb Trail */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', overflowX: 'auto', flex: 1, minWidth: '160px' }}>
                 <button
                   type="button"
                   disabled={pathHistory.length <= 1}
                   onClick={handleNavigateUp}
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '28px',
+                    height: '28px',
                     borderRadius: '50%',
                     border: 'none',
-                    backgroundColor: 'transparent',
+                    backgroundColor: pathHistory.length > 1 ? '#EDF2FA' : 'transparent',
                     cursor: pathHistory.length > 1 ? 'pointer' : 'not-allowed',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: pathHistory.length > 1 ? '#1F1F1F' : '#C4C7C5',
+                    color: pathHistory.length > 1 ? '#0B57D0' : '#C4C7C5',
+                    flexShrink: 0,
                   }}
                 >
-                  <ArrowLeft size={18} />
+                  <ArrowLeft size={16} />
                 </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', overflowX: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
                   {pathHistory.map((item, idx) => {
                     const isLast = idx === pathHistory.length - 1;
                     return (
                       <React.Fragment key={item.id}>
-                        {idx > 0 && <ChevronRight size={14} style={{ color: '#8E918F' }} />}
+                        {idx > 0 && <ChevronRight size={12} style={{ color: '#8E918F' }} />}
                         <button
                           type="button"
                           onClick={() => handleJumpToBreadcrumb(idx)}
@@ -428,11 +452,10 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                             backgroundColor: isLast ? '#EDF2FA' : 'transparent',
                             color: isLast ? '#0B57D0' : '#444746',
                             fontWeight: isLast ? 700 : 500,
-                            fontSize: '0.825rem',
-                            padding: '0.25rem 0.5rem',
+                            fontSize: '0.775rem',
+                            padding: '0.2rem 0.45rem',
                             borderRadius: '6px',
                             cursor: 'pointer',
-                            whiteSpace: 'nowrap',
                           }}
                         >
                           {item.name}
@@ -444,9 +467,9 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
               </div>
 
               {/* Search Bar & View Mode Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ position: 'relative', width: '180px' }}>
-                  <Search size={14} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: '#747775' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <div style={{ position: 'relative', width: '150px' }}>
+                  <Search size={13} style={{ position: 'absolute', left: '0.55rem', top: '50%', transform: 'translateY(-50%)', color: '#747775' }} />
                   <input
                     type="text"
                     placeholder="Search folder..."
@@ -454,10 +477,10 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '0.4rem 0.5rem 0.4rem 2rem',
+                      padding: '0.35rem 0.5rem 0.35rem 1.75rem',
                       borderRadius: '20px',
                       border: '1px solid #C4C7C5',
-                      fontSize: '0.775rem',
+                      fontSize: '0.75rem',
                       backgroundColor: '#F8FAFD',
                       outline: 'none',
                       boxSizing: 'border-box',
@@ -469,8 +492,8 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                   type="button"
                   onClick={() => setViewMode(prev => prev === 'list' ? 'grid' : 'list')}
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '30px',
+                    height: '30px',
                     borderRadius: '50%',
                     border: 'none',
                     backgroundColor: 'transparent',
@@ -481,13 +504,13 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                     color: '#444746',
                   }}
                 >
-                  {viewMode === 'list' ? <Grid size={18} /> : <ListIcon size={18} />}
+                  {viewMode === 'list' ? <Grid size={16} /> : <ListIcon size={16} />}
                 </button>
               </div>
             </div>
 
             {/* Folder Items Container */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1rem' }}>
               {/* Create New Folder Inline Input Overlay */}
               {isCreatingFolder && (
                 <form
@@ -496,14 +519,14 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                     backgroundColor: '#EDF2FA',
                     border: '2px solid #0B57D0',
                     borderRadius: '12px',
-                    padding: '0.85rem 1rem',
-                    marginBottom: '1rem',
+                    padding: '0.75rem 0.85rem',
+                    marginBottom: '0.75rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
+                    gap: '0.5rem',
                   }}
                 >
-                  <FolderPlus size={20} style={{ color: '#0B57D0' }} />
+                  <FolderPlus size={18} style={{ color: '#0B57D0', flexShrink: 0 }} />
                   <input
                     type="text"
                     autoFocus
@@ -512,10 +535,10 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                     onChange={(e) => setNewFolderName(e.target.value)}
                     style={{
                       flex: 1,
-                      padding: '0.45rem 0.75rem',
-                      borderRadius: '8px',
+                      padding: '0.4rem 0.65rem',
+                      borderRadius: '6px',
                       border: '1px solid #0B57D0',
-                      fontSize: '0.85rem',
+                      fontSize: '0.8rem',
                       outline: 'none',
                     }}
                   />
@@ -525,9 +548,9 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                       backgroundColor: '#0B57D0',
                       color: '#FFFFFF',
                       border: 'none',
-                      borderRadius: '16px',
-                      padding: '0.4rem 0.85rem',
-                      fontSize: '0.775rem',
+                      borderRadius: '14px',
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
                       cursor: 'pointer',
                     }}
@@ -542,21 +565,24 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                       color: '#444746',
                       border: 'none',
                       borderRadius: '50%',
-                      width: '28px',
-                      height: '28px',
+                      width: '26px',
+                      height: '26px',
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    <X size={16} />
+                    <X size={15} />
                   </button>
                 </form>
               )}
 
               {filteredFolders.length === 0 ? (
-                <div style={{ padding: '3rem 1rem', textAlign: 'center', color: '#747775' }}>
-                  <FolderOpen size={48} style={{ color: '#C4C7C5', marginBottom: '0.75rem' }} />
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1F1F1F' }}>No sub-folders inside this directory</div>
-                  <p style={{ fontSize: '0.775rem', marginTop: '0.25rem', color: '#444746' }}>
+                <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#747775' }}>
+                  <FolderOpen size={44} style={{ color: '#C4C7C5', marginBottom: '0.5rem' }} />
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1F1F1F' }}>No sub-folders inside this directory</div>
+                  <p style={{ fontSize: '0.725rem', marginTop: '0.2rem', color: '#444746' }}>
                     Click <strong>"+ New folder"</strong> above to create a dedicated wedding destination folder
                   </p>
                 </div>
@@ -574,35 +600,38 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '0.7rem 0.85rem',
+                          padding: '0.65rem 0.85rem',
                           borderRadius: '8px',
                           backgroundColor: isSelected ? '#E8F0FE' : '#FFFFFF',
                           border: isSelected ? '1.5px solid #0B57D0' : '1px solid #F1F5F9',
                           cursor: 'pointer',
                           transition: 'all 0.12s ease',
+                          minHeight: '48px',
+                          boxSizing: 'border-box',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
                           <div
                             style={{
                               color: isSelected ? '#0B57D0' : (folder.folderColorRgb || '#4285F4'),
                               display: 'flex',
                               alignItems: 'center',
+                              flexShrink: 0,
                             }}
                           >
-                            <Folder size={22} fill={isSelected ? '#0B57D0' : '#4285F4'} fillOpacity={0.2} />
+                            <Folder size={20} fill={isSelected ? '#0B57D0' : '#4285F4'} fillOpacity={0.2} />
                           </div>
-                          <div>
-                            <div style={{ fontWeight: isSelected ? 700 : 600, fontSize: '0.85rem', color: '#1F1F1F' }}>
+                          <div style={{ overflow: 'hidden' }}>
+                            <div style={{ fontWeight: isSelected ? 700 : 600, fontSize: '0.825rem', color: '#1F1F1F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {folder.name}
                             </div>
-                            <div style={{ fontSize: '0.725rem', color: '#747775' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#747775' }}>
                               Modified: {folder.updatedAt || 'Recently'}
                             </div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -613,8 +642,8 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                               backgroundColor: '#EDF2FA',
                               color: '#0B57D0',
                               border: 'none',
-                              borderRadius: '16px',
-                              padding: '0.3rem 0.65rem',
+                              borderRadius: '14px',
+                              padding: '0.3rem 0.6rem',
                               fontSize: '0.725rem',
                               fontWeight: 700,
                               cursor: 'pointer',
@@ -624,7 +653,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                             }}
                           >
                             <span>Open</span>
-                            <ChevronRight size={14} />
+                            <ChevronRight size={13} />
                           </button>
                         </div>
                       </div>
@@ -633,7 +662,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                 </div>
               ) : (
                 /* Grid View Layout */
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.65rem' }}>
                   {filteredFolders.map((folder) => {
                     const isSelected = selectedFolder?.id === folder.id;
                     return (
@@ -644,28 +673,28 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                         style={{
                           backgroundColor: isSelected ? '#E8F0FE' : '#F8FAFD',
                           border: isSelected ? '2px solid #0B57D0' : '1px solid #E2E8F0',
-                          borderRadius: '12px',
-                          padding: '1rem',
+                          borderRadius: '10px',
+                          padding: '0.75rem',
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: '0.65rem',
+                          gap: '0.5rem',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Folder size={28} style={{ color: '#0B57D0' }} />
+                          <Folder size={24} style={{ color: '#0B57D0' }} />
                           {isSelected && (
-                            <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#0B57D0', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Check size={12} />
+                            <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#0B57D0', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Check size={11} />
                             </div>
                           )}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1F1F1F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#1F1F1F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {folder.name}
                           </div>
-                          <div style={{ fontSize: '0.7rem', color: '#747775', marginTop: '0.15rem' }}>
+                          <div style={{ fontSize: '0.675rem', color: '#747775', marginTop: '0.1rem' }}>
                             {folder.updatedAt || 'Recently'}
                           </div>
                         </div>
@@ -678,33 +707,35 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
 
             {/* M3 Action Footer */}
             <div
+              className="picker-footer"
               style={{
                 backgroundColor: '#F8FAFD',
-                padding: '1rem 1.5rem',
+                padding: '0.85rem 1.25rem',
                 borderTop: '1px solid #E2E8F0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '1rem',
+                gap: '0.75rem',
               }}
             >
-              <div style={{ fontSize: '0.775rem', color: '#444746', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '380px' }}>
-                Selected Target Folder: <strong style={{ color: '#0B57D0' }}>{selectedFolder ? selectedFolder.path : 'My Drive'}</strong>
+              <div style={{ fontSize: '0.75rem', color: '#444746', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '360px' }}>
+                Target: <strong style={{ color: '#0B57D0' }}>{getEffectiveSelection().path}</strong>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="picker-footer-buttons" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <button
                   type="button"
                   onClick={onClose}
                   style={{
-                    padding: '0.55rem 1.25rem',
+                    padding: '0.5rem 1rem',
                     backgroundColor: 'transparent',
-                    color: '#0B57D0',
-                    border: 'none',
+                    color: '#444746',
+                    border: '1px solid #C4C7C5',
                     borderRadius: '20px',
-                    fontSize: '0.825rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
                     cursor: 'pointer',
+                    minHeight: '40px',
                   }}
                 >
                   Cancel
@@ -712,38 +743,28 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (selectedFolder) {
-                      onSelectFolder({
-                        id: selectedFolder.id,
-                        name: selectedFolder.name,
-                        path: selectedFolder.path,
-                      });
-                    } else {
-                      const currentPathStr = pathHistory.map(p => p.name).join(' / ');
-                      onSelectFolder({
-                        id: currentFolderId,
-                        name: pathHistory[pathHistory.length - 1].name,
-                        path: currentPathStr,
-                      });
-                    }
+                    const chosen = getEffectiveSelection();
+                    onSelectFolder(chosen);
                     onClose();
                   }}
                   style={{
-                    padding: '0.55rem 1.5rem',
+                    padding: '0.5rem 1.25rem',
                     backgroundColor: '#0B57D0',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: '20px',
-                    fontSize: '0.825rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
                     boxShadow: '0 1px 3px rgba(11, 87, 208, 0.3)',
+                    minHeight: '40px',
                   }}
                 >
-                  <Check size={16} />
+                  <Check size={15} />
                   <span>Select Folder</span>
                 </button>
               </div>

@@ -149,7 +149,10 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     }));
   };
 
-  const saveItem = async () => {
+  const saveItem = async (e?: React.FormEvent, continueAdding = false) => {
+    if (e) e.preventDefault();
+    if (isSyncing) return;
+
     if (!formState.category || !formState.vendorName) {
       alert('Please provide Category and Vendor Name');
       return;
@@ -174,8 +177,23 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     }
 
     await onUpdate(updatedBudget);
-    setEditingItem(null);
-    setIsAdding(false);
+
+    if (continueAdding) {
+      setFormState({
+        category: formState.category || '',
+        vendorName: '',
+        estimatedCost: 0,
+        actualCost: 0,
+        amountPaid: 0,
+        dueDate: '',
+        paymentStatus: 'Pending',
+      });
+      setIsAdding(true);
+      setEditingItem(null);
+    } else {
+      setEditingItem(null);
+      setIsAdding(false);
+    }
   };
 
   const deleteItem = async (itemId: string) => {
@@ -774,8 +792,23 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                 <button type="button" style={styles.cancelBtn} onClick={closeModal}>
                   CANCEL
                 </button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    disabled={isSyncing}
+                    onClick={(e) => saveItem(e, true)}
+                  >
+                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE ITEM'}
+                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE ITEM' : 'SAVE CHANGES')}
                 </button>
               </div>
             </form>

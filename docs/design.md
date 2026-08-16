@@ -8,9 +8,9 @@ Sheet2Vow supports dual customizable style themes (**Editorial Minimalist** and 
 The **Editorial Minimalist** style provides an elegant, high-end, print-publication feel tailored for wedding planning, balancing generous whitespace with refined typography and soft drop shadows.
 
 ### Typography
-- **Header Font:** `'Playfair Display'`, serif (`var(--font-serif)`) - Used for primary headings and luxury brand elements.
+- **Header Font:** `'Inter'`, sans-serif (`var(--font-header, var(--font-sans))`) - Used for primary headings, brand titles, and hero titles.
 - **Body Font:** `'Inter'`, sans-serif (`var(--font-sans)`) - Used for form fields, cards, and data tables.
-- **Accent Font:** `'Roboto Mono'`, monospace (`var(--font-mono)`) - Used for numerical data, currency display, and structured tables.
+- **Accent & Monospace Font:** `'Geist Mono'`, monospace (`var(--font-mono)`) - Used for numerical data, currency display, subtitles, status badges, and structured tables.
 
 ### Color Palette
 - `var(--color-bg)`: `#ffffff` (Light Canvas) / `#121212` (Dark)

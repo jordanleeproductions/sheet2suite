@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { DashboardSummary, Guest, Task, Song, PhotoShot } from '@/lib/sheets/types';
 import { Edit2, LayoutGrid, PieChart, BarChart2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
+import WelcomeGuideCard from '@/components/WelcomeGuideCard';
+import { StyleTheme, ColorTheme } from '@/lib/core/theme/ThemeProvider';
 
 export interface ModuleConfig {
   home?: boolean;
@@ -31,6 +33,17 @@ interface DashboardMetricsProps {
   currency?: string;
   onNavigateTab?: (tab: string, filter?: string) => void;
   onOpenModuleSettings?: () => void;
+  // First-Time User Welcome & Education Guide Card
+  showWelcomeGuide?: boolean;
+  onDismissWelcomeGuide?: () => void;
+  weddingName?: string;
+  spreadsheetId?: string;
+  styleTheme?: StyleTheme;
+  colorTheme?: ColorTheme;
+  navLayout?: 'top' | 'sidebar';
+  onSelectStyleTheme?: (style: StyleTheme) => void;
+  onToggleColorTheme?: () => void;
+  onToggleNavLayout?: () => void;
 }
 
 function DonutChart({
@@ -256,7 +269,27 @@ function LabeledProgressBar({
   );
 }
 
-export default function DashboardMetrics({ metrics, guests, tasks, music, photos, enabledModules, currency = 'USD', onNavigateTab, onOpenModuleSettings }: DashboardMetricsProps) {
+export default function DashboardMetrics({ 
+  metrics, 
+  guests, 
+  tasks, 
+  music, 
+  photos, 
+  enabledModules, 
+  currency = 'USD', 
+  onNavigateTab, 
+  onOpenModuleSettings,
+  showWelcomeGuide = false,
+  onDismissWelcomeGuide,
+  weddingName = 'Our Wedding',
+  spreadsheetId,
+  styleTheme = 'editorial',
+  colorTheme = 'light',
+  navLayout = 'top',
+  onSelectStyleTheme,
+  onToggleColorTheme,
+  onToggleNavLayout,
+}: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
 
   // Section View Modes (Cards | Pie Chart | Labeled Progress Bar)
@@ -321,52 +354,21 @@ export default function DashboardMetrics({ metrics, guests, tasks, music, photos
 
   return (
     <div className="metrics-container" style={styles.container}>
-      {/* Summary Layout Control Header Bar [DASH-7] */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '0.75rem 1rem',
-        backgroundColor: 'var(--color-surface, #ffffff)',
-        border: '1px solid var(--color-muted)',
-        borderRadius: 'var(--border-radius-md)',
-        marginBottom: '1rem',
-      }}>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-text)', margin: 0 }}>
-            EXECUTIVE DASHBOARD SUMMARY
-          </h2>
-          <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>
-            Real-time analytics and relational KPIs across active wedding planner modules.
-          </span>
-        </div>
-
-        {onOpenModuleSettings && (
-          <button
-            type="button"
-            onClick={onOpenModuleSettings}
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              backgroundColor: 'var(--color-primary)',
-              color: 'var(--color-on-primary, #ffffff)',
-              border: 'none',
-              borderRadius: 'var(--border-radius-sm, 4px)',
-              padding: '0.4rem 0.75rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              cursor: 'pointer',
-              boxShadow: 'var(--box-shadow-subtle)',
-              transition: 'all 0.2s ease',
-            }}
-            title="Configure Dashboard Modules & Layout Controls [DASH-7]"
-          >
-            <Edit2 size={13} /> EDIT LAYOUT CONTROLS
-          </button>
-        )}
-      </div>
+      {/* First-Time User Welcome & Quick-Start Guide Card */}
+      {showWelcomeGuide && onDismissWelcomeGuide && (
+        <WelcomeGuideCard
+          weddingName={weddingName}
+          spreadsheetId={spreadsheetId}
+          styleTheme={styleTheme}
+          colorTheme={colorTheme}
+          navLayout={navLayout}
+          onDismiss={onDismissWelcomeGuide}
+          onSelectStyleTheme={onSelectStyleTheme}
+          onToggleColorTheme={onToggleColorTheme}
+          onToggleNavLayout={onToggleNavLayout}
+          onOpenSettings={onOpenModuleSettings}
+        />
+      )}
 
       {/* Financial KPI Cards Grid */}
       {modules.budget && (

@@ -232,7 +232,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
     });
   };
 
-  const saveItem = async (e: React.FormEvent) => {
+  const saveItem = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
     if (isSyncing) return;
 
@@ -266,7 +266,23 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
     }
 
     await onUpdate(updatedMusic);
-    closeModal();
+
+    if (continueAdding) {
+      setFormState({
+        title: '',
+        artist: '',
+        listType: formState.listType || 'Reception',
+        playStatus: formState.playStatus || 'Must Play',
+        notes: '',
+        requestedBy: 'Admin',
+        approvalStatus: 'Approved',
+        link: '',
+      });
+      setIsAdding(true);
+      setEditingItem(null);
+    } else {
+      closeModal();
+    }
   };
 
   const confirmDeleteSong = async () => {
@@ -938,8 +954,23 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
               </div>
               <div style={styles.modalFooter}>
                 <button type="button" style={styles.cancelBtn} onClick={closeModal}>CANCEL</button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    disabled={isSyncing}
+                    onClick={(e) => saveItem(e, true)}
+                  >
+                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE SONG'}
+                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE SONG' : 'SAVE CHANGES')}
                 </button>
               </div>
             </form>

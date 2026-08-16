@@ -10,8 +10,8 @@ export type ColorMode = 'light' | 'dark';
 export const COLOR_PRESETS: Record<StyleTheme, Record<ColorMode, ColorPreset[]>> = {
   editorial: {
     light: [
+      { name: 'Royal Navy', hex: '#0D1B2A', desc: 'Midnight Luxury Navy' },
       { name: 'Forest Green', hex: '#11552D', desc: 'Classic Deep Emerald' },
-      { name: 'Royal Navy', hex: '#0d1b2a', desc: 'Midnight Luxury Navy' },
       { name: 'Burgundy Rose', hex: '#881337', desc: 'Rich Bordeaux Rose' },
       { name: 'Warm Amber', hex: '#b45309', desc: 'Golden Ochre Tone' },
     ],

@@ -121,9 +121,14 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
     setFormState(prev => ({ ...prev, [field]: value }));
   };
 
-  const saveTask = async (e: React.FormEvent) => {
+  const saveTask = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
     if (isSyncing) return;
+
+    if (!formState.taskName) {
+      alert('Please enter a Task Name.');
+      return;
+    }
 
     let updated: Task[];
     if (isAdding) {
@@ -135,8 +140,24 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
     }
 
     await onUpdate(updated);
-    setIsAdding(false);
-    setEditingTask(null);
+
+    if (continueAdding) {
+      setFormState({
+        taskId: `T${updated.length + 1}`,
+        taskName: '',
+        kanbanStage: formState.kanbanStage || 'To Do',
+        category: formState.category || '',
+        priority: formState.priority || 'Medium',
+        assignedTo: formState.assignedTo || '',
+        dueDate: '',
+        notes: '',
+      });
+      setIsAdding(true);
+      setEditingTask(null);
+    } else {
+      setIsAdding(false);
+      setEditingTask(null);
+    }
   };
 
   const confirmDeleteTask = async () => {
@@ -513,8 +534,23 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                 >
                   CANCEL
                 </button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    disabled={isSyncing}
+                    onClick={(e) => saveTask(e, true)}
+                  >
+                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE TASK'}
+                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE TASK' : 'SAVE CHANGES')}
                 </button>
               </div>
             </form>

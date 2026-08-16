@@ -36,10 +36,10 @@ body {
 
 /* Base Typography rules */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-header, var(--font-serif));
+  font-family: var(--font-header, var(--font-sans));
   color: var(--color-primary);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 [data-style='neo-brutalism'] h1,
@@ -541,4 +541,169 @@ button[style*="backgroundColor: 'var(--color-bg)'"] {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border, #e2e8f0);
 }
+
+.s2s-home-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 0.775rem;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  border-radius: 9999px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background-color: var(--color-surface, #ffffff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.s2s-home-nav-btn:hover {
+  border-color: var(--color-primary, #0b57d0) !important;
+  background-color: var(--color-surface, #ffffff);
+  box-shadow: 0 4px 14px rgba(11, 87, 208, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+  transform: translateY(-1px);
+}
+
+.s2s-home-nav-btn:hover .s2s-home-nav-icon {
+  transform: scale(1.08);
+  background-color: var(--color-primary, #0b57d0) !important;
+  color: var(--color-on-primary, #ffffff) !important;
+}
+
+.s2s-home-nav-btn:hover .s2s-home-nav-arrow {
+  transform: translateX(2px);
+  color: var(--color-primary, #0b57d0) !important;
+}
+
+.s2s-home-nav-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Mobile Styles for Activation Wizard */
+.activation-page-container {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.activation-content-card {
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 680px;
+  padding: 2.5rem;
+  box-shadow: var(--box-shadow-hover);
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.activation-brand-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.activation-main-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.activation-sub-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .activation-page-container {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1.5rem 0.75rem !important;
+  }
+
+  .activation-content-card {
+    padding: 1.25rem 1rem !important;
+    border-radius: var(--border-radius-md) !important;
+  }
+
+  .activation-brand-header {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .activation-main-title {
+    font-size: 1.5rem !important;
+  }
+
+  .activation-sub-title {
+    font-size: 0.75rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .preselected-shortcuts-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .picker-modal-overlay {
+    padding: 0.5rem !important;
+  }
+
+  .picker-modal-card {
+    height: 94vh !important;
+    max-height: 94vh !important;
+    border-radius: 12px !important;
+  }
+
+  .picker-layout-container {
+    flex-direction: column !important;
+  }
+
+  .picker-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    padding: 0.5rem 0.75rem !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 0.35rem !important;
+  }
+
+  .picker-footer {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: stretch !important;
+    padding: 0.85rem 1rem !important;
+  }
+
+  .picker-footer-buttons {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+  }
+
+  .picker-footer-buttons button {
+    flex: 1 !important;
+  }
+}
+
+.preselected-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+
 

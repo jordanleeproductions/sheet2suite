@@ -1,7 +1,8 @@
 {
-  "id": "ETSY-12345678",
-  "licenseKey": "ETSY-12345678",
-  "orderId": "ETSY-12345678",
+  "id": "TEST-12345",
+  "updatedAt": "2026-08-14T20:22:36.809Z",
+  "licenseKey": "TEST-12345",
+  "orderId": "TEST-12345",
   "purchaserEmail": "jordanleeproductions@gmail.com",
   "sku": "ETSY-SHEET2VOW-PRO",
   "status": "active",
@@ -10,6 +11,5 @@
     "SHEET2VOW"
   ],
   "maxWorkspaces": 2,
-  "createdAt": "2026-08-14T20:21:46.198Z",
-  "updatedAt": "2026-08-14T20:21:46.198Z"
+  "createdAt": "2026-08-14T20:22:36.809Z"
 }

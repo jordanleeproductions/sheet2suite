@@ -156,6 +156,66 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 - **Live DJ Vendor Sync (`/share/[token]/page.tsx`):** Instantly displays requested songs under the `REQUESTED SONGS` filter pill in the DJ's live read-only vendor view.
 - **Printable QR Code Tent Cards:** Integrated in `VendorShareLinkManager.tsx` and `PrintTemplatesModal.tsx` (`song_request_qr_cards`) to print bar and DJ booth tent cards.
 
+### 3.7 Google Drive Native Picker & Hierarchy Resolution (`/api/drive/resolve-path`)
+- **Native Google Picker API Integration (`src/lib/google/googlePicker.ts`):** Directly interfaces with Google's native `google.picker.PickerBuilder` allowing users to select target directories from their personal Google Drive without granting broad root permissions.
+- **Parent Hierarchy Path Resolution (`/api/drive/resolve-path`):** Server-side endpoint traversing parent folder chains (`drive.files.get({ fields: 'id, name, parents' })`) to reconstruct the full breadcrumb directory string (e.g., `My Drive / DEVELOPMENT / Sheet2Vow`) upon folder selection.
+
+### 3.7.1 Live Master Template Exporter & Multi-Tier Provisioning Engine (`src/lib/sheets/masterTemplateExporter.ts` & `/api/provision`)
+- **Live Binary Spreadsheet Exporter:** Fetches the real-time `.xlsx` export buffer of the official Master Google Sheet (`1h_RGirRXv...`) via Google Sheets export endpoint or Service Account JWT credentials (`drive.files.export`).
+- **Zero-Friction `drive.file` Scope Duplication:** Streams the exact Master Sheet binary directly into the user's selected Drive folder via `drive.files.create({ mimeType: 'application/vnd.google-apps.spreadsheet' })`, bypassing cross-tenant Google Drive API `copy` restrictions while preserving 100% of formatting, tab colors, formulas, and data validations.
+- **Programmatic Fallback:** If network export is unreachable, automatically falls back to in-memory template generation (`generateMasterXlsxBuffer`).
+- **Post-Provision Injection:** Updates `DASHBOARD!B2` and `'Settings'!Z1` via Sheets batch API with exact custom wedding title and budget metadata without clobbering dropdown lookup columns.
+
+### 3.7.2 Automated Dropdown Validation Preserver (`src/lib/sheets/dropdownValidator.ts`)
+- **Native Google Sheets In-Cell Dropdown Engine:** Automatically inspects table headers across all 10 tabs and applies `setDataValidation` requests with `type: 'ONE_OF_RANGE'`, `showCustomUi: true`, and userEnteredValues linking directly to the corresponding lookup range on the `'Settings'` tab (`=Settings!$A$2:$A$50`, `=Settings!$D$2:$D$50`, etc.).
+- **Settings Tab Lookup Integrity:** Protects columns A–M of the `'Settings'` tab (Age Categories, Table Shapes, RSVP Statuses, Task Statuses, etc.) from configuration overwrites by relocating metadata JSON to cell `Settings!Z1`.
+
+### 3.8 Guided Setup & Onboarding Engine (`src/app/activate/page.tsx`)
+- **Step 1: Wedding Details & Multi-Admin Access:** Captures Couple's Name / Wedding Title, Wedding Date (with live countdown sync), and up to 2 additional Co-Admin accounts with full edit permissions to the underlying Google Sheet database.
+- **Step 2: Feature & Module Enablement:** Interactive module toggles (*Financials & Budget*, *Guests & RSVPs*, *Day-Of Itinerary*, *Tasks & Checklist*, *Vendors Directory*, *Music & DJ Playlist*), with explicit user assurance that modules can be toggled in Settings without data loss.
+- **Step 3: Conditional Feature Details:** Dynamically adapts based on enabled features:
+  - *Financials Enabled:* Estimated Total Budget input and multi-currency selector (`USD`, `CAD`, `GBP`, `EUR`, `AUD`).
+  - *Tasks Enabled:* Choice between Pre-populated Task Presets (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) and *Clean Slate*, featuring an interactive task item checklist with granular check/uncheck controls before spreadsheet provisioning.
+- **Step 4: UI Theme & Navigation Customization:** User customization for Style Theme (*Editorial Elegance*, *Neo-Brutalism*, *Botanical Romance*, *Midnight Tuxedo*), Color Mode (*Light* vs *Dark*), and Navigation Layout (*Left-Hand Sidebar Nav* [Default] vs *Top Header Nav*), instantly persisting to client state and database workspace configuration.
+
+#### 3.8.1 Mobile Google Drive Picker & Action Ergonomics (`src/components/GoogleDrivePickerModal.tsx`)
+- **Full-Width Mobile Shortcuts:** Responsive `.preselected-shortcuts-grid` transforming 3-column desktop shortcuts into full-width touch cards on mobile screens.
+- **Authentication-Gated Browse Picker:** Enforces Google OAuth connection before the Drive picker modal can be opened; displays `📁 CONNECT GOOGLE DRIVE TO BROWSE` with disabled state when unauthenticated.
+- **High-Contrast Action Button Palette:** Clear visual separation between interactive action buttons (bold `#0f172a` obsidian backgrounds, 2px borders, vibrant primary buttons) and background cards/inputs.
+- **Responsive In-App Drive Picker Modal:** Adapts dynamically to mobile viewports with horizontal scrollable scope pills (`My Drive`, `Shared with me`, `Starred`), 48px+ folder rows, and stacked confirmation footer.
+
+#### 3.8.2 First-Time Workspace Welcome & UX Education Info Card (`src/components/WelcomeGuideCard.tsx`)
+- **Standout Visual Presence:** Rendered with a high-contrast royal indigo/violet gradient card (`#1e1b4b` to `#4f46e5`) with radiant borders, replacing the Executive Summary header bar on newly created or non-dismissed workspaces.
+- **Purpose & Core Value Education:** Explains that Sheet2Vow is a live digital canvas connected directly to their private Google Spreadsheet in Google Drive, featuring bi-directional synchronization and zero data lock-in.
+- **Interactive UX Customization Pillars:**
+  - *1. Style Aesthetic:* Direct 1-click selectors to preview and switch between 4 bespoke themes (*Editorial Elegance*, *Neo-Brutalism*, *Botanical Romance*, *Midnight Tuxedo*).
+  - *2. Color Mode:* 1-click interactive toggle between crisp Light Mode and sleek low-light Dark Mode.
+  - *3. Navigation Layout:* 1-click interactive toggle between collapsible Left-Hand Sidebar and classic Top Header navigation tabs.
+- **Cross-Device Persistence:** Permanent dismissal state is stored in `localStorage` (`s2v_welcome_dismissed_${spreadsheetId}`) and persisted directly into the user's spreadsheet configuration in `Settings!Z1` (`hasDismissedWelcomeCard: true`). Once dismissed, the dashboard directly showcases planning KPI modules with no clutter.
+
+#### 3.8.3 User Profile Popover & Workspace Typography Isolation
+- **Persistent Google Avatar & Display Name:** Restores `s2v_google_name`, `s2v_google_avatar`, and `s2v_google_email` from `localStorage` across page reloads and authentication callbacks.
+- **1-Click Google Spreadsheet Deep Link:** In-app profile menu features an instant `OPEN GOOGLE SPREADSHEET` action button linking directly to `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`.
+- **Editorial Light Default Primary Color:** `#0D1B2A` (Royal Navy) configured as the first/default preset color.
+- **Newspaper Serif Workspace Header Isolation:** Restores Playfair Display serif header typography (`--font-header: var(--font-serif)`) specifically for workspace headers while keeping the Hub landing page and Activation wizard locked to clean, fixed modern sans.
+
+#### 3.8.4 Rapid Bulk-Loading 3-Button Modal Workflow (`[UX-BULK-LOAD]`)
+- **Tri-Action Modal Controls:** All standard item creation modals implement a 3-button footer layout:
+  1. `CANCEL`: Discards changes and closes the modal dialog without saving.
+  2. `SAVE & ADD NEW`: Persists the current input record, triggers background bi-directional synchronization with Google Sheets, and immediately resets form inputs with the next sequential ID—keeping the modal open for uninterrupted high-velocity batch data entry.
+  3. `SAVE [ITEM]`: Persists the record, triggers synchronization, and closes the modal.
+- **Enabled Across All 10 Workspace Modules:**
+  - `GuestListManager.tsx` (Guest Records)
+  - `VendorManager.tsx` (Vendor Contracts & Balances)
+  - `MusicManager.tsx` (Song & DJ Playlist Items)
+  - `KanbanBoard.tsx` (Planning Tasks & Milestones)
+  - `PhotoShotListManager.tsx` (Photography Required Shot List)
+  - `BudgetLedgerManager.tsx` (Budget Line-Item Expenses)
+  - `TimelineManager.tsx` (Day-Of Schedule Events)
+  - `ThankYouManager.tsx` (Gift Records & Thank You Notes)
+  - `MenuSetupManager.tsx` (Catering Dishes & Entrees)
+  - `SeatingChartManager.tsx` (Seating Table Configurations)
+
 ---
 
 ## 4. Data Storage & Schema Mapping

@@ -138,9 +138,12 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
   };
 
   // Save Table Configuration
-  const saveTableConfig = (e: React.FormEvent) => {
+  const saveTableConfig = (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
-    if (!tableFormState.tableName) return;
+    if (!tableFormState.tableName) {
+      alert('Please enter a Table Name.');
+      return;
+    }
 
     let finalCapacity = Number(tableFormState.capacity) || 8;
     const finalShape = tableFormState.shape || 'circle';
@@ -160,14 +163,31 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
       singleSideSeating: finalShape === 'rectangle' ? (tableFormState.singleSideSeating || false) : false,
     };
 
+    let updatedTables: TableConfig[];
     if (isAddingTable) {
-      setTables([...tables, tableData]);
+      updatedTables = [...tables, tableData];
+      setTables(updatedTables);
     } else if (editingTable) {
-      setTables(tables.map(t => t.tableId === editingTable.tableId ? tableData : t));
+      updatedTables = tables.map(t => t.tableId === editingTable.tableId ? tableData : t);
+      setTables(updatedTables);
+    } else {
+      return;
     }
 
-    setIsAddingTable(false);
-    setEditingTable(null);
+    if (continueAdding) {
+      setTableFormState({
+        tableName: `Table ${updatedTables.length + 1}`,
+        shape: tableFormState.shape || 'circle',
+        capacity: tableFormState.capacity || 8,
+        includeEndSeats: false,
+        singleSideSeating: false,
+      });
+      setIsAddingTable(true);
+      setEditingTable(null);
+    } else {
+      setIsAddingTable(false);
+      setEditingTable(null);
+    }
   };
 
   // Delete Table Confirmation Handler
@@ -1365,8 +1385,29 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
               )}
 
               <div style={styles.formActions}>
+                <button
+                  type="button"
+                  style={styles.cancelBtn}
+                  onClick={() => { setIsAddingTable(false); setEditingTable(null); }}
+                >
+                  CANCEL
+                </button>
+                {isAddingTable && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    onClick={(e) => saveTableConfig(e, true)}
+                  >
+                    SAVE & ADD NEW
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} className="saveBtn">
-                  SAVE TABLE
+                  {isAddingTable ? 'SAVE TABLE' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>
@@ -2006,6 +2047,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '0.75rem',
+  },
+  cancelBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    backgroundColor: 'transparent',
+    color: 'var(--color-muted)',
+    border: '1px solid var(--color-muted)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.625rem 1.25rem',
+    cursor: 'pointer',
   },
   saveBtn: {
     fontFamily: 'var(--font-mono)',

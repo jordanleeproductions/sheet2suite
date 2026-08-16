@@ -110,10 +110,14 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
   };
 
   // Save Shot Handler
-  const handleSaveShot = async (e: React.FormEvent) => {
+  const handleSaveShot = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
-    if (!formData.description) return;
+    if (!formData.description) {
+      alert('Please enter a Shot Description.');
+      return;
+    }
 
+    let updated: PhotoShot[];
     if (isAddingShot) {
       const newShot: PhotoShot = {
         shotId: `P${Date.now().toString().slice(-4)}`,
@@ -125,16 +129,33 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
         priority: (formData.priority as any) || 'Must Have',
         notes: formData.notes || '',
       };
-      await onUpdatePhotos([...photos, newShot]);
+      updated = [...photos, newShot];
     } else if (editingShot) {
-      const updated = photos.map(p => 
+      updated = photos.map(p => 
         p.shotId === editingShot.shotId ? { ...p, ...formData } as PhotoShot : p
       );
-      await onUpdatePhotos(updated);
+    } else {
+      return;
     }
 
-    setIsAddingShot(false);
-    setEditingShot(null);
+    await onUpdatePhotos(updated);
+
+    if (continueAdding) {
+      setFormData({
+        description: '',
+        location: formData.location || 'Main Venue',
+        shotTime: formData.shotTime || 'TBD',
+        people: '',
+        status: 'Pending',
+        priority: formData.priority || 'Must Have',
+        notes: '',
+      });
+      setIsAddingShot(true);
+      setEditingShot(null);
+    } else {
+      setIsAddingShot(false);
+      setEditingShot(null);
+    }
   };
 
   // Confirm Delete Handler
@@ -524,8 +545,22 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
                 >
                   CANCEL
                 </button>
+                {isAddingShot && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    onClick={(e) => handleSaveShot(e, true)}
+                  >
+                    SAVE & ADD NEW
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} className="saveBtn">
-                  SAVE SHOT
+                  {isAddingShot ? 'SAVE SHOT' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>

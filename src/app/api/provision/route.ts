@@ -4,6 +4,8 @@ import { Readable } from 'stream';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
 import { CellGuard } from '@/lib/core/CellGuard';
 import { generateMasterXlsxBuffer } from '@/lib/core/templates/xlsxGenerator';
+import { getMasterSpreadsheetXlsxBuffer } from '@/lib/sheets/masterTemplateExporter';
+import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
 
 /**
  * Helper to find or create a folder in Google Drive using drive.file scope.
@@ -86,7 +88,9 @@ export async function POST(req: NextRequest) {
     // Step 3: Copy Master Template Spreadsheet or Create Fresh Template
     const masterSheetId = process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
     const sanitizedCoupleName = CellGuard.sanitizeCellValue(coupleName || 'Alex & Sam');
-    const documentTitle = coupleName ? `${coupleName} Wedding Database` : 'Sheet2Vow Wedding Planner Database';
+    const documentTitle = coupleName
+      ? (coupleName.toLowerCase().includes('wedding') ? `${coupleName} Database` : `${coupleName} Wedding Database`)
+      : 'Sheet2Vow Wedding Planner Database';
 
     let newSpreadsheetId: string | undefined;
     let webViewLink: string | undefined;
@@ -104,11 +108,12 @@ export async function POST(req: NextRequest) {
       newSpreadsheetId = copyRes.data.id || undefined;
       webViewLink = copyRes.data.webViewLink || undefined;
     } catch (copyErr: any) {
-      console.warn('Master template copy failed (404/403 or inaccessible). Executing Tier 2 XLSX conversion fallback:', copyErr?.message);
+      console.warn('Direct master template copy blocked (drive.file scope / 404/403). Executing Tier 2 Master Template Export & Conversion:', copyErr?.message);
 
       try {
-        // Tier 2: Upload local pre-formatted .xlsx template & convert to native Google Sheet
-        const xlsxBuffer = await generateMasterXlsxBuffer(sanitizedCoupleName);
+        // Tier 2: Fetch live Master Google Sheet binary export buffer & convert to native Google Sheet in User's Drive
+        const { buffer: xlsxBuffer, source } = await getMasterSpreadsheetXlsxBuffer(sanitizedCoupleName, masterSheetId);
+        console.log(`[Provisioning] Cloned master template via source: ${source}, bufferSize: ${xlsxBuffer.byteLength} bytes`);
         const stream = Readable.from(xlsxBuffer);
 
         const uploadRes = await drive.files.create({
@@ -127,7 +132,7 @@ export async function POST(req: NextRequest) {
         newSpreadsheetId = uploadRes.data.id || undefined;
         webViewLink = uploadRes.data.webViewLink || undefined;
       } catch (xlsxErr: any) {
-        console.warn('Tier 2 XLSX conversion upload failed. Executing Tier 3 fresh Sheets API fallback:', xlsxErr?.message);
+        console.warn('Tier 2 Master Export upload failed. Executing Tier 3 fresh Sheets API fallback:', xlsxErr?.message);
 
         // Tier 3: Create fresh spreadsheet via Sheets API
         const sheets = google.sheets({ version: 'v4', auth });
@@ -171,20 +176,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Step 4: Inject couple title into Dashboard sheet if token is active
+    // Step 4: Inject couple title and configuration into Dashboard & Settings, and apply dropdown validations
     if (newSpreadsheetId && token) {
       try {
         const sheets = google.sheets({ version: 'v4', auth });
-        await sheets.spreadsheets.values.update({
+        await sheets.spreadsheets.values.batchUpdate({
           spreadsheetId: newSpreadsheetId,
-          range: 'DASHBOARD!B2',
-          valueInputOption: 'USER_ENTERED',
           requestBody: {
-            values: [[sanitizedCoupleName]],
-          },
+            valueInputOption: 'USER_ENTERED',
+            data: [
+              {
+                range: 'DASHBOARD!B2',
+                values: [[sanitizedCoupleName]],
+              },
+              {
+                range: "'Settings'!Z1",
+                values: [[JSON.stringify({ budget: 35000, weddingName: sanitizedCoupleName })]],
+              }
+            ]
+          }
         });
+
+        // Reconnect and preserve interactive in-cell dropdowns linked to 'Settings' tab
+        const dropdownRes = await applyDropdownValidations(sheets, newSpreadsheetId);
+        console.log(`[Provisioning] Applied ${dropdownRes.appliedCount} dropdown validation rules from Settings tab.`);
       } catch (sheetsErr) {
-        console.warn('Could not inject couple name into DASHBOARD tab:', sheetsErr);
+        console.warn('Could not inject couple name or apply dropdowns into sheets:', sheetsErr);
       }
     }
 

@@ -144,9 +144,14 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
     setFormState(prev => ({ ...prev, [field]: value }));
   };
 
-  const saveEvent = async (e: React.FormEvent) => {
+  const saveEvent = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
     if (isSyncing) return;
+
+    if (!formState.eventMoment) {
+      alert('Please enter an Event Moment Name.');
+      return;
+    }
 
     let updated: ScheduleEvent[];
     if (isAdding) {
@@ -158,8 +163,23 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
     }
 
     await onUpdate(updated);
-    setIsAdding(false);
-    setEditingIndex(null);
+
+    if (continueAdding) {
+      setFormState({
+        startTime: formState.endTime || '12:00 PM',
+        endTime: '',
+        eventMoment: '',
+        location: formState.location || '',
+        responsibility: formState.responsibility || '',
+        notes: '',
+        isAfterMidnight: formState.isAfterMidnight || false,
+      });
+      setIsAdding(true);
+      setEditingIndex(null);
+    } else {
+      setIsAdding(false);
+      setEditingIndex(null);
+    }
   };
 
   const confirmDeleteEvent = async () => {
@@ -497,8 +517,23 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                 >
                   CANCEL
                 </button>
+                {isAdding && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-primary)',
+                      border: '2px solid var(--color-primary)',
+                    }}
+                    disabled={isSyncing}
+                    onClick={(e) => saveEvent(e, true)}
+                  >
+                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                  </button>
+                )}
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE MOMENT'}
+                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}
                 </button>
               </div>
             </form>
