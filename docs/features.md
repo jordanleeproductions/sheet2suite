@@ -218,6 +218,12 @@
 |---|---|---|---|---|---|
 | **`[SUITE-1]`** | Multi-Product Licensed Suite Applications Hub & Switcher (Support for Sheet2Finances, Sheet2Stay, Sheet2Closet, Sheet2Inventory multi-product bundle activation & cross-app workspace switching) | `src/app/activate/page.tsx`, `src/components/SuiteProductSwitcher.tsx`, `/api/workspaces` | 🔴 High | ⚡ High (~4-5 turns) | Backlog |
 
+### 💼 Vendor Directory & Document Storage
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[VND-6]`** | Vendor Contract Upload & Google Drive "Contracts" Folder Storage (Upload vendor PDF/image contracts when adding or editing a vendor in `VendorManager.tsx`; automatically provisions a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the contract Drive URL to the vendor entry) | `src/components/VendorManager.tsx`, `src/app/api/upload/contract/route.ts`, `src/types/wedding.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Backlog |
+
 ### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |

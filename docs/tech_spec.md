@@ -43,6 +43,7 @@ Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14
 
 ### 2.7 Vendor Directory (`VendorManager.tsx`)
 - Vendor contact directory, categories, contract values, deposit paid, and staff meal requirements.
+- **Vendor Contract Document Storage (`[VND-6]` - Backlog):** Integrated PDF/image contract uploader in Add/Edit Vendor modal. Automatically uploads attachments to a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the Drive URL to the vendor entry.
 
 ### 2.8 Kanban Checklist (`KanbanBoard.tsx`)
 - Categorized checklist (*To Do*, *In Progress*, *Done*) with priority badges and target due dates.
