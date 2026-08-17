@@ -47,22 +47,29 @@ export function Sheet2ThemeProvider({ children }: { children: React.ReactNode })
     localStorage.setItem('s2v_font_scale', clamped.toString());
   };
 
+  // Effect 1: Style theme (aesthetic) — only fires when the visual style changes
   useEffect(() => {
     document.documentElement.setAttribute('data-style', styleTheme);
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.style.fontSize = `${fontSizeScale}%`;
+    localStorage.setItem('s2v_style_theme', styleTheme);
+  }, [styleTheme]);
 
+  // Effect 2: Color mode + primary accent — only fires when light/dark or color changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
     if (primaryColor) {
       document.documentElement.style.setProperty('--color-primary', primaryColor);
+      localStorage.setItem('s2v_primary_color', primaryColor);
     } else {
       document.documentElement.style.removeProperty('--color-primary');
+      localStorage.removeItem('s2v_primary_color');
     }
-
-    localStorage.setItem('s2v_style_theme', styleTheme);
     localStorage.setItem('s2v_theme', theme);
-    if (primaryColor) localStorage.setItem('s2v_primary_color', primaryColor);
-    else localStorage.removeItem('s2v_primary_color');
-  }, [styleTheme, theme, primaryColor, fontSizeScale]);
+  }, [theme, primaryColor]);
+
+  // Effect 3: Font size scale — isolated so it NEVER touches theme attributes
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSizeScale}%`;
+  }, [fontSizeScale]);
 
   return (
     <ThemeContext.Provider value={{ styleTheme, theme, primaryColor, fontSizeScale, setStyleTheme, setTheme, setPrimaryColor, setFontSizeScale }}>
