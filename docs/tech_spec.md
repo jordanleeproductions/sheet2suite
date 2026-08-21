@@ -1,8 +1,34 @@
-# Sheet2Vow - Technical Specification
+# Sheet2Suite & Sheet2Vow - Technical Specification
 
-## 1. Architecture Overview
+## 1. Multi-Product Platform Architecture Overview
 
-Sheet2Vow is a high-end, localized digital wedding planner built on **Next.js 14 (App Router)** and **TypeScript**. It maps directly to a single Google Sheet in the user's personal Google Drive via the Google Sheets API v4. Sheet2Vow anchors the **Sheet2 Suite** (*Sheet2Vow, Sheet2Finance, Sheet2Home*) using `@germin8/sheet2-core`.
+Sheet2Suite is the parent digital canvas application platform residing on **`sheet2suite.com`**, built on **Next.js (App Router)** and **TypeScript**. Sheet2Suite powers a family of domain-specific productivity applications (sub-products / features) that map directly to private Google Spreadsheets in the user's Google Drive via the Google Sheets API v4 with zero vendor lock-in.
+
+```
+                                  ┌──────────────────────────────────────────────┐
+                                  │             SHEET2SUITE PLATFORM             │
+                                  │               sheet2suite.com                │
+                                  └──────────────────────┬───────────────────────┘
+                                                         │
+             ┌───────────────────────────────────────────┴───────────────────────────────────────────┐
+             │                                                                                       │
+             ▼                                                                                       ▼
+┌──────────────────────────────────────────┐                               ┌──────────────────────────────────────────┐
+│        GENERIC ACTIVATION ENGINE         │                               │     SUB-PRODUCTS / DIGITAL CANVASES      │
+│         activate.sheet2suite.com         │                               │                                          │
+│                                          │                               │ 💍 Sheet2Vow (vow.sheet2suite.com)       │
+│ 1. License & Order Validation            │                               │ 🏗️ Sheet2Build (build.sheet2suite.com)   │
+│ 2. Google OAuth & Drive Selection        ├─────────── Provisions ───────►│ 💰 Sheet2Finance (finance.sheet2suite...) │
+│ 3. Feature Setup Plugin Injection        │      Directly into User Drive │ 🏡 Sheet2Home (home.sheet2suite.com)     │
+│ 4. Automated Spreadsheet Template Copy   │                               │ 🏋️ Sheet2Fit (fit.sheet2suite.com)       │
+└──────────────────────────────────────────┘                               └──────────────────────────────────────────┘
+```
+
+### 1.1 Architectural Guarantees & Developer Experience
+- **Zero Rebuild for New Products:** Adding a new sub-product (e.g., *Sheet2Build*, *Sheet2Fit*) does NOT require rebuilding authentication, Google Drive integration, licensing, provisioning, theme engines, or layout shells.
+- **Generic Activation Framework:** A single, unified activation pipeline (`/activate` / `activate.sheet2suite.com`) handles order verification, Google OAuth, target Drive directory resolution, and Drive spreadsheet provisioning for all products.
+- **Pluggable Feature Setup Modules:** Setup wizards are modular plugins injected into Step 3 of the Activation pipeline. Each product exposes a standard `<ProductSetupPlugin />` interface supplying product-specific onboarding questions (e.g. Wedding Date & Couple Names for Sheet2Vow vs Project Milestones & Trade Categories for Sheet2Build).
+- **Subdomain & Path Parity (`src/proxy.ts`):** Dynamic subdomain routing engine mapping `{product}.sheet2suite.com` and `sheet2suite.com/{product}` seamlessly to corresponding app routes.
 
 ---
 
@@ -176,13 +202,103 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 - **Native Google Sheets In-Cell Dropdown Engine:** Automatically inspects table headers across all 10 tabs and applies `setDataValidation` requests with `type: 'ONE_OF_RANGE'`, `showCustomUi: true`, and userEnteredValues linking directly to the corresponding lookup range on the `'Settings'` tab (`=Settings!$A$2:$A$50`, `=Settings!$D$2:$D$50`, etc.).
 - **Settings Tab Lookup Integrity:** Protects columns A–M of the `'Settings'` tab (Age Categories, Table Shapes, RSVP Statuses, Task Statuses, etc.) from configuration overwrites by relocating metadata JSON to cell `Settings!Z1`.
 
-### 3.8 Guided Setup & Onboarding Engine (`src/app/activate/page.tsx`)
-- **Step 1: Wedding Details & Multi-Admin Access:** Captures Couple's Name / Wedding Title, Wedding Date (with live countdown sync), and up to 2 additional Co-Admin accounts with full edit permissions to the underlying Google Sheet database.
-- **Step 2: Feature & Module Enablement:** Interactive module toggles (*Financials & Budget*, *Guests & RSVPs*, *Day-Of Itinerary*, *Tasks & Checklist*, *Vendors Directory*, *Music & DJ Playlist*), with explicit user assurance that modules can be toggled in Settings without data loss.
-- **Step 3: Conditional Feature Details:** Dynamically adapts based on enabled features:
-  - *Financials Enabled:* Estimated Total Budget input and multi-currency selector (`USD`, `CAD`, `GBP`, `EUR`, `AUD`).
-  - *Tasks Enabled:* Choice between Pre-populated Task Presets (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) and *Clean Slate*, featuring an interactive task item checklist with granular check/uncheck controls before spreadsheet provisioning.
-- **Step 4: UI Theme & Navigation Customization:** User customization for Style Theme (*Editorial Elegance*, *Neo-Brutalism*, *Botanical Romance*, *Midnight Tuxedo*), Color Mode (*Light* vs *Dark*), and Navigation Layout (*Left-Hand Sidebar Nav* [Default] vs *Top Header Nav*), instantly persisting to client state and database workspace configuration.
+### 3.8 Generic Activation Pipeline & Pluggable Product Setup (`/activate`)
+
+The Activation Engine (`src/app/activate/page.tsx` & `activate.sheet2suite.com`) is a generic, reusable suite orchestrator that activates licenses, connects Google Drive, and provisions personal Google Spreadsheets for ANY Sheet2Suite digital canvas product:
+
+```
+[ Step 0: Order Verification ]
+- Accepts orderId, email, and target productCode (e.g. 'SHEET2VOW', 'SHEET2BUILD', 'MASTER_PASS').
+- Verifies entitlement and resolves purchased product tier.
+
+[ Step 1: Google OAuth Connection & Trust ]
+- Connects user's personal Google Account with `drive.file` scope.
+- Displays Pre-Auth Trust Card and Data Protection guarantees.
+
+[ Step 2: Target Drive Directory Resolution ]
+- Prompts user to select or create their destination Drive folder (e.g., `My Drive/Sheet2Suite/Sheet2Vow`).
+- Uses Google Picker API (`openGoogleDriveNativePicker`) or in-app modal.
+
+[ Step 3: Pluggable Product Setup Plugin (<ProductSetupPlugin />) ]
+- Dynamically mounts the target product's setup wizard:
+  - 💍 Sheet2Vow: `<VowSetupWizard />` (Couple Names, Wedding Date, Presets, Active Modules).
+  - 🏗️ Sheet2Build: `<BuildSetupWizard />` (Project Title, Address, Milestones, Trade Contractors).
+  - 💰 Sheet2Finance: `<FinanceSetupWizard />` (Fiscal Year, Accounts, Budget Categories).
+
+[ Step 4: Automated Provisioning & Workspace Launch ]
+- Calls `/api/provision` with `{ productCode, driveFolderId, customMetadata }`.
+- Streams product template XLSX into user's Google Drive.
+- Injects custom metadata into `Settings!Z1` and `DASHBOARD!B2`.
+- Directs user to the activated digital canvas (`{product}.sheet2suite.com` or `/{product}`).
+```
+
+#### 3.8.0 Product Setup Plugin Contract (`src/lib/core/activation/pluginTypes.ts`)
+```typescript
+export interface ProductSetupPluginProps<TConfig = any> {
+  productCode: string;
+  initialData?: Partial<TConfig>;
+  onComplete: (productConfig: TConfig) => void;
+  onBack: () => void;
+  theme?: 'light' | 'dark';
+}
+```
+
+---
+
+## 4. Modular Workspace Architecture & Directory Standards
+
+To prevent code duplication and enable rapid addition of new digital canvas applications, the Sheet2Suite workspace adheres to a strict 3-tier modular architecture:
+
+```
+src/
+├── app/                              # Next.js App Router Shells & Subdomain Entrypoints
+│   ├── (suite)/                      # Main Showcase Platform (sheet2suite.com)
+│   ├── activate/                     # Generic Suite Activation Engine (activate.sheet2suite.com)
+│   ├── vow/                          # Sheet2Vow Digital Wedding Canvas (vow.sheet2suite.com)
+│   ├── [future-app]/                 # e.g., build/ (build.sheet2suite.com), finance/, home/
+│   ├── api/                          # Shared Serverless API Endpoints
+│   │   ├── auth/google/              # Reusable Google OAuth Handlers
+│   │   ├── verify-order/             # Generic License & Order Entitlement Engine
+│   │   ├── provision/                # Universal Drive Spreadsheet Duplicator & Injector
+│   │   ├── sync/                     # Bi-Directional Google Sheets Synchronization
+│   │   └── drive/                    # Drive Folder Hierarchy & Native Picker Resolution
+│   ├── share/[token]/                # Reusable Tokenized Vendor/Client Read-Only Portals
+│   ├── upload/[token]/               # Reusable Guest/Client File & Photo Upload Portals
+│   └── request-song/[token]/         # Interactive Guest Request Portals
+│
+├── core/ (or src/lib/core/)          # Shared Platform Engine (@germin8/sheet2-core)
+│   ├── activation/                   # Generic Order Validator & Setup Plugin Registry
+│   ├── auth/                         # OAuth Client, Token Refresh, Session Hydration
+│   ├── drive/                        # Drive Picker, Folder Hierarchy, Google Drive API
+│   ├── sheets/                       # CellGuard, Range Sync, In-Memory XLSX Engine
+│   ├── theme/                        # Multi-Theme Provider, Dark Mode, Font Size Scaler
+│   └── security/                     # HMAC-SHA256 Token Crypto, Rate Limiting, Input Sanitization
+│
+├── components/
+│   ├── shared/                       # Shared Cross-App UI Primitives
+│   │   ├── OfficialGoogleButton.tsx  # Google Identity Buttons & Badges
+│   │   ├── GoogleDrivePickerModal.tsx# Universal Drive Directory Picker
+│   │   ├── ToastNotification.tsx     # Global Floating Toast System
+│   │   ├── SafetyShieldSyncBadge.tsx # Bi-Directional Sync & Status Badge
+│   │   └── InfoDisclosure.tsx        # Expandable Tooltip & Diagnostic Accordion
+│   └── activate/                     # Generic Activation Engine UI Components
+│       ├── StepOrderVerification.tsx # Step 0 Order Form
+│       └── PreAuthTrustCard.tsx      # Step 1 Trust & Privacy Card
+│
+└── products/ (or src/features/)      # Encapsulated Domain Product Modules
+    ├── vow/                          # Sheet2Vow Product Module
+    │   ├── components/               # Vow-Specific Components (GuestList, Seating, Budget, Music)
+    │   ├── setup/                    # Vow Setup Wizard Plugin (<VowSetupWizard />)
+    │   ├── schemas/                  # Master Wedding Sheet 14-Tab Schema Definition
+    │   ├── presets/                  # Wedding Task & Style Presets
+    │   └── types/                    # Vow TypeScript Models (Guest, Vendor, Song, etc.)
+    │
+    └── [future-product]/             # e.g., build/, finance/, fit/, property/
+        ├── components/
+        ├── setup/                    # Product Setup Plugin
+        ├── schemas/                  # Master Product Spreadsheet Schema
+        └── types/
+```
 
 #### 3.8.1 Mobile Google Drive Picker & Action Ergonomics (`src/components/GoogleDrivePickerModal.tsx`)
 - **Full-Width Mobile Shortcuts:** Responsive `.preselected-shortcuts-grid` transforming 3-column desktop shortcuts into full-width touch cards on mobile screens.

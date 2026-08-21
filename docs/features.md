@@ -218,6 +218,7 @@
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[SUITE-1]`** | Multi-Product Licensed Suite Applications Hub & Switcher (Support for Sheet2Finances, Sheet2Stay, Sheet2Closet, Sheet2Inventory multi-product bundle activation & cross-app workspace switching) | `src/app/activate/page.tsx`, `src/components/SuiteProductSwitcher.tsx`, `/api/workspaces` | 🔴 High | ⚡ High (~4-5 turns) | Backlog |
+| **`[SUITE-ARCH]`** | Multi-Product Architecture & Generic Activation vs Pluggable Product Setup Specification | `docs/tech_spec.md`, `src/app/activate/page.tsx`, `src/proxy.ts` | 🔴 High | ⚡ Med (~2 turns) | ✅ Completed Specification |
 
 ### 💼 Vendor Directory & Document Storage
 
