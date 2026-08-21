@@ -2,17 +2,19 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Sheet2Suite Unified Subdomain & Path Proxy Engine [LIFE-5]
- * Handles $0-cost DNS subdomain routing & path parity for the Sheet2Suite family:
- * - vow.sheet2suite.com or /vow -> Sheet2Vow Digital Wedding Planner
- * - activate.sheet2suite.com or /activate -> Shared Activation Engine
- * - sheet2suite.com -> Root Parent Platform Showcase & Suite Hub
+ * Sheet2Suite Dynamic Subdomain & Multi-Product Proxy Engine [LIFE-5]
+ * Handles zero-cost DNS wildcard & subdomain routing for the entire Sheet2Suite ecosystem:
+ * - vow.sheet2suite.com -> /vow (Sheet2Vow)
+ * - build.sheet2suite.com -> /build (Sheet2Build)
+ * - finance.sheet2suite.com -> /finance (Sheet2Finance)
+ * - activate.sheet2suite.com -> /activate (Universal Activation Engine)
+ * - sheet2suite.com -> / (Parent Suite Showcase & Product Hub)
  */
 export function proxy(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host') || '';
 
-  // Skip static assets, _next internal files, and API routes
+  // Skip static assets, Next.js internal bundles, and shared API routes
   if (
     url.pathname.startsWith('/_next') ||
     url.pathname.startsWith('/api') ||
@@ -21,17 +23,19 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 1. activate.sheet2suite.com -> Route to /activate
-  if (hostname.startsWith('activate.')) {
-    if (!url.pathname.startsWith('/activate')) {
-      return NextResponse.rewrite(new URL(`/activate${url.pathname}`, req.url));
-    }
-  }
+  // Extract primary subdomain from hostname (e.g., 'vow' from 'vow.sheet2suite.com' or 'vow.localhost:3000')
+  const hostParts = hostname.split(':')[0].split('.');
+  
+  // Check for multi-level domain (e.g., 'vow.sheet2suite.com' or 'vow.localhost')
+  if (hostParts.length >= 2) {
+    const subdomain = hostParts[0].toLowerCase();
 
-  // 2. vow.sheet2suite.com -> Route to /vow
-  if (hostname.startsWith('vow.')) {
-    if (!url.pathname.startsWith('/vow')) {
-      return NextResponse.rewrite(new URL(`/vow${url.pathname}`, req.url));
+    // Ignore 'www' or root hostnames
+    if (subdomain !== 'www' && subdomain !== 'localhost' && subdomain !== 'sheet2suite') {
+      // If the current path doesn't already start with the subdomain segment, rewrite to it
+      if (!url.pathname.startsWith(`/${subdomain}`)) {
+        return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, req.url));
+      }
     }
   }
 
