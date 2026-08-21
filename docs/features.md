@@ -107,8 +107,9 @@
 - [x] **[UX-10] Modal Header CSS Class Coverage:** Ensured all modal headers (`MenuSetupManager`, `VendorShareLinkManager`, `ShareModal`, `AdvancedSettingsModal`, `PrintTemplatesModal`) have `className="modalHeader"` attached.
 - [x] **[UX-11] Touch Target Color Preset Swatches:** Expanded quick settings primary color swatches from 20px to 28px for better mobile touch usability.
 - [x] **[UX-12] Design Style Subtitle Descriptions:** Added descriptive hover tooltips and labels to Quick Settings design system selector buttons.
-- [x] **[UX-13] Explicit Color Reset Label:** Updated color reset button label to "RESET TO DEFAULT" with explicit hover tooltip.
 - [x] **[UX-15] Elevated Dark Mode Toast Notifications:** Updated `ToastNotification.tsx` background token to `var(--color-bg-hover)` to ensure clear visual elevation above page canvas in dark mode.
+- [x] **[NAV-SWIPE] Mobile Gestures & Swipe Sheet:** Swipe-up from mobile bottom nav reveals categorized module drawer; swipe-down on drag handle dismisses drawer.
+- [x] **[NAV-HAPTIC] Mobile Web Micro-Haptic Feedback:** Added safe `triggerHaptic()` feedback on mobile bottom nav tab clicks, drawer module selection, and theme toggles via `navigator.vibrate`.
 
 ---
 
@@ -230,8 +231,8 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[NAV-SWIPE]`** | Mobile Swipe-to-Open & Swipe-Down-to-Dismiss Bottom Sheet Gestures (Touch event listener on mobile screen edge to drag-reveal and drag-dismiss the navigation bottom sheet) | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | Backlog |
-| **`[NAV-HAPTIC]`** | Mobile Web Haptic Feedback on Tab Selection (`navigator.vibrate`) | `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | Backlog |
+| **`[NAV-SWIPE]`** | Mobile Swipe-to-Open & Swipe-Down-to-Dismiss Bottom Sheet Gestures (Touch event listener on mobile screen edge to drag-reveal and drag-dismiss the navigation bottom sheet) | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
+| **`[NAV-HAPTIC]`** | Mobile Web Haptic Feedback on Tab Selection (`navigator.vibrate`) | `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
 

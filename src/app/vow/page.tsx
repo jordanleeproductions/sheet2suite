@@ -238,11 +238,58 @@ export default function Sheet2VowDashboard() {
     }, 600);
   };
 
-  // Navigation Layout & Mobile Responsive States [NAV-1]
+  // Navigation Layout & Mobile Responsive States [NAV-1, NAV-SWIPE, NAV-HAPTIC]
   const [navLayout, setNavLayout] = useState<'top' | 'sidebar'>('top');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
+
+  // Haptic Feedback Helper [NAV-HAPTIC]
+  const triggerHaptic = (duration = 12) => {
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(duration);
+      } catch (_) {}
+    }
+  };
+
+  // Mobile Swipe Gesture Handlers [NAV-SWIPE]
+  const bottomNavTouchStartY = useRef<number | null>(null);
+  const drawerTouchStartY = useRef<number | null>(null);
+
+  const handleBottomNavTouchStart = (e: React.TouchEvent) => {
+    bottomNavTouchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleBottomNavTouchEnd = (e: React.TouchEvent) => {
+    if (bottomNavTouchStartY.current !== null) {
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaY = bottomNavTouchStartY.current - touchEndY;
+      // Swipe UP by >= 35px reveals the categorized module drawer
+      if (deltaY > 35) {
+        triggerHaptic(15);
+        setIsMobileDrawerOpen(true);
+      }
+      bottomNavTouchStartY.current = null;
+    }
+  };
+
+  const handleDrawerTouchStart = (e: React.TouchEvent) => {
+    drawerTouchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleDrawerTouchEnd = (e: React.TouchEvent) => {
+    if (drawerTouchStartY.current !== null) {
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaY = touchEndY - drawerTouchStartY.current;
+      // Swipe DOWN by >= 35px closes the categorized module drawer
+      if (deltaY > 35) {
+        triggerHaptic(10);
+        setIsMobileDrawerOpen(false);
+      }
+      drawerTouchStartY.current = null;
+    }
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -286,10 +333,12 @@ export default function Sheet2VowDashboard() {
   };
 
   const handleToggleTheme = () => {
+    triggerHaptic(10);
     handleThemeChange(theme === 'dark' ? 'light' : 'dark');
   };
 
   const handleToggleNavLayout = () => {
+    triggerHaptic(10);
     const next = navLayout === 'sidebar' ? 'top' : 'sidebar';
     setNavLayout(next);
     if (typeof window !== 'undefined') {
@@ -311,6 +360,7 @@ export default function Sheet2VowDashboard() {
 
   // Tab switching with browser History API push & URL hash sync
   const switchTab = (tab: 'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks', filter?: string, pushToHistory = true) => {
+    triggerHaptic(10);
     const targetTab = tab === 'metrics' ? 'home' : tab;
     setActiveTab(targetTab as any);
     if (filter) {
@@ -2323,10 +2373,12 @@ export default function Sheet2VowDashboard() {
         </div>
       )}
 
-      {/* Mobile Ergonomic Bottom Tab Navigation Bar [NAV-MOBILE-THUMB] */}
+      {/* Mobile Ergonomic Bottom Tab Navigation Bar [NAV-MOBILE-THUMB, NAV-SWIPE] */}
       {isMobile && isOnboarded && (
         <nav
           className="mobile-bottom-nav-bar"
+          onTouchStart={handleBottomNavTouchStart}
+          onTouchEnd={handleBottomNavTouchEnd}
           style={{
             position: 'fixed',
             bottom: 0,
@@ -2357,6 +2409,7 @@ export default function Sheet2VowDashboard() {
                 key={tab.id}
                 type="button"
                 onClick={() => {
+                  triggerHaptic(10);
                   switchTab(tab.id as any);
                   setIsMobileDrawerOpen(false);
                 }}
@@ -2400,7 +2453,10 @@ export default function Sheet2VowDashboard() {
             return (
               <button
                 type="button"
-                onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+                onClick={() => {
+                  triggerHaptic(12);
+                  setIsMobileDrawerOpen(!isMobileDrawerOpen);
+                }}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -2450,6 +2506,405 @@ export default function Sheet2VowDashboard() {
             );
           })()}
         </nav>
+      )}
+
+      {/* Categorized Mobile Module & Tools Drawer [NAV-MOBILE-DRAWER, NAV-SWIPE] */}
+      {isMobile && isOnboarded && isMobileDrawerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(4px)',
+            animation: 'fadeIn 0.2s ease',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              triggerHaptic(8);
+              setIsMobileDrawerOpen(false);
+            }
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              borderTopLeftRadius: '20px',
+              borderTopRightRadius: '20px',
+              borderTop: '2px solid var(--color-border)',
+              boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.2)',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              overflow: 'hidden',
+            }}
+            onTouchStart={handleDrawerTouchStart}
+            onTouchEnd={handleDrawerTouchEnd}
+          >
+            {/* Drawer Drag Handle Bar */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                paddingTop: '0.75rem',
+                paddingBottom: '0.25rem',
+                cursor: 'grab',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '4px',
+                  borderRadius: '2px',
+                  backgroundColor: 'var(--color-muted)',
+                  opacity: 0.5,
+                }}
+              />
+            </div>
+
+            {/* Drawer Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.5rem 1.25rem 0.75rem 1.25rem',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    margin: 0,
+                    color: 'var(--color-primary)',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  All Planning Modules & Tools
+                </h3>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
+                  Swipe down or tap a module to navigate
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic(8);
+                  setIsMobileDrawerOpen(false);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-muted)',
+                  cursor: 'pointer',
+                  padding: '0.35rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Drawer Body — Categorized Grid */}
+            <div
+              style={{
+                padding: '1rem 1.25rem 2rem 1.25rem',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.25rem',
+              }}
+            >
+              {/* Category: Core Event Planning */}
+              <div>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    color: 'var(--color-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Core Planning
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                  {[
+                    { id: 'home', label: 'Summary', sub: 'KPI Dashboard', icon: LayoutDashboard, color: '#3b82f6' },
+                    { id: 'guests', label: 'Guests & RSVP', sub: 'Registry & Invites', icon: Users, color: '#10b981' },
+                    { id: 'budget', label: 'Financials', sub: 'Ledger & Deposits', icon: DollarSign, color: '#f59e0b' },
+                    { id: 'schedule', label: 'Day Timeline', sub: 'Run of Show', icon: Calendar, color: '#8b5cf6' },
+                    { id: 'menu', label: 'Catering', sub: 'Dishes & Allergens', icon: Utensils, color: '#ec4899' },
+                    { id: 'tables', label: 'Seating Chart', sub: 'Floor & Head Table', icon: Grid, color: '#06b6d4' },
+                    { id: 'tasks', label: 'Checklist', sub: 'Kanban Stages', icon: ListTodo, color: '#f97316' },
+                    { id: 'vendors', label: 'Vendors', sub: 'Contracts & Contacts', icon: Briefcase, color: '#6366f1' },
+                  ]
+                    .filter(m => (enabledModules as any)[m.id] ?? (m.id === 'home' ? enabledModules.metrics : true))
+                    .map(m => {
+                      const IconC = m.icon;
+                      const isActive = activeTab === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(12);
+                            switchTab(m.id as any);
+                            setIsMobileDrawerOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.65rem',
+                            padding: '0.65rem 0.75rem',
+                            backgroundColor: isActive ? 'var(--color-bg-hover, #f1f5f9)' : 'var(--color-bg-subtle, #f8fafc)',
+                            border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                            borderRadius: 'var(--border-radius-md, 8px)',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'var(--transition-smooth)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
+                              color: isActive ? 'var(--color-on-primary)' : m.color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                            }}
+                          >
+                            <IconC size={16} />
+                          </div>
+                          <div style={{ overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.725rem',
+                                fontWeight: isActive ? 800 : 700,
+                                color: 'var(--color-text)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {m.label}
+                            </div>
+                            <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {m.sub}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Category: Media & Experience */}
+              <div>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    color: 'var(--color-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Media & Experience
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                  {[
+                    { id: 'music', label: 'Music & DJ', sub: 'Cue Sheet & Do-Not-Play', icon: Music, color: '#a855f7' },
+                    { id: 'photos', label: 'Photo Shot List', sub: 'Must-Have Groupings', icon: Camera, color: '#14b8a6' },
+                    { id: 'thanks', label: 'Thank-You Tracker', sub: 'Gifts & Notes', icon: Heart, color: '#ef4444' },
+                  ]
+                    .filter(m => (enabledModules as any)[m.id] ?? true)
+                    .map(m => {
+                      const IconC = m.icon;
+                      const isActive = activeTab === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(12);
+                            switchTab(m.id as any);
+                            setIsMobileDrawerOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.65rem',
+                            padding: '0.65rem 0.75rem',
+                            backgroundColor: isActive ? 'var(--color-bg-hover, #f1f5f9)' : 'var(--color-bg-subtle, #f8fafc)',
+                            border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                            borderRadius: 'var(--border-radius-md, 8px)',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'var(--transition-smooth)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
+                              color: isActive ? 'var(--color-on-primary)' : m.color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                            }}
+                          >
+                            <IconC size={16} />
+                          </div>
+                          <div style={{ overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.725rem',
+                                fontWeight: isActive ? 800 : 700,
+                                color: 'var(--color-text)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {m.label}
+                            </div>
+                            <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {m.sub}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Category: Collaboration & Quick Tools */}
+              <div>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    color: 'var(--color-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Export & Quick Tools
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic(12);
+                      setIsMobileDrawerOpen(false);
+                      setShowPrintModal(true);
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.65rem 0.5rem',
+                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--border-radius-md, 8px)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Printer size={18} style={{ color: 'var(--color-primary)' }} />
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                      Print Studio
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic(12);
+                      setIsMobileDrawerOpen(false);
+                      setShowShareModal(true);
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.65rem 0.5rem',
+                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--border-radius-md, 8px)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Share2 size={18} style={{ color: 'var(--color-primary)' }} />
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                      Vendor Links
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic(12);
+                      setIsMobileDrawerOpen(false);
+                      setShowAdvancedSettings(true);
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.65rem 0.5rem',
+                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--border-radius-md, 8px)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Sliders size={18} style={{ color: 'var(--color-primary)' }} />
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                      Settings
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast Notification Container [GEN-3] */}

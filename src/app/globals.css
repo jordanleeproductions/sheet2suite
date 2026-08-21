@@ -257,14 +257,15 @@ code, pre, .font-mono {
 }
 
 /* Save / Submit Button background rule */
+/* Save / Submit Button background rule */
 [class*="saveBtn"],
 [class*="submitBtn"],
 button[type="submit"] {
-  background-color: var(--color-primary) !important;
-  color: var(--color-on-primary, #ffffff) !important;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary, #ffffff);
 }
 
-/* In Dark Mode: buttons with var(--color-primary) background have sharp black font */
+/* In Dark Mode: buttons with var(--color-primary) background use on-primary token */
 [data-theme='dark'] button[style*="backgroundColor: var(--color-primary)"],
 [data-theme='dark'] button[style*="background-color: var(--color-primary)"],
 [data-theme='dark'] button[style*="backgroundColor:var(--color-primary)"],
@@ -272,22 +273,46 @@ button[type="submit"] {
 [data-theme='dark'] [class*="saveBtn"],
 [data-theme='dark'] [class*="submitBtn"],
 [data-theme='dark'] button[type="submit"] {
-  color: #000000 !important;
+  color: var(--color-on-primary);
 }
 
 [data-theme='dark'] button[style*="backgroundColor: var(--color-primary)"] *,
 [data-theme='dark'] button[style*="background-color: var(--color-primary)"] * {
-  color: #000000 !important;
+  color: var(--color-on-primary);
 }
 
-/* In Dark Mode: Modal Headers use on-primary token — specificity chain sufficient, no !important needed */
-[data-theme='dark'] [class*="modalHeader"],
-[data-theme='dark'] [class*="modalHeader"] h3,
-[data-theme='dark'] [class*="modalHeader"] button,
-[data-theme='dark'] [class*="modalHeader"] svg,
-[data-theme='dark'] [class*="modalTitle"],
-[data-theme='dark'] [class*="closeBtn"] {
+/* Modal Headers */
+.modalHeader,
+[class*="modalHeader"] {
+  background-color: var(--color-primary);
   color: var(--color-on-primary);
+}
+
+.modalHeader h3,
+.modalHeader [class*="modalTitle"],
+[class*="modalHeader"] h3,
+[class*="modalHeader"] [class*="modalTitle"],
+.modalHeader button,
+[class*="modalHeader"] button,
+.modalHeader svg,
+[class*="modalHeader"] svg {
+  color: var(--color-on-primary);
+}
+
+/* Destructive Red Modal Headers */
+.modalHeader[style*="var(--color-red)"],
+.modalHeader[style*="--color-red"],
+[class*="modalHeader"][style*="var(--color-red)"],
+[class*="modalHeader"][style*="--color-red"] {
+  background-color: var(--color-red) !important;
+  color: #ffffff !important;
+}
+
+.modalHeader[style*="var(--color-red)"] *,
+.modalHeader[style*="--color-red"] *,
+[class*="modalHeader"][style*="var(--color-red)"] *,
+[class*="modalHeader"][style*="--color-red"] * {
+  color: #ffffff !important;
 }
 
 /* Remove background from Sync / Mock Mode Banner in Dark Mode */
@@ -311,43 +336,36 @@ button[type="submit"] {
   color: #000000;
 }
 
-/* Settings Dropdown — specificity sufficient for light mode; dark !important only on bg (inline style conflict) */
+/* Settings Dropdown — clean token inheritance for light & dark modes */
 .settingsDropdown,
 [class*="settingsDropdown"] {
-  background-color: #ffffff;
-  color: #121824;
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-text, #121824);
+  border: var(--border-width, 1px) solid var(--color-border, #e5e7eb);
+  box-shadow: var(--box-shadow-hover, 0 10px 25px -5px rgba(0, 0, 0, 0.1));
 }
 
 .settingsDropdown label,
+[class*="settingsDropdown"] label {
+  color: var(--color-muted);
+}
+
 .settingsDropdown span,
 .settingsDropdown div,
 .settingsDropdown a,
-.settingsDropdown button {
-  color: #121824;
+[class*="settingsDropdown"] span,
+[class*="settingsDropdown"] div,
+[class*="settingsDropdown"] a {
+  color: var(--color-text);
 }
 
-[data-theme='dark'] [class*="settingsDropdown"],
-[data-theme='dark'] .settingsDropdown {
-  background-color: #000000 !important; /* cascade-trump: overrides inline style */
-  color: #ffffff;
-  border: 2px solid var(--color-muted);
+.settingsDropdown button:not([style*="var(--color-primary)"]),
+[class*="settingsDropdown"] button:not([style*="var(--color-primary)"]) {
+  color: var(--color-text);
 }
 
-[data-theme='dark'] [class*="settingsDropdown"] label,
-[data-theme='dark'] [class*="settingsDropdown"] span,
-[data-theme='dark'] [class*="settingsDropdown"] div,
-[data-theme='dark'] [class*="settingsDropdown"] a,
-[data-theme='dark'] [class*="settingsDropdown"] button,
-[data-theme='dark'] .settingsDropdown label,
-[data-theme='dark'] .settingsDropdown span,
-[data-theme='dark'] .settingsDropdown div,
-[data-theme='dark'] .settingsDropdown a,
-[data-theme='dark'] .settingsDropdown button {
-  color: #ffffff;
-}
-
-[data-theme='dark'] [class*="settingsDropdown"] button[style*="var(--color-primary)"],
-[data-theme='dark'] .settingsDropdown button[style*="var(--color-primary)"] {
+.settingsDropdown button[style*="var(--color-primary)"],
+[class*="settingsDropdown"] button[style*="var(--color-primary)"] {
   color: var(--color-on-primary);
 }
 
