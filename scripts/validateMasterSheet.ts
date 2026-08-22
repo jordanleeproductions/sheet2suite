@@ -28,7 +28,7 @@ export const EXPECTED_SCHEMA: Record<string, string[]> = {
     'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required'
   ],
   'TO DO': [
-    'Task ID', 'Task Name', 'Kanban Stage', 'Category', 
+    'Task ID', 'Task Name', 'Status', 'Category', 
     'Priority', 'Assigned To', 'Due Date', 'Notes / Links'
   ],
   MUSIC: [
@@ -40,8 +40,8 @@ export const EXPECTED_SCHEMA: Record<string, string[]> = {
     'Included People', 'Status', 'Priority', 'Notes'
   ],
   'GIFT REGISTRY': [
-    'Item ID', 'Gift Description / Name', 'Giver / From', 
-    'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes'
+    'Gift ID', 'Guest / Party Name', 'Gift Description', 'Gift Type', 
+    'Amount', 'Received Date', 'Thank You Sent', 'Sent Date', 'Notes'
   ],
   TABLES: [
     'Table ID', 'Table Name', 'Shape', 'Capacity'
