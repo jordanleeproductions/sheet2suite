@@ -470,61 +470,66 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
               </tr>
             </thead>
             <tbody>
-              {filteredVendors.map((item) => (
-                <tr key={item.vendorId} style={styles.tr}>
-                  <td style={styles.td}>
-                    <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{item.vendorName}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '2px' }}>{item.category}</div>
-                  </td>
-                  <td style={styles.td}>
-                    <div>{item.contactName}</div>
-                    {item.emailAddress && <a href={`mailto:${item.emailAddress}`} style={styles.link}>{item.emailAddress}</a>}
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'right' }}>${item.totalContractValue.toLocaleString()}</td>
-                  <td style={{ ...styles.td, textAlign: 'right' }}>${item.depositPaid.toLocaleString()}</td>
-                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
-                    ${item.balanceOwing.toLocaleString()}
-                  </td>
-                  <td style={styles.td}>
-                    {(() => {
-                      const reminder = getDueDateReminder(item.paymentDueDate, item.balanceOwing);
-                      return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                          <span>{item.paymentDueDate || '-'}</span>
-                          {reminder && (
-                            <span style={{
-                              fontFamily: 'var(--font-mono)',
-                              fontSize: '0.65rem',
-                              fontWeight: 700,
-                              backgroundColor: reminder.isUrgent ? 'var(--color-red, #ef4444)' : 'var(--color-gold, #eab308)',
-                              color: '#ffffff',
-                              padding: '0.1rem 0.4rem',
-                              borderRadius: 'var(--border-radius-sm)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              width: 'fit-content',
-                            }}>
-                              <AlertCircle size={10} style={{ marginRight: '0.2rem' }} /> {reminder.label}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </td>
-                  <td style={styles.td}>
-                    {item.contractLink && <a href={item.contractLink} target="_blank" rel="noopener noreferrer" style={styles.iconLink}><Link2 size={14} /></a>}
-                    {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meals</span>}
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Vendor">
-                      <Edit2 size={16} />
-                    </button>
-                    <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)} title="Delete">
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filteredVendors.map((item, idx) => {
+                const itemKey = (item.vendorId && item.vendorId.trim() !== '')
+                  ? item.vendorId
+                  : `vendor-${item.vendorName ? item.vendorName.replace(/\s+/g, '_') : 'item'}-${idx}`;
+                return (
+                  <tr key={itemKey} style={styles.tr}>
+                    <td style={styles.td}>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{item.vendorName}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '2px' }}>{item.category}</div>
+                    </td>
+                    <td style={styles.td}>
+                      <div>{item.contactName}</div>
+                      {item.emailAddress && <a href={`mailto:${item.emailAddress}`} style={styles.link}>{item.emailAddress}</a>}
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>${item.totalContractValue.toLocaleString()}</td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>${item.depositPaid.toLocaleString()}</td>
+                    <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
+                      ${item.balanceOwing.toLocaleString()}
+                    </td>
+                    <td style={styles.td}>
+                      {(() => {
+                        const reminder = getDueDateReminder(item.paymentDueDate, item.balanceOwing);
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span>{item.paymentDueDate || '-'}</span>
+                            {reminder && (
+                              <span style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                backgroundColor: reminder.isUrgent ? 'var(--color-red, #ef4444)' : 'var(--color-gold, #eab308)',
+                                color: '#ffffff',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: 'var(--border-radius-sm)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                width: 'fit-content',
+                              }}>
+                                <AlertCircle size={10} style={{ marginRight: '0.2rem' }} /> {reminder.label}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td style={styles.td}>
+                      {item.contractLink && <a href={item.contractLink} target="_blank" rel="noopener noreferrer" style={styles.iconLink}><Link2 size={14} /></a>}
+                      {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meals</span>}
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                      <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Vendor">
+                        <Edit2 size={16} />
+                      </button>
+                      <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)} title="Delete">
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {filteredVendors.length === 0 && (
                 <tr>
                   <td colSpan={8} style={styles.emptyState}>No vendors found.</td>
@@ -535,8 +540,12 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
         </div>
       ) : (
         <div style={styles.cardGrid}>
-          {filteredVendors.map((item) => (
-            <div key={item.vendorId} style={styles.card}>
+          {filteredVendors.map((item, idx) => {
+            const itemKey = (item.vendorId && item.vendorId.trim() !== '')
+              ? item.vendorId
+              : `vendor-${item.vendorName ? item.vendorName.replace(/\s+/g, '_') : 'item'}-${idx}`;
+            return (
+              <div key={itemKey} style={styles.card}>
               <div className="vendor-card-header" style={styles.cardHeader}>
                 <div>
                   <h3 style={styles.cardTitle}>{item.vendorName}</h3>
@@ -623,7 +632,8 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                 </div>
               </div>
             </div>
-          ))}
+          );
+        })}
           {vendors.length === 0 && (
             <div style={styles.emptyState}>No vendors added yet.</div>
           )}

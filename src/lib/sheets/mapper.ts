@@ -227,9 +227,12 @@ export const scheduleMapper = {
 export const vendorMapper = {
   fromRow(headers: string[], row: any[]): Vendor {
     const obj = mapRowToObject<Vendor>(headers, row, VENDOR_HEADERS);
+    const rawId = String(obj.vendorId || '').trim();
+    const vendorName = String(obj.vendorName || '').trim();
+    const vendorId = rawId !== '' ? rawId : (vendorName ? `V_${vendorName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` : `V_${Math.random().toString(36).substring(2, 7)}`);
     return {
-      vendorId: String(obj.vendorId || ''),
-      vendorName: String(obj.vendorName || ''),
+      vendorId,
+      vendorName,
       category: String(obj.category || ''),
       contactName: String(obj.contactName || ''),
       emailAddress: String(obj.emailAddress || ''),
