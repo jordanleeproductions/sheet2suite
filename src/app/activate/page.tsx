@@ -216,7 +216,7 @@ export default function ActivationPage() {
         if (productConfig.admin1Email) localStorage.setItem('s2v_spouse_email', productConfig.admin1Email);
         if (productConfig.styleTheme) localStorage.setItem('s2v_style_theme', productConfig.styleTheme);
         if (productConfig.colorMode) localStorage.setItem('s2v_theme', productConfig.colorMode);
-        if (productConfig.navLayout) localStorage.setItem('s2v_nav_layout', productConfig.navLayout);
+        if (productConfig.showTopNav !== undefined) localStorage.setItem('s2v_show_top_nav', String(productConfig.showTopNav));
         if (productConfig.taskMode) localStorage.setItem('s2v_task_preset', productConfig.taskMode === 'clean_slate' ? 'CLEAN_SLATE' : productConfig.selectedPresetKey);
         if (productConfig.selectedTaskIds) localStorage.setItem('s2v_selected_task_ids', JSON.stringify(productConfig.selectedTaskIds));
       }

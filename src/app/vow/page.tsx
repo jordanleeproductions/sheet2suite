@@ -306,8 +306,8 @@ export default function Sheet2VowDashboard() {
     }, 600);
   };
 
-  // Navigation Layout & Mobile Responsive States [NAV-1, NAV-SWIPE, NAV-HAPTIC]
-  const [navLayout, setNavLayout] = useState<'top' | 'sidebar'>('top');
+  // Navigation Layout & Mobile Responsive States [NAV-ENFORCE, NAV-SWIPE, NAV-HAPTIC]
+  const [showTopNav, setShowTopNav] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
@@ -394,12 +394,12 @@ export default function Sheet2VowDashboard() {
     handleThemeChange(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const handleToggleNavLayout = () => {
+  const handleToggleTopNav = (val?: boolean) => {
     triggerHaptic(10);
-    const next = navLayout === 'sidebar' ? 'top' : 'sidebar';
-    setNavLayout(next);
+    const next = val !== undefined ? val : !showTopNav;
+    setShowTopNav(next);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('s2v_nav_layout', next);
+      localStorage.setItem('s2v_show_top_nav', String(next));
     }
   };
 
@@ -494,10 +494,10 @@ export default function Sheet2VowDashboard() {
     const savedFolder = localStorage.getItem('s2v_drive_folder');
     const savedModules = localStorage.getItem('s2v_enabled_modules');
     const savedWorkspacesStr = localStorage.getItem('s2v_workspaces');
-    const savedNavLayout = localStorage.getItem('s2v_nav_layout');
+    const savedShowTopNav = localStorage.getItem('s2v_show_top_nav');
 
-    if (savedNavLayout === 'top' || savedNavLayout === 'sidebar') {
-      setNavLayout(savedNavLayout);
+    if (savedShowTopNav !== null) {
+      setShowTopNav(savedShowTopNav === 'true');
     }
 
     if (savedWorkspacesStr) {
@@ -854,7 +854,7 @@ export default function Sheet2VowDashboard() {
     return `${diffDays} DAYS UNTIL THE WEDDING!`;
   };
 
-  const isDesktopSidebarActive = !isMobile && isOnboarded && navLayout === 'sidebar';
+  const isDesktopSidebarActive = !isMobile && isOnboarded;
   const sidebarWidthPx = isSidebarCollapsed ? 64 : 220;
 
   return (
@@ -1153,8 +1153,8 @@ export default function Sheet2VowDashboard() {
         </div>
       )}
 
-      {/* Desktop Sticky Collapsible Left Sidebar [NAV-1] */}
-      {!isMobile && isOnboarded && navLayout === 'sidebar' && (
+      {/* Desktop Sticky Collapsible Left Sidebar [NAV-ENFORCE] */}
+      {!isMobile && isOnboarded && (
         <aside
           className="app-sidebar"
           style={{
@@ -1515,37 +1515,31 @@ export default function Sheet2VowDashboard() {
                   </div>
 
                   <div style={styles.settingsSection}>
-                    <label style={styles.settingsLabel}>NAVIGATION LAYOUT</label>
+                    <label style={styles.settingsLabel}>TOP NAVIGATION BAR</label>
                     <div style={styles.themeToggle}>
                       <button
                         style={{
                           ...styles.themeBtn,
-                          fontWeight: navLayout === 'top' ? 'bold' : 'normal',
-                          backgroundColor: navLayout === 'top' ? 'var(--color-primary)' : 'transparent',
-                          color: navLayout === 'top' ? 'var(--color-on-primary)' : 'var(--color-text)'
+                          fontWeight: !showTopNav ? 'bold' : 'normal',
+                          backgroundColor: !showTopNav ? 'var(--color-primary)' : 'transparent',
+                          color: !showTopNav ? 'var(--color-on-primary)' : 'var(--color-text)'
                         }}
-                        onClick={() => {
-                          setNavLayout('top');
-                          localStorage.setItem('s2v_nav_layout', 'top');
-                        }}
-                        title="Top Horizontal Navbar"
+                        onClick={() => handleToggleTopNav(false)}
+                        title="Clean Layout (Left Sidebar on Desktop, Bottom Nav on Mobile)"
                       >
-                        TOP NAVBAR
+                        OFF (DEFAULT)
                       </button>
                       <button
                         style={{
                           ...styles.themeBtn,
-                          fontWeight: navLayout === 'sidebar' ? 'bold' : 'normal',
-                          backgroundColor: navLayout === 'sidebar' ? 'var(--color-primary)' : 'transparent',
-                          color: navLayout === 'sidebar' ? 'var(--color-on-primary)' : 'var(--color-text)'
+                          fontWeight: showTopNav ? 'bold' : 'normal',
+                          backgroundColor: showTopNav ? 'var(--color-primary)' : 'transparent',
+                          color: showTopNav ? 'var(--color-on-primary)' : 'var(--color-text)'
                         }}
-                        onClick={() => {
-                          setNavLayout('sidebar');
-                          localStorage.setItem('s2v_nav_layout', 'sidebar');
-                        }}
-                        title="Sticky Collapsible Left Sidebar Layout"
+                        onClick={() => handleToggleTopNav(true)}
+                        title="Show Dual Top Horizontal Navigation Bar"
                       >
-                        LEFT SIDEBAR
+                        ON (SHOW TOP BAR)
                       </button>
                     </div>
                   </div>
@@ -2233,10 +2227,12 @@ export default function Sheet2VowDashboard() {
           primaryColor={primaryColor}
           timeFormat={timeFormat}
           currency={currency}
+          showTopNav={showTopNav}
           onUpdateWeddingDetails={handleUpdateWeddingDetails}
           onToggleModule={toggleModule}
           onUpdateStyleTheme={handleStyleThemeChange}
           onUpdateTheme={handleThemeChange}
+          onToggleTopNav={handleToggleTopNav}
           onUpdatePrimaryColor={(clr) => setPrimaryColor(clr)}
           onUpdateTimeFormat={(tf) => {
             setTimeFormat(tf);
@@ -2444,8 +2440,8 @@ export default function Sheet2VowDashboard() {
             </div>
           )}
 
-          {/* Navigation tabs (Only rendered when navLayout is 'top') */}
-          {navLayout === 'top' && (
+          {/* Navigation tabs (Only rendered when showTopNav is true) */}
+          {showTopNav && (
             <nav style={styles.navbar}>
               {[
                 { id: 'home', label: '[ SUMMARY ]' },
@@ -2503,10 +2499,10 @@ export default function Sheet2VowDashboard() {
                   spreadsheetId={spreadsheetId}
                   styleTheme={styleTheme}
                   colorTheme={theme}
-                  navLayout={navLayout}
+                  showTopNav={showTopNav}
                   onSelectStyleTheme={handleStyleThemeChange}
                   onToggleColorTheme={handleToggleTheme}
-                  onToggleNavLayout={handleToggleNavLayout}
+                  onToggleTopNav={handleToggleTopNav}
                 />
               )}
 

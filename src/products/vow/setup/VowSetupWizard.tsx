@@ -55,7 +55,8 @@ export interface VowSetupConfig {
   };
   styleTheme: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
   colorMode: 'light' | 'dark';
-  navLayout: 'sidebar' | 'top';
+  showTopNav?: boolean;
+  navLayout?: 'sidebar' | 'top';
   taskMode: 'preset' | 'clean_slate';
   selectedPresetKey: string;
   selectedTaskIds: string[];
@@ -98,7 +99,7 @@ export default function VowSetupWizard({
   // Setup Form State: Workspace Styling & Navigation Experience
   const [styleTheme, setStyleTheme] = useState<'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
-  const [navLayout, setNavLayout] = useState<'sidebar' | 'top'>('sidebar');
+  const [showTopNav, setShowTopNav] = useState<boolean>(false);
 
   // Module Configuration State
   const [modules, setModules] = useState({
@@ -154,7 +155,7 @@ export default function VowSetupWizard({
       modules,
       styleTheme,
       colorMode,
-      navLayout,
+      showTopNav,
       taskMode,
       selectedPresetKey,
       selectedTaskIds,
@@ -651,25 +652,25 @@ export default function VowSetupWizard({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Navigation Layout */}
               <div>
-                <label style={styles.fieldLabel}>NAVIGATION LAYOUT</label>
+                <label style={styles.fieldLabel}>OPTIONAL TOP NAVIGATION BAR</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.6rem' }}>
                   {[
-                    { key: 'sidebar' as const, title: 'Left-Hand Nav', desc: 'Modern collapsible sidebar (Recommended)' },
-                    { key: 'top' as const, title: 'Top Nav Header', desc: 'Classic horizontal tabs layout' },
-                  ].map(layout => (
+                    { key: false, title: 'Standard Layout (Recommended)', desc: 'Left Sidebar on Desktop, Bottom Nav + Hamburger on Mobile' },
+                    { key: true, title: 'Dual Top Navigation Bar', desc: 'Adds an extra top horizontal navigation tab bar' },
+                  ].map(option => (
                     <div
-                      key={layout.key}
-                      onClick={() => setNavLayout(layout.key)}
+                      key={String(option.key)}
+                      onClick={() => setShowTopNav(option.key)}
                       style={{
                         padding: '0.75rem',
                         borderRadius: 'var(--border-radius-sm)',
-                        border: navLayout === layout.key ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: navLayout === layout.key ? 'var(--color-surface, #ffffff)' : 'var(--color-bg)',
+                        border: showTopNav === option.key ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: showTopNav === option.key ? 'var(--color-surface, #ffffff)' : 'var(--color-bg)',
                         cursor: 'pointer',
                       }}
                     >
-                      <div style={{ fontSize: '0.825rem', fontWeight: 800 }}>{layout.title}</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>{layout.desc}</div>
+                      <div style={{ fontSize: '0.825rem', fontWeight: 800 }}>{option.title}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>{option.desc}</div>
                     </div>
                   ))}
                 </div>

@@ -40,10 +40,10 @@ interface DashboardMetricsProps {
   spreadsheetId?: string;
   styleTheme?: StyleTheme;
   colorTheme?: ColorTheme;
-  navLayout?: 'top' | 'sidebar';
+  showTopNav?: boolean;
   onSelectStyleTheme?: (style: StyleTheme) => void;
   onToggleColorTheme?: () => void;
-  onToggleNavLayout?: () => void;
+  onToggleTopNav?: () => void;
 }
 
 function DonutChart({
@@ -285,10 +285,10 @@ export default function DashboardMetrics({
   spreadsheetId,
   styleTheme = 'editorial',
   colorTheme = 'light',
-  navLayout = 'top',
+  showTopNav = false,
   onSelectStyleTheme,
   onToggleColorTheme,
-  onToggleNavLayout,
+  onToggleTopNav,
 }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
 
@@ -361,11 +361,11 @@ export default function DashboardMetrics({
           spreadsheetId={spreadsheetId}
           styleTheme={styleTheme}
           colorTheme={colorTheme}
-          navLayout={navLayout}
+          showTopNav={showTopNav}
           onDismiss={onDismissWelcomeGuide}
           onSelectStyleTheme={onSelectStyleTheme}
           onToggleColorTheme={onToggleColorTheme}
-          onToggleNavLayout={onToggleNavLayout}
+          onToggleTopNav={onToggleTopNav}
           onOpenSettings={onOpenModuleSettings}
         />
       )}

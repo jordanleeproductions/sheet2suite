@@ -178,6 +178,9 @@
   - **Dynamic In-Cell Dropdown Preserver (`src/lib/sheets/dropdownValidator.ts`)**: Automated Google Sheets API `setDataValidation` engine that scans table headers across all 10 tabs and applies `ONE_OF_RANGE` validation linked to the `'Settings'` lookup columns (`=Settings!$A$2:$A$50`, `=Settings!$D$2:$D$50`, etc.) with `showCustomUi: true` interactive dropdown arrow pills.
   - **Settings Dropdown Cell Protection**: Relocated system JSON configuration storage from `Settings!B2` (which conflicted with `Table Shapes`) to `Settings!Z1`, preserving 100% of Settings lookup lists and preventing formula `#REF!` degradation.
   - **Post-Provision & Sync Dropdown Repair (`/api/provision`, `/api/sync`)**: Automatically applies dropdown validations during provisioning and exposes `sheetType: 'repair_dropdowns'` for on-demand table validation restoration.
+- [x] **[NAV-ENFORCE] Enforced Navigation Architecture & Optional Dual Top Nav Bar:**
+  - **Hard-Enforced Desktop & Mobile Layouts**: Desktop layout strictly enforces the sticky collapsible left sidebar, while mobile devices strictly enforce the bottom nav bar with thumb-accessible drawer button.
+  - **Optional Top Navigation Bar Setting**: Added an optional **Top Navigation Bar** toggle setting (default: `OFF`) in `AdvancedSettingsModal.tsx`, `VowSetupWizard.tsx` (Step 4), `WelcomeGuideCard.tsx`, and `vow/page.tsx`, allowing users to optionally enable a dual top navbar while keeping the main canvas clean by default.
 
 ---
 ---
@@ -237,7 +240,7 @@
 |---|---|---|---|---|---|
 | **`[NAV-SWIPE]`** | Mobile Swipe-to-Open & Swipe-Down-to-Dismiss Bottom Sheet Gestures (Touch event listener on mobile screen edge to drag-reveal and drag-dismiss the navigation bottom sheet) | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
 | **`[NAV-HAPTIC]`** | Mobile Web Haptic Feedback on Tab Selection (`navigator.vibrate`) | `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
-| **`[NAV-ENFORCE]`** | Enforce Left Sidebar on Desktop & Bottom Nav + Hamburger on Mobile — Remove `navLayout` toggle from runtime and hard-enforce: desktop always gets left sidebar, mobile always gets bottom nav. Add optional **Show Top Nav Bar** toggle in Advanced Settings (default: `OFF`). Update `VowSetupConfig` and the Guided Setup Screen 4 to match. | `src/app/vow/page.tsx`, `src/components/AdvancedSettingsModal.tsx`, `src/products/vow/setup/VowSetupWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[NAV-ENFORCE]`** | Enforce Left Sidebar on Desktop & Bottom Nav + Hamburger on Mobile — Remove `navLayout` toggle from runtime and hard-enforce: desktop always gets left sidebar, mobile always gets bottom nav. Add optional **Show Top Nav Bar** toggle in Advanced Settings (default: `OFF`). Update `VowSetupConfig` and the Guided Setup Screen 4 to match. | `src/app/vow/page.tsx`, `src/components/AdvancedSettingsModal.tsx`, `src/products/vow/setup/VowSetupWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 
 ### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
 

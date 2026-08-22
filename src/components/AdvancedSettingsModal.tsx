@@ -46,6 +46,7 @@ interface AdvancedSettingsModalProps {
   primaryColor?: string;
   timeFormat: '12h' | '24h';
   currency?: string;
+  showTopNav?: boolean;
   onUpdateWeddingDetails: (name: string, date: string, location?: string) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
   onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => void;
@@ -53,6 +54,7 @@ interface AdvancedSettingsModalProps {
   onUpdatePrimaryColor?: (color: string) => void;
   onUpdateTimeFormat: (format: '12h' | '24h') => void;
   onUpdateCurrency?: (currency: string) => void;
+  onToggleTopNav?: (show: boolean) => void;
   onDisconnect: () => void;
   onOpenShareModal?: () => void;
   onClose: () => void;
@@ -70,6 +72,7 @@ export default function AdvancedSettingsModal({
   primaryColor,
   timeFormat,
   currency = 'USD',
+  showTopNav = false,
   onUpdateWeddingDetails,
   onToggleModule,
   onUpdateStyleTheme,
@@ -77,6 +80,7 @@ export default function AdvancedSettingsModal({
   onUpdatePrimaryColor,
   onUpdateTimeFormat,
   onUpdateCurrency,
+  onToggleTopNav,
   onDisconnect,
   onOpenShareModal,
   onClose,
@@ -370,6 +374,61 @@ export default function AdvancedSettingsModal({
                       }}
                     >
                       <span>🌙 DARK MODE</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Optional Top Navigation Bar Toggle [NAV-ENFORCE] */}
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>TOP NAVIGATION BAR</label>
+                  <p style={{ fontSize: '0.725rem', color: 'var(--color-muted)', margin: '-0.2rem 0 0.5rem 0' }}>
+                    Desktop uses the Left Sidebar and mobile uses the Bottom Nav + Hamburger menu. Toggle to show an optional top navigation bar as well.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => onToggleTopNav?.(false)}
+                      style={{
+                        flex: '1 1 140px',
+                        padding: '0.625rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: !showTopNav ? 700 : 500,
+                        border: !showTopNav ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: !showTopNav ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>OFF (DEFAULT)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onToggleTopNav?.(true)}
+                      style={{
+                        flex: '1 1 140px',
+                        padding: '0.625rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        fontWeight: showTopNav ? 700 : 500,
+                        border: showTopNav ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                        backgroundColor: showTopNav ? 'var(--color-bg)' : 'transparent',
+                        color: 'var(--color-text)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>ON (SHOW TOP BAR)</span>
                     </button>
                   </div>
                 </div>

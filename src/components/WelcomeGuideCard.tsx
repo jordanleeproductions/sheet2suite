@@ -22,11 +22,11 @@ interface WelcomeGuideCardProps {
   spreadsheetId?: string;
   styleTheme: StyleTheme;
   colorTheme: ColorTheme;
-  navLayout: 'top' | 'sidebar';
+  showTopNav?: boolean;
   onDismiss: () => void;
   onSelectStyleTheme?: (style: StyleTheme) => void;
   onToggleColorTheme?: () => void;
-  onToggleNavLayout?: () => void;
+  onToggleTopNav?: () => void;
   onOpenSettings?: () => void;
 }
 
@@ -35,11 +35,11 @@ export default function WelcomeGuideCard({
   spreadsheetId,
   styleTheme,
   colorTheme,
-  navLayout,
+  showTopNav = false,
   onDismiss,
   onSelectStyleTheme,
   onToggleColorTheme,
-  onToggleNavLayout,
+  onToggleTopNav,
   onOpenSettings,
 }: WelcomeGuideCardProps) {
   const googleSheetUrl = spreadsheetId 
@@ -268,18 +268,18 @@ export default function WelcomeGuideCard({
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem', color: '#cbd5e1' }}>
               <Layout size={15} style={{ color: '#6ee7b7' }} />
               <span style={{ fontSize: '0.8rem', fontWeight: 800, fontFamily: 'var(--font-mono, monospace)', textTransform: 'uppercase' }}>
-                3. Navigation Layout
+                3. Optional Top Nav Bar
               </span>
             </div>
             <p style={{ margin: '0 0 0.65rem 0', fontSize: '0.75rem', color: '#c7d2fe', lineHeight: 1.35 }}>
-              Choose your preferred workflow layout: collapsible <strong>Left Sidebar</strong> or classic <strong>Top Header</strong> tabs.
+              Desktop uses the <strong>Left Sidebar</strong> and mobile uses the <strong>Bottom Nav</strong>. Optionally toggle the top navigation bar.
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '0.4rem' }}>
             <button
               type="button"
-              onClick={onToggleNavLayout}
+              onClick={onToggleTopNav}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 color: '#ffffff',
@@ -296,7 +296,7 @@ export default function WelcomeGuideCard({
               }}
             >
               <Compass size={13} />
-              <span>NAV: {navLayout === 'sidebar' ? 'LEFT SIDEBAR' : 'TOP HEADER'} (CLICK TO SWITCH)</span>
+              <span>TOP NAV BAR: {showTopNav ? 'ENABLED' : 'DISABLED'}</span>
             </button>
           </div>
         </div>
