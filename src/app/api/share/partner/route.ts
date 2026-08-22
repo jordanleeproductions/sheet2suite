@@ -88,12 +88,16 @@ export async function POST(req: NextRequest) {
     const auth = getGoogleAuth(token);
     const drive = google.drive({ version: 'v3', auth });
 
+    const origin = req.headers.get('origin') || req.nextUrl?.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://sheet2vow.com';
+    const appAccessUrl = `${origin}/vow?spreadsheetId=${spreadsheetId}`;
+    const customEmailMsg = `${weddingName}: You've been added as a co-planner to our wedding database on Sheet2Vow!\n\nOpen your Co-Planner App Dashboard directly at:\n${appAccessUrl}`;
+
     let permissionId: string | undefined;
     try {
       const permRes = await drive.permissions.create({
         fileId: spreadsheetId,
         sendNotificationEmail: true, // Native Free Google Notification Email
-        emailMessage: `${weddingName}: You've been added as a co-planner to our wedding database on Sheet2Vow!`,
+        emailMessage: customEmailMsg,
         requestBody: {
           role: role === 'reader' ? 'reader' : 'writer',
           type: 'user',
