@@ -13,6 +13,53 @@ export default function AdminDatabasePage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [rawJsonRecord, setRawJsonRecord] = useState<any | null>(null);
 
+  // Schema Validator State
+  const [schemaReport, setSchemaReport] = useState<any | null>(null);
+  const [isAuditingSchema, setIsAuditingSchema] = useState<boolean>(false);
+  const [isRepairingSchema, setIsRepairingSchema] = useState<boolean>(false);
+  const [auditSpreadsheetId, setAuditSpreadsheetId] = useState<string>('1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI');
+
+  const handleRunSchemaAudit = async () => {
+    setIsAuditingSchema(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`/api/admin/validate-schema?spreadsheetId=${encodeURIComponent(auditSpreadsheetId)}`);
+      const data = await res.json();
+      if (data.success) {
+        setSchemaReport(data.report);
+      } else {
+        setErrorMsg(data.error || 'Failed to run schema audit.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error running schema audit.');
+    } finally {
+      setIsAuditingSchema(false);
+    }
+  };
+
+  const handleAutoRepairSchema = async () => {
+    setIsRepairingSchema(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/admin/validate-schema', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spreadsheetId: auditSpreadsheetId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMsg(`Successfully repaired ${data.repairedTabs?.length || 0} tabs on Google Sheet!`);
+        setSchemaReport(data.report);
+      } else {
+        setErrorMsg(data.error || 'Failed to auto-repair Google Sheet schema.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error executing auto-repair.');
+    } finally {
+      setIsRepairingSchema(false);
+    }
+  };
+
   const fetchRecords = async () => {
     setIsLoading(true);
     setErrorMsg(null);
@@ -398,6 +445,109 @@ export default function AdminDatabasePage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+
+        {/* Schema Validator & Auto-Repair Tool Section */}
+        <div style={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldCheck size={20} style={{ color: '#10b981' }} />
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                Master Spreadsheet Schema Validator & Auto-Repair Engine
+              </h2>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                type="text"
+                value={auditSpreadsheetId}
+                onChange={(e) => setAuditSpreadsheetId(e.target.value)}
+                placeholder="Google Spreadsheet ID"
+                style={{
+                  backgroundColor: '#111827',
+                  border: '1px solid #4b5563',
+                  borderRadius: '4px',
+                  padding: '0.4rem 0.75rem',
+                  color: '#ffffff',
+                  fontFamily: 'monospace',
+                  fontSize: '0.8rem',
+                  width: '280px',
+                }}
+              />
+              <button
+                onClick={handleRunSchemaAudit}
+                disabled={isAuditingSchema}
+                style={{
+                  backgroundColor: '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '0.45rem 0.9rem',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <RefreshCw size={14} className={isAuditingSchema ? 'spin' : ''} />
+                <span>{isAuditingSchema ? 'Auditing...' : 'Run Schema Audit'}</span>
+              </button>
+            </div>
+          </div>
+
+          {schemaReport && (
+            <div style={{ marginTop: '1rem', backgroundColor: '#111827', borderRadius: '6px', padding: '1.25rem', border: '1px solid #374151' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: schemaReport.isFullyCompliant ? '#34d399' : '#f59e0b', fontFamily: 'monospace' }}>
+                  STATUS: {schemaReport.isFullyCompliant ? '✅ 100% SCHEMA COMPLIANT' : '⚠️ DISCREPANCIES DETECTED'}
+                </span>
+                {!schemaReport.isFullyCompliant && (
+                  <button
+                    onClick={handleAutoRepairSchema}
+                    disabled={isRepairingSchema}
+                    style={{
+                      backgroundColor: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '0.45rem 0.9rem',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    {isRepairingSchema ? 'Repairing Sheet...' : '🛠️ Auto-Repair Google Sheet'}
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                {schemaReport.tabReports?.map((tr: any) => (
+                  <div key={tr.tabName} style={{ backgroundColor: '#1f2937', padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid #374151' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={{ fontWeight: 800, color: '#ffffff', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                        📄 {tr.tabName}
+                      </span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: tr.missingHeaders.length === 0 ? '#34d399' : '#f87171' }}>
+                        {tr.missingHeaders.length === 0 ? 'MATCH' : `-${tr.missingHeaders.length} MISSING`}
+                      </span>
+                    </div>
+                    {tr.missingHeaders.length > 0 && (
+                      <div style={{ fontSize: '0.7rem', color: '#fca5a5', fontFamily: 'monospace' }}>
+                        Missing: {tr.missingHeaders.join(', ')}
+                      </div>
+                    )}
+                    {tr.extraHeaders.length > 0 && (
+                      <div style={{ fontSize: '0.7rem', color: '#fde68a', fontFamily: 'monospace', marginTop: '0.2rem' }}>
+                        Extra unmapped: {tr.extraHeaders.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
