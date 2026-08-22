@@ -2579,6 +2579,7 @@ export default function Sheet2VowDashboard() {
                   isSyncing={isSyncing}
                   spreadsheetId={spreadsheetId}
                   weddingName={weddingName}
+                  driveFolder={driveFolder}
                   onOpenShareModal={() => setShowShareModal(true)}
                   onOpenPrintStudio={(tmpl) => {
                     setPrintModalInitialTemplate(tmpl);

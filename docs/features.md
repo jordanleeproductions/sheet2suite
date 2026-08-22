@@ -185,6 +185,9 @@
   - **Dedicated Bride & Groom Setup Step**: Added Guided Setup Step 2 (`VowSetupWizard.tsx`), allowing couples to define Partner 1 (Bride/Spouse A) and Partner 2 (Groom/Spouse B) with First/Last Name and optional Email/Phone.
   - **Automatic Co-Admin Invite Checkbox**: Integrated partner email sync with partner co-admin access (`grantPartner2Admin`), automatically granting Google Drive and app editing access.
   - **Automatic Guest Registry Provisioning (`/api/provision`)**: Automatically provisions Partner 1 (`G1`) and Partner 2 (`G2`) as the first 2 guest entries under `Sweetheart Table` in the customer's `GUESTS` Google Sheet.
+- [x] **[VND-6] Vendor Contract Upload & Google Drive "Contracts" Folder Storage:**
+  - **Google Drive Contract Upload API (`/api/upload/contract`)**: API route accepting contract document files (PDF, PNG, JPG, WEBP, DOC, DOCX up to 10MB) and automatically provisioning a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder.
+  - **Modal Upload UI & Contract Attachment (`VendorManager.tsx`)**: Integrated single-click file upload trigger alongside standard URL input in the Add/Edit Vendor modal. Automatically uploads attachments to Google Drive and populates the `contractLink` property with the file's Google Drive `webViewLink`.
 
 ---
 ---

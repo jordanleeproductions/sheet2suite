@@ -32,7 +32,7 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 ### 💼 Vendor Directory & Document Storage
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[VND-6]`** | Vendor Contract Upload & Google Drive "Contracts" Folder Storage (Upload vendor PDF/image contracts when adding or editing a vendor in `VendorManager.tsx`; automatically provisions a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the contract Drive URL to the vendor entry) | `src/components/VendorManager.tsx`, `src/app/api/upload/contract/route.ts`, `src/types/wedding.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[VND-6]`** | Vendor Contract Upload & Google Drive "Contracts" Folder Storage (Upload vendor PDF/image contracts when adding or editing a vendor in `VendorManager.tsx`; automatically provisions a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the contract Drive URL to the vendor entry) | `src/components/VendorManager.tsx`, `src/app/api/upload/contract/route.ts`, `src/types/wedding.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 
 ### 🔗 Public Portals & Co-Planning
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |

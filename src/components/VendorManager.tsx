@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Vendor } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer } from 'lucide-react';
+import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 
 interface VendorManagerProps {
@@ -12,15 +12,18 @@ interface VendorManagerProps {
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
   spreadsheetId?: string;
   weddingName?: string;
+  driveFolder?: string;
   onOpenShareModal?: () => void;
 }
 
-export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrintStudio, spreadsheetId, weddingName, onOpenShareModal }: VendorManagerProps) {
+export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Vendor>>({});
+  const [isUploadingContract, setIsUploadingContract] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Search & Filtering state
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,6 +125,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
       contractLink: '',
       staffMealsRequired: 'No',
     });
+    setUploadError(null);
     setIsAdding(true);
     setEditingItem(null);
   };
@@ -129,13 +133,51 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
   const startEdit = (item: Vendor) => {
     setFormState(item);
     setEditingItem(item);
+    setUploadError(null);
     setIsAdding(false);
   };
 
   const closeModal = () => {
     setIsAdding(false);
     setEditingItem(null);
+    setUploadError(null);
     setFormState({});
+  };
+
+  const handleContractFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingContract(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('vendorName', formState.vendorName || 'Vendor');
+      formData.append('driveFolder', driveFolder || 'Sheet2Vow');
+      if (spreadsheetId) formData.append('spreadsheetId', spreadsheetId);
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null;
+      if (token) formData.append('accessToken', token);
+
+      const res = await fetch('/api/upload/contract', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.contractLink) {
+        throw new Error(data.error || 'Failed to upload contract file to Google Drive.');
+      }
+
+      handleFormChange('contractLink', data.contractLink);
+    } catch (err: any) {
+      console.error('[Contract Upload Error]:', err);
+      setUploadError(err?.message || 'Error uploading contract file to Google Drive.');
+    } finally {
+      setIsUploadingContract(false);
+    }
   };
 
   const handleFormChange = (field: keyof Vendor, value: any) => {
@@ -764,15 +806,71 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                     onChange={(e) => handleFormChange('paymentDueDate', e.target.value)}
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Contract Link (URL)</label>
-                  <input
-                    style={styles.input}
-                    type="url"
-                    value={formState.contractLink || ''}
-                    onChange={(e) => handleFormChange('contractLink', e.target.value)}
-                    placeholder="https://..."
-                  />
+                <div style={{ ...styles.formGroup, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                    <label style={{ ...styles.label, margin: 0 }}>
+                      📄 VENDOR CONTRACT DOCUMENT (PDF / IMAGE / DOC)
+                    </label>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                      Uploads to Google Drive &quot;Contracts&quot; Folder
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <input
+                        style={{ ...styles.input, flex: 1 }}
+                        type="url"
+                        value={formState.contractLink || ''}
+                        onChange={(e) => handleFormChange('contractLink', e.target.value)}
+                        placeholder="Paste URL or upload file (e.g. https://drive.google.com/...)"
+                      />
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.55rem 0.85rem',
+                          backgroundColor: isUploadingContract ? 'var(--color-muted)' : 'var(--color-primary)',
+                          color: 'var(--color-on-primary, #ffffff)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          fontSize: '0.725rem',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
+                          cursor: isUploadingContract ? 'not-allowed' : 'pointer',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.15s ease',
+                          border: 'none',
+                        }}
+                      >
+                        <Upload size={14} />
+                        <span>{isUploadingContract ? 'UPLOADING TO DRIVE...' : '📤 UPLOAD CONTRACT'}</span>
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+                          style={{ display: 'none' }}
+                          disabled={isUploadingContract}
+                          onChange={handleContractFileUpload}
+                        />
+                      </label>
+                    </div>
+
+                    {formState.contractLink && (
+                      <div style={{ fontSize: '0.725rem', color: 'var(--color-green, #10b981)', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
+                        <CheckCircle2 size={14} />
+                        <span>Google Drive Contract Linked: </span>
+                        <a href={formState.contractLink} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>
+                          View Contract File ↗
+                        </a>
+                      </div>
+                    )}
+
+                    {uploadError && (
+                      <div style={{ fontSize: '0.725rem', color: 'var(--color-red, #ef4444)', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
+                        <AlertCircle size={14} /> {uploadError}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={styles.formGroup}>
                   <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '0.25rem' }}>
