@@ -7,7 +7,7 @@ import * as path from 'path';
 export const EXPECTED_SCHEMA: Record<string, string[]> = {
   GUESTS: [
     'Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 
-    'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Ceremony Seating', 
+    'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 
     'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'
   ],
   BUDGET: [
@@ -40,8 +40,8 @@ export const EXPECTED_SCHEMA: Record<string, string[]> = {
     'Included People', 'Status', 'Priority', 'Notes'
   ],
   'GIFT REGISTRY': [
-    'Gift ID', 'Guest / Party Name', 'Gift Description', 'Gift Type', 
-    'Amount', 'Received Date', 'Thank You Sent', 'Sent Date', 'Notes'
+    'Item ID', 'Giver / From', 'Gift Description / Name', 'Category / Store', 
+    'Estimated Value / Cash Amount', 'Received Date', 'Thank You Sent', 'Sent Date', 'Notes'
   ],
   TABLES: [
     'Table ID', 'Table Name', 'Shape', 'Capacity'
