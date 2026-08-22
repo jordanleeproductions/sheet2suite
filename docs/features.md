@@ -192,6 +192,10 @@
   - **Co-Planner API Handler (`/api/share/partner`)**: API endpoint supporting `POST` and `DELETE` requests. Grants Google Drive `writer` (edit) or `reader` (view) permissions on the Master Spreadsheet and triggers zero-cost native Google Drive notification emails (`sendNotificationEmail: true`).
   - **Quota Enforcement (Max 2 Co-Planners)**: Persists `coPlanners: string[]` on `WorkspaceRecord` in database and strictly caps total active co-planners at 2 slots per workspace.
   - **Co-Planning Access Card (`AdvancedSettingsModal.tsx`)**: Renders real-time slot counter (`1 / 2 Slots Used`), invite email input, active co-planners roster, 🗑️ **Revoke Access** actions, and zero-cost 1-click personal email app (`mailto:`) / link copy triggers.
+- [x] **[GUEST-9] Dual Table Assignment Columns (Ceremony Seating vs Reception Table):**
+  - **Domain & Spreadsheet Schema Update**: Separated guest seating into `ceremonySeating` (`Ceremony Seating` column) and `tableAssignment` (`Reception Table` column), resolving value override conflicts.
+  - **UI & Seating Chart Integration**: Added `CEREMONY SEATING (ROW / SIDE)` form input in Add/Edit Guest modal (`GuestListManager.tsx`), table/card badges, and ceremony row/aisle assignment support in `SeatingChartManager.tsx`.
+  - **Export Engine Compatibility**: Updated `masterTemplateExporter.ts`, `xlsxGenerator.ts`, and `PrintTemplatesModal.tsx` Canva CSV exporters to include `Ceremony Seating`.
 
 ---
 ---

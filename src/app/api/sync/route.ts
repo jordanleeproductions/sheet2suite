@@ -18,7 +18,7 @@ import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
 
 // Map sheet columns to standard header lists so that we can write files correctly
 const HEADERS_MAP = {
-  guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
+  guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Ceremony Seating', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
   budget: ['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status'],
   expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'],
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],

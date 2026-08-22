@@ -85,12 +85,13 @@ export default function PrintTemplatesModal({
 
   // Canva Bulk Create CSV Exporters [PRINT-3]
   const handleExportCanvaPlaceCardsCSV = () => {
-    const headers = ['First Name', 'Last Name', 'Full Name', 'Table Assignment', 'Seat Number', 'Meal Selection', 'Dietary Restrictions', 'Party Group'];
+    const headers = ['First Name', 'Last Name', 'Full Name', 'Table Assignment', 'Ceremony Seating', 'Seat Number', 'Meal Selection', 'Dietary Restrictions', 'Party Group'];
     const rows = attendingGuests.map(g => [
       `"${(g.firstName || '').replace(/"/g, '""')}"`,
       `"${(g.lastName || '').replace(/"/g, '""')}"`,
       `"${(`${g.firstName || ''} ${g.lastName || ''}`).trim().replace(/"/g, '""')}"`,
       `"${(g.tableAssignment || 'Table TBD').replace(/"/g, '""')}"`,
+      `"${(g.ceremonySeating || 'Ceremony TBD').replace(/"/g, '""')}"`,
       `"${g.seatNumber || ''}"`,
       `"${(g.mealChoice || '').replace(/"/g, '""')}"`,
       `"${(g.dietaryRestrictions || '').replace(/"/g, '""')}"`,

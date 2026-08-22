@@ -31,6 +31,7 @@ export interface Guest {
   dietaryRestrictions: string;
   mealChoice?: string;
   tableAssignment: string;
+  ceremonySeating?: string;
   emailAddress: string;
   phoneNumber: string;
   mailingAddress: string;

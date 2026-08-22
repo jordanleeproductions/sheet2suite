@@ -31,6 +31,7 @@ export async function generateMasterXlsxBuffer(coupleName: string = 'Alex & Sam'
     { header: 'RSVP Status', key: 'rsvpStatus', width: 14 },
     { header: 'Dietary Restrictions', key: 'dietary', width: 22 },
     { header: 'Table Assignment', key: 'table', width: 16 },
+    { header: 'Ceremony Seating', key: 'ceremonySeating', width: 18 },
     { header: 'Email Address', key: 'email', width: 24 },
     { header: 'Phone Number', key: 'phone', width: 18 },
     { header: 'Mailing Address', key: 'address', width: 28 },

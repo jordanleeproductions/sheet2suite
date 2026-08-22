@@ -103,13 +103,15 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
   };
 
   // Helper to assign a guest to a table and specific seat number
-  const assignGuestToTable = async (guestId: string, tableName: string, seatNumber?: number) => {
+  const assignGuestToTable = async (guestId: string, tableName: string, seatNumber?: number, isCeremonyMode = false) => {
     if (isSyncing) return;
-    const updated = guests.map(g => 
-      g.guestId === guestId 
-        ? { ...g, tableAssignment: tableName, seatNumber: tableName === 'Unassigned' ? undefined : seatNumber } 
-        : g
-    );
+    const updated = guests.map(g => {
+      if (g.guestId !== guestId) return g;
+      if (isCeremonyMode) {
+        return { ...g, ceremonySeating: tableName === 'Unassigned' ? '' : tableName };
+      }
+      return { ...g, tableAssignment: tableName, seatNumber: tableName === 'Unassigned' ? undefined : seatNumber };
+    });
     await onUpdateGuests(updated);
     
     // Reset all popups cleanly
@@ -517,7 +519,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                     <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {Array.from({ length: ceremonyConfig.chairsPerSide }).map((_, cIdx) => {
                         const seatNum = cIdx + 1;
-                        const guest = guests.find(g => g.tableAssignment === tableName && g.seatNumber === seatNum);
+                        const guest = guests.find(g => (g.ceremonySeating === tableName || g.tableAssignment === tableName) && g.seatNumber === seatNum);
 
                         return (
                           <div
@@ -612,7 +614,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                     <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                       {Array.from({ length: ceremonyConfig.chairsPerSide }).map((_, cIdx) => {
                         const seatNum = cIdx + 1;
-                        const guest = guests.find(g => g.tableAssignment === tableName && g.seatNumber === seatNum);
+                        const guest = guests.find(g => (g.ceremonySeating === tableName || g.tableAssignment === tableName) && g.seatNumber === seatNum);
 
                         return (
                           <div

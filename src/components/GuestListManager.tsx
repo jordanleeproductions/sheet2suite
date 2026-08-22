@@ -282,6 +282,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               <Tag size={12} style={styles.icon} />
               <span>Table: {guest.tableAssignment || 'Unassigned'}</span>
             </div>
+            <div style={styles.detailItem}>
+              <Tag size={12} style={styles.icon} />
+              <span>Ceremony: {guest.ceremonySeating || '-'}</span>
+            </div>
           </div>
         </div>
 
@@ -352,7 +356,8 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>RSVP STATUS</th>
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>MEAL CHOICE</th>
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>DIETARY TAGS</th>
-              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>TABLE</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>RECEPTION TABLE</th>
+              <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>CEREMONY SEATING</th>
               <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700 }}>ACTIONS</th>
             </tr>
           </thead>
@@ -416,6 +421,9 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 </td>
                 <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600 }}>
                   {guest.tableAssignment || 'Unassigned'}
+                </td>
+                <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-muted)' }}>
+                  {guest.ceremonySeating || '-'}
                 </td>
                 <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
                   <button
@@ -1118,7 +1126,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>TABLE ASSIGNMENT</label>
+                  <label style={styles.label}>RECEPTION TABLE ASSIGNMENT</label>
                   {existingTables.length > 0 ? (
                     <select
                       value={formState.tableAssignment || ''}
@@ -1135,6 +1143,17 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                       No tables set up yet. Go to <strong>Seating Chart</strong> to add tables first.
                     </div>
                   )}
+                </div>
+
+                <div style={styles.fieldGroup}>
+                  <label style={styles.label}>CEREMONY SEATING (ROW / SIDE)</label>
+                  <input
+                    type="text"
+                    value={formState.ceremonySeating || ''}
+                    onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
+                    placeholder="e.g. Row 1 - Bride Side, Front Aisle"
+                    style={styles.input}
+                  />
                 </div>
 
                 <div style={styles.fieldGroup}>
