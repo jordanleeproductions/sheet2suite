@@ -141,6 +141,72 @@ export default function Sheet2VowDashboard() {
     }
   };
 
+  // Session Token Refresh Handler — refreshes OAuth token without clearing workspace state
+  const handleReauth = async () => {
+    setIsReauthenticating(true);
+    try {
+      const res = await fetch('/api/auth/google');
+      const data = await res.json();
+
+      if (data.authUrl && typeof window !== 'undefined') {
+        const width = 520;
+        const height = 650;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
+        const handleReauthMessage = (event: MessageEvent) => {
+          if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+            const { user, accessToken } = event.data;
+            window.removeEventListener('message', handleReauthMessage);
+            setIsReauthenticating(false);
+
+            if (accessToken) {
+              setGoogleToken(accessToken);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_google_token', accessToken);
+              }
+            }
+            if (user?.name) setGoogleUserName(user.name);
+            if (user?.email) setGoogleUserEmail(user.email);
+            if (user?.picture) setGoogleUserAvatar(user.picture);
+
+            setShowSessionExpiredModal(false);
+            addToast('Session refreshed — reconnecting to your workspace...', 'success');
+            // Re-fetch data with the fresh token directly
+            fetchWeddingData(accessToken);
+
+          } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
+            window.removeEventListener('message', handleReauthMessage);
+            setIsReauthenticating(false);
+            addToast(event.data.error || 'Google re-authentication failed', 'warning');
+          }
+        };
+
+        window.addEventListener('message', handleReauthMessage);
+
+        const authWindow = window.open(
+          data.authUrl,
+          'Sheet2SuiteGoogleLogin',
+          `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+        const checkClosedInterval = setInterval(() => {
+          if (authWindow?.closed) {
+            clearInterval(checkClosedInterval);
+            setIsReauthenticating(false);
+          }
+        }, 1000);
+      } else {
+        setIsReauthenticating(false);
+        addToast(data.error || 'Failed to initialize Google authentication.', 'warning');
+      }
+    } catch (err: any) {
+      console.error('Reauth Error:', err);
+      setIsReauthenticating(false);
+      addToast(err.message || 'Failed to reconnect with Google.', 'warning');
+    }
+  };
+
   // Toast Notification System [GEN-3]
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -206,6 +272,8 @@ export default function Sheet2VowDashboard() {
   const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [printModalInitialTemplate, setPrintModalInitialTemplate] = useState<PrintTemplateType>('place_cards');
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState<boolean>(false);
+  const [isReauthenticating, setIsReauthenticating] = useState<boolean>(false);
 
   // Onboarding Demo Mode & Preset States [ONBOARD-1, ONBOARD-3, ONBOARD-4, ONBOARD-6]
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
@@ -314,21 +382,10 @@ export default function Sheet2VowDashboard() {
   // Welcome Guide Dismissal State
   const [hasDismissedWelcomeCard, setHasDismissedWelcomeCard] = useState<boolean>(true);
 
-  const handleDismissWelcomeGuide = async () => {
+  const handleDismissWelcomeGuide = () => {
     setHasDismissedWelcomeCard(true);
     if (spreadsheetId && typeof window !== 'undefined') {
       localStorage.setItem(`s2v_welcome_dismissed_${spreadsheetId}`, 'true');
-    }
-    if (weddingData && spreadsheetId && !isMockMode) {
-      try {
-        await syncUpdate('dashboard', {
-          budget: weddingData.dashboard.totalBudget,
-          weddingName: weddingName || 'Our Wedding',
-          hasDismissedWelcomeCard: true,
-        });
-      } catch (e) {
-        console.warn('Could not persist welcome guide dismissal to Google Sheets:', e);
-      }
     }
   };
 
@@ -572,7 +629,7 @@ export default function Sheet2VowDashboard() {
     }
   }, [isOnboarded, spreadsheetId, activeTab]);
 
-  const fetchWeddingData = async () => {
+  const fetchWeddingData = async (overrideToken?: string) => {
     setIsLoading(true);
     setSyncError(null);
     try {
@@ -580,7 +637,8 @@ export default function Sheet2VowDashboard() {
         'Content-Type': 'application/json',
       };
 
-      const token = isMockMode ? 'mock-token' : googleToken;
+      const activeToken = overrideToken || googleToken;
+      const token = isMockMode ? 'mock-token' : activeToken;
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -592,7 +650,7 @@ export default function Sheet2VowDashboard() {
 
       const res = await response.json();
       if (response.status === 401 || res.isAuthError) {
-        addToast('Google OAuth session expired. Please reconnect your Drive sheet.', 'warning');
+        setShowSessionExpiredModal(true);
         return;
       }
       if (res.success) {
@@ -736,7 +794,7 @@ export default function Sheet2VowDashboard() {
 
       const res = await response.json();
       if (response.status === 401 || res.isAuthError) {
-        addToast('Google OAuth session expired. Please reconnect your Drive sheet.', 'warning');
+        setShowSessionExpiredModal(true);
         return;
       }
       if (!res.success) {
@@ -1944,6 +2002,198 @@ export default function Sheet2VowDashboard() {
         onClose={() => setShowDisconnectModal(false)}
         onConfirmDisconnect={handleConfirmDisconnect}
       />
+
+      {/* SESSION EXPIRED RE-AUTHENTICATION MODAL */}
+      {showSessionExpiredModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '2px solid var(--color-border)',
+              borderRadius: 'var(--border-radius-lg, 1rem)',
+              padding: '2rem 2rem 1.75rem',
+              maxWidth: '420px',
+              width: '100%',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(234, 179, 8, 0.15)',
+                border: '1.5px solid rgba(234, 179, 8, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                fontSize: '1.2rem',
+              }}>
+                🔒
+              </div>
+              <div>
+                <div style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.08em',
+                  color: 'var(--color-text)',
+                  textTransform: 'uppercase',
+                }}>
+                  Session Expired
+                </div>
+                <div style={{
+                  fontSize: '0.78rem',
+                  color: 'var(--color-muted)',
+                  marginTop: '0.15rem',
+                }}>
+                  Your Google session has timed out
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <p style={{
+              fontSize: '0.875rem',
+              color: 'var(--color-text)',
+              lineHeight: 1.6,
+              margin: 0,
+            }}>
+              Your Google OAuth token has expired. Sign back in to refresh your session — your workspace data and settings will remain untouched.
+            </p>
+
+            {/* User identity pill */}
+            {googleUserEmail && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                background: 'var(--color-bg-subtle)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--border-radius-sm)',
+                fontSize: '0.8rem',
+                color: 'var(--color-muted)',
+              }}>
+                {googleUserAvatar && (
+                  <img
+                    src={googleUserAvatar}
+                    alt=""
+                    style={{ width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0 }}
+                  />
+                )}
+                <span style={{ fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {googleUserEmail}
+                </span>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+              <button
+                type="button"
+                onClick={handleReauth}
+                disabled={isReauthenticating}
+                style={{
+                  flex: 1,
+                  padding: '0.65rem 1rem',
+                  background: 'var(--color-primary)',
+                  color: 'var(--color-on-primary, #fff)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  letterSpacing: '0.06em',
+                  cursor: isReauthenticating ? 'not-allowed' : 'pointer',
+                  opacity: isReauthenticating ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  transition: 'opacity 0.15s ease',
+                }}
+              >
+                {isReauthenticating ? (
+                  <>
+                    <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite', fontSize: '0.9rem' }}>⟳</span>
+                    SIGNING IN...
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    SIGN IN WITH GOOGLE
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSessionExpiredModal(false)}
+                disabled={isReauthenticating}
+                style={{
+                  padding: '0.65rem 1rem',
+                  background: 'transparent',
+                  color: 'var(--color-muted)',
+                  border: '1.5px solid var(--color-border)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                DISMISS
+              </button>
+            </div>
+
+            {/* Disconnect fallback */}
+            <div style={{ textAlign: 'center', paddingTop: '0.25rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSessionExpiredModal(false);
+                  setShowDisconnectModal(true);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-muted)',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontFamily: 'var(--font-sans)',
+                }}
+              >
+                Disconnect workspace instead
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Vendor Share Link Modal */}
       {showShareModal && (

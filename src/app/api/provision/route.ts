@@ -57,7 +57,8 @@ async function getOrCreateFolder(drive: any, folderName: string, parentId?: stri
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { accessToken, coupleName, productName = 'Sheet2Vow' } = body;
+    const { accessToken, coupleName, productName = 'Sheet2Vow', budget } = body;
+    const initialBudget = Number(budget) || 35000;
 
     // Use passed token or cookie fallback
     const authHeader = req.headers.get('authorization');
@@ -180,20 +181,33 @@ export async function POST(req: NextRequest) {
     if (newSpreadsheetId && token) {
       try {
         const sheets = google.sheets({ version: 'v4', auth });
+        const metaRes = await sheets.spreadsheets.get({ spreadsheetId: newSpreadsheetId });
+        const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
+        const hasDash = availableTitles.some(t => t.toLowerCase() === 'dashboard');
+
+        const settingsTitle = availableTitles.find(t => t.toLowerCase() === 'settings') || 'SETTINGS';
+        const updateRanges: any[] = [
+          {
+            range: `'${settingsTitle}'!A1:B3`,
+            values: [
+              ['Name', 'Value'],
+              ['Wedding Name', sanitizedCoupleName],
+              ['Wedding Budget', initialBudget]
+            ],
+          }
+        ];
+        if (hasDash) {
+          updateRanges.unshift({
+            range: 'DASHBOARD!B2',
+            values: [[sanitizedCoupleName]],
+          });
+        }
+
         await sheets.spreadsheets.values.batchUpdate({
           spreadsheetId: newSpreadsheetId,
           requestBody: {
             valueInputOption: 'USER_ENTERED',
-            data: [
-              {
-                range: 'DASHBOARD!B2',
-                values: [[sanitizedCoupleName]],
-              },
-              {
-                range: "'Settings'!Z1",
-                values: [[JSON.stringify({ budget: 35000, weddingName: sanitizedCoupleName })]],
-              }
-            ]
+            data: updateRanges,
           }
         });
 

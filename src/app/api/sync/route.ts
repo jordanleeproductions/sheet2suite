@@ -93,7 +93,7 @@ export async function GET(req: Request) {
       return candidates[0];
     };
 
-    const settingsTitle = findTitle(['Settings', 'SETTINGS', 'DASHBOARD', 'Dashboard']);
+    const settingsTitle = findTitle(['SETTINGS', 'Settings', 'DASHBOARD', 'Dashboard']);
     const guestsTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
     const budgetTitle = findTitle(['BUDGET', 'Budget Ledger', 'Budget', 'Budget_Ledger']);
     const scheduleTitle = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);
@@ -101,44 +101,78 @@ export async function GET(req: Request) {
     const tasksTitle = findTitle(['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'To Do List', 'TASKS', 'Tasks']);
     const photosTitle = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
     const giftsTitle = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry', 'Gift_Registry']);
-    const dashboardTitle = findTitle(['DASHBOARD', 'Dashboard', 'INFO']);
+    const dashTitle = availableTitles.some(t => t.toLowerCase() === 'dashboard') ? findTitle(['DASHBOARD', 'Dashboard']) : null;
+    const ranges = [
+      `'${settingsTitle}'!A1:B10`,
+      `'${guestsTitle}'!A1:L1000`,
+      `'${budgetTitle}'!A1:H1000`,
+      `'${scheduleTitle}'!A1:F1000`,
+      `'${vendorsTitle}'!A1:L1000`,
+      `'${tasksTitle}'!A1:H1000`,
+      `'${photosTitle}'!A1:H1000`,
+      `'${giftsTitle}'!A1:G1000`,
+      `'${settingsTitle}'!Z1:Z3`,
+    ];
+    if (dashTitle) {
+      ranges.push(`'${dashTitle}'!B2`);
+    }
 
     // Fetch all spreadsheet tabs in a single atomic batch get
     const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
       spreadsheetId,
-      ranges: [
-        `'${settingsTitle}'!Z1`,
-        `'${guestsTitle}'!A1:L1000`,
-        `'${budgetTitle}'!A1:H1000`,
-        `'${scheduleTitle}'!A1:F1000`,
-        `'${vendorsTitle}'!A1:L1000`,
-        `'${tasksTitle}'!A1:H1000`,
-        `'${photosTitle}'!A1:H1000`,
-        `'${giftsTitle}'!A1:G1000`,
-        `'${dashboardTitle}'!B2`,
-        `'${settingsTitle}'!B2`
-      ]
+      ranges,
     });
 
     const valueRanges = batchGetResponse.data.valueRanges || [];
     
-    // Parse Settings / Configuration JSON (Cell Z1 in 'Settings' tab, fallback to 'Dashboard'!B2 or 'Settings'!B2)
-    const settingsVal = valueRanges[0]?.values?.[0]?.[0] || valueRanges[8]?.values?.[0]?.[0] || valueRanges[9]?.values?.[0]?.[0] || '';
-    let totalBudget = 30000;
+    // Parse SETTINGS Table A1:B10 (A2="Wedding Name" -> B2, A3="Wedding Budget" -> B3)
+    const settingsTableRows = valueRanges[0]?.values || [];
     let weddingName = 'Our Wedding';
-    let hasDismissedWelcomeCard = false;
-    
-    try {
-      if (settingsVal.startsWith('{')) {
-        const parsed = JSON.parse(settingsVal);
-        totalBudget = Number(parsed.budget) || 30000;
-        weddingName = parsed.weddingName || 'Our Wedding';
-        hasDismissedWelcomeCard = Boolean(parsed.hasDismissedWelcomeCard || parsed.welcomeDismissed);
-      } else {
-        totalBudget = Number(settingsVal) || 30000;
+    let totalBudget = 30000;
+    let foundInTable = false;
+
+    for (const row of settingsTableRows) {
+      const label = String(row[0] || '').toLowerCase().trim();
+      const val = row[1];
+      if (label.includes('wedding name') || label.includes('couple name') || label.includes('name')) {
+        if (val) {
+          weddingName = String(val).trim();
+          foundInTable = true;
+        }
+      } else if (label.includes('budget') || label.includes('wedding budget')) {
+        if (val) {
+          totalBudget = Number(String(val).replace(/[^0-9.]/g, '')) || 30000;
+          foundInTable = true;
+        }
       }
-    } catch {
-      totalBudget = Number(settingsVal) || 30000;
+    }
+
+    // Fallback: Check B2 directly if row index match, or legacy Z1/Z2/Z3
+    if (!foundInTable) {
+      const b2Val = settingsTableRows[1]?.[1]; // B2
+      const b3Val = settingsTableRows[2]?.[1]; // B3
+      if (b2Val) weddingName = String(b2Val).trim();
+      if (b3Val) totalBudget = Number(String(b3Val).replace(/[^0-9.]/g, '')) || 30000;
+
+      if (!b2Val && !b3Val) {
+        const zRows = valueRanges[8]?.values || [];
+        const z1Val = zRows[0]?.[0] || '';
+        const z2Val = zRows[1]?.[0] || '';
+        const z3Val = zRows[2]?.[0] || '';
+
+        if (z2Val) weddingName = String(z2Val).trim();
+        if (z3Val) totalBudget = Number(z3Val) || 30000;
+
+        if (!z2Val && !z3Val && z1Val) {
+          try {
+            if (z1Val.startsWith('{')) {
+              const parsed = JSON.parse(z1Val);
+              if (parsed.weddingName) weddingName = parsed.weddingName;
+              if (parsed.budget) totalBudget = Number(parsed.budget) || 30000;
+            }
+          } catch (_) {}
+        }
+      }
     }
 
     // Parse Guest List
@@ -202,7 +236,6 @@ export async function GET(req: Request) {
       success: true,
       data,
       weddingName,
-      hasDismissedWelcomeCard,
       isMock: false
     });
 
@@ -290,25 +323,47 @@ export async function POST(req: Request) {
     }
 
     if (sheetType === 'dashboard') {
-      // Update cell Z1 in 'Settings' tab (and Dashboard!B2) for clean configuration storage without touching dropdown ranges
+      // Fetch spreadsheet metadata to check available sheet titles safely
+      const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+      const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
+
+      const findTitle = (candidates: string[]) => {
+        const exact = candidates.find(c => availableTitles.includes(c));
+        if (exact) return exact;
+        for (const c of candidates) {
+          const normCandidate = c.toLowerCase().replace(/[\s_\-]+/g, '');
+          const matched = availableTitles.find(t => t.toLowerCase().replace(/[\s_\-]+/g, '') === normCandidate);
+          if (matched) return matched;
+        }
+        return null;
+      };
+
+      const settingsTitle = findTitle(['SETTINGS', 'Settings']) || 'SETTINGS';
+      const dashTitle = findTitle(['DASHBOARD', 'Dashboard']);
+      const updateRanges: any[] = [
+        {
+          range: `'${settingsTitle}'!A1:B3`,
+          values: [
+            ['Name', 'Value'],
+            ['Wedding Name', data.weddingName || 'Our Wedding'],
+            ['Wedding Budget', data.budget ?? 35000]
+          ],
+        }
+      ];
+
+      if (dashTitle) {
+        updateRanges.unshift({
+          range: `'${dashTitle}'!B2`,
+          values: [[data.weddingName || 'Our Wedding']],
+        });
+      }
+
+      // Update configuration storage without failing if DASHBOARD tab was deleted
       await sheetsClient.spreadsheets.values.batchUpdate({
         spreadsheetId,
         requestBody: {
           valueInputOption: 'USER_ENTERED',
-          data: [
-            {
-              range: 'DASHBOARD!B2',
-              values: [[data.weddingName || 'Our Wedding']],
-            },
-            {
-              range: "'Settings'!Z1",
-              values: [[JSON.stringify({ 
-                budget: data.budget, 
-                weddingName: data.weddingName,
-                hasDismissedWelcomeCard: data.hasDismissedWelcomeCard ?? false,
-              })]],
-            }
-          ]
+          data: updateRanges
         }
       });
     } else {

@@ -33,6 +33,9 @@ export default function AdminDatabasePage() {
   };
 
   useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'Sheet2Suite Admin Portal';
+    }
     fetchRecords();
   }, []);
 

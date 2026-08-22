@@ -148,6 +148,7 @@
 - [x] **[NAV-MOBILE-THUMB] Mobile Ergonomic Thumb-Zone Navigation & Categorized Bottom Sheet Drawer (`src/app/vow/page.tsx`):** Added a persistent glassmorphism bottom navigation bar pinned to the bottom of mobile screens ($\le 768\text{px}$) with 1-tap thumb access to the 4 core daily modules (*Summary*, *Guests*, *Budget*, *Timeline*) plus an active `MORE (☰)` trigger button with live active dot indicators. Upgraded the mobile drawer into an ergonomic bottom sheet drawer sliding up from the bottom with a drag handle, 3 categorized module groups (*Guests & Hospitality*, *Logistics & Budget*, *Day-Of Media & Tasks*), quick action buttons (*Print*, *Share*, *Config*), and 5.5rem safe-area padding.
 - [x] **[ONBOARD-1] Express Mode ("Jump Right In") 1-Click Launch:** Added prominent 1-click button (`⚡ EXPLORE DEMO WORKSPACE (JUMP RIGHT IN)`) to instant-load sample wedding workspace without registration forms.
 - [x] **[ONBOARD-2] Unified Onboarding Wizard Component:** Created standalone `OnboardingWizard.tsx` component supporting `express`, `quick`, and 4-step `guided` setup modes.
+- [x] **[SUITE-SHOWCASE] Multi-Product Ecosystem Showcase Landing Page (`src/app/page.tsx`):** Refreshed parent `sheet2suite.com` landing page showcasing flagship products (*Sheet2Vow*, *Sheet2Build*, *Sheet2Finance*, *Sheet2Home*, *Sheet2Harvest*) with interactive category filter tabs, feature matrices, Sheet2Suite Master Pass bundle card, and data sovereignty guarantees.
 - [x] **[ONBOARD-3] Visual Task Preset Selector Cards:** Interactive visual cards (*Traditional*, *Destination*, *Micro-Wedding*, *DIY*) featuring category badges, descriptions, and task preview pills.
 - [x] **[ONBOARD-4] Visual Drive Target Directory Selector Cards:** Interactive visual selection cards replacing plain `<select>` dropdown for Drive folder selection (`Default`, `Root`, `Dedicated App`).
 - [x] **[ONBOARD-5] Partner & Spouse Quick Invite Step:** Step 4 inline invite input in `OnboardingWizard.tsx` to pre-configure spouse co-admin permissions.
@@ -194,6 +195,7 @@
 | **`[SYS-7]`** | Security & Risk Audit (formula injection prevention, HMAC replay guard) | `security.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[SYS-8]`** | Google Calendar 1-Click Itinerary Sync Engine (`calendar.events` scope) | `TimelineManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[SYS-9]`** | Google Tasks 1-Click Kanban Checklist Sync Engine (`tasks` scope) | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[VOW-TITLE]`** | Sheet2Vow Browser Tab Title & Spreadsheet Favicon on `/vow` — Set `document.title` to `Sheet2Vow` on mount inside `vow/page.tsx` and add `/vow/layout.tsx` exporting `metadata` with `title: "Sheet2Vow"` and `icons` pointing to the spreadsheet SVG asset. | `src/app/vow/page.tsx`, `src/app/vow/layout.tsx`, `public/` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
 
 ### 🖨️ Print Studio & Canva Exporter
 
@@ -220,6 +222,7 @@
 |---|---|---|---|---|---|
 | **`[SUITE-1]`** | Multi-Product Licensed Suite Applications Hub & Switcher (Support for Sheet2Finances, Sheet2Stay, Sheet2Closet, Sheet2Inventory multi-product bundle activation & cross-app workspace switching) | `src/app/activate/page.tsx`, `src/components/SuiteProductSwitcher.tsx`, `/api/workspaces` | 🔴 High | ⚡ High (~4-5 turns) | Backlog |
 | **`[SUITE-ARCH]`** | Multi-Product Architecture & Generic Activation vs Pluggable Product Setup Specification | `docs/tech_spec.md`, `src/app/activate/page.tsx`, `src/proxy.ts` | 🔴 High | ⚡ Med (~2 turns) | ✅ Completed Specification |
+| **`[SUITE-SHOWCASE]`** | Multi-Product Ecosystem Showcase Landing Page (`src/app/page.tsx`) | `src/app/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
 
 ### 💼 Vendor Directory & Document Storage
 
@@ -233,6 +236,7 @@
 |---|---|---|---|---|---|
 | **`[NAV-SWIPE]`** | Mobile Swipe-to-Open & Swipe-Down-to-Dismiss Bottom Sheet Gestures (Touch event listener on mobile screen edge to drag-reveal and drag-dismiss the navigation bottom sheet) | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed |
 | **`[NAV-HAPTIC]`** | Mobile Web Haptic Feedback on Tab Selection (`navigator.vibrate`) | `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+| **`[NAV-ENFORCE]`** | Enforce Left Sidebar on Desktop & Bottom Nav + Hamburger on Mobile — Remove `navLayout` toggle from runtime and hard-enforce: desktop always gets left sidebar, mobile always gets bottom nav. Add optional **Show Top Nav Bar** toggle in Advanced Settings (default: `OFF`). Update `VowSetupConfig` and the Guided Setup Screen 4 to match. | `src/app/vow/page.tsx`, `src/components/AdvancedSettingsModal.tsx`, `src/products/vow/setup/VowSetupWizard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
 ### 🎨 UX / UI Design & Accessibility (from UX Audit Report)
 
@@ -241,6 +245,20 @@
 | **`[UX-7]`** | Migrate `!important` overrides to semantic CSS classes | `globals.css` | 🔴 High | ⚡ Med (~3-4 turns) | ✅ Completed |
 | **`[UX-14]`** | Group modules into intuitive clusters on mobile | `src/app/vow/page.tsx` | 🟡 Medium | ⚡ Med (~2 turns) | ✅ Completed (`[NAV-MOBILE-THUMB]`) |
 | **`[UX-15]`** | Mobile Header Action Consolidation & Demo Banner Grid Optimization | `src/components/MusicManager.tsx`, `src/app/vow/page.tsx` | 🟢 Low | ⚡ Low (~1 turn) | ✅ Completed |
+
+---
+
+### 🍽️ Guest Registry & Seating
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[GUEST-9]`** | Dual Table Assignment Columns — Split single `tableAssignment` field into **`Ceremony Seating`** (`ceremonySeating`: row/side in ceremony aisle planner) and **`Reception Table`** (`tableAssignment`: reception dinner table assignment) to prevent value override conflicts between ceremony and reception seating flows. Update `Guest` type, `GUESTS` tab schema, mapper, `GuestListManager`, `SeatingChartManager`, `PrintTemplatesModal`, `relationalSync`, `dropdownValidator`, `masterTemplateExporter`, and master XLSX template. | `src/types/wedding.ts`, `src/lib/sheets/mapper.ts`, `src/lib/sheets/relationalSync.ts`, `src/lib/sheets/masterTemplateExporter.ts`, `src/lib/sheets/dropdownValidator.ts`, `src/components/GuestListManager.tsx`, `src/components/SeatingChartManager.tsx`, `src/components/PrintTemplatesModal.tsx`, `docs/master_spreadsheet_schema.md` | 🔴 High | ⚡ High (~3-4 turns) | Pending |
+
+### ⚙️ Guided Setup Wizard (Onboarding)
+
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[ONBOARD-7]`** | Bride & Groom Profile Step in Guided Setup — Add a new guided step (after Wedding Details / before Module Selection) where the couple enters their own profiles (first name, last name, optional email/phone). These entries are automatically provisioned as the first 2 guests in the `GUESTS` sheet with `partyGroup: 'Couple'` and `ageCategory: 'Adult'`. Contact info is optional. This step also prompts whether the partner should receive co-admin/invite access (links to existing `[ONBOARD-5]` partner invite logic). | `src/products/vow/setup/VowSetupWizard.tsx`, `src/app/api/provision/route.ts`, `src/lib/sheets/masterTemplateExporter.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 
 ---
 

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Document body -->
+  <rect x="3" y="1" width="21" height="28" rx="2" fill="#1A7F4B"/>
+  <!-- Folded corner -->
+  <path d="M18 1 L24 7 L18 7 Z" fill="#145F38"/>
+  <!-- Grid lines vertical -->
+  <line x1="10" y1="11" x2="10" y2="27" stroke="rgba(255,255,255,0.35)" stroke-width="0.75"/>
+  <line x1="17" y1="11" x2="17" y2="27" stroke="rgba(255,255,255,0.35)" stroke-width="0.75"/>
+  <!-- Grid lines horizontal -->
+  <line x1="4" y1="15" x2="23" y2="15" stroke="rgba(255,255,255,0.35)" stroke-width="0.75"/>
+  <line x1="4" y1="19" x2="23" y2="19" stroke="rgba(255,255,255,0.35)" stroke-width="0.75"/>
+  <line x1="4" y1="23" x2="23" y2="23" stroke="rgba(255,255,255,0.35)" stroke-width="0.75"/>
+  <!-- Header row fill -->
+  <rect x="4" y="11" width="19" height="4" fill="rgba(255,255,255,0.18)" rx="0"/>
+  <!-- Header text bars -->
+  <rect x="5" y="12.5" width="4" height="1.5" rx="0.5" fill="white" opacity="0.9"/>
+  <rect x="11" y="12.5" width="5" height="1.5" rx="0.5" fill="white" opacity="0.9"/>
+  <rect x="18" y="12.5" width="4" height="1.5" rx="0.5" fill="white" opacity="0.9"/>
+  <!-- Data cells -->
+  <rect x="5" y="16.5" width="3" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="11" y="16.5" width="4" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="18" y="16.5" width="3.5" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="5" y="20.5" width="4" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="11" y="20.5" width="3" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="18" y="20.5" width="4" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="5" y="24.5" width="2.5" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="11" y="24.5" width="5" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <rect x="18" y="24.5" width="3" height="1.5" rx="0.5" fill="white" opacity="0.6"/>
+  <!-- Heart accent (Sheet2Vow brand) -->
+  <path d="M26 20 C26 18.5 28 17 29 18.5 C30 17 32 18.5 32 20 C32 21.5 29 24 29 24 C29 24 26 21.5 26 20Z" fill="#e11d48" opacity="0.9"/>
+</svg>

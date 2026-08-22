@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   FileSpreadsheet,
@@ -18,19 +18,141 @@ import {
   Printer,
   Lock,
   CreditCard,
-  Unlock
+  Unlock,
+  Hammer,
+  Building2,
+  TrendingUp,
+  Layers,
+  Check,
+  ExternalLink,
+  Gift,
+  Wrench,
+  Sliders,
+  ChevronRight
 } from 'lucide-react';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
 export default function Sheet2SuiteParentHub() {
   const { styleTheme, theme } = useSheet2Theme();
+  const [activeFilter, setActiveFilter] = useState<'all' | 'available' | 'beta' | 'roadmap'>('all');
+
+  const products = [
+    {
+      id: 'vow',
+      name: 'Sheet2Vow',
+      tagline: 'Digital Wedding Planning Suite',
+      status: 'available',
+      version: 'v1.0 Live',
+      icon: Heart,
+      iconColor: '#e11d48',
+      desc: 'Complete wedding coordination engine: Guest list RSVP tracker, seating charts, budget ledger, day-of timeline, vendor directory, music playlist, and Canva place card exporter.',
+      features: [
+        'Relational Guest Registry & Catering Sync',
+        'Trigonometric Visual Table Seating Canvas',
+        'Itemized Budget Ledger & Payment Badges',
+        'Tokenized Vendor & DJ Share Portals',
+        'Canva Bulk Merge & Print PDF Studio',
+      ],
+      primaryCtaText: 'LAUNCH SHEET2VOW',
+      primaryHref: '/vow',
+      secondaryCtaText: 'Activate License',
+      secondaryHref: '/activate?product=vow',
+    },
+    {
+      id: 'build',
+      name: 'Sheet2Build',
+      tagline: 'Construction, Renovation & Contractor Ledger',
+      status: 'beta',
+      version: 'v0.8 Beta Access',
+      icon: Building2,
+      iconColor: '#f59e0b',
+      desc: 'Professional construction and home renovation management canvas: Contractor bids, change order logs, payment milestone tracking, material expense ledger, and site timeline.',
+      features: [
+        'Trade Category & Subcontractor Directory',
+        'Change Order Log & Budget Variance Alerts',
+        'Payment Milestone Draw Schedule',
+        'Material & Supply Chain Expense Tracker',
+        'Gantt Project Timeline & Site Photos',
+      ],
+      primaryCtaText: 'LAUNCH SHEET2BUILD',
+      primaryHref: '/activate?product=build',
+      secondaryCtaText: 'Quick Setup',
+      secondaryHref: '/activate?product=build&step=guided',
+    },
+    {
+      id: 'finance',
+      name: 'Sheet2Finance',
+      tagline: 'Personal Finance & Cashflow Engine',
+      status: 'beta',
+      version: 'v0.8 Beta Access',
+      icon: TrendingUp,
+      iconColor: '#10b981',
+      desc: 'Zero-based monthly budget ledger, cashflow forecasting, debt payoff snowball calculator, asset allocation, and personal net worth tracker.',
+      features: [
+        'Zero-Based Monthly Income & Expense Ledger',
+        'Debt Snowball & Avalanche Payoff Calculator',
+        '12-Month Rolling Cashflow Forecast',
+        'Asset Allocation & Net Worth Meter',
+        'Emergency Fund Savings Goal Ticker',
+      ],
+      primaryCtaText: 'LAUNCH SHEET2FINANCE',
+      primaryHref: '/activate?product=finance',
+      secondaryCtaText: 'Quick Setup',
+      secondaryHref: '/activate?product=finance&step=guided',
+    },
+    {
+      id: 'home',
+      name: 'Sheet2Home',
+      tagline: 'Property Inventory & Maintenance System',
+      status: 'roadmap',
+      version: 'Coming Q4 2026',
+      icon: Home,
+      iconColor: '#8b5cf6',
+      desc: 'Personal property, valuables, and electronics inventory system for home management, warranty tracking, insurance claims, and recurring home maintenance schedules.',
+      features: [
+        'Itemized Valuables & Serial Number Vault',
+        'Warranty Expiry & Receipt Photo Tracker',
+        'Seasonal Home Maintenance Schedule',
+        'Contractor & Trade Service Directory',
+      ],
+      primaryCtaText: 'COMING SOON',
+      primaryHref: '',
+      disabled: true,
+    },
+    {
+      id: 'harvest',
+      name: 'Sheet2Harvest',
+      tagline: "Gardener's Seasonal Log Book",
+      status: 'roadmap',
+      version: 'Coming Q1 2027',
+      icon: Sparkles,
+      iconColor: '#06b6d4',
+      desc: "A gardener's seasonal logbook for planting schedules, soil health tracking, crop rotation planning, pest management, and harvest yield analytics.",
+      features: [
+        'Planting Calendar & Seed Packet Database',
+        'Soil Health & Crop Rotation Planner',
+        'Pest & Fertilizer Application Journal',
+        'Harvest Weight & Yield Analytics',
+      ],
+      primaryCtaText: 'COMING SOON',
+      primaryHref: '',
+      disabled: true,
+    },
+  ];
+
+  const filteredProducts = products.filter((p) => {
+    if (activeFilter === 'available') return p.status === 'available';
+    if (activeFilter === 'beta') return p.status === 'beta';
+    if (activeFilter === 'roadmap') return p.status === 'roadmap';
+    return true;
+  });
 
   return (
     <div style={styles.container}>
       {/* Top Suite Bar */}
       <header style={styles.header}>
         <div style={styles.brandGroup}>
-          <FileSpreadsheet size={32} style={{ color: 'var(--color-primary)' }} />
+          <FileSpreadsheet size={34} style={{ color: 'var(--color-primary)' }} />
           <div>
             <h1 style={styles.brandTitle}>Sheet2Suite</h1>
             <p style={styles.brandSubtitle}>The Digital Canvas Suite for Google Sheets Purists</p>
@@ -38,10 +160,7 @@ export default function Sheet2SuiteParentHub() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Link
-            href="/activate"
-            style={styles.activateLinkBtn}
-          >
+          <Link href="/activate" style={styles.activateLinkBtn}>
             <Key size={16} />
             <span>ACTIVATION PORTAL</span>
           </Link>
@@ -52,117 +171,167 @@ export default function Sheet2SuiteParentHub() {
       <section style={styles.heroSection}>
         <div style={styles.heroBadge}>
           <Sparkles size={14} style={{ color: 'var(--color-gold, #f59e0b)' }} />
-          <span>PRODUCTIVITY APPLICATIONS FOR GOOGLE DRIVE</span>
+          <span>MULTI-PRODUCT DIGITAL CANVAS ECOSYSTEM</span>
         </div>
         <h2 style={styles.heroTitle}>
-          Turn Plain Spreadsheets Into <span style={{ color: 'var(--color-primary)' }}>High-Performance Apps</span>.
+          Turn Plain Spreadsheets Into <span style={{ color: 'var(--color-primary)' }}>High-Performance Digital Apps</span>.
         </h2>
         <p style={styles.heroDesc}>
-          Sheet2Suite turns Google Sheets into beautiful, real-time web applications for wedding planning, vacation rentals, personal budgets, and milestone events. Zero subscription fees, 100% private to your Google Drive.
+          Sheet2Suite converts Google Spreadsheets into ultra-fast, beautiful web applications for wedding planning, construction & renovation management, personal cashflow, and property logs. 100% private to your personal Google Drive with zero monthly subscription fees.
         </p>
 
         <div style={styles.heroCtaGroup}>
           <Link href="/vow" style={styles.primaryCta}>
             <Heart size={18} />
-            <span>LAUNCH SHEET2VOW (WEDDING PLANNER)</span>
+            <span>LAUNCH SHEET2VOW (WEDDING)</span>
             <ArrowRight size={18} />
           </Link>
 
-          <Link href="/activate" style={styles.secondaryCta}>
-            <Key size={18} />
-            <span>ACTIVATION & LICENSE PORTAL</span>
+          <Link href="/activate?product=build" style={styles.secondaryCta}>
+            <Building2 size={18} style={{ color: '#f59e0b' }} />
+            <span>TRY SHEET2BUILD (CONSTRUCTION)</span>
+          </Link>
+
+          <Link href="/activate?product=finance" style={styles.secondaryCta}>
+            <TrendingUp size={18} style={{ color: '#10b981' }} />
+            <span>TRY SHEET2FINANCE (BUDGET)</span>
           </Link>
         </div>
       </section>
 
-      {/* Suite Product Showcase Grid */}
+      {/* Master Pass Bundle Banner */}
+      <section style={styles.masterPassBanner}>
+        <div style={styles.masterPassContent}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Layers size={22} style={{ color: 'var(--color-primary)' }} />
+            <span style={styles.masterPassBadge}>SHEET2SUITE MASTER PASS</span>
+          </div>
+          <h3 style={styles.masterPassTitle}>One Master License. Every Current & Future Application.</h3>
+          <p style={styles.masterPassDesc}>
+            Purchasing a Sheet2Suite Master License gives you immediate access to all existing applications (*Sheet2Vow*, *Sheet2Build*, *Sheet2Finance*) plus all upcoming products (*Sheet2Home*, *Sheet2Harvest*) as they launch — backed by lifetime platform updates and zero recurring fees.
+          </p>
+        </div>
+        <Link href="/activate" style={styles.masterPassBtn}>
+          <Key size={18} />
+          <span>ENTER ACTIVATION CODE</span>
+        </Link>
+      </section>
+
+      {/* Product Category Filter Tabs */}
       <section style={styles.showcaseSection}>
         <div style={styles.sectionHeader}>
           <h3 style={styles.sectionTitle}>SHEET2SUITE PRODUCT FAMILY</h3>
-          <p style={styles.sectionDesc}>Explore our suite of specialized spreadsheet applications.</p>
+          <p style={styles.sectionDesc}>Explore our ecosystem of specialized spreadsheet applications.</p>
         </div>
 
+        {/* Filter Bar */}
+        <div style={styles.filterBar}>
+          {[
+            { id: 'all', label: 'ALL PRODUCTS', count: products.length },
+            { id: 'available', label: 'LIVE V1.0', count: products.filter(p => p.status === 'available').length },
+            { id: 'beta', label: 'BETA ACCESS', count: products.filter(p => p.status === 'beta').length },
+            { id: 'roadmap', label: 'ROADMAP', count: products.filter(p => p.status === 'roadmap').length },
+          ].map((tab) => {
+            const isActive = activeFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveFilter(tab.id as any)}
+                style={{
+                  ...styles.filterBtn,
+                  backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle)',
+                  color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
+                  borderColor: isActive ? 'var(--color-primary)' : 'var(--color-border)',
+                  fontWeight: isActive ? 800 : 600,
+                }}
+              >
+                <span>{tab.label}</span>
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    padding: '0.1rem 0.4rem',
+                    borderRadius: '10px',
+                    backgroundColor: isActive ? 'rgba(0,0,0,0.15)' : 'var(--color-border)',
+                  }}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Product Grid */}
         <div style={styles.productGrid}>
-          {/* Card 1: Sheet2Vow */}
-          <div style={{ ...styles.productCard, borderColor: 'var(--color-primary)' }}>
-            <div style={styles.cardHeader}>
-              <div style={styles.iconCircle}>
-                <Heart size={24} style={{ color: 'var(--color-primary)' }} />
+          {filteredProducts.map((p) => {
+            const IconComp = p.icon;
+            const isLive = p.status === 'available';
+            const isBeta = p.status === 'beta';
+
+            return (
+              <div
+                key={p.id}
+                style={{
+                  ...styles.productCard,
+                  borderColor: isLive ? 'var(--color-primary)' : isBeta ? 'var(--color-gold, #f59e0b)' : 'var(--color-border)',
+                }}
+              >
+                {/* Header */}
+                <div style={styles.cardHeader}>
+                  <div style={{ ...styles.iconCircle, border: `1px solid ${p.iconColor}` }}>
+                    <IconComp size={24} style={{ color: p.iconColor }} />
+                  </div>
+                  <span
+                    style={{
+                      ...styles.badgeBase,
+                      backgroundColor: isLive ? 'var(--color-primary)' : isBeta ? 'var(--color-gold, #f59e0b)' : 'var(--color-bg-subtle)',
+                      color: isLive ? 'var(--color-on-primary)' : isBeta ? '#000000' : 'var(--color-muted)',
+                      border: isLive || isBeta ? 'none' : '1px solid var(--color-border)',
+                    }}
+                  >
+                    {p.version.toUpperCase()}
+                  </span>
+                </div>
+
+                <h4 style={styles.cardTitle}>{p.name}</h4>
+                <span style={styles.cardTagline}>{p.tagline}</span>
+                <p style={styles.cardDesc}>{p.desc}</p>
+
+                {/* Features List */}
+                <div style={styles.featuresList}>
+                  {p.features.map((feat, idx) => (
+                    <div key={idx} style={styles.featureItem}>
+                      <Check size={14} style={{ color: p.iconColor, flexShrink: 0 }} />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {p.disabled ? (
+                    <button disabled style={styles.cardBtnDisabled}>
+                      <span>{p.primaryCtaText}</span>
+                    </button>
+                  ) : (
+                    <>
+                      <Link href={p.primaryHref} style={styles.cardBtnPrimary}>
+                        <span>{p.primaryCtaText}</span>
+                        <ArrowRight size={16} />
+                      </Link>
+                      {p.secondaryHref && (
+                        <Link href={p.secondaryHref} style={styles.cardBtnSecondary}>
+                          <span>{p.secondaryCtaText}</span>
+                          <ChevronRight size={14} />
+                        </Link>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-              <span style={styles.badgeActive}>AVAILABLE NOW (v1.0)</span>
-            </div>
-
-            <h4 style={styles.cardTitle}>Sheet2Vow</h4>
-            <span style={styles.cardTagline}>Digital Wedding Planning Suite</span>
-            <p style={styles.cardDesc}>
-              Complete wedding coordination engine: Guest list RSVP tracker, seating charts, budget ledger, day-of timeline, vendor directory, music playlist, and Canva place card exporter.
-            </p>
-
-            <Link href="/vow" style={styles.cardBtnPrimary}>
-              <span>LAUNCH SHEET2VOW</span>
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          {/* Card 2: Sheet2Home */}
-          <div style={styles.productCard}>
-            <div style={styles.cardHeader}>
-              <div style={styles.iconCircle}>
-                <Home size={24} style={{ color: 'var(--color-muted)' }} />
-              </div>
-              <span style={styles.badgeUpcoming}>COMING NEXT — Q4 2026</span>
-            </div>
-
-            <h4 style={styles.cardTitle}>Sheet2Home</h4>
-            <span style={styles.cardTagline}>Personal Property & Inventory System</span>
-            <p style={styles.cardDesc}>
-              Personal property, valuables, and electronics inventory system for home management, warranty tracking, and insurance claims.
-            </p>
-
-            <button disabled style={styles.cardBtnDisabled}>
-              <span>COMING NEXT</span>
-            </button>
-          </div>
-
-          {/* Card 3: Sheet2Harvest */}
-          <div style={styles.productCard}>
-            <div style={styles.cardHeader}>
-              <div style={styles.iconCircle}>
-                <Sparkles size={24} style={{ color: 'var(--color-muted)' }} />
-              </div>
-              <span style={styles.badgeUpcoming}>COMING Q1 2027</span>
-            </div>
-
-            <h4 style={styles.cardTitle}>Sheet2Harvest</h4>
-            <span style={styles.cardTagline}>Gardener's Seasonal Log Book</span>
-            <p style={styles.cardDesc}>
-              A gardener's seasonal logbook for planting schedules, soil health tracking, crop rotation, pest management, and harvest yields.
-            </p>
-
-            <button disabled style={styles.cardBtnDisabled}>
-              <span>COMING SOON</span>
-            </button>
-          </div>
-
-          {/* Card 4: Sheet2Finances */}
-          <div style={styles.productCard}>
-            <div style={styles.cardHeader}>
-              <div style={styles.iconCircle}>
-                <DollarSign size={24} style={{ color: 'var(--color-muted)' }} />
-              </div>
-              <span style={styles.badgeUpcoming}>COMING Q2 2027</span>
-            </div>
-
-            <h4 style={styles.cardTitle}>Sheet2Finances</h4>
-            <span style={styles.cardTagline}>Personal Net Worth & Budget Ledger</span>
-            <p style={styles.cardDesc}>
-              Zero-based budget ledger, cashflow forecasting, debt payoff snowball calculator, asset allocation, and personal net worth tracker.
-            </p>
-
-            <button disabled style={styles.cardBtnDisabled}>
-              <span>COMING SOON</span>
-            </button>
-          </div>
+            );
+          })}
         </div>
       </section>
 
@@ -171,19 +340,19 @@ export default function Sheet2SuiteParentHub() {
         <div style={styles.pillarItem}>
           <ShieldCheck size={28} style={{ color: 'var(--color-primary)' }} />
           <h5 style={styles.pillarTitle}>100% Private to Drive</h5>
-          <p style={styles.pillarDesc}>Your financial and guest data lives strictly inside your personal Google Drive account. We never store your personal records on central servers.</p>
+          <p style={styles.pillarDesc}>Your financial, wedding, and construction data lives strictly inside your personal Google Drive account. We never store your personal records on central servers.</p>
         </div>
 
         <div style={styles.pillarItem}>
           <HardDrive size={28} style={{ color: 'var(--color-primary)' }} />
           <h5 style={styles.pillarTitle}>Spreadsheet Purist Format</h5>
-          <p style={styles.pillarDesc}>Every app is backed by clean standard Google Sheets (.xlsx format) that you can inspect, export, print, or edit manually at any time.</p>
+          <p style={styles.pillarDesc}>Every app is backed by standard Google Sheets (.xlsx format) that you can inspect, export, print, or edit manually in Google Sheets at any time.</p>
         </div>
 
         <div style={styles.pillarItem}>
           <Printer size={28} style={{ color: 'var(--color-primary)' }} />
           <h5 style={styles.pillarTitle}>Print Studio & Canva Ready</h5>
-          <p style={styles.pillarDesc}>Built-in Canva bulk merge CSV exporter and print studio to create gorgeous place cards, menus, agendas, and seating charts.</p>
+          <p style={styles.pillarDesc}>Built-in Canva bulk merge CSV exporter and print studio to create gorgeous place cards, schedules, rosters, and vendor directory contact sheets.</p>
         </div>
       </section>
 
@@ -236,6 +405,13 @@ export default function Sheet2SuiteParentHub() {
       {/* Footer */}
       <footer style={styles.footer}>
         <p style={{ margin: 0 }}>© 2026 Sheet2Suite Platform • Built for Google Sheets Purists</p>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', justifyContent: 'center' }}>
+          <Link href="/activate" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Activation Portal</Link>
+          <span>•</span>
+          <Link href="/vow" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Sheet2Vow Application</Link>
+          <span>•</span>
+          <Link href="/admin" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Admin DB</Link>
+        </div>
       </footer>
     </div>
   );
@@ -294,12 +470,12 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    padding: '2.5rem 1rem 3.5rem 1rem',
+    padding: '2.5rem 1.5rem 3.5rem 1.5rem',
     backgroundColor: 'var(--color-surface, #fff)',
     border: '2px solid var(--color-border)',
     borderRadius: 'var(--border-radius-md)',
     boxShadow: 'var(--box-shadow-subtle)',
-    marginBottom: '3rem',
+    marginBottom: '2rem',
   },
   heroBadge: {
     display: 'inline-flex',
@@ -321,14 +497,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     letterSpacing: '-0.03em',
     lineHeight: 1.2,
-    maxWidth: '800px',
+    maxWidth: '820px',
     margin: '0 0 1rem 0',
   },
   heroDesc: {
     fontSize: '1rem',
     color: 'var(--color-muted)',
-    maxWidth: '680px',
-    lineHeight: 1.5,
+    maxWidth: '720px',
+    lineHeight: 1.55,
     margin: '0 0 2rem 0',
   },
   heroCtaGroup: {
@@ -355,22 +531,72 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.85rem',
     fontWeight: 700,
-    backgroundColor: 'transparent',
+    backgroundColor: 'var(--color-bg-subtle)',
     color: 'var(--color-text)',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-sm)',
-    padding: '0.875rem 1.5rem',
+    padding: '0.875rem 1.25rem',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
     textDecoration: 'none',
+  },
+  masterPassBanner: {
+    backgroundColor: 'var(--color-bg-subtle)',
+    border: '2px solid var(--color-primary)',
+    borderRadius: 'var(--border-radius-md)',
+    padding: '2rem',
+    marginBottom: '3rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1.5rem',
+    flexWrap: 'wrap',
+  },
+  masterPassContent: {
+    flex: '1 1 500px',
+  },
+  masterPassBadge: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.7rem',
+    fontWeight: 800,
+    color: 'var(--color-primary)',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+  },
+  masterPassTitle: {
+    fontFamily: 'var(--font-sans)',
+    fontSize: '1.4rem',
+    fontWeight: 800,
+    color: 'var(--color-text)',
+    margin: '0 0 0.5rem 0',
+  },
+  masterPassDesc: {
+    fontSize: '0.875rem',
+    color: 'var(--color-muted)',
+    lineHeight: 1.5,
+    margin: 0,
+  },
+  masterPassBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.8rem',
+    fontWeight: 800,
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-on-primary)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.75rem 1.25rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    textDecoration: 'none',
+    whiteSpace: 'nowrap',
   },
   showcaseSection: {
     marginBottom: '3.5rem',
   },
   sectionHeader: {
     textAlign: 'center',
-    marginBottom: '2rem',
+    marginBottom: '1.5rem',
   },
   sectionTitle: {
     fontFamily: 'var(--font-mono)',
@@ -388,16 +614,35 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text)',
     margin: 0,
   },
+  filterBar: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    marginBottom: '2rem',
+    flexWrap: 'wrap',
+  },
+  filterBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.725rem',
+    border: '1px solid',
+    borderRadius: '20px',
+    padding: '0.4rem 0.85rem',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    transition: 'var(--transition-smooth)',
+  },
   productGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '1.25rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '1.5rem',
   },
   productCard: {
     backgroundColor: 'var(--color-surface, #fff)',
-    border: '1px solid var(--color-border)',
+    border: '2px solid var(--color-border)',
     borderRadius: 'var(--border-radius-md)',
-    padding: '1.5rem',
+    padding: '1.75rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
@@ -410,36 +655,25 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
   },
   iconCircle: {
-    width: '44px',
-    height: '44px',
-    borderRadius: 'var(--border-radius-sm)',
+    width: '48px',
+    height: '48px',
+    borderRadius: 'var(--border-radius-md)',
     backgroundColor: 'var(--color-bg-subtle)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeActive: {
+  badgeBase: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.6rem',
+    fontSize: '0.625rem',
     fontWeight: 800,
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
-    padding: '0.2rem 0.5rem',
+    padding: '0.25rem 0.65rem',
     borderRadius: 'var(--border-radius-sm)',
-  },
-  badgeUpcoming: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.6rem',
-    fontWeight: 700,
-    backgroundColor: 'var(--color-bg-subtle)',
-    color: 'var(--color-muted)',
-    border: '1px solid var(--color-border)',
-    padding: '0.2rem 0.5rem',
-    borderRadius: 'var(--border-radius-sm)',
+    letterSpacing: '0.04em',
   },
   cardTitle: {
     fontFamily: 'var(--font-sans)',
-    fontSize: '1.35rem',
+    fontSize: '1.45rem',
     fontWeight: 800,
     letterSpacing: '-0.02em',
     color: 'var(--color-text)',
@@ -447,30 +681,62 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cardTagline: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.7rem',
+    fontSize: '0.725rem',
     color: 'var(--color-muted)',
     fontWeight: 700,
-    marginTop: '-0.35rem',
+    marginTop: '-0.4rem',
   },
   cardDesc: {
-    fontSize: '0.825rem',
+    fontSize: '0.85rem',
     color: 'var(--color-muted)',
-    lineHeight: 1.45,
+    lineHeight: 1.5,
     margin: '0.25rem 0 0.5rem 0',
-    flex: 1,
+  },
+  featuresList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+    margin: '0.5rem 0 1rem 0',
+    backgroundColor: 'var(--color-bg-subtle)',
+    padding: '0.85rem',
+    borderRadius: 'var(--border-radius-sm)',
+    border: '1px solid var(--color-border)',
+  },
+  featureItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.75rem',
+    color: 'var(--color-text)',
+    fontFamily: 'var(--font-mono)',
   },
   cardBtnPrimary: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
+    fontSize: '0.775rem',
     fontWeight: 800,
     backgroundColor: 'var(--color-primary)',
     color: 'var(--color-on-primary)',
     borderRadius: 'var(--border-radius-sm)',
-    padding: '0.65rem 1rem',
+    padding: '0.75rem 1rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
+    textDecoration: 'none',
+  },
+  cardBtnSecondary: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.725rem',
+    fontWeight: 700,
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.5rem 1rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.35rem',
     textDecoration: 'none',
   },
   cardBtnDisabled: {
@@ -481,9 +747,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-muted)',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-sm)',
-    padding: '0.65rem 1rem',
+    padding: '0.75rem 1rem',
     cursor: 'not-allowed',
     textAlign: 'center',
+    width: '100%',
   },
   pillarsSection: {
     display: 'grid',

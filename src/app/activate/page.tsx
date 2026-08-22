@@ -173,6 +173,7 @@ export default function ActivationPage() {
           coupleName: workspaceTitle,
           productName: finalProductName,
           driveFolder: driveFolder,
+          budget: productConfig.budget,
         }),
       });
 

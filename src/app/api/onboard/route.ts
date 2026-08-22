@@ -51,13 +51,21 @@ export async function POST(req: Request) {
       weddingName: finalWeddingName,
     };
 
-    await sheetsClient.spreadsheets.values.update({
+    await sheetsClient.spreadsheets.values.batchUpdate({
       spreadsheetId: newSheetId,
-      range: "'Dashboard'!B2",
-      valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[JSON.stringify(configPayload)]],
-      },
+        valueInputOption: 'USER_ENTERED',
+        data: [
+          {
+            range: "'SETTINGS'!A1:B3",
+            values: [
+              ['Name', 'Value'],
+              ['Wedding Name', finalWeddingName],
+              ['Wedding Budget', finalBudget]
+            ],
+          }
+        ]
+      }
     });
 
     return NextResponse.json({

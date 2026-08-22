@@ -34,13 +34,16 @@ This document defines the authoritative tab structure and column header contract
 | `First Name` | `firstName` | Text | Guest first name |
 | `Last Name` | `lastName` | Text | Guest last name |
 | `Guest Age Category` | `ageCategory` | Dropdown | `Adult`, `Child`, `Infant` |
-| `Table Number` | `tableAssignment` | Dropdown | Assigned table name / ID |
+| `Ceremony Seating` | `ceremonySeating` | Text / Dropdown | Row & side assignment in ceremony aisle planner (e.g. `Row 3 - Bride Side`). Separate from reception table. |
+| `Reception Table` | `tableAssignment` | Dropdown | Assigned reception dinner table name / ID (e.g. `Table 1 - Head Table`). Linked to `TABLES` tab. |
 | `Plus-One?` | `hasPlusOne` | Checkbox | `TRUE`, `FALSE` |
 | `Plus-One Name` | `plusOneName` | Text | Name of guest's plus-one |
 | `RSVP Status` | `rsvpStatus` | Dropdown | `Attending`, `Declined`, `Pending` |
 | `Dietary Restrictions` | `dietaryRestrictions` | Text | e.g. `Vegetarian`, `Nut Allergy`, `None` |
 | `Meal Choice` | `mealChoice` | Text / Dropdown | e.g. `Filet Mignon`, `Pan-Seared Salmon`, `Vegan Risotto` |
 | `Notes` | `notes` | Text | Additional guest notes |
+
+> **Schema Change Notice (`[GUEST-9]`):** The legacy single `Table Number` column has been split into two separate columns: `Ceremony Seating` and `Reception Table`. This prevents the ceremony aisle planner from overwriting the reception dinner table assignment and vice-versa. Both the XLSX master template and the Google Sheets provisioning API must be updated to reflect this two-column layout.
 
 ---
 
@@ -183,8 +186,17 @@ This document defines the authoritative tab structure and column header contract
 
 ---
 
-## ⚙️ Tab 11: `Settings` *(Config & System Metadata)*
-Contains master validation dropdown lists as well as application configuration JSON in cell **`B2`** (`budget`, `weddingName`, `weddingDate`, `shareVersion`). Keeping configuration JSON in the `Settings` tab preserves the `DASHBOARD` tab purely as a human-friendly visual overview for couples opening their spreadsheet.
+## ⚙️ Tab 11: `SETTINGS` *(Config & System Metadata)*
+Contains two primary sections:
+1. **Settings Table (`A1:B3`)**:
+   - `A1`: `Name` | `B1`: `Value`
+   - `A2`: `Wedding Name` | `B2`: `weddingName` string value (e.g. `Alex & Sam's Wedding`)
+   - `A3`: `Wedding Budget` | `B3`: `budget` numeric value (e.g. `35000`)
+2. **Master Dropdown Lookup Lists (`Columns C to O`)**:
+   - `C`: Guest Age Category | `D`: Table Shapes | `E`: Priority Levels
+   - `F`: RSVP Status | `G`: Payment Status | `H`: Task Status / Kanban Stage
+   - `I`: Decor Category | `J`: Vendor Category | `K`: Budget Category
+   - `L`: Task Category | `M`: Gift Type | `N`: Approval Status | `O`: Play Status
 
 ---
 

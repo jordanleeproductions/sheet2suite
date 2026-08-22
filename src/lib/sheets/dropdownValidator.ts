@@ -11,80 +11,80 @@ export const MASTER_DROPDOWN_RULES: DropdownRuleConfig[] = [
   {
     tabCandidateNames: ['GUESTS', 'Guest List', 'Guests'],
     columnHeaderMatches: ['Age Category', 'Age', 'Guest Age Category'],
-    settingsRange: '=Settings!$A$2:$A$50',
+    settingsRange: '=SETTINGS!$C$2:$C$50',
   },
   {
     tabCandidateNames: ['GUESTS', 'Guest List', 'Guests'],
     columnHeaderMatches: ['RSVP Status', 'RSVP', 'Status'],
-    settingsRange: '=Settings!$D$2:$D$50',
+    settingsRange: '=SETTINGS!$F$2:$F$50',
   },
   // TABLES tab
   {
     tabCandidateNames: ['TABLES', 'Tables'],
     columnHeaderMatches: ['Shape', 'Table Shape', 'Table Shapes'],
-    settingsRange: '=Settings!$B$2:$B$50',
+    settingsRange: '=SETTINGS!$D$2:$D$50',
   },
   // VENDORS tab
   {
     tabCandidateNames: ['VENDORS', 'Vendors', 'Vendor Directory'],
     columnHeaderMatches: ['Category', 'Vendor Category'],
-    settingsRange: '=Settings!$H$2:$H$50',
+    settingsRange: '=SETTINGS!$J$2:$J$50',
   },
   // BUDGET tab
   {
     tabCandidateNames: ['BUDGET', 'Budget Ledger', 'Budget'],
     columnHeaderMatches: ['Category', 'Budget Category'],
-    settingsRange: '=Settings!$I$2:$I$50',
+    settingsRange: '=SETTINGS!$K$2:$K$50',
   },
   {
     tabCandidateNames: ['BUDGET', 'Budget Ledger', 'Budget'],
     columnHeaderMatches: ['Payment Status', 'Status'],
-    settingsRange: '=Settings!$E$2:$E$50',
+    settingsRange: '=SETTINGS!$G$2:$G$50',
   },
   // TO DO tab
   {
     tabCandidateNames: ['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'TASKS', 'Tasks'],
     columnHeaderMatches: ['Status', 'Task Status', 'Stage'],
-    settingsRange: '=Settings!$F$2:$F$50',
+    settingsRange: '=SETTINGS!$H$2:$H$50',
   },
   {
     tabCandidateNames: ['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'TASKS', 'Tasks'],
     columnHeaderMatches: ['Category', 'To Do Category', 'To Do Categories'],
-    settingsRange: '=Settings!$J$2:$J$50',
+    settingsRange: '=SETTINGS!$L$2:$L$50',
   },
   {
     tabCandidateNames: ['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'TASKS', 'Tasks'],
     columnHeaderMatches: ['Priority', 'Priority Levels', 'Priority Level'],
-    settingsRange: '=Settings!$C$2:$C$50',
+    settingsRange: '=SETTINGS!$E$2:$E$50',
   },
   // MUSIC tab
   {
     tabCandidateNames: ['MUSIC', 'Music', 'Playlists'],
     columnHeaderMatches: ['Play Status'],
-    settingsRange: '=Settings!$M$2:$M$50',
+    settingsRange: '=SETTINGS!$O$2:$O$50',
   },
   {
     tabCandidateNames: ['MUSIC', 'Music', 'Playlists'],
     columnHeaderMatches: ['Approval Status'],
-    settingsRange: '=Settings!$L$2:$L$50',
+    settingsRange: '=SETTINGS!$N$2:$N$50',
   },
   // PHOTOS tab
   {
     tabCandidateNames: ['PHOTOS', 'Photos', 'Photo Shot List'],
     columnHeaderMatches: ['Priority'],
-    settingsRange: '=Settings!$C$2:$C$50',
+    settingsRange: '=SETTINGS!$E$2:$E$50',
   },
   // GIFT REGISTRY tab
   {
     tabCandidateNames: ['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry'],
     columnHeaderMatches: ['Gift Type', 'Category / Store', 'Category'],
-    settingsRange: '=Settings!$K$2:$K$50',
+    settingsRange: '=SETTINGS!$M$2:$M$50',
   },
   // DECOR INVENTORY tab
   {
     tabCandidateNames: ['DECOR INVENTORY', 'DECOR', 'Decor Inventory'],
     columnHeaderMatches: ['Category', 'Decor Category'],
-    settingsRange: '=Settings!$G$2:$G$50',
+    settingsRange: '=SETTINGS!$I$2:$I$50',
   },
 ];
 
@@ -110,7 +110,7 @@ export async function applyDropdownValidations(
       const name = (s.properties?.title || '').toLowerCase();
       return name === 'settings';
     });
-    const settingsTitle = settingsSheet?.properties?.title || 'Settings';
+    const settingsTitle = settingsSheet?.properties?.title || 'SETTINGS';
 
     const requests: sheets_v4.Schema$Request[] = [];
 

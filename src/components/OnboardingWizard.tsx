@@ -155,6 +155,7 @@ export default function OnboardingWizard({
             coupleName: weddingName,
             productName: 'Sheet2Vow',
             driveFolder: driveFolder,
+            budget: budgetThreshold,
           }),
         });
 
