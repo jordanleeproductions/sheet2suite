@@ -50,6 +50,13 @@ export let mockDatabase: WeddingData = {
     { itemId: 'B5', category: 'Florals', vendorName: 'Bloom & Petal', estimatedCost: 2000, actualCost: 2200, amountPaid: 0, dueDate: '2026-10-01', paymentStatus: 'Pending' },
     { itemId: 'B6', category: 'Music/DJ', vendorName: 'BeatDrop Entertainment', estimatedCost: 1700, actualCost: 1700, amountPaid: 1700, dueDate: '2026-07-01', paymentStatus: 'Paid' },
   ],
+  expenses: [
+    { itemId: 'EXP1', description: 'Deposit for Grand Plaza Hall', category: 'Venue', actualCost: 5000, amountPaid: 5000, purchaseDate: '2026-04-15', notes: 'Initial 30% deposit' },
+    { itemId: 'EXP2', description: 'Catering Tasting & Lock-in', category: 'Catering', actualCost: 7500, amountPaid: 7500, purchaseDate: '2026-05-10', notes: 'Paid via credit card' },
+    { itemId: 'EXP3', description: 'Bridal Gown Downpayment', category: 'Attire', actualCost: 2800, amountPaid: 2800, purchaseDate: '2026-05-20', notes: 'Vows & Veils Boutique' },
+    { itemId: 'EXP4', description: 'DJ Retainer Fee', category: 'Music/DJ', actualCost: 1700, amountPaid: 1700, purchaseDate: '2026-06-01', notes: 'BeatDrop Entertainment' },
+    { itemId: 'EXP5', description: 'Photo Retainer Fee', category: 'Photography', actualCost: 1750, amountPaid: 1750, purchaseDate: '2026-06-15', notes: 'Golden Hour Photo 50% retainer' }
+  ],
   schedule: [
     { startTime: '08:00 AM', endTime: '10:00 AM', eventMoment: 'Hair & Makeup Styling', location: 'Bridal Suite', responsibility: 'Glam Team (Vows & Veils)', notes: 'Bride & Bridesmaids need to start on time. Mimosas and fruit platter served.' },
     { startTime: '11:00 AM', endTime: '12:00 PM', eventMoment: 'Groom Prep & Portraits', location: 'Hotel Lounge', responsibility: 'Groom, Groomsmen, Photographer', notes: 'Detail shots of rings, watch, and suit.' },

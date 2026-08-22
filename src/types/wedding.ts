@@ -126,6 +126,16 @@ export interface GiftItem {
   notes?: string;
 }
 
+export interface ExpenseItem {
+  itemId: string;
+  description: string;
+  category: string;
+  actualCost: number;
+  amountPaid: number;
+  purchaseDate: string;
+  notes?: string;
+}
+
 export interface EnabledModules {
   metrics: boolean;
   guests: boolean;
@@ -145,6 +155,7 @@ export interface WeddingData {
   dashboard: DashboardSummary;
   guests: Guest[];
   budget: BudgetItem[];
+  expenses?: ExpenseItem[];
   schedule: ScheduleEvent[];
   vendors: Vendor[];
   tasks: Task[];

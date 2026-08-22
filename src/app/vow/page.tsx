@@ -759,7 +759,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'budget' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
@@ -2546,7 +2546,9 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'budget' && weddingData && (
                 <BudgetLedgerManager
                   budget={weddingData.budget}
+                  expenses={weddingData.expenses || []}
                   onUpdate={(data) => syncUpdate('budget', data)}
+                  onUpdateExpenses={(data) => syncUpdate('expenses', data)}
                   isSyncing={isSyncing}
                   currency={currency}
                 />

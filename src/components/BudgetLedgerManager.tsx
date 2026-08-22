@@ -1,50 +1,71 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BudgetItem } from '@/lib/sheets/types';
-import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle } from 'lucide-react';
+import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
+import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/currency';
 
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
+  expenses?: ExpenseItem[];
   budgetTarget?: number;
   onUpdateBudgetTarget?: (newTarget: number) => Promise<void>;
   onUpdate: (updatedBudget: BudgetItem[]) => Promise<void>;
+  onUpdateExpenses?: (updatedExpenses: ExpenseItem[]) => Promise<void>;
   isSyncing: boolean;
   currency?: string;
 }
 
-export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdateBudgetTarget, onUpdate, isSyncing, currency = 'USD' }: BudgetLedgerManagerProps) {
+export default function BudgetLedgerManager({
+  budget,
+  expenses = [],
+  budgetTarget = 0,
+  onUpdateBudgetTarget,
+  onUpdate,
+  onUpdateExpenses,
+  isSyncing,
+  currency = 'USD'
+}: BudgetLedgerManagerProps) {
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
-  // Inline Editable Budget Target State [BUDGET-2 & BUDGET-3]
+  // Inline Editable Budget Target State
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [customTargetInput, setCustomTargetInput] = useState<string>(budgetTarget > 0 ? budgetTarget.toString() : '');
   const [isUnsetMode, setIsUnsetMode] = useState<boolean>(budgetTarget === 0);
 
-  // Form & Delete Modal state
+  // Budget Item Modal state
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<BudgetItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<BudgetItem>>({});
 
-  // Search & Filter state
+  // Expense Item Modal state
+  const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<ExpenseItem | null>(null);
+  const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [expenseFormState, setExpenseFormState] = useState<Partial<ExpenseItem>>({});
+
+  // Budget Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Pending'>('All');
 
+  // Expenses Search & Filter state
+  const [expenseSearchTerm, setExpenseSearchTerm] = useState('');
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
+
   // Unique categories for summaries & dropdowns
-  const categories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
+  const budgetCategories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
+  const expenseCategories = Array.from(new Set(expenses.map(item => item.category).filter(Boolean)));
+  const allCategories = Array.from(new Set([...budgetCategories, ...expenseCategories])).filter(Boolean);
 
   const toggleCategoryFilter = (cat: string) => {
     setSelectedCategories(prev => {
       const isAlreadySelected = prev.includes(cat);
       const updated = isAlreadySelected ? prev.filter(c => c !== cat) : [...prev, cat];
-      
-      // Keep dropdown in sync
       if (updated.length === 1) {
         setCategoryFilter(updated[0]);
       } else {
@@ -59,6 +80,19 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     setCategoryFilter('All');
   };
 
+  // Dynamic Expenses calculations per category
+  const getCategoryExpenseTotals = (category: string) => {
+    const catExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === (category || '').toLowerCase().trim());
+    const actualCost = catExpenses.reduce((sum, e) => sum + (e.actualCost || 0), 0);
+    const amountPaid = catExpenses.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
+    return {
+      count: catExpenses.length,
+      actualCost,
+      amountPaid,
+    };
+  };
+
+  // Filtered Budget items
   const filteredBudget = budget.filter(item => {
     const matchesSearch =
       (item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,13 +110,45 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  // Totals & Active Target Baseline
-  const totalEstimate = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
-  const totalActual = budget.reduce((sum, item) => sum + item.actualCost, 0);
-  const totalPaid = budget.reduce((sum, item) => sum + item.amountPaid, 0);
-  const totalBalance = budget.reduce((sum, item) => sum + (item.actualCost - item.amountPaid), 0);
+  // Filtered Expense items
+  const filteredExpenses = expenses.filter(item => {
+    const matchesSearch =
+      (item.description || '').toLowerCase().includes(expenseSearchTerm.toLowerCase()) ||
+      (item.category || '').toLowerCase().includes(expenseSearchTerm.toLowerCase()) ||
+      (item.notes || '').toLowerCase().includes(expenseSearchTerm.toLowerCase());
 
-  // Effective Budget Target Baseline (Custom Budget Target vs Sum of Estimates vs Unset Mode)
+    const matchesCategory = expenseCategoryFilter === 'All' || (item.category || '').toLowerCase() === expenseCategoryFilter.toLowerCase();
+
+    return matchesSearch && matchesCategory;
+  });
+
+  // Dynamic Budget Totals (integrating Expenses)
+  const totalEstimate = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
+
+  // Categories with expenses logged
+  const categoriesWithLoggedExpenses = new Set(expenses.map(e => (e.category || '').toLowerCase().trim()));
+  const totalLoggedExpensesActual = expenses.reduce((sum, e) => sum + e.actualCost, 0);
+  const budgetWithoutExpensesActual = budget
+    .filter(b => !categoriesWithLoggedExpenses.has((b.category || '').toLowerCase().trim()))
+    .reduce((sum, b) => sum + b.actualCost, 0);
+
+  // If expenses exist, actual cost combines total expenses + un-logged budget items; else uses budget actual cost
+  const totalActual = expenses.length > 0
+    ? (totalLoggedExpensesActual + budgetWithoutExpensesActual)
+    : budget.reduce((sum, item) => sum + item.actualCost, 0);
+
+  const totalLoggedExpensesPaid = expenses.reduce((sum, e) => sum + e.amountPaid, 0);
+  const budgetWithoutExpensesPaid = budget
+    .filter(b => !categoriesWithLoggedExpenses.has((b.category || '').toLowerCase().trim()))
+    .reduce((sum, b) => sum + b.amountPaid, 0);
+
+  const totalPaid = expenses.length > 0
+    ? (totalLoggedExpensesPaid + budgetWithoutExpensesPaid)
+    : budget.reduce((sum, item) => sum + item.amountPaid, 0);
+
+  const totalBalance = totalActual - totalPaid;
+
+  // Effective Budget Target Baseline
   const effectiveTarget = isUnsetMode ? 0 : (Number(customTargetInput) > 0 ? Number(customTargetInput) : totalEstimate);
 
   // Utilization & Health Meters
@@ -95,10 +161,12 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     : (percentUtilized > 100 ? 'var(--color-red)' : percentUtilized > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)');
 
   // Category Health Breakdown
-  const categoryStats = categories.map(cat => {
-    const catItems = budget.filter(item => item.category === cat);
-    const catEstimate = catItems.reduce((sum, i) => sum + i.estimatedCost, 0);
-    const catActual = catItems.reduce((sum, i) => sum + i.actualCost, 0);
+  const categoryStats = allCategories.map(cat => {
+    const catBudgetItems = budget.filter(item => (item.category || '').toLowerCase() === cat.toLowerCase());
+    const catEstimate = catBudgetItems.reduce((sum, i) => sum + i.estimatedCost, 0);
+
+    const expStats = getCategoryExpenseTotals(cat);
+    const catActual = expStats.count > 0 ? expStats.actualCost : catBudgetItems.reduce((sum, i) => sum + i.actualCost, 0);
     const catPercent = catEstimate > 0 ? Math.min(Math.round((catActual / catEstimate) * 100), 150) : (catActual > 0 ? 100 : 0);
     const isOver = catActual > catEstimate;
     const overAmount = catActual - catEstimate;
@@ -109,12 +177,13 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
       actual: catActual,
       percent: catPercent,
       isOver,
-      overAmount
+      overAmount,
+      expenseCount: expStats.count,
     };
   });
 
-  // Form actions
-  const startAdd = () => {
+  // Budget Item Actions
+  const startAddBudget = () => {
     setFormState({
       category: '',
       vendorName: '',
@@ -128,7 +197,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     setEditingItem(null);
   };
 
-  const startEdit = (item: BudgetItem) => {
+  const startEditBudget = (item: BudgetItem) => {
     setFormState(item);
     setEditingItem(item);
     setIsAdding(false);
@@ -149,12 +218,12 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     }));
   };
 
-  const saveItem = async (e?: React.FormEvent, continueAdding = false) => {
+  const saveBudget = async (e?: React.FormEvent, continueAdding = false) => {
     if (e) e.preventDefault();
     if (isSyncing) return;
 
     if (!formState.category || !formState.vendorName) {
-      alert('Please provide Category and Vendor Name');
+      alert('Please provide Category and Line Item / Vendor Name');
       return;
     }
 
@@ -166,7 +235,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
       const newItem: BudgetItem = {
         itemId: `item-${Date.now()}`,
         category: formState.category || 'General',
-        vendorName: formState.vendorName || 'New Expense',
+        vendorName: formState.vendorName || 'New Budget Item',
         estimatedCost: Number(formState.estimatedCost) || 0,
         actualCost: Number(formState.actualCost) || 0,
         amountPaid: Number(formState.amountPaid) || 0,
@@ -196,15 +265,100 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
     }
   };
 
-  const deleteItem = async (itemId: string) => {
+  const deleteBudget = async (itemId: string) => {
     const updated = budget.filter(i => i.itemId !== itemId);
     await onUpdate(updated);
     setItemToDelete(null);
   };
 
+  // Expense Item Actions
+  const startAddExpense = () => {
+    setExpenseFormState({
+      description: '',
+      category: allCategories[0] || 'General',
+      actualCost: 0,
+      amountPaid: 0,
+      purchaseDate: new Date().toISOString().split('T')[0],
+      notes: '',
+    });
+    setIsAddingExpense(true);
+    setEditingExpense(null);
+  };
+
+  const startEditExpense = (item: ExpenseItem) => {
+    setExpenseFormState(item);
+    setEditingExpense(item);
+    setIsAddingExpense(false);
+  };
+
+  const closeExpenseModal = () => {
+    setIsAddingExpense(false);
+    setEditingExpense(null);
+    setExpenseFormState({});
+  };
+
+  const handleExpenseFormChange = (field: keyof ExpenseItem, value: any) => {
+    setExpenseFormState(prev => ({
+      ...prev,
+      [field]: field === 'actualCost' || field === 'amountPaid' ? Number(value) || 0 : value
+    }));
+  };
+
+  const saveExpense = async (e?: React.FormEvent, continueAdding = false) => {
+    if (e) e.preventDefault();
+    if (isSyncing || !onUpdateExpenses) return;
+
+    if (!expenseFormState.description || !expenseFormState.category) {
+      alert('Please provide Description and Category');
+      return;
+    }
+
+    let updatedExpenses: ExpenseItem[];
+
+    if (editingExpense) {
+      updatedExpenses = expenses.map(i => i.itemId === editingExpense.itemId ? { ...i, ...expenseFormState } as ExpenseItem : i);
+    } else {
+      const newExpense: ExpenseItem = {
+        itemId: `exp-${Date.now()}`,
+        description: expenseFormState.description || 'New Expense Item',
+        category: expenseFormState.category || 'General',
+        actualCost: Number(expenseFormState.actualCost) || 0,
+        amountPaid: Number(expenseFormState.amountPaid) || 0,
+        purchaseDate: expenseFormState.purchaseDate || new Date().toISOString().split('T')[0],
+        notes: expenseFormState.notes || '',
+      };
+      updatedExpenses = [newExpense, ...expenses];
+    }
+
+    await onUpdateExpenses(updatedExpenses);
+
+    if (continueAdding) {
+      setExpenseFormState({
+        description: '',
+        category: expenseFormState.category || 'General',
+        actualCost: 0,
+        amountPaid: 0,
+        purchaseDate: new Date().toISOString().split('T')[0],
+        notes: '',
+      });
+      setIsAddingExpense(true);
+      setEditingExpense(null);
+    } else {
+      setEditingExpense(null);
+      setIsAddingExpense(false);
+    }
+  };
+
+  const deleteExpense = async (itemId: string) => {
+    if (!onUpdateExpenses) return;
+    const updated = expenses.filter(i => i.itemId !== itemId);
+    await onUpdateExpenses(updated);
+    setExpenseToDelete(null);
+  };
+
   return (
     <div className="budget-manager-container" style={styles.container}>
-      {/* Scoped CSS for Header and Mobile View Toggle */}
+      {/* Scoped CSS for Header and Responsive View Toggle */}
       <style>{`
         .budget-header-container {
           display: flex;
@@ -239,6 +393,17 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
           min-width: 36px;
           min-height: 34px;
         }
+        .section-header-banner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 2px solid var(--color-border);
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
         @media (max-width: 640px) {
           .budget-header-container {
             flex-direction: column !important;
@@ -251,9 +416,6 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
             justify-content: space-between !important;
             gap: 0.625rem !important;
             width: 100% !important;
-          }
-          .budget-view-toggle {
-            flex-shrink: 0 !important;
           }
           .budget-view-toggle button {
             padding: 0.45rem 0.75rem !important;
@@ -270,11 +432,11 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         }
       `}</style>
 
-      {/* Header */}
+      {/* Main Header */}
       <div className="budget-header-container">
         <div>
           <h2 style={styles.title}>EXPENSE & BUDGET LEDGER</h2>
-          <p style={styles.subtitle}>Track estimated vs actual costs and log payments</p>
+          <p style={styles.subtitle}>Track estimated caps, log individual purchases & monitor real-time payments</p>
         </div>
         <div className="budget-header-actions">
           <div className="budget-view-toggle">
@@ -293,8 +455,8 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
               <Grid size={16} />
             </button>
           </div>
-          <button className="budget-add-btn" style={{ ...styles.addButton, color: 'var(--color-on-dark)' }} onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> LOG NEW EXPENSE
+          <button className="budget-add-btn" style={{ ...styles.addButton, color: 'var(--color-on-dark)' }} onClick={startAddBudget} disabled={isSyncing}>
+            <Plus size={16} style={{ marginRight: '0.25rem' }} /> + NEW BUDGET
           </button>
         </div>
       </div>
@@ -304,9 +466,9 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         <div style={styles.meterHeader}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
-              <span style={styles.meterSubtext}>BUDGET USED</span>
+              <span style={styles.meterSubtext}>BUDGET UTILIZED</span>
               
-              {/* Unset Budget Mode Toggle [BUDGET-3] */}
+              {/* Unset Budget Mode Toggle */}
               <button
                 type="button"
                 onClick={() => {
@@ -320,63 +482,56 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  backgroundColor: isUnsetMode ? 'var(--color-primary)' : 'transparent',
-                  color: isUnsetMode ? '#ffffff' : 'var(--color-muted)',
-                  border: isUnsetMode ? '1px solid var(--color-primary)' : '1px solid var(--color-muted)',
-                  borderRadius: 'var(--border-radius-sm, 4px)',
-                  padding: '0.1rem 0.4rem',
+                  color: isUnsetMode ? 'var(--color-primary)' : 'var(--color-muted)',
+                  backgroundColor: isUnsetMode ? 'rgba(26, 127, 75, 0.12)' : 'transparent',
+                  border: `1px solid ${isUnsetMode ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                  borderRadius: '12px',
+                  padding: '0.15rem 0.5rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.15s ease',
                 }}
                 title={isUnsetMode ? "Click to set a target budget amount" : "Switch to Unset Budget Mode (log expenses without hard target limit)"}
               >
-                {isUnsetMode ? '✓ UNSET BUDGET MODE ACTIVE' : 'UNSET BUDGET TRACKING'}
+                {isUnsetMode ? "UNSET TARGET MODE ACTIVE" : "SET TARGET BUDGET"}
               </button>
             </div>
 
-            <div style={styles.meterTitleRow}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               <h3 style={styles.meterTitle}>
                 {formatCurrency(totalActual, currency)}{' '}
-                <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--color-muted)', fontWeight: 500 }}>
+                  of{' '}
                   {isUnsetMode ? (
-                    'Total Actual Logged Expenses'
+                    'No Hard Limit'
                   ) : (
                     <>
-                      of{' '}
                       {isEditingTarget ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                           <input
                             type="number"
                             value={customTargetInput}
                             onChange={(e) => setCustomTargetInput(e.target.value)}
-                            placeholder={totalEstimate.toString()}
                             style={{
-                              width: '110px',
-                              fontFamily: 'var(--font-mono)',
+                              width: '100px',
+                              padding: '0.2rem 0.4rem',
                               fontSize: '0.85rem',
-                              fontWeight: 700,
-                              padding: '0.15rem 0.35rem',
-                              border: '2px solid var(--color-primary)',
+                              fontFamily: 'var(--font-mono)',
+                              border: '1px solid var(--color-primary)',
                               borderRadius: '4px',
                             }}
+                            placeholder="Amount"
                             autoFocus
                           />
                           <button
                             type="button"
                             onClick={async () => {
                               setIsEditingTarget(false);
-                              const newTarget = Number(customTargetInput) || 0;
-                              if (onUpdateBudgetTarget) await onUpdateBudgetTarget(newTarget);
+                              const val = Number(customTargetInput);
+                              if (!isNaN(val) && onUpdateBudgetTarget) {
+                                await onUpdateBudgetTarget(val);
+                              }
                             }}
-                            style={{
-                              backgroundColor: 'var(--color-primary)',
-                              color: '#ffffff',
-                              border: 'none',
-                              borderRadius: '4px',
-                              padding: '0.2rem 0.4rem',
-                              cursor: 'pointer',
-                              fontSize: '0.75rem',
-                            }}
+                            style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.4rem', cursor: 'pointer' }}
                           >
                             <Check size={12} />
                           </button>
@@ -390,7 +545,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                             cursor: 'pointer', 
                             borderBottom: '1px dashed var(--color-primary)' 
                           }}
-                          title="Click to edit target budget limit [BUDGET-2]"
+                          title="Click to edit target budget limit"
                         >
                           {formatCurrency(effectiveTarget, currency)} Target <Edit2 size={12} style={{ display: 'inline', marginLeft: '2px' }} />
                         </span>
@@ -432,7 +587,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
           }} />
         </div>
 
-        {/* Category Breakdown Progress Meters (Clickable Quick Filters) */}
+        {/* Category Breakdown Progress Meters */}
         {categoryStats.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -448,54 +603,34 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     fontSize: '0.65rem',
                     fontWeight: 700,
                     backgroundColor: 'transparent',
-                    color: 'var(--color-red)',
-                    border: '1px solid #ef4444',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.15rem 0.5rem',
+                    color: 'var(--color-primary)',
+                    border: 'none',
                     cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
+                    textDecoration: 'underline'
                   }}
                 >
-                  <X size={11} /> CLEAR FILTERS ({selectedCategories.length})
+                  CLEAR FILTERS ({selectedCategories.length})
                 </button>
               )}
             </div>
 
-            <div style={styles.categoryMeterGrid}>
+            <div style={styles.categoryChipsGrid}>
               {categoryStats.map(stat => {
-                const isSelected = selectedCategories.includes(stat.category);
+                const isSelected = selectedCategories.some(c => c.toLowerCase() === stat.category.toLowerCase());
                 return (
-                  <div 
-                    key={stat.category} 
-                    className={`category-chip ${isSelected ? 'is-selected' : ''}`}
+                  <div
+                    key={stat.category}
                     onClick={() => toggleCategoryFilter(stat.category)}
                     style={{
                       ...styles.categoryChip,
+                      borderColor: isSelected ? 'var(--color-primary)' : stat.isOver ? 'var(--color-red)' : 'var(--color-border)',
+                      backgroundColor: isSelected ? 'rgba(26, 127, 75, 0.08)' : 'var(--color-surface)',
                       cursor: 'pointer',
-                      borderColor: isSelected ? 'var(--color-primary)' : (stat.isOver ? 'var(--color-red)' : 'var(--color-muted)'),
-                      backgroundColor: isSelected 
-                        ? (stat.isOver ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-surface, #ffffff)') 
-                        : 'var(--color-bg)',
-                      boxShadow: isSelected ? '0 0 0 2px var(--color-primary)' : 'none',
-                      transform: isSelected ? 'translateY(-1px)' : 'none',
-                      transition: 'all 0.15s ease',
-                      padding: '0.5rem 0.75rem',
+                      transition: 'all 0.15s ease'
                     }}
-                    title={isSelected ? `Click to remove ${stat.category} filter` : `Click to filter by ${stat.category}`}
                   >
                     <div style={styles.categoryChipHeader}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        {isSelected && <Check size={12} style={{ color: 'var(--color-primary)' }} />}
-                        <span style={{ 
-                          ...styles.categoryChipName, 
-                          fontWeight: isSelected ? 800 : 700,
-                          color: isSelected ? 'var(--color-primary)' : 'var(--color-text)' 
-                        }}>
-                          {stat.category}
-                        </span>
-                      </div>
+                      <span style={styles.categoryChipName}>{stat.category}</span>
                       {stat.isOver ? (
                         <span style={styles.overBadgeMini}>+${stat.overAmount.toLocaleString()}</span>
                       ) : (
@@ -517,7 +652,29 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         )}
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* ============================================================ */}
+      {/* SECTION 1: 📊 BUDGET TRACKER TABLE & CARDS                   */}
+      {/* ============================================================ */}
+      <div className="section-header-banner">
+        <div>
+          <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
+            📊 BUDGET TRACKER
+          </h3>
+          <p style={{ fontSize: '0.78rem', color: 'var(--color-muted)', margin: '0.15rem 0 0' }}>
+            Target baseline allocations & category caps
+          </p>
+        </div>
+        <button
+          className="budget-add-btn"
+          style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
+          onClick={startAddBudget}
+          disabled={isSyncing}
+        >
+          <Plus size={15} style={{ marginRight: '0.25rem' }} /> + NEW BUDGET
+        </button>
+      </div>
+
+      {/* Filter and Search Bar for Budget */}
       <div style={styles.filterBar}>
         <input
           type="text"
@@ -538,7 +695,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
             style={styles.filterSelect}
           >
             <option value="All">{selectedCategories.length > 1 ? `FILTERED (${selectedCategories.length} SELECTED)` : 'ALL CATEGORIES'}</option>
-            {categories.map(cat => (
+            {allCategories.map(cat => (
               <option key={cat} value={cat}>{cat.toUpperCase()}</option>
             ))}
           </select>
@@ -562,7 +719,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
             <thead>
               <tr>
                 <th style={styles.th}>CATEGORY</th>
-                <th style={styles.th}>VENDOR</th>
+                <th style={styles.th}>LINE ITEM / VENDOR</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>ESTIMATED</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>ACTUAL</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>PAID</th>
@@ -574,7 +731,11 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
             </thead>
             <tbody>
               {filteredBudget.map((item) => {
-                const owing = item.actualCost - item.amountPaid;
+                const expStats = getCategoryExpenseTotals(item.category);
+                const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
+                const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
+                const owing = displayActual - displayPaid;
+
                 return (
                   <tr key={item.itemId} style={styles.tr}>
                     <td style={styles.td}>
@@ -588,16 +749,21 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span style={styles.monoText}>${item.actualCost.toLocaleString()}</span>
-                        {item.actualCost > item.estimatedCost && (
+                        <span style={styles.monoText}>${displayActual.toLocaleString()}</span>
+                        {expStats.count > 0 && (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 600 }}>
+                            ({expStats.count} logged expense{expStats.count > 1 ? 's' : ''})
+                          </span>
+                        )}
+                        {displayActual > item.estimatedCost && (
                           <span style={styles.overBadgeTable}>
-                            <AlertTriangle size={10} style={{ marginRight: '2px' }} /> +${(item.actualCost - item.estimatedCost).toLocaleString()}
+                            <AlertTriangle size={10} style={{ marginRight: '2px' }} /> +${(displayActual - item.estimatedCost).toLocaleString()}
                           </span>
                         )}
                       </div>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={styles.monoText}>${item.amountPaid.toLocaleString()}</span>
+                      <span style={styles.monoText}>${displayPaid.toLocaleString()}</span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
                       <span style={{ ...styles.monoText, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-muted)' }}>
@@ -618,7 +784,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     </td>
                     <td style={{ ...styles.td, textAlign: 'center' }}>
                       <div style={styles.actionsCell}>
-                        <button style={styles.actionBtn} onClick={() => startEdit(item)}>
+                        <button style={styles.actionBtn} onClick={() => startEditBudget(item)}>
                           <Edit2 size={12} />
                         </button>
                         <button
@@ -636,7 +802,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
 
               {/* Table Footer Totals */}
               <tr style={styles.footerTr}>
-                <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>LEDGER TOTALS</td>
+                <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>BUDGET TOTALS</td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
                   <span style={styles.monoText}>${totalEstimate.toLocaleString()}</span>
                 </td>
@@ -659,18 +825,18 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         <div style={styles.cardGrid}>
           {/* Ledger Total Card */}
           <div style={{ ...styles.card, ...styles.totalCard }} className="totalCard">
-            <h3 style={{ ...styles.categoryCell, fontFamily: 'var(--font-header, var(--font-serif))', fontSize: '1.25rem', color: 'var(--color-on-dark)' }}>LEDGER TOTALS</h3>
+            <h3 style={{ ...styles.categoryCell, fontFamily: 'var(--font-header, var(--font-serif))', fontSize: '1.25rem', color: 'var(--color-on-dark)' }}>BUDGET SUMMARY</h3>
             <div style={styles.cardBody}>
               <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ESTIMATED</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ESTIMATED TARGET</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalEstimate.toLocaleString()}</span>
               </div>
               <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ACTUAL</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ACTUAL OUTLAY</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalActual.toLocaleString()}</span>
               </div>
               <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>PAID</span>
+                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>AMOUNT PAID</span>
                 <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalPaid.toLocaleString()}</span>
               </div>
               <div style={{ ...styles.cardRow, borderTop: '1px dotted var(--color-on-dark-subtle)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
@@ -681,8 +847,12 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
           </div>
 
           {filteredBudget.map(item => {
-            const owing = item.actualCost - item.amountPaid;
-            const isOver = item.actualCost > item.estimatedCost;
+            const expStats = getCategoryExpenseTotals(item.category);
+            const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
+            const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
+            const owing = displayActual - displayPaid;
+            const isOver = displayActual > item.estimatedCost;
+
             return (
               <div 
                 key={item.itemId} 
@@ -697,7 +867,7 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.25rem', textTransform: 'none' }}>{item.category}</span>
                   </div>
                   <div style={styles.cardActions}>
-                    <button style={styles.actionBtn} onClick={() => startEdit(item)}>
+                    <button style={styles.actionBtn} onClick={() => startEditBudget(item)}>
                       <Edit2 size={12} />
                     </button>
                     <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setItemToDelete(item)} disabled={isSyncing}>
@@ -706,9 +876,9 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                   </div>
                 </div>
 
-                {item.actualCost > item.estimatedCost && (
+                {isOver && (
                   <div style={styles.overBadgeCard}>
-                    <AlertTriangle size={11} style={{ marginRight: '0.25rem' }} /> OVER ESTIMATE (+${(item.actualCost - item.estimatedCost).toLocaleString()})
+                    <AlertTriangle size={11} style={{ marginRight: '0.25rem' }} /> OVER ESTIMATE (+${(displayActual - item.estimatedCost).toLocaleString()})
                   </div>
                 )}
                 <h3 style={{ ...styles.cardTitle, fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--color-muted)' }}>{item.vendorName}</h3>
@@ -719,12 +889,15 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     <span style={styles.cardValue}>${item.estimatedCost.toLocaleString()}</span>
                   </div>
                   <div style={styles.cardRow}>
-                    <span style={styles.cardLabel}>ACTUAL</span>
-                    <span style={styles.cardValue}>${item.actualCost.toLocaleString()}</span>
+                    <span style={styles.cardLabel}>
+                      ACTUAL
+                      {expStats.count > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', marginLeft: '4px' }}>({expStats.count} exp)</span>}
+                    </span>
+                    <span style={styles.cardValue}>${displayActual.toLocaleString()}</span>
                   </div>
                   <div style={styles.cardRow}>
                     <span style={styles.cardLabel}>PAID</span>
-                    <span style={styles.cardValue}>${item.amountPaid.toLocaleString()}</span>
+                    <span style={styles.cardValue}>${displayPaid.toLocaleString()}</span>
                   </div>
                   <div style={{ ...styles.cardRow, fontWeight: 600 }}>
                     <span style={styles.cardLabel}>BALANCE DUE</span>
@@ -748,90 +921,314 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         </div>
       )}
 
-      {/* Summary Mini Box */}
-      <div style={styles.summaryBox}>
-        <div style={styles.summaryItem}>
-          <span style={styles.summaryLabel}>TOTAL STILL OWING</span>
-          <span style={styles.summaryValue}>${totalBalance.toLocaleString()}</span>
+      {/* ============================================================ */}
+      {/* SECTION 2: 💳 EXPENSES TABLE & CARDS                          */}
+      {/* ============================================================ */}
+      <div className="section-header-banner">
+        <div>
+          <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
+            💳 EXPENSES
+          </h3>
+          <p style={{ fontSize: '0.78rem', color: 'var(--color-muted)', margin: '0.15rem 0 0' }}>
+            Individual logged purchases & outlays by category
+          </p>
         </div>
-        <div style={styles.summaryItem}>
-          <span style={styles.summaryLabel}>PERCENT PAID</span>
-          <span style={styles.summaryValue}>
-            {totalActual > 0 ? Math.round((totalPaid / totalActual) * 100) : 0}%
-          </span>
+        {onUpdateExpenses && (
+          <button
+            className="budget-add-btn"
+            style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
+            onClick={startAddExpense}
+            disabled={isSyncing}
+          >
+            <Plus size={15} style={{ marginRight: '0.25rem' }} /> + NEW EXPENSE
+          </button>
+        )}
+      </div>
+
+      {/* Expenses Filter and Search Bar */}
+      <div style={styles.filterBar}>
+        <input
+          type="text"
+          placeholder="SEARCH EXPENSE DESCRIPTION OR NOTES..."
+          value={expenseSearchTerm}
+          onChange={(e) => setExpenseSearchTerm(e.target.value)}
+          style={styles.searchInput}
+        />
+
+        <div style={styles.filtersGroup}>
+          <select
+            value={expenseCategoryFilter}
+            onChange={(e) => setExpenseCategoryFilter(e.target.value)}
+            style={styles.filterSelect}
+          >
+            <option value="All">ALL CATEGORIES ({expenses.length})</option>
+            {allCategories.map(cat => (
+              <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Editor Modal */}
+      {/* Expenses Table View */}
+      {filteredExpenses.length === 0 ? (
+        <div style={{
+          textAlign: 'center',
+          padding: '2.5rem 1.5rem',
+          backgroundColor: 'var(--color-surface)',
+          border: '1px dashed var(--color-border)',
+          borderRadius: 'var(--border-radius-md)',
+          color: 'var(--color-muted)',
+        }}>
+          <ShoppingBag size={28} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
+          <p style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>No expenses logged yet</p>
+          <p style={{ fontSize: '0.78rem', margin: '0.25rem 0 1rem' }}>Click "+ NEW EXPENSE" to record purchases for your wedding categories.</p>
+          {onUpdateExpenses && (
+            <button
+              onClick={startAddExpense}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-on-primary)',
+                border: 'none',
+                borderRadius: 'var(--border-radius-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              + NEW EXPENSE
+            </button>
+          )}
+        </div>
+      ) : viewMode === 'table' ? (
+        <div style={styles.tableWrapper}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>ITEM ID</th>
+                <th style={styles.th}>DESCRIPTION</th>
+                <th style={styles.th}>CATEGORY</th>
+                <th style={{ ...styles.th, textAlign: 'right' }}>ACTUAL COST</th>
+                <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT PAID</th>
+                <th style={styles.th}>PURCHASE DATE</th>
+                <th style={styles.th}>NOTES</th>
+                <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredExpenses.map((exp) => (
+                <tr key={exp.itemId} style={styles.tr}>
+                  <td style={styles.td}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.725rem', color: 'var(--color-muted)' }}>
+                      {exp.itemId}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={styles.categoryCell}>{exp.category}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>
+                    <span style={{ ...styles.monoText, fontWeight: 700 }}>${exp.actualCost.toLocaleString()}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>
+                    <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>${exp.amountPaid.toLocaleString()}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={styles.monoText}>{exp.purchaseDate || '-'}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center' }}>
+                    <div style={styles.actionsCell}>
+                      <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
+                        <Edit2 size={12} />
+                      </button>
+                      {onUpdateExpenses && (
+                        <button
+                          style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
+                          onClick={() => setExpenseToDelete(exp)}
+                          disabled={isSyncing}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {/* Expense Table Footer Totals */}
+              <tr style={styles.footerTr}>
+                <td colSpan={3} style={{ ...styles.td, fontWeight: 700 }}>TOTAL LOGGED EXPENSES</td>
+                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
+                  <span style={styles.monoText}>${filteredExpenses.reduce((s, e) => s + e.actualCost, 0).toLocaleString()}</span>
+                </td>
+                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
+                  <span style={styles.monoText}>${filteredExpenses.reduce((s, e) => s + e.amountPaid, 0).toLocaleString()}</span>
+                </td>
+                <td colSpan={3} style={styles.td}></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* Expenses Card View Layout */
+        <div style={styles.cardGrid}>
+          {filteredExpenses.map((exp) => (
+            <div
+              key={exp.itemId}
+              style={styles.card}
+            >
+              <div style={styles.cardHeader}>
+                <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.1rem', textTransform: 'none' }}>
+                  {exp.category}
+                </span>
+                <div style={styles.cardActions}>
+                  <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
+                    <Edit2 size={12} />
+                  </button>
+                  {onUpdateExpenses && (
+                    <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setExpenseToDelete(exp)} disabled={isSyncing}>
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)', margin: '0.2rem 0' }}>
+                {exp.description}
+              </h4>
+
+              <div style={styles.cardBody}>
+                <div style={styles.cardRow}>
+                  <span style={styles.cardLabel}>ACTUAL COST</span>
+                  <span style={{ ...styles.cardValue, fontWeight: 700 }}>${exp.actualCost.toLocaleString()}</span>
+                </div>
+                <div style={styles.cardRow}>
+                  <span style={styles.cardLabel}>AMOUNT PAID</span>
+                  <span style={{ ...styles.cardValue, color: 'var(--color-primary)', fontWeight: 700 }}>${exp.amountPaid.toLocaleString()}</span>
+                </div>
+                {exp.notes && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                    📝 {exp.notes}
+                  </div>
+                )}
+              </div>
+
+              <div style={styles.cardFooter}>
+                <span style={styles.monoText}>{exp.purchaseDate || 'No Date'}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', color: 'var(--color-muted)' }}>
+                  ID: {exp.itemId}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* BUDGET ITEM ADD/EDIT MODAL                                    */}
+      {/* ============================================================ */}
       {(isAdding || editingItem) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">{isAdding ? 'ADD BUDGET ITEM' : 'EDIT BUDGET ITEM'}</h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={closeModal}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>
+                {editingItem ? 'EDIT BUDGET ITEM' : '+ NEW BUDGET'}
+              </h3>
+              <button style={styles.closeBtn} onClick={closeModal}>
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={saveItem} style={styles.form}>
-              <div style={styles.formGrid}>
-                <div style={styles.fieldGroup}>
+
+            <form onSubmit={(e) => saveBudget(e, false)} style={styles.form}>
+              <div style={styles.formBody}>
+                <div style={styles.formGroup}>
                   <label style={styles.label}>CATEGORY</label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Catering, Venue"
+                    list="budget-categories-list"
                     value={formState.category || ''}
                     onChange={(e) => handleFormChange('category', e.target.value)}
                     style={styles.input}
+                    placeholder="e.g. Venue, Catering, Florals"
+                    required
                   />
+                  <datalist id="budget-categories-list">
+                    {allCategories.map(cat => <option key={cat} value={cat} />)}
+                  </datalist>
                 </div>
 
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>VENDOR NAME</label>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>LINE ITEM / VENDOR NAME</label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Grand Plaza"
                     value={formState.vendorName || ''}
                     onChange={(e) => handleFormChange('vendorName', e.target.value)}
                     style={styles.input}
+                    placeholder="e.g. Grand Plaza Hall"
+                    required
                   />
                 </div>
 
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>ESTIMATED COST ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formState.estimatedCost || ''}
-                    onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
-                    style={styles.input}
-                  />
+                <div style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>ESTIMATED COST ($)</label>
+                    <input
+                      type="number"
+                      value={formState.estimatedCost ?? 0}
+                      onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
+                      style={styles.input}
+                      min="0"
+                      step="any"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>ACTUAL COST ($)</label>
+                    <input
+                      type="number"
+                      value={formState.actualCost ?? 0}
+                      onChange={(e) => handleFormChange('actualCost', e.target.value)}
+                      style={styles.input}
+                      min="0"
+                      step="any"
+                    />
+                  </div>
                 </div>
 
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>ACTUAL COST ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formState.actualCost || ''}
-                    onChange={(e) => handleFormChange('actualCost', e.target.value)}
-                    style={styles.input}
-                  />
+                <div style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>AMOUNT PAID ($)</label>
+                    <input
+                      type="number"
+                      value={formState.amountPaid ?? 0}
+                      onChange={(e) => handleFormChange('amountPaid', e.target.value)}
+                      style={styles.input}
+                      min="0"
+                      step="any"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>PAYMENT STATUS</label>
+                    <select
+                      value={formState.paymentStatus || 'Pending'}
+                      onChange={(e) => handleFormChange('paymentStatus', e.target.value)}
+                      style={styles.select}
+                    >
+                      <option value="Pending">PENDING</option>
+                      <option value="Paid">PAID</option>
+                      <option value="Overdue">OVERDUE</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>AMOUNT PAID ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formState.amountPaid || ''}
-                    onChange={(e) => handleFormChange('amountPaid', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
+                <div style={styles.formGroup}>
                   <label style={styles.label}>DUE DATE</label>
                   <input
                     type="date"
@@ -840,41 +1237,26 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
                     style={styles.input}
                   />
                 </div>
-
-                <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>PAYMENT STATUS</label>
-                  <select
-                    value={formState.paymentStatus || 'Pending'}
-                    onChange={(e) => handleFormChange('paymentStatus', e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="Paid">Paid</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Overdue">Overdue</option>
-                  </select>
-                </div>
               </div>
+
               <div style={styles.formActions}>
                 <button type="button" style={styles.cancelBtn} onClick={closeModal}>
                   CANCEL
                 </button>
-                {isAdding && (
+
+                {!editingItem && (
                   <button
                     type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
+                    style={{ ...styles.saveBtn, backgroundColor: 'transparent', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+                    onClick={(e) => saveBudget(e, true)}
                     disabled={isSyncing}
-                    onClick={(e) => saveItem(e, true)}
                   >
-                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                    SAVE & ADD ANOTHER
                   </button>
                 )}
+
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE ITEM' : 'SAVE CHANGES')}
+                  {isSyncing ? 'SAVING...' : 'SAVE BUDGET ITEM'}
                 </button>
               </div>
             </form>
@@ -882,68 +1264,179 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
         </div>
       )}
 
-      {/* IN-APP DELETE BUDGET ITEM CONFIRMATION MODAL */}
-      {itemToDelete && (
-        <div style={styles.modalOverlay} onClick={() => setItemToDelete(null)}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-on-dark)' }}>
-                <AlertCircle size={20} />
-                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-dark)' }} className="modalTitle">
-                  DELETE BUDGET ITEM CONFIRMATION
-                </h3>
-              </div>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-dark)' }} className="closeBtn" onClick={() => setItemToDelete(null)}>
-                <X size={20} />
+      {/* ============================================================ */}
+      {/* EXPENSE ITEM ADD/EDIT MODAL                                   */}
+      {/* ============================================================ */}
+      {(isAddingExpense || editingExpense) && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>
+                {editingExpense ? 'EDIT EXPENSE' : '+ NEW EXPENSE'}
+              </h3>
+              <button style={styles.closeBtn} onClick={closeExpenseModal}>
+                <X size={18} />
               </button>
             </div>
 
-            <div style={styles.modalBody}>
-              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
-                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{itemToDelete.vendorName || itemToDelete.category}"</strong> from your budget ledger?
-              </p>
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                Category: {itemToDelete.category} &bull; Estimated: ${itemToDelete.estimatedCost.toLocaleString()}
-              </span>
+            <form onSubmit={(e) => saveExpense(e, false)} style={styles.form}>
+              <div style={styles.formBody}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>DESCRIPTION / ITEM NAME</label>
+                  <input
+                    type="text"
+                    value={expenseFormState.description || ''}
+                    onChange={(e) => handleExpenseFormChange('description', e.target.value)}
+                    style={styles.input}
+                    placeholder="e.g. Deposit for Grand Plaza Hall, Cake Tasting Fee"
+                    required
+                  />
+                </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-text)',
-                    border: '1px solid var(--color-muted)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.625rem 1.25rem',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setItemToDelete(null)}
-                >
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>CATEGORY</label>
+                  <input
+                    type="text"
+                    list="expense-categories-list"
+                    value={expenseFormState.category || ''}
+                    onChange={(e) => handleExpenseFormChange('category', e.target.value)}
+                    style={styles.input}
+                    placeholder="e.g. Venue, Catering, Florals, Attire"
+                    required
+                  />
+                  <datalist id="expense-categories-list">
+                    {allCategories.map(cat => <option key={cat} value={cat} />)}
+                  </datalist>
+                </div>
+
+                <div style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>ACTUAL COST ($)</label>
+                    <input
+                      type="number"
+                      value={expenseFormState.actualCost ?? 0}
+                      onChange={(e) => handleExpenseFormChange('actualCost', e.target.value)}
+                      style={styles.input}
+                      min="0"
+                      step="any"
+                      required
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>AMOUNT PAID ($)</label>
+                    <input
+                      type="number"
+                      value={expenseFormState.amountPaid ?? 0}
+                      onChange={(e) => handleExpenseFormChange('amountPaid', e.target.value)}
+                      style={styles.input}
+                      min="0"
+                      step="any"
+                    />
+                  </div>
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>PURCHASE DATE</label>
+                  <input
+                    type="date"
+                    value={expenseFormState.purchaseDate || ''}
+                    onChange={(e) => handleExpenseFormChange('purchaseDate', e.target.value)}
+                    style={styles.input}
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>NOTES / DETAILS</label>
+                  <input
+                    type="text"
+                    value={expenseFormState.notes || ''}
+                    onChange={(e) => handleExpenseFormChange('notes', e.target.value)}
+                    style={styles.input}
+                    placeholder="e.g. Paid via credit card, 30% initial deposit"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formActions}>
+                <button type="button" style={styles.cancelBtn} onClick={closeExpenseModal}>
                   CANCEL
                 </button>
 
-                <button
-                  type="button"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    backgroundColor: 'var(--color-red)',
-                    color: 'var(--color-on-dark)',
-                    border: 'none',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.625rem 1.25rem',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => itemToDelete && deleteItem(itemToDelete.itemId)}
-                  disabled={isSyncing}
-                >
-                  {isSyncing ? 'DELETING...' : 'DELETE ITEM'}
+                {!editingExpense && (
+                  <button
+                    type="button"
+                    style={{ ...styles.saveBtn, backgroundColor: 'transparent', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+                    onClick={(e) => saveExpense(e, true)}
+                    disabled={isSyncing}
+                  >
+                    SAVE & ADD ANOTHER
+                  </button>
+                )}
+
+                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
+                  {isSyncing ? 'SAVING...' : 'SAVE EXPENSE'}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* DELETE CONFIRMATION MODALS                                    */}
+      {/* ============================================================ */}
+      {itemToDelete && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '400px' }}>
+            <div style={styles.modalHeader}>
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-red)' }}>DELETE BUDGET ITEM</h3>
+              <button style={styles.closeBtn} onClick={() => setItemToDelete(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: '1.25rem', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', color: 'var(--color-text)' }}>
+              Are you sure you want to delete budget item <strong>{itemToDelete.vendorName}</strong> ({itemToDelete.category})?
+            </div>
+            <div style={styles.formActions}>
+              <button style={styles.cancelBtn} onClick={() => setItemToDelete(null)}>
+                CANCEL
+              </button>
+              <button
+                style={{ ...styles.saveBtn, backgroundColor: 'var(--color-red)' }}
+                onClick={() => deleteBudget(itemToDelete.itemId)}
+                disabled={isSyncing}
+              >
+                DELETE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {expenseToDelete && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '400px' }}>
+            <div style={styles.modalHeader}>
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-red)' }}>DELETE EXPENSE</h3>
+              <button style={styles.closeBtn} onClick={() => setExpenseToDelete(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: '1.25rem', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', color: 'var(--color-text)' }}>
+              Are you sure you want to delete expense <strong>{expenseToDelete.description}</strong> (${expenseToDelete.actualCost.toLocaleString()})?
+            </div>
+            <div style={styles.formActions}>
+              <button style={styles.cancelBtn} onClick={() => setExpenseToDelete(null)}>
+                CANCEL
+              </button>
+              <button
+                style={{ ...styles.saveBtn, backgroundColor: 'var(--color-red)' }}
+                onClick={() => deleteExpense(expenseToDelete.itemId)}
+                disabled={isSyncing}
+              >
+                DELETE
+              </button>
             </div>
           </div>
         </div>
@@ -953,98 +1446,125 @@ export default function BudgetLedgerManager({ budget, budgetTarget = 0, onUpdate
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+  },
+  title: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '1.1rem',
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    color: 'var(--color-text)',
+    margin: 0,
+  },
+  subtitle: {
+    fontSize: '0.8rem',
+    color: 'var(--color-muted)',
+    margin: '0.2rem 0 0 0',
+  },
+  toggleBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+  },
+  addButton: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    padding: '0.45rem 0.85rem',
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-on-primary)',
+    border: 'none',
+    borderRadius: 'var(--border-radius-sm)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+  },
   meterCard: {
-    backgroundColor: 'var(--color-surface, #ffffff)',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-md)',
-    padding: '1.25rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-lg, 1rem)',
+    padding: '1.25rem 1.5rem',
     boxShadow: 'var(--box-shadow-subtle)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.875rem',
-    marginBottom: '0.5rem',
-    marginTop: '.5rem'
+    gap: '0.85rem',
   },
   meterHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexWrap: 'wrap',
     gap: '0.5rem',
   },
   meterSubtext: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 600,
+    fontSize: '0.675rem',
+    fontWeight: 700,
     color: 'var(--color-muted)',
-    letterSpacing: '0.05em',
-  },
-  meterTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    marginTop: '0.125rem',
-    flexWrap: 'wrap',
+    letterSpacing: '0.08em',
   },
   meterTitle: {
-    fontFamily: 'var(--font-serif)',
+    fontFamily: 'var(--font-mono)',
     fontSize: '1.35rem',
-    fontWeight: 700,
-    color: 'var(--color-primary)',
+    fontWeight: 800,
+    color: 'var(--color-text)',
     margin: 0,
   },
-  overBadgeMain: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 700,
-    backgroundColor: 'var(--color-red-muted)',
-    color: 'var(--color-red)',
-    padding: '0.2rem 0.5rem',
-    borderRadius: 'var(--border-radius-sm)',
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  headroomBadge: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 600,
-    backgroundColor: 'var(--color-green-muted)',
-    color: 'var(--color-green)',
-    padding: '0.2rem 0.5rem',
-    borderRadius: 'var(--border-radius-sm)',
-  },
   percentDisplay: {
-    display: 'flex',
-    alignItems: 'center',
+    textAlign: 'right',
   },
   percentValue: {
     fontFamily: 'var(--font-mono)',
     fontSize: '1.5rem',
-    fontWeight: 700,
+    fontWeight: 800,
+  },
+  overBadgeMain: {
+    fontSize: '0.675rem',
+    fontFamily: 'var(--font-mono)',
+    fontWeight: 800,
+    backgroundColor: '#fee2e2',
+    color: '#b91c1c',
+    border: '1px solid #fca5a5',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '12px',
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
+  headroomBadge: {
+    fontSize: '0.675rem',
+    fontFamily: 'var(--font-mono)',
+    fontWeight: 800,
+    backgroundColor: 'rgba(26, 127, 75, 0.12)',
+    color: 'var(--color-primary)',
+    border: '1px solid rgba(26, 127, 75, 0.3)',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '12px',
   },
   progressTrack: {
     width: '100%',
     height: '8px',
-    backgroundColor: 'var(--color-bg-hover)',
-    borderRadius: '4px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    borderRadius: '999px',
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: '4px',
-    transition: 'width 0.4s ease, background-color 0.4s ease',
+    borderRadius: '999px',
+    transition: 'width 0.4s ease',
   },
-  categoryMeterGrid: {
+  categoryChipsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
     gap: '0.5rem',
     marginTop: '0.25rem',
   },
   categoryChip: {
-    backgroundColor: 'var(--color-bg-subtle)',
-    border: '1px solid var(--color-muted)',
+    padding: '0.5rem 0.65rem',
     borderRadius: 'var(--border-radius-sm)',
-    padding: '0.4rem 0.6rem',
+    border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
@@ -1056,70 +1576,52 @@ const styles: Record<string, React.CSSProperties> = {
   },
   categoryChipName: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    fontWeight: 600,
-    color: 'var(--color-primary)',
+    fontSize: '0.675rem',
+    fontWeight: 700,
+    color: 'var(--color-text)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: '100px',
   },
   categoryChipPercent: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
+    fontSize: '0.65rem',
+    fontWeight: 700,
     color: 'var(--color-muted)',
   },
   overBadgeMini: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.6rem',
-    fontWeight: 700,
-    color: 'var(--color-red)',
+    fontSize: '0.625rem',
+    fontWeight: 800,
+    color: '#b91c1c',
   },
   miniTrack: {
     width: '100%',
     height: '4px',
-    backgroundColor: 'var(--color-bg-hover)',
-    borderRadius: '2px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    borderRadius: '999px',
     overflow: 'hidden',
   },
   miniFill: {
     height: '100%',
-    borderRadius: '2px',
-  },
-  overBadgeTable: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.6rem',
-    fontWeight: 700,
-    color: 'var(--color-red)',
-    backgroundColor: 'var(--color-red-muted)',
-    padding: '1px 4px',
-    borderRadius: '2px',
-    marginTop: '2px',
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  overBadgeCard: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 700,
-    color: 'var(--color-red)',
-    backgroundColor: 'var(--color-red-muted)',
-    padding: '0.25rem 0.5rem',
-    borderRadius: 'var(--border-radius-sm)',
-    display: 'flex',
-    alignItems: 'center',
+    borderRadius: '999px',
   },
   filterBar: {
     display: 'flex',
-    gap: '0.75rem',
-    marginBottom: '0.5rem',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '0.75rem',
+    flexWrap: 'wrap',
   },
   searchInput: {
     flex: '1 1 240px',
+    padding: '0.5rem 0.75rem',
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    padding: '0.5rem 0.75rem',
-    border: '1px solid var(--color-muted)',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-surface)',
     color: 'var(--color-text)',
   },
   filtersGroup: {
@@ -1128,268 +1630,209 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
   },
   filterSelect: {
+    padding: '0.5rem 0.75rem',
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    padding: '0.5rem 0.75rem',
-    border: '1px solid var(--color-muted)',
+    fontWeight: 700,
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-surface)',
     color: 'var(--color-text)',
-    cursor: 'pointer',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid var(--color-muted)',
-    paddingBottom: '0.75rem',
-  },
-  headerActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-  },
-  viewToggle: {
-    display: 'flex',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    overflow: 'hidden',
-  },
-  toggleBtn: {
-    border: 'none',
-    padding: '0.375rem 0.5rem',
-    cursor: 'pointer',
-    transition: 'var(--transition-smooth)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontFamily: 'var(--font-serif)',
-    fontSize: '1.5rem',
-    color: 'var(--color-primary)',
-  },
-  addButton: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
-    border: 'none',
-    borderRadius: 'var(--border-radius-sm)',
-    padding: '0.5rem 0.75rem',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    transition: 'var(--transition-smooth)',
   },
   tableWrapper: {
+    width: '100%',
     overflowX: 'auto',
-    border: '1px solid var(--color-muted)',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-md)',
-    backgroundColor: 'var(--color-surface, #ffffff)',
-    boxShadow: 'var(--box-shadow-subtle)',
+    backgroundColor: 'var(--color-surface)',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '0.825rem',
-    textAlign: 'left',
+    fontSize: '0.85rem',
   },
   th: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.675rem',
-    fontWeight: 700,
+    fontWeight: 800,
+    letterSpacing: '0.06em',
     color: 'var(--color-muted)',
     backgroundColor: 'var(--color-bg-subtle)',
-    borderBottom: '1px solid var(--color-muted)',
-    padding: '0.75rem',
-    letterSpacing: '0.05em',
+    padding: '0.65rem 0.85rem',
+    borderBottom: '1px solid var(--color-border)',
+    textAlign: 'left',
+    whiteSpace: 'nowrap',
   },
   tr: {
-    borderBottom: '1px solid #f1f1f1',
-    transition: 'var(--transition-smooth)',
+    borderBottom: '1px solid var(--color-border)',
   },
   footerTr: {
     backgroundColor: 'var(--color-bg-subtle)',
-    borderTop: '2px solid var(--color-muted)',
+    borderTop: '2px solid var(--color-border)',
   },
   td: {
-    padding: '0.75rem',
+    padding: '0.65rem 0.85rem',
     verticalAlign: 'middle',
+    color: 'var(--color-text)',
   },
   categoryCell: {
-    fontWeight: 600,
-    color: 'var(--color-text)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: 'var(--color-primary)',
   },
   monoText: {
     fontFamily: 'var(--font-mono)',
+    fontSize: '0.8rem',
   },
   statusTag: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    fontWeight: 600,
-    padding: '0.125rem 0.375rem',
-    borderRadius: 'var(--border-radius-sm)',
+    fontSize: '0.65rem',
+    fontWeight: 800,
+    padding: '0.2rem 0.5rem',
+    borderRadius: '12px',
     display: 'inline-block',
+  },
+  overBadgeTable: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.625rem',
+    color: '#b91c1c',
+    fontWeight: 800,
+    display: 'inline-flex',
+    alignItems: 'center',
+    marginTop: '1px',
   },
   actionsCell: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '0.375rem',
+    gap: '0.35rem',
   },
   actionBtn: {
-    background: 'none',
-    border: 'none',
+    padding: '0.3rem 0.45rem',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-muted)',
     cursor: 'pointer',
-    padding: '0.25rem',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryBox: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '0.5rem',
-  },
-  summaryItem: {
-    flex: 1,
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-md)',
-    padding: '1rem',
-    backgroundColor: 'var(--color-surface, #ffffff)',
-    boxShadow: 'var(--box-shadow-subtle)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  summaryLabel: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    color: 'var(--color-muted)',
-    letterSpacing: '0.05em',
-  },
-  summaryValue: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: 'var(--color-primary)',
-  },
   modalOverlay: {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(13, 27, 42, 0.4)',
-    backdropFilter: 'blur(2px)',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    backdropFilter: 'blur(4px)',
+    zIndex: 999,
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
+    justifyContent: 'center',
     padding: '1rem',
   },
   modalContent: {
-    backgroundColor: 'var(--color-bg)',
-    border: '2px solid var(--color-primary)',
-    borderRadius: 'var(--border-radius-lg)',
-    width: '100%',
+    backgroundColor: 'var(--color-surface)',
+    border: '2px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-lg, 1rem)',
     maxWidth: '520px',
-    maxHeight: '90vh',
+    width: '100%',
+    boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+    maxHeight: '90vh',
     overflow: 'hidden',
   },
   modalHeader: {
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
-    padding: '1rem 1.25rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexShrink: 0,
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid var(--color-border)',
   },
   modalTitle: {
-    fontFamily: 'var(--font-serif)',
-    fontSize: '1.15rem',
-    color: 'var(--color-on-primary)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.9rem',
+    fontWeight: 800,
+    letterSpacing: '0.06em',
+    margin: 0,
+    color: 'var(--color-text)',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
-    color: 'var(--color-on-primary)',
+    color: 'var(--color-muted)',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    flex: 1,
-    minHeight: 0,
-    overflow: 'hidden',
-  },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '0.875rem',
-    padding: '1.25rem',
     overflowY: 'auto',
-    flex: 1,
   },
-  fieldGroup: {
+  formBody: {
+    padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.25rem',
+    gap: '0.85rem',
+  },
+  formRow: {
+    display: 'flex',
+    gap: '0.75rem',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.3rem',
+    flex: 1,
   },
   label: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 600,
+    fontSize: '0.675rem',
+    fontWeight: 800,
+    letterSpacing: '0.05em',
     color: 'var(--color-muted)',
   },
   input: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.5rem 0.65rem',
+    fontFamily: 'var(--font-sans)',
     fontSize: '0.85rem',
-    width: '100%',
-    boxSizing: 'border-box',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-sm)',
+    backgroundColor: 'var(--color-bg)',
+    color: 'var(--color-text)',
   },
   select: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.5rem 0.65rem',
+    fontFamily: 'var(--font-sans)',
     fontSize: '0.85rem',
-    width: '100%',
-    boxSizing: 'border-box',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-sm)',
+    backgroundColor: 'var(--color-bg)',
+    color: 'var(--color-text)',
   },
   formActions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '0.75rem',
-    padding: '0.875rem 1.25rem',
-    borderTop: '1px solid var(--color-muted)',
-    backgroundColor: 'var(--color-bg)',
-    flexShrink: 0,
-    position: 'sticky',
-    bottom: 0,
-    zIndex: 10,
+    gap: '0.5rem',
+    padding: '0.85rem 1.25rem',
+    borderTop: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-subtle)',
   },
   cancelBtn: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    padding: '0.5rem 1rem',
+    fontWeight: 700,
+    padding: '0.5rem 0.85rem',
     backgroundColor: 'transparent',
     color: 'var(--color-muted)',
-    border: '1px solid var(--color-muted)',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-sm)',
     cursor: 'pointer',
   },
   saveBtn: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    fontWeight: 600,
+    fontWeight: 800,
     padding: '0.5rem 1rem',
     backgroundColor: 'var(--color-primary)',
     color: 'var(--color-on-primary)',
@@ -1403,8 +1846,8 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '1rem',
   },
   card: {
-    backgroundColor: 'var(--color-surface, #ffffff)',
-    border: '1px solid var(--color-muted)',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--border-radius-md)',
     padding: '1rem',
     boxShadow: 'var(--box-shadow-subtle)',
@@ -1429,18 +1872,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     gap: '0.25rem',
   },
-  cardCategory: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: 'var(--color-muted)',
-    letterSpacing: '0.05em',
-  },
   cardTitle: {
-    fontFamily: 'var(--font-serif)',
-    fontSize: '1.25rem',
-    fontWeight: 600,
-    color: 'var(--color-primary)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    color: 'var(--color-muted)',
   },
   cardBody: {
     display: 'flex',
@@ -1457,21 +1893,32 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cardLabel: {
     color: 'var(--color-muted)',
-    fontSize: '0.75rem',
-    fontWeight: 600,
+    fontSize: '0.7rem',
+    fontWeight: 700,
   },
   cardValue: {
-    fontWeight: 600,
+    fontWeight: 700,
   },
   cardFooter: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTop: '1px dotted var(--color-muted)',
+    borderTop: '1px dotted var(--color-border)',
     marginTop: '0.5rem',
     paddingTop: '0.5rem',
     fontSize: '0.75rem',
     fontFamily: 'var(--font-mono)',
     color: 'var(--color-muted)',
+  },
+  overBadgeCard: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.65rem',
+    fontWeight: 800,
+    color: '#b91c1c',
+    backgroundColor: '#fee2e2',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    display: 'inline-flex',
+    alignItems: 'center',
   }
 };

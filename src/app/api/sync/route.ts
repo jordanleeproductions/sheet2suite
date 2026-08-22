@@ -3,13 +3,14 @@ import { getSheetsClient } from '@/lib/sheets/client';
 import { 
   guestMapper, 
   budgetMapper, 
+  expenseMapper,
   scheduleMapper, 
   vendorMapper, 
   taskMapper,
   photoMapper,
   giftMapper 
 } from '@/lib/sheets/mapper';
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, WeddingData } from '@/lib/sheets/types';
+import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 import { CellGuard } from '@/lib/core/CellGuard';
@@ -19,6 +20,7 @@ import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
 const HEADERS_MAP = {
   guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
   budget: ['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status'],
+  expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'],
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],
   vendors: ['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required'],
   tasks: ['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links'],
@@ -96,6 +98,7 @@ export async function GET(req: Request) {
     const settingsTitle = findTitle(['SETTINGS', 'Settings', 'DASHBOARD', 'Dashboard']);
     const guestsTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
     const budgetTitle = findTitle(['BUDGET', 'Budget Ledger', 'Budget', 'Budget_Ledger']);
+    const expensesTitle = findTitle(['EXPENSES', 'Expenses', 'Expense List']);
     const scheduleTitle = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);
     const vendorsTitle = findTitle(['VENDORS', 'Vendors', 'Vendor Directory']);
     const tasksTitle = findTitle(['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'To Do List', 'TASKS', 'Tasks']);
@@ -106,6 +109,7 @@ export async function GET(req: Request) {
       `'${settingsTitle}'!A1:B10`,
       `'${guestsTitle}'!A1:L1000`,
       `'${budgetTitle}'!A1:H1000`,
+      `'${expensesTitle}'!A1:G1000`,
       `'${scheduleTitle}'!A1:F1000`,
       `'${vendorsTitle}'!A1:L1000`,
       `'${tasksTitle}'!A1:H1000`,
@@ -155,7 +159,7 @@ export async function GET(req: Request) {
       if (b3Val) totalBudget = Number(String(b3Val).replace(/[^0-9.]/g, '')) || 30000;
 
       if (!b2Val && !b3Val) {
-        const zRows = valueRanges[8]?.values || [];
+        const zRows = valueRanges[9]?.values || [];
         const z1Val = zRows[0]?.[0] || '';
         const z2Val = zRows[1]?.[0] || '';
         const z3Val = zRows[2]?.[0] || '';
@@ -185,34 +189,41 @@ export async function GET(req: Request) {
     const budgetHeaders = budgetRows[0] || HEADERS_MAP.budget;
     const budget = budgetRows.slice(1).map(row => budgetMapper.fromRow(budgetHeaders, row));
 
+    // Parse Expenses
+    const expenseRows = valueRanges[3]?.values || [];
+    const expenseHeaders = expenseRows[0] || HEADERS_MAP.expenses;
+    const expenses = expenseRows.slice(1).map(row => expenseMapper.fromRow(expenseHeaders, row));
+
     // Parse Day-Of-Schedule
-    const scheduleRows = valueRanges[3]?.values || [];
+    const scheduleRows = valueRanges[4]?.values || [];
     const scheduleHeaders = scheduleRows[0] || HEADERS_MAP.schedule;
     const schedule = scheduleRows.slice(1).map(row => scheduleMapper.fromRow(scheduleHeaders, row));
 
     // Parse Vendors
-    const vendorRows = valueRanges[4]?.values || [];
+    const vendorRows = valueRanges[5]?.values || [];
     const vendorHeaders = vendorRows[0] || HEADERS_MAP.vendors;
     const vendors = vendorRows.slice(1).map(row => vendorMapper.fromRow(vendorHeaders, row));
 
     // Parse To-Do List
-    const taskRows = valueRanges[5]?.values || [];
+    const taskRows = valueRanges[6]?.values || [];
     const taskHeaders = taskRows[0] || HEADERS_MAP.tasks;
     const tasks = taskRows.slice(1).map(row => taskMapper.fromRow(taskHeaders, row));
 
     // Parse Photos
-    const photoRows = valueRanges[6]?.values || [];
+    const photoRows = valueRanges[7]?.values || [];
     const photoHeaders = photoRows[0] || HEADERS_MAP.photos;
     const photos = photoRows.slice(1).map(row => photoMapper.fromRow(photoHeaders, row));
 
     // Parse Gifts
-    const giftRows = valueRanges[7]?.values || [];
+    const giftRows = valueRanges[8]?.values || [];
     const giftHeaders = giftRows[0] || HEADERS_MAP.gifts;
     const gifts = giftRows.slice(1).map(row => giftMapper.fromRow(giftHeaders, row));
 
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
-    const actualCost = budget.reduce((sum, item) => sum + item.actualCost, 0);
+    const actualCost = expenses.length > 0 
+      ? expenses.reduce((sum, item) => sum + item.actualCost, 0)
+      : budget.reduce((sum, item) => sum + item.actualCost, 0);
     const remainingTasks = tasks.filter(t => t.kanbanStage === 'To Do').length;
 
     const data: WeddingData = {
@@ -224,6 +235,7 @@ export async function GET(req: Request) {
       },
       guests,
       budget,
+      expenses,
       schedule,
       vendors,
       tasks,
@@ -277,6 +289,8 @@ export async function POST(req: Request) {
         mockDatabase.guests = data as Guest[];
       } else if (sheetType === 'budget') {
         mockDatabase.budget = data as BudgetItem[];
+      } else if (sheetType === 'expenses') {
+        mockDatabase.expenses = data as ExpenseItem[];
       } else if (sheetType === 'schedule') {
         mockDatabase.schedule = data as ScheduleEvent[];
       } else if (sheetType === 'vendors') {
@@ -293,7 +307,9 @@ export async function POST(req: Request) {
 
       // Recompute metrics
       const estimatedCost = mockDatabase.budget.reduce((sum, item) => sum + item.estimatedCost, 0);
-      const actualCost = mockDatabase.budget.reduce((sum, item) => sum + item.actualCost, 0);
+      const actualCost = (mockDatabase.expenses && mockDatabase.expenses.length > 0)
+        ? mockDatabase.expenses.reduce((sum, item) => sum + item.actualCost, 0)
+        : mockDatabase.budget.reduce((sum, item) => sum + item.actualCost, 0);
       const remainingTasks = mockDatabase.tasks.filter(task => task.kanbanStage === 'To Do').length;
 
       mockDatabase.dashboard = {
@@ -416,6 +432,12 @@ export async function POST(req: Request) {
         range = `'${title}'!A1:H1000`;
         (data as BudgetItem[]).forEach(item => {
           values.push(budgetMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'expenses') {
+        const title = findTitle(['EXPENSES', 'Expenses', 'Expense List']);
+        range = `'${title}'!A1:G1000`;
+        (data as ExpenseItem[]).forEach(item => {
+          values.push(expenseMapper.toRow(headers, item));
         });
       } else if (sheetType === 'schedule') {
         const title = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);

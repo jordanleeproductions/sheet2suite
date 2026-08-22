@@ -4,7 +4,7 @@ This document defines the authoritative tab structure and column header contract
 
 ---
 
-## 📊 Complete Sheet Architecture Overview (14 Tabs)
+## 📊 Complete Sheet Architecture Overview (15 Tabs)
 
 | Tab Name | Sheet Table Name | Key Purpose | Status |
 |---|---|---|---|
@@ -14,6 +14,7 @@ This document defines the authoritative tab structure and column header contract
 | **`TABLES`** | Table Assignments | Floorplan table shapes & seating capacity | ✏️ Active |
 | **`VENDORS`** | Vendors | Vendor directory, contacts & payment tracking | ✏️ Active |
 | **`BUDGET`** | Budget Ledger | Estimated vs. actual costs & payment status | ✏️ Active |
+| **`EXPENSES`** | Expenses | Logged purchases & itemized outlays by category | ✏️ Active |
 | **`SCHEDULE`** | Day of Schedule | Day-of itinerary timeline & responsibilities | ✏️ Active |
 | **`MUSIC`** | Music | Playlist tracks, occasions & priorities | ✏️ Active |
 | **`PHOTOS`** | Photography Shot List | Shot list requirements, timing & status | ✏️ Active |
@@ -21,7 +22,7 @@ This document defines the authoritative tab structure and column header contract
 | **`GIFT REGISTRY`** | Gift Registry | Gifts received, amounts & thank-you cards | ✏️ Active |
 | **`DECOR INVENTORY`**| Decor Inventory | Venue decor, packing checklist & cleanup | ✏️ Active |
 | **`Calc_Data`** | System Lookup | System metric lookup table for formulas | 🔒 Internal |
-| **`Settings`** | Config Dropdowns | Master enum dropdown validation lists | 🔒 System Config |
+| **`SETTINGS`** | Config & Dropdowns | Master Settings table & enum dropdown lists | 🔒 System Config |
 
 ---
 
@@ -84,14 +85,29 @@ This document defines the authoritative tab structure and column header contract
 
 | Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Expense ID` | `itemId` | Text (Primary Key) | e.g. `B1`, `B2` |
-| `Item Name` | `vendorName` | Text | Expense / vendor line item name |
+| `Item ID` | `itemId` | Text (Primary Key) | e.g. `B1`, `B2` |
 | `Category` | `category` | Dropdown | Budget category |
-| `Estimated Cost` | `estimatedCost` | Currency ($) | Initial estimated cost |
+| `Vendor Name` | `vendorName` | Text | Line item / vendor name |
+| `Estimated Cost` | `estimatedCost` | Currency ($) | Initial estimated cost cap |
 | `Actual Cost` | `actualCost` | Currency ($) | Final actual cost |
 | `Amount Paid` | `amountPaid` | Currency ($) | Amount paid to date |
+| `Due Date` | `dueDate` | Date | Payment due date |
 | `Payment Status` | `paymentStatus` | Dropdown | `Paid`, `Pending`, `Overdue` |
-| `Notes` | `notes` | Text | Due date or payment notes |
+
+---
+
+## 💳 Tab 4b: `EXPENSES`
+**Sheet Table Name**: `Expenses`
+
+| Column Header Name | Developer Key | Format / Input Type | Description / Notes |
+|---|---|---|---|
+| `Item ID` | `itemId` | Text (Primary Key) | e.g. `EXP1`, `EXP2` |
+| `Description` | `description` | Text | Purchase / item description |
+| `Category` | `category` | Dropdown | Expense category (linked to `=SETTINGS!$K$2:$K$50`) |
+| `Actual Cost` | `actualCost` | Currency ($) | Actual cost of purchase |
+| `Amount Paid` | `amountPaid` | Currency ($) | Amount paid to date |
+| `Purchase Date` | `purchaseDate` | Date | Date of purchase |
+| `Notes` | `notes` | Text | Payment method or receipt details |
 
 ---
 

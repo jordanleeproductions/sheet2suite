@@ -1,4 +1,4 @@
-import { Guest, BudgetItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, AgeCategory, RSVPStatus, KanbanStage } from './types';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -33,6 +33,19 @@ export const BUDGET_HEADERS: Record<string, keyof BudgetItem> = {
   'Amount Paid': 'amountPaid',
   'Due Date': 'dueDate',
   'Payment Status': 'paymentStatus',
+};
+
+export const EXPENSE_HEADERS: Record<string, keyof ExpenseItem> = {
+  'Item ID': 'itemId',
+  'Description': 'description',
+  'Item Name': 'description',
+  'Item Description': 'description',
+  'Category': 'category',
+  'Actual Cost': 'actualCost',
+  'Amount Paid': 'amountPaid',
+  'Purchase Date': 'purchaseDate',
+  'Date': 'purchaseDate',
+  'Notes': 'notes',
 };
 
 export const SCHEDULE_HEADERS: Record<string, keyof ScheduleEvent> = {
@@ -161,6 +174,24 @@ export const budgetMapper = {
   },
   toRow(headers: string[], item: BudgetItem): any[] {
     return mapObjectToRow(headers, item, BUDGET_HEADERS);
+  }
+};
+
+export const expenseMapper = {
+  fromRow(headers: string[], row: any[]): ExpenseItem {
+    const obj = mapRowToObject<ExpenseItem>(headers, row, EXPENSE_HEADERS);
+    return {
+      itemId: String(obj.itemId || ''),
+      description: String(obj.description || ''),
+      category: String(obj.category || ''),
+      actualCost: Number(obj.actualCost) || 0,
+      amountPaid: Number(obj.amountPaid) || 0,
+      purchaseDate: String(obj.purchaseDate || ''),
+      notes: String(obj.notes || ''),
+    };
+  },
+  toRow(headers: string[], item: ExpenseItem): any[] {
+    return mapObjectToRow(headers, item, EXPENSE_HEADERS);
   }
 };
 

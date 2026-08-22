@@ -80,6 +80,12 @@ export const MASTER_DROPDOWN_RULES: DropdownRuleConfig[] = [
     columnHeaderMatches: ['Gift Type', 'Category / Store', 'Category'],
     settingsRange: '=SETTINGS!$M$2:$M$50',
   },
+  // EXPENSES tab
+  {
+    tabCandidateNames: ['EXPENSES', 'Expenses', 'Expense List'],
+    columnHeaderMatches: ['Category', 'Expense Category'],
+    settingsRange: '=SETTINGS!$K$2:$K$50',
+  },
   // DECOR INVENTORY tab
   {
     tabCandidateNames: ['DECOR INVENTORY', 'DECOR', 'Decor Inventory'],
