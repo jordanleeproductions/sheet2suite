@@ -27,6 +27,7 @@ export interface WorkspaceDocument {
   workspaceId: string;
   userEmail: string;
   partnerEmail?: string;
+  coPlanners?: string[];
   spreadsheetId: string;
   spreadsheetName: string;
   driveFolderPath: string;

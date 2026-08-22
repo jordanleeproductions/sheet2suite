@@ -188,6 +188,10 @@
 - [x] **[VND-6] Vendor Contract Upload & Google Drive "Contracts" Folder Storage:**
   - **Google Drive Contract Upload API (`/api/upload/contract`)**: API route accepting contract document files (PDF, PNG, JPG, WEBP, DOC, DOCX up to 10MB) and automatically provisioning a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder.
   - **Modal Upload UI & Contract Attachment (`VendorManager.tsx`)**: Integrated single-click file upload trigger alongside standard URL input in the Add/Edit Vendor modal. Automatically uploads attachments to Google Drive and populates the `contractLink` property with the file's Google Drive `webViewLink`.
+- [x] **[SHARE-4] Spouse & Partner Co-Planning Access & Quota Control:**
+  - **Co-Planner API Handler (`/api/share/partner`)**: API endpoint supporting `POST` and `DELETE` requests. Grants Google Drive `writer` (edit) or `reader` (view) permissions on the Master Spreadsheet and triggers zero-cost native Google Drive notification emails (`sendNotificationEmail: true`).
+  - **Quota Enforcement (Max 2 Co-Planners)**: Persists `coPlanners: string[]` on `WorkspaceRecord` in database and strictly caps total active co-planners at 2 slots per workspace.
+  - **Co-Planning Access Card (`AdvancedSettingsModal.tsx`)**: Renders real-time slot counter (`1 / 2 Slots Used`), invite email input, active co-planners roster, 🗑️ **Revoke Access** actions, and zero-cost 1-click personal email app (`mailto:`) / link copy triggers.
 
 ---
 ---

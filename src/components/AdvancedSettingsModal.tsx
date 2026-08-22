@@ -57,6 +57,8 @@ interface AdvancedSettingsModalProps {
   onToggleTopNav?: (show: boolean) => void;
   onDisconnect: () => void;
   onOpenShareModal?: () => void;
+  coPlanners?: string[];
+  onUpdateCoPlanners?: (coPlanners: string[]) => void;
   onClose: () => void;
 }
 
@@ -83,6 +85,8 @@ export default function AdvancedSettingsModal({
   onToggleTopNav,
   onDisconnect,
   onOpenShareModal,
+  coPlanners: initialCoPlanners,
+  onUpdateCoPlanners,
   onClose,
 }: AdvancedSettingsModalProps) {
   const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
@@ -95,9 +99,86 @@ export default function AdvancedSettingsModal({
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Partner Co-Planning State
-  const [partnerEmail, setPartnerEmail] = useState('');
-  const [partnerInviteSent, setPartnerInviteSent] = useState(false);
+  // Partner Co-Planning State [SHARE-4]
+  const [coPlannersList, setCoPlannersList] = useState<string[]>(initialCoPlanners || []);
+  const [coPlannerEmailInput, setCoPlannerEmailInput] = useState('');
+  const [coPlannerRole, setCoPlannerRole] = useState<'writer' | 'reader'>('writer');
+  const [isGrantingCoPlanner, setIsGrantingCoPlanner] = useState(false);
+  const [revokingEmail, setRevokingEmail] = useState<string | null>(null);
+  const [coPlannerMsg, setCoPlannerMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  React.useEffect(() => {
+    if (!spreadsheetId) return;
+    fetch(`/api/share/partner?spreadsheetId=${spreadsheetId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.coPlanners)) {
+          setCoPlannersList(data.coPlanners);
+          if (onUpdateCoPlanners) onUpdateCoPlanners(data.coPlanners);
+        }
+      })
+      .catch(() => {});
+  }, [spreadsheetId]);
+
+  const handleGrantCoPlanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!coPlannerEmailInput || isGrantingCoPlanner) return;
+
+    setIsGrantingCoPlanner(true);
+    setCoPlannerMsg(null);
+
+    try {
+      const res = await fetch('/api/share/partner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId,
+          partnerEmail: coPlannerEmailInput,
+          role: coPlannerRole,
+          weddingName: initialName,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to grant co-planner access.');
+      }
+
+      setCoPlannersList(data.coPlanners || []);
+      if (onUpdateCoPlanners) onUpdateCoPlanners(data.coPlanners);
+      setCoPlannerEmailInput('');
+      setCoPlannerMsg({ text: data.message || 'Access granted & Google notification sent!', isError: false });
+    } catch (err: any) {
+      setCoPlannerMsg({ text: err?.message || 'Error granting co-planner access.', isError: true });
+    } finally {
+      setIsGrantingCoPlanner(false);
+    }
+  };
+
+  const handleRevokeCoPlanner = async (emailToRevoke: string) => {
+    if (revokingEmail) return;
+    setRevokingEmail(emailToRevoke);
+    setCoPlannerMsg(null);
+
+    try {
+      const res = await fetch(`/api/share/partner?spreadsheetId=${spreadsheetId}&partnerEmail=${encodeURIComponent(emailToRevoke)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to revoke co-planner access.');
+      }
+
+      setCoPlannersList(data.coPlanners || []);
+      if (onUpdateCoPlanners) onUpdateCoPlanners(data.coPlanners);
+      setCoPlannerMsg({ text: `Revoked access for ${emailToRevoke}.`, isError: false });
+    } catch (err: any) {
+      setCoPlannerMsg({ text: err?.message || 'Error revoking access.', isError: true });
+    } finally {
+      setRevokingEmail(null);
+    }
+  };
 
   // Feedback Form State
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature'>('feature');
@@ -918,48 +999,183 @@ export default function AdvancedSettingsModal({
                   </div>
                 </div>
 
-                {/* Grant Partner / Spouse Admin Access Section */}
+                {/* Grant Partner / Spouse Co-Planning Access Section [SHARE-4] */}
                 <div style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-muted)', borderRadius: 'var(--border-radius-sm)', padding: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <UserPlus size={18} style={{ color: 'var(--color-primary)' }} />
-                    <h5 style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-text)' }}>
-                      GRANT PARTNER / SPOUSE ADMIN ACCESS
-                    </h5>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <UserPlus size={18} style={{ color: 'var(--color-primary)' }} />
+                      <h5 style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                        CO-PLANNING & PARTNER ACCESS
+                      </h5>
+                    </div>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: 'var(--border-radius-sm)',
+                      backgroundColor: coPlannersList.length >= 2 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: coPlannersList.length >= 2 ? 'var(--color-red, #ef4444)' : 'var(--color-green, #10b981)',
+                      border: coPlannersList.length >= 2 ? '1px solid var(--color-red, #ef4444)' : '1px solid var(--color-green, #10b981)',
+                    }}>
+                      {coPlannersList.length} / 2 CO-PLANNER SLOTS USED
+                    </span>
                   </div>
+
                   <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0 0 0.75rem 0' }}>
-                    Grant your spouse or co-planner admin read/write permissions so both partners can co-plan on the same spreadsheet in real time.
+                    Grant your spouse or partner access to co-plan on your wedding database in real time. Automatically sends a free native Google Drive email notification to their inbox. (Maximum 2 co-planners per workspace).
                   </p>
 
-                  {partnerInviteSent && (
-                    <div style={{ backgroundColor: 'rgba(19, 170, 82, 0.1)', border: '1px solid #11552D', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.8rem', color: '#11552D', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Check size={16} /> Invitation request registered for {partnerEmail || 'your partner'}.
+                  {coPlannerMsg && (
+                    <div style={{
+                      backgroundColor: coPlannerMsg.isError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      border: coPlannerMsg.isError ? '1px solid var(--color-red, #ef4444)' : '1px solid var(--color-green, #10b981)',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '4px',
+                      fontSize: '0.775rem',
+                      color: coPlannerMsg.isError ? 'var(--color-red, #ef4444)' : 'var(--color-green, #10b981)',
+                      marginBottom: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontWeight: 600,
+                    }}>
+                      {coPlannerMsg.isError ? <AlertCircle size={15} /> : <Check size={15} />}
+                      <span>{coPlannerMsg.text}</span>
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {/* Add Co-Planner Form */}
+                  <form onSubmit={handleGrantCoPlanner} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                     <input
                       type="email"
-                      value={partnerEmail}
-                      onChange={(e) => setPartnerEmail(e.target.value)}
-                      placeholder="e.g. spouse@example.com"
-                      style={{ ...styles.input, flex: 1, minWidth: '220px' }}
+                      value={coPlannerEmailInput}
+                      onChange={(e) => setCoPlannerEmailInput(e.target.value)}
+                      placeholder="e.g. partner@example.com"
+                      required
+                      disabled={coPlannersList.length >= 2 || isGrantingCoPlanner}
+                      style={{ ...styles.input, flex: '1 1 200px', minWidth: '180px' }}
                     />
+                    <select
+                      value={coPlannerRole}
+                      onChange={(e) => setCoPlannerRole(e.target.value as 'writer' | 'reader')}
+                      disabled={coPlannersList.length >= 2 || isGrantingCoPlanner}
+                      style={{ ...styles.select, width: 'auto', minWidth: '110px' }}
+                    >
+                      <option value="writer">Editor (Co-Planner)</option>
+                      <option value="reader">Viewer (Read Only)</option>
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={coPlannersList.length >= 2 || isGrantingCoPlanner || !coPlannerEmailInput.trim()}
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: coPlannersList.length >= 2 ? 'var(--color-muted)' : 'var(--color-primary)',
+                        color: 'var(--color-on-primary, #ffffff)',
+                        border: 'none',
+                        opacity: (coPlannersList.length >= 2 || isGrantingCoPlanner) ? 0.6 : 1,
+                        cursor: (coPlannersList.length >= 2 || isGrantingCoPlanner) ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      <UserPlus size={14} />
+                      <span>{isGrantingCoPlanner ? 'GRANTING...' : 'GRANT ACCESS'}</span>
+                    </button>
+                  </form>
+
+                  {/* Active Co-Planners List Roster */}
+                  {coPlannersList.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
+                        ACTIVE CO-PLANNERS ({coPlannersList.length})
+                      </span>
+                      {coPlannersList.map((email) => (
+                        <div
+                          key={email}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '0.4rem 0.65rem',
+                            backgroundColor: 'var(--color-surface)',
+                            border: '1px solid var(--color-muted)',
+                            borderRadius: 'var(--border-radius-sm)',
+                            fontSize: '0.775rem',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <Check size={13} style={{ color: 'var(--color-green, #10b981)' }} />
+                            <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{email}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeCoPlanner(email)}
+                            disabled={revokingEmail === email}
+                            style={{
+                              backgroundColor: 'transparent',
+                              color: 'var(--color-red, #ef4444)',
+                              border: 'none',
+                              cursor: revokingEmail === email ? 'not-allowed' : 'pointer',
+                              fontSize: '0.7rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 600,
+                              textDecoration: 'underline',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.2rem',
+                            }}
+                          >
+                            {revokingEmail === email ? 'REVOKING...' : 'REVOKE ACCESS'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Zero-Cost Mailto & Link Helper */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                    <a
+                      href={`mailto:?subject=${encodeURIComponent(`${initialName} - Co-Planning Invite`)}&body=${encodeURIComponent(`Hi! Join me as a co-planner on Sheet2Vow for ${initialName}.\n\nSpreadsheet ID: ${spreadsheetId}\nAccess URL: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                      style={{
+                        fontSize: '0.7rem',
+                        fontFamily: 'var(--font-mono)',
+                        padding: '0.35rem 0.6rem',
+                        backgroundColor: 'transparent',
+                        color: 'var(--color-primary)',
+                        border: '1px solid var(--color-muted)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      ✉️ OPEN PERSONAL EMAIL APP
+                    </a>
                     <button
                       type="button"
                       onClick={() => {
-                        if (partnerEmail.trim()) setPartnerInviteSent(true);
+                        if (typeof window !== 'undefined') {
+                          navigator.clipboard.writeText(window.location.href);
+                          setCoPlannerMsg({ text: 'Co-planner URL copied to clipboard!', isError: false });
+                        }
                       }}
-                      style={{ ...styles.saveBtn, backgroundColor: 'var(--color-surface)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+                      style={{
+                        fontSize: '0.7rem',
+                        fontFamily: 'var(--font-mono)',
+                        padding: '0.35rem 0.6rem',
+                        backgroundColor: 'transparent',
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-muted)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
                     >
-                      <UserPlus size={14} /> GRANT ADMIN ACCESS
+                      📋 COPY CO-PLANNER LINK
                     </button>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid #eab308', borderRadius: 'var(--border-radius-sm)' }}>
-                    <Lock size={16} style={{ color: '#eab308', flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
-                      <strong>Phase 3 Germin8 Co-Planning Integration:</strong> Real-time Google Drive permission delegation plumbing will link with your Germin8 account in a future update.
-                    </span>
                   </div>
                 </div>
 

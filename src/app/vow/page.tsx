@@ -408,6 +408,7 @@ export default function Sheet2VowDashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [coPlanners, setCoPlanners] = useState<string[]>([]);
 
   // Navigation
   const [activeTab, setActiveTab] = useState<'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('home');
@@ -2242,6 +2243,8 @@ export default function Sheet2VowDashboard() {
             setCurrency(cur);
             localStorage.setItem('s2v_currency', cur);
           }}
+          coPlanners={coPlanners}
+          onUpdateCoPlanners={(c) => setCoPlanners(c)}
           onDisconnect={() => setShowDisconnectModal(true)}
           onOpenShareModal={() => setShowShareModal(true)}
           onClose={() => setShowAdvancedSettings(false)}

@@ -30,6 +30,8 @@ export interface WorkspaceRecord {
   userRole: 'owner' | 'co_planner' | 'read_only';
   weddingName: string;
   driveFolder: string;
+  coPlanners?: string[];
+  partnerEmail?: string;
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;

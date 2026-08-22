@@ -37,4 +37,4 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 ### 🔗 Public Portals & Co-Planning
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[SHARE-4]`** | Spouse & Partner Co-Planning Access (delegate Drive read/write permissions) | `page.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[SHARE-4]`** | Spouse & Partner Co-Planning Access (delegate Drive read/write permissions & free Google email notification with max 2 co-planner quota) | `src/components/AdvancedSettingsModal.tsx`, `src/app/api/share/partner/route.ts`, `src/types/licensing.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
