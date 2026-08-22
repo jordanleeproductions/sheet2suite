@@ -181,6 +181,10 @@
 - [x] **[NAV-ENFORCE] Enforced Navigation Architecture & Optional Dual Top Nav Bar:**
   - **Hard-Enforced Desktop & Mobile Layouts**: Desktop layout strictly enforces the sticky collapsible left sidebar, while mobile devices strictly enforce the bottom nav bar with thumb-accessible drawer button.
   - **Optional Top Navigation Bar Setting**: Added an optional **Top Navigation Bar** toggle setting (default: `OFF`) in `AdvancedSettingsModal.tsx`, `VowSetupWizard.tsx` (Step 4), `WelcomeGuideCard.tsx`, and `vow/page.tsx`, allowing users to optionally enable a dual top navbar while keeping the main canvas clean by default.
+- [x] **[ONBOARD-7] Bride & Groom Profile Step in Guided Setup:**
+  - **Dedicated Bride & Groom Setup Step**: Added Guided Setup Step 2 (`VowSetupWizard.tsx`), allowing couples to define Partner 1 (Bride/Spouse A) and Partner 2 (Groom/Spouse B) with First/Last Name and optional Email/Phone.
+  - **Automatic Co-Admin Invite Checkbox**: Integrated partner email sync with partner co-admin access (`grantPartner2Admin`), automatically granting Google Drive and app editing access.
+  - **Automatic Guest Registry Provisioning (`/api/provision`)**: Automatically provisions Partner 1 (`G1`) and Partner 2 (`G2`) as the first 2 guest entries under `Sweetheart Table` in the customer's `GUESTS` Google Sheet.
 
 ---
 ---
@@ -262,7 +266,7 @@
 
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[ONBOARD-7]`** | Bride & Groom Profile Step in Guided Setup — Add a new guided step (after Wedding Details / before Module Selection) where the couple enters their own profiles (first name, last name, optional email/phone). These entries are automatically provisioned as the first 2 guests in the `GUESTS` sheet with `partyGroup: 'Couple'` and `ageCategory: 'Adult'`. Contact info is optional. This step also prompts whether the partner should receive co-admin/invite access (links to existing `[ONBOARD-5]` partner invite logic). | `src/products/vow/setup/VowSetupWizard.tsx`, `src/app/api/provision/route.ts`, `src/lib/sheets/masterTemplateExporter.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[ONBOARD-7]`** | Bride & Groom Profile Step in Guided Setup — Add a new guided step (after Wedding Details / before Module Selection) where the couple enters their own profiles (first name, last name, optional email/phone). These entries are automatically provisioned as the first 2 guests in the `GUESTS` sheet with `partyGroup: 'Sweetheart Table'` and `ageCategory: 'Adult'`. Contact info is optional. This step also prompts whether the partner should receive co-admin/invite access (links to existing `[ONBOARD-5]` partner invite logic). | `src/products/vow/setup/VowSetupWizard.tsx`, `src/app/api/provision/route.ts`, `src/app/activate/page.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 
 ---
 

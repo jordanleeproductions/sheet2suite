@@ -34,16 +34,25 @@ import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import InfoDisclosure from '@/components/InfoDisclosure';
 import { ProductSetupPluginProps } from '@/lib/core/activation/types';
 
+export interface PartnerProfile {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+}
+
 export interface VowSetupConfig {
   weddingName: string;
   weddingDate: string;
-  admin1Name: string;
-  admin1Email: string;
+  admin1Name?: string;
+  admin1Email?: string;
   admin2Name?: string;
   admin2Email?: string;
+  partner1?: PartnerProfile;
+  partner2?: PartnerProfile;
   budget: number | string;
   currency: string;
-  driveFolder: string;
+  driveFolder?: string;
   modules: {
     metrics: boolean;
     budget: boolean;
@@ -86,6 +95,18 @@ export default function VowSetupWizard({
   const [admin2Name, setAdmin2Name] = useState('');
   const [admin2Email, setAdmin2Email] = useState('');
   const [showAdmin2, setShowAdmin2] = useState(false);
+
+  // Bride & Groom / Couple Profiles [ONBOARD-7]
+  const [partner1FirstName, setPartner1FirstName] = useState('');
+  const [partner1LastName, setPartner1LastName] = useState('');
+  const [partner1Email, setPartner1Email] = useState('');
+  const [partner1Phone, setPartner1Phone] = useState('');
+
+  const [partner2FirstName, setPartner2FirstName] = useState('');
+  const [partner2LastName, setPartner2LastName] = useState('');
+  const [partner2Email, setPartner2Email] = useState('');
+  const [partner2Phone, setPartner2Phone] = useState('');
+  const [grantPartner2Admin, setGrantPartner2Admin] = useState(true);
 
   // Setup Form State: Feature Details
   const [budget, setBudget] = useState<number | string>(0);
@@ -142,14 +163,36 @@ export default function VowSetupWizard({
   };
 
   const handleFinish = () => {
+    const derivedWeddingName = weddingName.trim() || (
+      partner1FirstName && partner2FirstName 
+        ? `${partner1FirstName} & ${partner2FirstName}'s Wedding`
+        : 'Our Wedding'
+    );
+
+    const partner1Obj = (partner1FirstName || partner1LastName) ? {
+      firstName: partner1FirstName.trim() || 'Partner',
+      lastName: partner1LastName.trim() || '1',
+      email: partner1Email.trim() || undefined,
+      phone: partner1Phone.trim() || undefined,
+    } : undefined;
+
+    const partner2Obj = (partner2FirstName || partner2LastName) ? {
+      firstName: partner2FirstName.trim() || 'Partner',
+      lastName: partner2LastName.trim() || '2',
+      email: partner2Email.trim() || undefined,
+      phone: partner2Phone.trim() || undefined,
+    } : undefined;
+
     onComplete({
-      weddingName: weddingName.trim() || 'Our Wedding',
+      weddingName: derivedWeddingName,
       weddingDate,
-      admin1Name,
-      admin1Email,
-      admin2Name: showAdmin2 ? admin2Name : undefined,
-      admin2Email: showAdmin2 ? admin2Email : undefined,
-      budget,
+      admin1Name: partner1FirstName ? `${partner1FirstName} ${partner1LastName}`.trim() : admin1Name,
+      admin1Email: partner1Email || admin1Email,
+      admin2Name: partner2FirstName ? `${partner2FirstName} ${partner2LastName}`.trim() : (showAdmin2 ? admin2Name : undefined),
+      admin2Email: (grantPartner2Admin && partner2Email) ? partner2Email : (showAdmin2 ? admin2Email : undefined),
+      partner1: partner1Obj,
+      partner2: partner2Obj,
+      budget: typeof budget === 'number' ? budget : parseFloat(budget as string) || 0,
       currency,
       driveFolder,
       modules,
@@ -361,21 +404,22 @@ export default function VowSetupWizard({
         </div>
       )}
 
-      {/* GUIDED 4-STEP WIZARD */}
+      {/* GUIDED 5-STEP WIZARD */}
       {setupMode === 'guided' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Step Progress Ticker */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-              STEP {guidedStep} OF 4 &bull; {
-                guidedStep === 1 ? 'WEDDING DETAILS & CO-ADMINS' :
-                guidedStep === 2 ? 'ENABLED PLANNING MODULES' :
-                guidedStep === 3 ? 'FINANCIALS & TASK PRESETS' :
+              STEP {guidedStep} OF 5 &bull; {
+                guidedStep === 1 ? 'WEDDING TITLE & DATE' :
+                guidedStep === 2 ? 'BRIDE & GROOM PROFILES' :
+                guidedStep === 3 ? 'ENABLED PLANNING MODULES' :
+                guidedStep === 4 ? 'FINANCIALS & TASK PRESETS' :
                 'THEME & NAVIGATION LAYOUT'
               }
             </span>
             <div style={{ display: 'flex', gap: '0.35rem' }}>
-              {[1, 2, 3, 4].map(s => (
+              {[1, 2, 3, 4, 5].map(s => (
                 <div
                   key={s}
                   onClick={() => setGuidedStep(s)}
@@ -400,7 +444,7 @@ export default function VowSetupWizard({
             </div>
           </div>
 
-          {/* GUIDED STEP 1: Details & Admins */}
+          {/* GUIDED STEP 1: Details */}
           {guidedStep === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
@@ -426,32 +470,134 @@ export default function VowSetupWizard({
                 />
               </div>
 
-              <div>
-                <label style={styles.fieldLabel}>PRIMARY ADMIN / SPOUSE GOOGLE EMAIL (OPTIONAL)</label>
-                <input
-                  type="email"
-                  placeholder="e.g. partner@gmail.com"
-                  value={admin1Email}
-                  onChange={(e) => setAdmin1Email(e.target.value)}
-                  style={styles.inputField}
-                />
-              </div>
-
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                 <button
                   type="button"
                   onClick={() => setGuidedStep(2)}
                   style={styles.nextBtn}
                 >
-                  <span>NEXT: ENABLE MODULES</span>
+                  <span>NEXT: BRIDE & GROOM PROFILES</span>
                   <ArrowRight size={16} />
                 </button>
               </div>
             </div>
           )}
 
-          {/* GUIDED STEP 2: Feature Modules */}
+          {/* GUIDED STEP 2: Bride & Groom Profiles [ONBOARD-7] */}
           {guidedStep === 2 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ backgroundColor: 'var(--color-bg-subtle)', padding: '0.75rem 1rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.78rem', color: 'var(--color-text)' }}>
+                👰🤵 <strong>Sweetheart Table Guest Entry:</strong> Partner profiles entered below are automatically added as the first 2 guests in your Guest Registry under <em>&quot;Sweetheart Table&quot;</em>!
+              </div>
+
+              {/* Partner 1 Section */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+                  PARTNER 1 (BRIDE / SPOUSE A)
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <input
+                    type="text"
+                    placeholder="First Name e.g. Sarah"
+                    value={partner1FirstName}
+                    onChange={(e) => setPartner1FirstName(e.target.value)}
+                    style={styles.inputField}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last Name e.g. Connor"
+                    value={partner1LastName}
+                    onChange={(e) => setPartner1LastName(e.target.value)}
+                    style={styles.inputField}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <input
+                    type="email"
+                    placeholder="Email (Optional)"
+                    value={partner1Email}
+                    onChange={(e) => setPartner1Email(e.target.value)}
+                    style={styles.inputField}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone (Optional)"
+                    value={partner1Phone}
+                    onChange={(e) => setPartner1Phone(e.target.value)}
+                    style={styles.inputField}
+                  />
+                </div>
+              </div>
+
+              {/* Partner 2 Section */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+                  PARTNER 2 (GROOM / SPOUSE B)
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <input
+                    type="text"
+                    placeholder="First Name e.g. Mark"
+                    value={partner2FirstName}
+                    onChange={(e) => setPartner2FirstName(e.target.value)}
+                    style={styles.inputField}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last Name e.g. Connor"
+                    value={partner2LastName}
+                    onChange={(e) => setPartner2LastName(e.target.value)}
+                    style={styles.inputField}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <input
+                    type="email"
+                    placeholder="Email (Optional for RSVPs & Admin)"
+                    value={partner2Email}
+                    onChange={(e) => {
+                      setPartner2Email(e.target.value);
+                      if (grantPartner2Admin) setAdmin1Email(e.target.value);
+                    }}
+                    style={styles.inputField}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone (Optional)"
+                    value={partner2Phone}
+                    onChange={(e) => setPartner2Phone(e.target.value)}
+                    style={styles.inputField}
+                  />
+                </div>
+
+                {/* Partner Co-Admin Access Checkbox */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--color-text)', marginTop: '0.25rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={grantPartner2Admin}
+                    onChange={(e) => {
+                      setGrantPartner2Admin(e.target.checked);
+                      if (e.target.checked && partner2Email) setAdmin1Email(partner2Email);
+                    }}
+                  />
+                  <span>Grant Partner 2 Co-Admin Google Drive & App editing access</span>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setGuidedStep(1)} style={styles.backBtn}>
+                  <ArrowLeft size={16} /> Back
+                </button>
+                <button type="button" onClick={() => setGuidedStep(3)} style={styles.nextBtn}>
+                  <span>NEXT: PLANNING MODULES</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* GUIDED STEP 3: Feature Modules */}
+          {guidedStep === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={styles.fieldLabel}>CHOOSE YOUR PLANNING TOOLS</label>
@@ -497,10 +643,10 @@ export default function VowSetupWizard({
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setGuidedStep(1)} style={styles.backBtn}>
+                <button type="button" onClick={() => setGuidedStep(2)} style={styles.backBtn}>
                   <ArrowLeft size={16} /> Back
                 </button>
-                <button type="button" onClick={() => setGuidedStep(3)} style={styles.nextBtn}>
+                <button type="button" onClick={() => setGuidedStep(4)} style={styles.nextBtn}>
                   <span>NEXT: FINANCIALS & PRESETS</span>
                   <ArrowRight size={16} />
                 </button>
@@ -508,8 +654,8 @@ export default function VowSetupWizard({
             </div>
           )}
 
-          {/* GUIDED STEP 3: Financials & Task Presets */}
-          {guidedStep === 3 && (
+          {/* GUIDED STEP 4: Financials & Task Presets */}
+          {guidedStep === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {/* Budget Settings */}
               {modules.budget && (
@@ -636,10 +782,10 @@ export default function VowSetupWizard({
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setGuidedStep(2)} style={styles.backBtn}>
+                <button type="button" onClick={() => setGuidedStep(3)} style={styles.backBtn}>
                   <ArrowLeft size={16} /> Back
                 </button>
-                <button type="button" onClick={() => setGuidedStep(4)} style={styles.nextBtn}>
+                <button type="button" onClick={() => setGuidedStep(5)} style={styles.nextBtn}>
                   <span>NEXT: STYLING & FINISH</span>
                   <ArrowRight size={16} />
                 </button>
@@ -647,8 +793,8 @@ export default function VowSetupWizard({
             </div>
           )}
 
-          {/* GUIDED STEP 4: Styling & Navigation */}
-          {guidedStep === 4 && (
+          {/* GUIDED STEP 5: Styling & Navigation */}
+          {guidedStep === 5 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Navigation Layout */}
               <div>
@@ -743,7 +889,7 @@ export default function VowSetupWizard({
 
               {/* Final Submit & Launch Button */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setGuidedStep(3)} style={styles.backBtn}>
+                <button type="button" onClick={() => setGuidedStep(4)} style={styles.backBtn}>
                   <ArrowLeft size={16} /> Back
                 </button>
                 <button

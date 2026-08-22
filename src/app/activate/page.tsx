@@ -174,6 +174,8 @@ export default function ActivationPage() {
           productName: finalProductName,
           driveFolder: driveFolder,
           budget: productConfig.budget,
+          partner1: productConfig.partner1,
+          partner2: productConfig.partner2,
         }),
       });
 

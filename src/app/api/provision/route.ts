@@ -57,7 +57,7 @@ async function getOrCreateFolder(drive: any, folderName: string, parentId?: stri
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { accessToken, coupleName, productName = 'Sheet2Vow', budget } = body;
+    const { accessToken, coupleName, productName = 'Sheet2Vow', budget, partner1, partner2 } = body;
     const initialBudget = Number(budget) || 35000;
 
     // Use passed token or cookie fallback
@@ -211,11 +211,57 @@ export async function POST(req: NextRequest) {
           }
         });
 
+        // Inject Bride & Groom partner profiles into Guest List [ONBOARD-7]
+        if (partner1 || partner2) {
+          const guestTitle = availableTitles.find(t => t.toLowerCase() === 'guests' || t.toLowerCase() === 'guest list') || 'GUESTS';
+          const partnerRows: any[][] = [];
+          if (partner1?.firstName || partner1?.lastName) {
+            partnerRows.push([
+              'G1',
+              partner1.firstName || 'Partner',
+              partner1.lastName || '1',
+              'Sweetheart Table',
+              'Attending',
+              'Adult',
+              'Sweetheart',
+              '',
+              partner1.email || '',
+              partner1.phone || '',
+              'Table 1'
+            ]);
+          }
+          if (partner2?.firstName || partner2?.lastName) {
+            partnerRows.push([
+              `G${partnerRows.length + 1}`,
+              partner2.firstName || 'Partner',
+              partner2.lastName || '2',
+              'Sweetheart Table',
+              'Attending',
+              'Adult',
+              'Sweetheart',
+              '',
+              partner2.email || '',
+              partner2.phone || '',
+              'Table 1'
+            ]);
+          }
+
+          if (partnerRows.length > 0) {
+            await sheets.spreadsheets.values.update({
+              spreadsheetId: newSpreadsheetId,
+              range: `'${guestTitle}'!A2:K${1 + partnerRows.length}`,
+              valueInputOption: 'USER_ENTERED',
+              requestBody: { values: partnerRows },
+            });
+            console.log(`[Provisioning] Injected ${partnerRows.length} Bride & Groom profile entries into ${guestTitle} tab.`);
+          }
+        }
+
         // Reconnect and preserve interactive in-cell dropdowns linked to 'Settings' tab
         const dropdownRes = await applyDropdownValidations(sheets, newSpreadsheetId);
         console.log(`[Provisioning] Applied ${dropdownRes.appliedCount} dropdown validation rules from Settings tab.`);
       } catch (sheetsErr) {
-        console.warn('Could not inject couple name or apply dropdowns into sheets:', sheetsErr);
+        console.warn('Could not inject couple name, partner profiles, or apply dropdowns into sheets:', sheetsErr);
       }
     }
 
