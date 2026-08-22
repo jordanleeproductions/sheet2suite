@@ -283,8 +283,9 @@ export async function POST(req: Request) {
     // Mock Mode Update
     if (!accessToken || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
       if (sheetType === 'dashboard') {
-        mockDatabase.dashboard.totalBudget = Number(data.budget) || mockDatabase.dashboard.totalBudget;
-        setMockWeddingName(data.weddingName || 'Our Wedding');
+        const newBudgetVal = data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : mockDatabase.dashboard.totalBudget);
+        mockDatabase.dashboard.totalBudget = isNaN(newBudgetVal) ? mockDatabase.dashboard.totalBudget : newBudgetVal;
+        setMockWeddingName(data.weddingName || mockWeddingName || 'Our Wedding');
       } else if (sheetType === 'guests') {
         mockDatabase.guests = data as Guest[];
       } else if (sheetType === 'budget') {
@@ -362,7 +363,7 @@ export async function POST(req: Request) {
           values: [
             ['Name', 'Value'],
             ['Wedding Name', data.weddingName || 'Our Wedding'],
-            ['Wedding Budget', data.budget ?? 35000]
+            ['Wedding Budget', data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : 35000)]
           ],
         }
       ];

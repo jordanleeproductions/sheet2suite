@@ -130,6 +130,7 @@ export interface ExpenseItem {
   itemId: string;
   description: string;
   category: string;
+  amount?: number;
   actualCost: number;
   amountPaid: number;
   purchaseDate: string;

@@ -156,8 +156,8 @@ export default function BudgetLedgerManager({
   const isOverallOverBudget = effectiveTarget > 0 && totalActual > effectiveTarget;
   const overallHeadroom = effectiveTarget - totalActual;
 
-  const meterBarColor = isUnsetMode 
-    ? 'var(--color-primary)' 
+  const meterBarColor = isUnsetMode
+    ? 'var(--color-primary)'
     : (percentUtilized > 100 ? 'var(--color-red)' : percentUtilized > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)');
 
   // Category Health Breakdown
@@ -276,6 +276,7 @@ export default function BudgetLedgerManager({
     setExpenseFormState({
       description: '',
       category: allCategories[0] || 'General',
+      amount: 0,
       actualCost: 0,
       amountPaid: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
@@ -286,7 +287,8 @@ export default function BudgetLedgerManager({
   };
 
   const startEditExpense = (item: ExpenseItem) => {
-    setExpenseFormState(item);
+    const amt = item.amount ?? item.actualCost ?? item.amountPaid ?? 0;
+    setExpenseFormState({ ...item, amount: amt });
     setEditingExpense(item);
     setIsAddingExpense(false);
   };
@@ -300,7 +302,7 @@ export default function BudgetLedgerManager({
   const handleExpenseFormChange = (field: keyof ExpenseItem, value: any) => {
     setExpenseFormState(prev => ({
       ...prev,
-      [field]: field === 'actualCost' || field === 'amountPaid' ? Number(value) || 0 : value
+      [field]: field === 'amount' || field === 'actualCost' || field === 'amountPaid' ? Number(value) || 0 : value
     }));
   };
 
@@ -308,22 +310,52 @@ export default function BudgetLedgerManager({
     if (e) e.preventDefault();
     if (isSyncing || !onUpdateExpenses) return;
 
-    if (!expenseFormState.description || !expenseFormState.category) {
+    const targetCategory = (expenseFormState.category || '').trim();
+    const numAmount = Number(expenseFormState.amount ?? expenseFormState.actualCost ?? expenseFormState.amountPaid) || 0;
+
+    if (!expenseFormState.description || !targetCategory) {
       alert('Please provide Description and Category');
       return;
+    }
+
+    // Auto-create category in budget tracker if it doesn't exist yet
+    const categoryExistsInBudget = budget.some(
+      b => (b.category || '').toLowerCase().trim() === targetCategory.toLowerCase()
+    );
+
+    if (!categoryExistsInBudget) {
+      const newBudgetItem: BudgetItem = {
+        itemId: `item-${Date.now()}`,
+        category: targetCategory,
+        vendorName: `${targetCategory} Overview`,
+        estimatedCost: 0,
+        actualCost: numAmount,
+        amountPaid: numAmount,
+        dueDate: '',
+        paymentStatus: 'Pending',
+      };
+      await onUpdate([newBudgetItem, ...budget]);
     }
 
     let updatedExpenses: ExpenseItem[];
 
     if (editingExpense) {
-      updatedExpenses = expenses.map(i => i.itemId === editingExpense.itemId ? { ...i, ...expenseFormState } as ExpenseItem : i);
+      updatedExpenses = expenses.map(i => i.itemId === editingExpense.itemId ? {
+        ...i,
+        ...expenseFormState,
+        category: targetCategory,
+        amount: numAmount,
+        actualCost: numAmount,
+        amountPaid: numAmount,
+      } as ExpenseItem : i);
     } else {
       const newExpense: ExpenseItem = {
         itemId: `exp-${Date.now()}`,
         description: expenseFormState.description || 'New Expense Item',
-        category: expenseFormState.category || 'General',
-        actualCost: Number(expenseFormState.actualCost) || 0,
-        amountPaid: Number(expenseFormState.amountPaid) || 0,
+        category: targetCategory,
+        amount: numAmount,
+        actualCost: numAmount,
+        amountPaid: numAmount,
         purchaseDate: expenseFormState.purchaseDate || new Date().toISOString().split('T')[0],
         notes: expenseFormState.notes || '',
       };
@@ -335,14 +367,14 @@ export default function BudgetLedgerManager({
     if (continueAdding) {
       setExpenseFormState({
         description: '',
-        category: expenseFormState.category || 'General',
+        category: targetCategory,
+        amount: 0,
         actualCost: 0,
         amountPaid: 0,
         purchaseDate: new Date().toISOString().split('T')[0],
         notes: '',
       });
       setIsAddingExpense(true);
-      setEditingExpense(null);
     } else {
       setEditingExpense(null);
       setIsAddingExpense(false);
@@ -435,7 +467,7 @@ export default function BudgetLedgerManager({
       {/* Main Header */}
       <div className="budget-header-container">
         <div>
-          <h2 style={styles.title}>EXPENSE & BUDGET LEDGER</h2>
+          <h2 style={styles.title}>Wedding Financials</h2>
           <p style={styles.subtitle}>Track estimated caps, log individual purchases & monitor real-time payments</p>
         </div>
         <div className="budget-header-actions">
@@ -455,9 +487,6 @@ export default function BudgetLedgerManager({
               <Grid size={16} />
             </button>
           </div>
-          <button className="budget-add-btn" style={{ ...styles.addButton, color: 'var(--color-on-dark)' }} onClick={startAddBudget} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> + NEW BUDGET
-          </button>
         </div>
       </div>
 
@@ -467,7 +496,7 @@ export default function BudgetLedgerManager({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
               <span style={styles.meterSubtext}>BUDGET UTILIZED</span>
-              
+
               {/* Unset Budget Mode Toggle */}
               <button
                 type="button"
@@ -537,13 +566,13 @@ export default function BudgetLedgerManager({
                           </button>
                         </span>
                       ) : (
-                        <span 
+                        <span
                           onClick={() => setIsEditingTarget(true)}
-                          style={{ 
-                            fontWeight: 700, 
-                            color: 'var(--color-primary)', 
-                            cursor: 'pointer', 
-                            borderBottom: '1px dashed var(--color-primary)' 
+                          style={{
+                            fontWeight: 700,
+                            color: 'var(--color-primary)',
+                            cursor: 'pointer',
+                            borderBottom: '1px dashed var(--color-primary)'
                           }}
                           title="Click to edit target budget limit"
                         >
@@ -854,8 +883,8 @@ export default function BudgetLedgerManager({
             const isOver = displayActual > item.estimatedCost;
 
             return (
-              <div 
-                key={item.itemId} 
+              <div
+                key={item.itemId}
                 className={`budget-item-card ${isOver ? 'is-over-budget' : ''}`}
                 style={{
                   ...styles.card,
@@ -940,7 +969,7 @@ export default function BudgetLedgerManager({
             onClick={startAddExpense}
             disabled={isSyncing}
           >
-            <Plus size={15} style={{ marginRight: '0.25rem' }} /> + NEW EXPENSE
+            <Plus size={15} style={{ marginRight: '0.25rem' }} /> NEW EXPENSE
           </button>
         )}
       </div>
@@ -1006,69 +1035,59 @@ export default function BudgetLedgerManager({
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>ITEM ID</th>
                 <th style={styles.th}>DESCRIPTION</th>
                 <th style={styles.th}>CATEGORY</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>ACTUAL COST</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT PAID</th>
+                <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
                 <th style={styles.th}>PURCHASE DATE</th>
                 <th style={styles.th}>NOTES</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
-              {filteredExpenses.map((exp) => (
-                <tr key={exp.itemId} style={styles.tr}>
-                  <td style={styles.td}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.725rem', color: 'var(--color-muted)' }}>
-                      {exp.itemId}
-                    </span>
-                  </td>
-                  <td style={styles.td}>
-                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
-                  </td>
-                  <td style={styles.td}>
-                    <span style={styles.categoryCell}>{exp.category}</span>
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'right' }}>
-                    <span style={{ ...styles.monoText, fontWeight: 700 }}>${exp.actualCost.toLocaleString()}</span>
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'right' }}>
-                    <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>${exp.amountPaid.toLocaleString()}</span>
-                  </td>
-                  <td style={styles.td}>
-                    <span style={styles.monoText}>{exp.purchaseDate || '-'}</span>
-                  </td>
-                  <td style={styles.td}>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <div style={styles.actionsCell}>
-                      <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
-                        <Edit2 size={12} />
-                      </button>
-                      {onUpdateExpenses && (
-                        <button
-                          style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
-                          onClick={() => setExpenseToDelete(exp)}
-                          disabled={isSyncing}
-                        >
-                          <Trash2 size={12} />
+              {filteredExpenses.map((exp) => {
+                const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
+                return (
+                  <tr key={exp.itemId} style={styles.tr}>
+                    <td style={styles.td}>
+                      <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={styles.categoryCell}>{exp.category}</span>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>
+                      <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>${amt.toLocaleString()}</span>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={styles.monoText}>{exp.purchaseDate || '-'}</span>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                      <div style={styles.actionsCell}>
+                        <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
+                          <Edit2 size={12} />
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {onUpdateExpenses && (
+                          <button
+                            style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
+                            onClick={() => setExpenseToDelete(exp)}
+                            disabled={isSyncing}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
 
               {/* Expense Table Footer Totals */}
               <tr style={styles.footerTr}>
-                <td colSpan={3} style={{ ...styles.td, fontWeight: 700 }}>TOTAL LOGGED EXPENSES</td>
-                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>${filteredExpenses.reduce((s, e) => s + e.actualCost, 0).toLocaleString()}</span>
-                </td>
+                <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>TOTAL LOGGED EXPENSES</td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                  <span style={styles.monoText}>${filteredExpenses.reduce((s, e) => s + e.amountPaid, 0).toLocaleString()}</span>
+                  <span style={styles.monoText}>${filteredExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0).toLocaleString()}</span>
                 </td>
                 <td colSpan={3} style={styles.td}></td>
               </tr>
@@ -1076,57 +1095,49 @@ export default function BudgetLedgerManager({
           </table>
         </div>
       ) : (
-        /* Expenses Card View Layout */
+        /* Condensed Expenses Card View Layout */
         <div style={styles.cardGrid}>
-          {filteredExpenses.map((exp) => (
-            <div
-              key={exp.itemId}
-              style={styles.card}
-            >
-              <div style={styles.cardHeader}>
-                <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.1rem', textTransform: 'none' }}>
-                  {exp.category}
-                </span>
-                <div style={styles.cardActions}>
-                  <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
-                    <Edit2 size={12} />
-                  </button>
-                  {onUpdateExpenses && (
-                    <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setExpenseToDelete(exp)} disabled={isSyncing}>
-                      <Trash2 size={12} />
+          {filteredExpenses.map((exp) => {
+            const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
+            return (
+              <div
+                key={exp.itemId}
+                style={{ ...styles.card, padding: '0.85rem 1rem', gap: '0.4rem' }}
+              >
+                <div style={styles.cardHeader}>
+                  <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.05rem', textTransform: 'none' }}>
+                    {exp.category}
+                  </span>
+                  <div style={styles.cardActions}>
+                    <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
+                      <Edit2 size={12} />
                     </button>
-                  )}
+                    {onUpdateExpenses && (
+                      <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setExpenseToDelete(exp)} disabled={isSyncing}>
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)', margin: '0.2rem 0' }}>
-                {exp.description}
-              </h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.1rem' }}>
+                  <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
+                    {exp.description}
+                  </h4>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0 }}>
+                    ${amt.toLocaleString()}
+                  </span>
+                </div>
 
-              <div style={styles.cardBody}>
-                <div style={styles.cardRow}>
-                  <span style={styles.cardLabel}>ACTUAL COST</span>
-                  <span style={{ ...styles.cardValue, fontWeight: 700 }}>${exp.actualCost.toLocaleString()}</span>
-                </div>
-                <div style={styles.cardRow}>
-                  <span style={styles.cardLabel}>AMOUNT PAID</span>
-                  <span style={{ ...styles.cardValue, color: 'var(--color-primary)', fontWeight: 700 }}>${exp.amountPaid.toLocaleString()}</span>
-                </div>
-                {exp.notes && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                    📝 {exp.notes}
+                {(exp.purchaseDate || exp.notes) && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', paddingTop: '0.35rem', borderTop: '1px dotted var(--color-border)' }}>
+                    <span>{exp.purchaseDate || 'No Date'}</span>
+                    {exp.notes && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>📝 {exp.notes}</span>}
                   </div>
                 )}
               </div>
-
-              <div style={styles.cardFooter}>
-                <span style={styles.monoText}>{exp.purchaseDate || 'No Date'}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', color: 'var(--color-muted)' }}>
-                  ID: {exp.itemId}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -1295,45 +1306,54 @@ export default function BudgetLedgerManager({
 
                 <div style={styles.formGroup}>
                   <label style={styles.label}>CATEGORY</label>
-                  <input
-                    type="text"
-                    list="expense-categories-list"
-                    value={expenseFormState.category || ''}
-                    onChange={(e) => handleExpenseFormChange('category', e.target.value)}
-                    style={styles.input}
-                    placeholder="e.g. Venue, Catering, Florals, Attire"
-                    required
-                  />
-                  <datalist id="expense-categories-list">
-                    {allCategories.map(cat => <option key={cat} value={cat} />)}
-                  </datalist>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <select
+                      value={
+                        budgetCategories.includes(expenseFormState.category || '')
+                          ? expenseFormState.category
+                          : (expenseFormState.category ? '__custom__' : (budgetCategories[0] || 'General'))
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__custom__') {
+                          handleExpenseFormChange('category', '');
+                        } else {
+                          handleExpenseFormChange('category', val);
+                        }
+                      }}
+                      style={styles.select}
+                    >
+                      {budgetCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="__custom__">+ Add New / Custom Category...</option>
+                    </select>
+
+                    {(!budgetCategories.includes(expenseFormState.category || '') || expenseFormState.category === '') && (
+                      <input
+                        type="text"
+                        value={expenseFormState.category || ''}
+                        onChange={(e) => handleExpenseFormChange('category', e.target.value)}
+                        style={styles.input}
+                        placeholder="Type new category name (will auto-add to Budget Tracker)..."
+                        required
+                        autoFocus
+                      />
+                    )}
+                  </div>
                 </div>
 
-                <div style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>ACTUAL COST ($)</label>
-                    <input
-                      type="number"
-                      value={expenseFormState.actualCost ?? 0}
-                      onChange={(e) => handleExpenseFormChange('actualCost', e.target.value)}
-                      style={styles.input}
-                      min="0"
-                      step="any"
-                      required
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>AMOUNT PAID ($)</label>
-                    <input
-                      type="number"
-                      value={expenseFormState.amountPaid ?? 0}
-                      onChange={(e) => handleExpenseFormChange('amountPaid', e.target.value)}
-                      style={styles.input}
-                      min="0"
-                      step="any"
-                    />
-                  </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>AMOUNT ($)</label>
+                  <input
+                    type="number"
+                    value={expenseFormState.amount ?? expenseFormState.actualCost ?? expenseFormState.amountPaid ?? 0}
+                    onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
+                    style={styles.input}
+                    min="0"
+                    step="any"
+                    required
+                  />
                 </div>
 
                 <div style={styles.formGroup}>
@@ -1452,11 +1472,9 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '1.25rem',
   },
   title: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '1.1rem',
-    fontWeight: 800,
-    letterSpacing: '0.08em',
-    color: 'var(--color-text)',
+    fontFamily: 'var(--font-serif)',
+    fontSize: '1.5rem',
+    color: 'var(--color-primary)',
     margin: 0,
   },
   subtitle: {

@@ -101,11 +101,10 @@ This document defines the authoritative tab structure and column header contract
 
 | Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Item ID` | `itemId` | Text (Primary Key) | e.g. `EXP1`, `EXP2` |
+| `Item ID` | `itemId` | Text (Primary Key, Hidden in UI) | e.g. `EXP1`, `EXP2` |
 | `Description` | `description` | Text | Purchase / item description |
 | `Category` | `category` | Dropdown | Expense category (linked to `=SETTINGS!$K$2:$K$50`) |
-| `Actual Cost` | `actualCost` | Currency ($) | Actual cost of purchase |
-| `Amount Paid` | `amountPaid` | Currency ($) | Amount paid to date |
+| `Amount` | `amount` | Currency ($) | Purchase amount |
 | `Purchase Date` | `purchaseDate` | Date | Date of purchase |
 | `Notes` | `notes` | Text | Payment method or receipt details |
 

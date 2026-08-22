@@ -41,6 +41,7 @@ export const EXPENSE_HEADERS: Record<string, keyof ExpenseItem> = {
   'Item Name': 'description',
   'Item Description': 'description',
   'Category': 'category',
+  'Amount': 'amount',
   'Actual Cost': 'actualCost',
   'Amount Paid': 'amountPaid',
   'Purchase Date': 'purchaseDate',
@@ -180,18 +181,27 @@ export const budgetMapper = {
 export const expenseMapper = {
   fromRow(headers: string[], row: any[]): ExpenseItem {
     const obj = mapRowToObject<ExpenseItem>(headers, row, EXPENSE_HEADERS);
+    const parsedAmount = Number(obj.amount) || Number(obj.actualCost) || Number(obj.amountPaid) || 0;
     return {
       itemId: String(obj.itemId || ''),
       description: String(obj.description || ''),
       category: String(obj.category || ''),
-      actualCost: Number(obj.actualCost) || 0,
-      amountPaid: Number(obj.amountPaid) || 0,
+      amount: parsedAmount,
+      actualCost: parsedAmount,
+      amountPaid: parsedAmount,
       purchaseDate: String(obj.purchaseDate || ''),
       notes: String(obj.notes || ''),
     };
   },
   toRow(headers: string[], item: ExpenseItem): any[] {
-    return mapObjectToRow(headers, item, EXPENSE_HEADERS);
+    const amt = item.amount ?? item.actualCost ?? item.amountPaid ?? 0;
+    const normalizedItem: ExpenseItem = {
+      ...item,
+      amount: amt,
+      actualCost: amt,
+      amountPaid: amt,
+    };
+    return mapObjectToRow(headers, normalizedItem, EXPENSE_HEADERS);
   }
 };
 
