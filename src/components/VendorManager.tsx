@@ -81,6 +81,16 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
   };
 
   const filteredVendors = vendors.filter(v => {
+    const hasContent = Boolean(
+      (v.vendorName && v.vendorName.trim() !== '') ||
+      (v.contactName && v.contactName.trim() !== '') ||
+      (v.category && v.category.trim() !== '') ||
+      (v.emailAddress && v.emailAddress.trim() !== '') ||
+      (v.phoneNumber && v.phoneNumber.trim() !== '') ||
+      (v.totalContractValue && v.totalContractValue > 0)
+    );
+    if (!hasContent) return false;
+
     const matchesSearch = 
       (v.vendorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (v.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||

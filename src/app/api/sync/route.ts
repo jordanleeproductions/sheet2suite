@@ -179,45 +179,48 @@ export async function GET(req: Request) {
       }
     }
 
+    // Helper to check if a sheet row contains real content
+    const isNonEmptyRow = (row: any[]) => row && Array.isArray(row) && row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== '');
+
     // Parse Guest List
     const guestRows = valueRanges[1]?.values || [];
     const guestHeaders = guestRows[0] || HEADERS_MAP.guests;
-    const guests = guestRows.slice(1).map(row => guestMapper.fromRow(guestHeaders, row));
+    const guests = guestRows.slice(1).filter(isNonEmptyRow).map(row => guestMapper.fromRow(guestHeaders, row));
 
     // Parse Budget Ledger
     const budgetRows = valueRanges[2]?.values || [];
     const budgetHeaders = budgetRows[0] || HEADERS_MAP.budget;
-    const budget = budgetRows.slice(1).map(row => budgetMapper.fromRow(budgetHeaders, row));
+    const budget = budgetRows.slice(1).filter(isNonEmptyRow).map(row => budgetMapper.fromRow(budgetHeaders, row));
 
     // Parse Expenses
     const expenseRows = valueRanges[3]?.values || [];
     const expenseHeaders = expenseRows[0] || HEADERS_MAP.expenses;
-    const expenses = expenseRows.slice(1).map(row => expenseMapper.fromRow(expenseHeaders, row));
+    const expenses = expenseRows.slice(1).filter(isNonEmptyRow).map(row => expenseMapper.fromRow(expenseHeaders, row));
 
     // Parse Day-Of-Schedule
     const scheduleRows = valueRanges[4]?.values || [];
     const scheduleHeaders = scheduleRows[0] || HEADERS_MAP.schedule;
-    const schedule = scheduleRows.slice(1).map(row => scheduleMapper.fromRow(scheduleHeaders, row));
+    const schedule = scheduleRows.slice(1).filter(isNonEmptyRow).map(row => scheduleMapper.fromRow(scheduleHeaders, row));
 
     // Parse Vendors
     const vendorRows = valueRanges[5]?.values || [];
     const vendorHeaders = vendorRows[0] || HEADERS_MAP.vendors;
-    const vendors = vendorRows.slice(1).map(row => vendorMapper.fromRow(vendorHeaders, row));
+    const vendors = vendorRows.slice(1).filter(isNonEmptyRow).map(row => vendorMapper.fromRow(vendorHeaders, row));
 
     // Parse To-Do List
     const taskRows = valueRanges[6]?.values || [];
     const taskHeaders = taskRows[0] || HEADERS_MAP.tasks;
-    const tasks = taskRows.slice(1).map(row => taskMapper.fromRow(taskHeaders, row));
+    const tasks = taskRows.slice(1).filter(isNonEmptyRow).map(row => taskMapper.fromRow(taskHeaders, row));
 
     // Parse Photos
     const photoRows = valueRanges[7]?.values || [];
     const photoHeaders = photoRows[0] || HEADERS_MAP.photos;
-    const photos = photoRows.slice(1).map(row => photoMapper.fromRow(photoHeaders, row));
+    const photos = photoRows.slice(1).filter(isNonEmptyRow).map(row => photoMapper.fromRow(photoHeaders, row));
 
     // Parse Gifts
     const giftRows = valueRanges[8]?.values || [];
     const giftHeaders = giftRows[0] || HEADERS_MAP.gifts;
-    const gifts = giftRows.slice(1).map(row => giftMapper.fromRow(giftHeaders, row));
+    const gifts = giftRows.slice(1).filter(isNonEmptyRow).map(row => giftMapper.fromRow(giftHeaders, row));
 
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
