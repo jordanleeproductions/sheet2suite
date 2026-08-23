@@ -699,7 +699,7 @@ export default function BudgetLedgerManager({
           onClick={startAddBudget}
           disabled={isSyncing}
         >
-          <Plus size={15} style={{ marginRight: '0.25rem' }} /> + NEW BUDGET
+          <Plus size={15} style={{ marginRight: '0.25rem' }} /> NEW BUDGET
         </button>
       </div>
 
