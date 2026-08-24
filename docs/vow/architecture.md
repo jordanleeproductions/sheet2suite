@@ -1,35 +1,67 @@
 # Sheet2Vow Application Architecture
 
-## Overview
-Sheet2Vow is a Next.js-based web application designed to help manage wedding planning. It is built as a single-page-like experience within the Next.js App Router paradigm, serving modular dashboard components depending on the user's role (Admin vs. Guest).
+## 1. Overview
+Sheet2Vow is a Next.js (App Router) & TypeScript web application designed for comprehensive wedding planning. It serves as a modern interactive UI canvas connected directly to a private Master Google Spreadsheet in the user's personal Google Drive via the Google Sheets API v4.
 
-## Core Technologies
+---
+
+## 2. Core Technologies
 - **Framework:** Next.js (App Router)
-- **UI Library:** React.js
-- **Styling:** Vanilla CSS (CSS Modules / Global CSS) with CSS Variables for theming
-- **Deployment:** Vercel (or similar Node.js hosting)
+- **Language:** TypeScript
+- **UI & State:** React 19, Client-side state hooks (`useState`, `useEffect`), Local-first persistence (`localStorage`)
+- **Backend & APIs:** Next.js Server Route Handlers (`src/app/api/`)
+- **Cloud Integrations:** Google Sheets API v4, Google Drive API v3, iTunes Search API
+- **Styling:** Vanilla CSS Custom Property Tokens (`theme.css`, `globals.css`) supporting 4 design styles with light & dark modes.
 
-## Frontend Architecture
-- **Dynamic Imports:** The main page (`src/app/page.js`) uses `next/dynamic` to load modules (e.g., `DashboardModule`, `GuestListModule`) asynchronously. This bypasses Server-Side Rendering (SSR) hydration issues, which is critical since the app heavily relies on client-side state (`localStorage`, `window`).
-- **Module Pattern:** Each major feature (Budget, Tasks, Music, Guests) is encapsulated in its own React component module under `src/app/components/`.
-- **Content Configuration:** Static strings, headers, and localized text are centralized in `src/config/content.js` to allow easy updates without touching component logic.
-- **State Management:** Local component state via React Hooks (`useState`, `useEffect`). No global state managers (like Redux) are used, keeping the architecture lightweight.
+---
 
-## Backend & Data Architecture
-- **API Routes:** Next.js API routes (`src/app/api/`) serve as a lightweight backend.
-- **Data Persistence:** Currently interacts with local storage/JSON/CSV logic. (e.g., `/api/guests`, `/api/music`).
-- **Authentication:** A lightweight, client-side authentication system. Users are differentiated by an `admin` or `guest` flag stored in `localStorage`, unlocked via a hardcoded passcode (`Emery2026`).
+## 3. Data & Sync Architecture
 
-## Component Hierarchy
-- `RootLayout` (`src/app/layout.js`): Injects global fonts and metadata.
-- `Home` (`src/app/page.js`): Manages navigation state (current tab) and renders the appropriate module.
-  - `Navigation`: Top header for desktop, bottom bar for mobile.
-  - `Modules` (`src/app/components/`):
-    - `DashboardModule`
-    - `GuestListModule`
-    - `MusicModule`
-    - `BudgetModule`
-    - `TasksModule`
-    - `ScheduleModule`
-    - `ItineraryModule`
-    - `VendorsModule`
+### 3.1 Bi-Directional Google Sheets Sync Engine
+All application state maps 1:1 to a 15-tab Master Wedding Spreadsheet in Google Drive:
+- **`GET /api/sync?spreadsheetId=...`**: Fetches and parses all 10 active data tabs into typed domain models (`Guest[]`, `BudgetItem[]`, `Vendor[]`, `Task[]`, `Song[]`, etc.).
+- **`POST /api/sync`**: Serializes modified domain objects back into spreadsheet row arrays with formula protection via `CellGuard`.
+- **Relational Integrity (`relationalSync.ts`)**: Automatically syncs cascading changes across tabs (e.g. updating table names in `TABLES` updates assigned guests in `GUESTS`).
+
+### 3.2 CellGuard Formula Preservation
+To prevent overwriting spreadsheet formulas (such as `=SUM(...)`, `=COUNTA(...)`), `CellGuard` preserves formula strings during writebacks, ensuring spreadsheet calculations remain intact.
+
+---
+
+## 4. Frontend Component Hierarchy
+
+```text
+src/app/vow/page.tsx (Sheet2Vow Dashboard Controller)
+├── Navigation Shell
+│   ├── Desktop Sidebar (64px collapsed / 220px expanded)
+│   ├── Top Header Bar (Wedding Title, Countdown, Quick Settings)
+│   └── Mobile Ergonomic Bottom Tab Bar & Swipe-Up Categorized Drawer
+│
+├── Feature Manager Modules (src/components/)
+│   ├── DashboardMetrics.tsx        <-- Overview KPI cards, meters & vendor share status
+│   ├── GuestListManager.tsx        <-- Guest registry, RSVP quick toggles, catering filters
+│   ├── SeatingChartManager.tsx     <-- Drag-and-drop floorplan & ceremony aisle planner
+│   ├── BudgetLedgerManager.tsx     <-- Target caps, category ledger & payment status
+│   ├── TimelineManager.tsx         <-- Day-of itinerary timeline & responsibilities
+│   ├── VendorManager.tsx           <-- Vendor directory, contract Drive uploads & payments
+│   ├── KanbanBoard.tsx             <-- Stage-based task board (To Do, In Progress, Done)
+│   ├── MusicManager.tsx            <-- Playlists, iTunes previews, DJ export & live request queue
+│   ├── PhotoShotListManager.tsx    <-- Photo shot list, VIP people & priority tagging
+│   └── GiftRegistryManager.tsx     <-- Gift tracking, amounts & thank-you status
+│
+└── Modals & Subsystems
+    ├── AdvancedSettingsModal.tsx   <-- Event settings, Drive inspector, co-planning roster
+    ├── PrintTemplatesModal.tsx     <-- Place cards, table cards, timeline & Canva CSV exporter
+    └── VowSetupWizard.tsx          <-- 5-step guided onboarding wizard
+```
+
+---
+
+## 5. Security & Access Control Architecture
+- **Tokenized Public Portals:**
+  - `/request-song/[token]` — Guest song request portal with live iTunes preview search.
+  - `/upload/[token]` — Guest photo & video upload portal to Google Drive.
+  - `/share/[token]` — Read-only vendor coordination portal (DJ playlist, photographer shot list).
+- **Spouse & Partner Co-Planning (`/api/share/partner`, `[SHARE-4]`):**
+  - Delegates Google Drive `writer` or `reader` permissions with zero-cost native Google Drive email notifications.
+  - Strictly caps co-planners at a maximum of 2 additional accounts per workspace.
