@@ -1,12 +1,13 @@
 /**
- * Firestore-Compatible Local Document Database Engine for Sheet2Suite
- * Mirrors Firebase Firestore collections (/licenses, /workspaces, /users)
- * Stores document snapshots locally under data/firestore/{collection}/{docId}.json
- * Provides a 1-to-1 migration path to Firebase Firestore SDK when ready for production cloud deployment.
+ * Firestore-Compatible Document Database Engine for Sheet2Suite
+ * Supports:
+ * 1. Cloud Firestore via `firebase-admin` (active in production / when Firebase credentials exist).
+ * 2. Local File System fallback under `data/firestore/{collection}/{docId}.json` (active in offline local development).
  */
 
 import fs from 'fs';
 import path from 'path';
+import * as admin from 'firebase-admin';
 
 export interface LicenseDocument {
   id: string; // Document ID (licenseKey / orderId)
@@ -57,6 +58,63 @@ function ensureCollectionDir(collectionName: string): string {
   return dirPath;
 }
 
+// Initialize Firebase Admin SDK if in cloud environment or service account exists
+let firestoreInstance: FirebaseFirestore.Firestore | null = null;
+
+function getCloudFirestore(): FirebaseFirestore.Firestore | null {
+  if (firestoreInstance) return firestoreInstance;
+
+  try {
+    if (admin.apps.length > 0) {
+      firestoreInstance = admin.firestore();
+      return firestoreInstance;
+    }
+
+    // Check for standard Firebase/GCP credentials
+    if (
+      process.env.FIREBASE_CONFIG ||
+      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.K_SERVICE || // Google Cloud Run / Firebase App Hosting environment
+      process.env.FIREBASE_SERVICE_ACCOUNT
+    ) {
+      let appOptions: admin.AppOptions = {};
+
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        try {
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          appOptions.credential = admin.credential.cert(serviceAccount);
+        } catch (parseErr) {
+          console.warn('[Firestore] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', parseErr);
+        }
+      } else if (
+        process.env.GOOGLE_CLIENT_EMAIL &&
+        (process.env.GOOGLE_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY_BASE64)
+      ) {
+        let privateKey = process.env.GOOGLE_PRIVATE_KEY || '';
+        if (process.env.GOOGLE_PRIVATE_KEY_BASE64) {
+          privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('ascii');
+        }
+        privateKey = privateKey.replace(/\\n/g, '\n');
+
+        appOptions.credential = admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || 'sheet2suite-prod',
+          clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
+          privateKey,
+        });
+      }
+
+      const app = admin.initializeApp(appOptions);
+      firestoreInstance = app.firestore();
+      return firestoreInstance;
+    }
+  } catch (err: any) {
+    console.warn('[Firestore] Cloud Firestore initialization bypassed, falling back to local storage:', err?.message);
+  }
+
+  return null;
+}
+
 // Seed default entitlement licenses into Firestore licenses collection if empty
 function seedDefaultLicenses() {
   const collectionDir = ensureCollectionDir('licenses');
@@ -94,6 +152,18 @@ export const LocalFirestore = {
    * Reads a document by Collection Name & Document ID (Firestore doc().get())
    */
   getDoc<T = any>(collectionName: string, docId: string): T | null {
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        // In async context, use getDocAsync; this provides synchronous fallback lookup
+        const dirPath = ensureCollectionDir(collectionName);
+        const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
+        if (fs.existsSync(filePath)) {
+          return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
+        }
+      } catch (e) {}
+    }
+
     try {
       const dirPath = ensureCollectionDir(collectionName);
       const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
@@ -108,14 +178,72 @@ export const LocalFirestore = {
   },
 
   /**
+   * Async document reader for Cloud Firestore
+   */
+  async getDocAsync<T = any>(collectionName: string, docId: string): Promise<T | null> {
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        const docRef = await cloudDb.collection(collectionName).doc(docId.toLowerCase().trim()).get();
+        if (docRef.exists) {
+          return docRef.data() as T;
+        }
+      } catch (err) {
+        console.warn(`[Cloud Firestore] Error reading ${collectionName}/${docId}:`, err);
+      }
+    }
+    return this.getDoc<T>(collectionName, docId);
+  },
+
+  /**
    * Writes a document by Collection Name & Document ID (Firestore setDoc())
    */
   setDoc<T = any>(collectionName: string, docId: string, data: T): T {
-    const dirPath = ensureCollectionDir(collectionName);
-    const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
     const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...data };
-    fs.writeFileSync(filePath, JSON.stringify(docWithId, null, 2), 'utf-8');
+
+    // 1. Sync to local file storage
+    try {
+      const dirPath = ensureCollectionDir(collectionName);
+      const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(docWithId, null, 2), 'utf-8');
+    } catch (fsErr) {
+      console.warn(`[Firestore] Local file write warning:`, fsErr);
+    }
+
+    // 2. Sync to Cloud Firestore if active
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      cloudDb
+        .collection(collectionName)
+        .doc(docId.toLowerCase().trim())
+        .set(docWithId, { merge: true })
+        .catch((err) => {
+          console.warn(`[Cloud Firestore] Error writing ${collectionName}/${docId}:`, err);
+        });
+    }
+
     return docWithId as unknown as T;
+  },
+
+  /**
+   * Async document writer for Cloud Firestore
+   */
+  async setDocAsync<T = any>(collectionName: string, docId: string, data: T): Promise<T> {
+    const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...data };
+
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        await cloudDb
+          .collection(collectionName)
+          .doc(docId.toLowerCase().trim())
+          .set(docWithId, { merge: true });
+      } catch (err) {
+        console.warn(`[Cloud Firestore] Error setting ${collectionName}/${docId}:`, err);
+      }
+    }
+
+    return this.setDoc<T>(collectionName, docId, data);
   },
 
   /**
@@ -161,6 +289,18 @@ export const LocalFirestore = {
       console.error(`LocalFirestore error during scan delete in ${collectionName}:`, err);
     }
 
+    // Sync deletion to Cloud Firestore if active
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      cloudDb
+        .collection(collectionName)
+        .doc(targetNorm)
+        .delete()
+        .catch((err) => {
+          console.warn(`[Cloud Firestore] Error deleting ${collectionName}/${docId}:`, err);
+        });
+    }
+
     return hasDeleted;
   },
 
@@ -184,6 +324,24 @@ export const LocalFirestore = {
       console.error(`LocalFirestore Error listing collection ${collectionName}:`, e);
       return [];
     }
+  },
+
+  /**
+   * Async document collection retrieval for Cloud Firestore
+   */
+  async getDocsAsync<T = any>(collectionName: string): Promise<T[]> {
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        const snapshot = await cloudDb.collection(collectionName).get();
+        if (!snapshot.empty) {
+          return snapshot.docs.map((doc) => doc.data() as T);
+        }
+      } catch (err) {
+        console.warn(`[Cloud Firestore] Error fetching collection ${collectionName}:`, err);
+      }
+    }
+    return this.getDocs<T>(collectionName);
   },
 
   /**

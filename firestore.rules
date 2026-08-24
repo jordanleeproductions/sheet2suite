@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // By default, secure all document collections.
+    // Server-side Firebase Admin SDK bypasses these rules with full read/write capability.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

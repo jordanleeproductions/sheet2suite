@@ -1,0 +1,41 @@
+# Firebase App Hosting Configuration File
+# Documentation: https://firebase.google.com/docs/app-hosting/configure
+
+kind: AppHostingYaml
+schemaVersion: v1alpha
+
+# Runtime Environment
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+# Environment Variables & Secrets
+env:
+  - variable: NEXT_PUBLIC_APP_URL
+    value: "https://sheet2vow.web.app"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: GOOGLE_CLIENT_ID
+    secret: GOOGLE_CLIENT_ID
+    availability:
+      - RUNTIME
+
+  - variable: GOOGLE_CLIENT_SECRET
+    secret: GOOGLE_CLIENT_SECRET
+    availability:
+      - RUNTIME
+
+  - variable: GOOGLE_REDIRECT_URI
+    value: "https://sheet2vow.web.app/api/auth/google/callback"
+    availability:
+      - RUNTIME
+
+  - variable: GOOGLE_MASTER_SHEET_ID
+    value: "1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI"
+    availability:
+      - RUNTIME
