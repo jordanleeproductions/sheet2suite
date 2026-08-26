@@ -23,15 +23,30 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Extract primary subdomain from hostname (e.g., 'vow' from 'vow.sheet2suite.com' or 'vow.localhost:3000')
-  const hostParts = hostname.split(':')[0].split('.');
+  // Extract primary subdomain from hostname (e.g., 'vow' from 'vow.sheet2suite.com')
+  const hostWithoutPort = hostname.split(':')[0].toLowerCase();
   
-  // Check for multi-level domain (e.g., 'vow.sheet2suite.com' or 'vow.localhost')
-  if (hostParts.length >= 2) {
+  // If running on standard cloud root domains (e.g., yourproject.web.app, yourproject.firebaseapp.com)
+  if (
+    hostWithoutPort.endsWith('.web.app') ||
+    hostWithoutPort.endsWith('.firebaseapp.com') ||
+    hostWithoutPort.endsWith('.vercel.app') ||
+    hostWithoutPort === 'localhost' ||
+    hostWithoutPort === '127.0.0.1' ||
+    hostWithoutPort === 'sheet2suite.com' ||
+    hostWithoutPort === 'www.sheet2suite.com'
+  ) {
+    return NextResponse.next();
+  }
+
+  const hostParts = hostWithoutPort.split('.');
+  
+  // Check for custom multi-level product subdomain (e.g., 'vow.sheet2suite.com' or 'finance.sheet2suite.com')
+  if (hostParts.length >= 3) {
     const subdomain = hostParts[0].toLowerCase();
 
     // Ignore 'www' or root hostnames
-    if (subdomain !== 'www' && subdomain !== 'localhost' && subdomain !== 'sheet2suite') {
+    if (subdomain !== 'www' && subdomain !== 'sheet2suite') {
       // If the current path doesn't already start with the subdomain segment, rewrite to it
       if (!url.pathname.startsWith(`/${subdomain}`)) {
         return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, req.url));
