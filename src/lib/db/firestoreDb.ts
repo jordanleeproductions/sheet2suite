@@ -7,7 +7,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import * as admin from 'firebase-admin';
+import { getApps, initializeApp, cert, AppOptions } from 'firebase-admin/app';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
 export interface LicenseDocument {
   id: string; // Document ID (licenseKey / orderId)
@@ -59,14 +60,15 @@ function ensureCollectionDir(collectionName: string): string {
 }
 
 // Initialize Firebase Admin SDK if in cloud environment or service account exists
-let firestoreInstance: FirebaseFirestore.Firestore | null = null;
+let firestoreInstance: Firestore | null = null;
 
-function getCloudFirestore(): FirebaseFirestore.Firestore | null {
+function getCloudFirestore(): Firestore | null {
   if (firestoreInstance) return firestoreInstance;
 
   try {
-    if (admin.apps.length > 0) {
-      firestoreInstance = admin.firestore();
+    const activeApps = getApps();
+    if (activeApps.length > 0) {
+      firestoreInstance = getFirestore(activeApps[0]);
       return firestoreInstance;
     }
 
@@ -78,12 +80,12 @@ function getCloudFirestore(): FirebaseFirestore.Firestore | null {
       process.env.K_SERVICE || // Google Cloud Run / Firebase App Hosting environment
       process.env.FIREBASE_SERVICE_ACCOUNT
     ) {
-      let appOptions: admin.AppOptions = {};
+      let appOptions: AppOptions = {};
 
       if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         try {
           const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-          appOptions.credential = admin.credential.cert(serviceAccount);
+          appOptions.credential = cert(serviceAccount);
         } catch (parseErr) {
           console.warn('[Firestore] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', parseErr);
         }
@@ -97,15 +99,15 @@ function getCloudFirestore(): FirebaseFirestore.Firestore | null {
         }
         privateKey = privateKey.replace(/\\n/g, '\n');
 
-        appOptions.credential = admin.credential.cert({
+        appOptions.credential = cert({
           projectId: process.env.FIREBASE_PROJECT_ID || 'sheet2suite-prod',
           clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
           privateKey,
         });
       }
 
-      const app = admin.initializeApp(appOptions);
-      firestoreInstance = app.firestore();
+      const app = initializeApp(appOptions);
+      firestoreInstance = getFirestore(app);
       return firestoreInstance;
     }
   } catch (err: any) {
@@ -155,7 +157,6 @@ export const LocalFirestore = {
     const cloudDb = getCloudFirestore();
     if (cloudDb) {
       try {
-        // In async context, use getDocAsync; this provides synchronous fallback lookup
         const dirPath = ensureCollectionDir(collectionName);
         const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
         if (fs.existsSync(filePath)) {
@@ -188,8 +189,8 @@ export const LocalFirestore = {
         if (docRef.exists) {
           return docRef.data() as T;
         }
-      } catch (err) {
-        console.warn(`[Cloud Firestore] Error reading ${collectionName}/${docId}:`, err);
+      } catch (err: any) {
+        console.warn(`[Cloud Firestore] Error reading ${collectionName}/${docId}:`, err?.message);
       }
     }
     return this.getDoc<T>(collectionName, docId);
@@ -217,8 +218,8 @@ export const LocalFirestore = {
         .collection(collectionName)
         .doc(docId.toLowerCase().trim())
         .set(docWithId, { merge: true })
-        .catch((err) => {
-          console.warn(`[Cloud Firestore] Error writing ${collectionName}/${docId}:`, err);
+        .catch((err: any) => {
+          console.warn(`[Cloud Firestore] Error writing ${collectionName}/${docId}:`, err?.message);
         });
     }
 
@@ -238,8 +239,8 @@ export const LocalFirestore = {
           .collection(collectionName)
           .doc(docId.toLowerCase().trim())
           .set(docWithId, { merge: true });
-      } catch (err) {
-        console.warn(`[Cloud Firestore] Error setting ${collectionName}/${docId}:`, err);
+      } catch (err: any) {
+        console.warn(`[Cloud Firestore] Error setting ${collectionName}/${docId}:`, err?.message);
       }
     }
 
@@ -285,8 +286,8 @@ export const LocalFirestore = {
           }
         }
       }
-    } catch (err) {
-      console.error(`LocalFirestore error during scan delete in ${collectionName}:`, err);
+    } catch (err: any) {
+      console.error(`LocalFirestore error during scan delete in ${collectionName}:`, err?.message);
     }
 
     // Sync deletion to Cloud Firestore if active
@@ -296,8 +297,8 @@ export const LocalFirestore = {
         .collection(collectionName)
         .doc(targetNorm)
         .delete()
-        .catch((err) => {
-          console.warn(`[Cloud Firestore] Error deleting ${collectionName}/${docId}:`, err);
+        .catch((err: any) => {
+          console.warn(`[Cloud Firestore] Error deleting ${collectionName}/${docId}:`, err?.message);
         });
     }
 
@@ -335,10 +336,10 @@ export const LocalFirestore = {
       try {
         const snapshot = await cloudDb.collection(collectionName).get();
         if (!snapshot.empty) {
-          return snapshot.docs.map((doc) => doc.data() as T);
+          return snapshot.docs.map((docSnap: FirebaseFirestore.DocumentSnapshot) => docSnap.data() as T);
         }
-      } catch (err) {
-        console.warn(`[Cloud Firestore] Error fetching collection ${collectionName}:`, err);
+      } catch (err: any) {
+        console.warn(`[Cloud Firestore] Error fetching collection ${collectionName}:`, err?.message);
       }
     }
     return this.getDocs<T>(collectionName);
