@@ -205,7 +205,7 @@ export async function GET(req: Request) {
     // Parse Vendors
     const vendorRows = valueRanges[5]?.values || [];
     const vendorHeaders = vendorRows[0] || HEADERS_MAP.vendors;
-    const vendors = vendorRows.slice(1).filter(isNonEmptyRow).map(row => vendorMapper.fromRow(vendorHeaders, row));
+    const vendors = vendorRows.slice(1).filter(isNonEmptyRow).map(row => vendorMapper.fromRow(vendorHeaders, row)).filter(v => Boolean(v.vendorName && v.vendorName.trim() !== ''));
 
     // Parse To-Do List
     const taskRows = valueRanges[6]?.values || [];
@@ -452,7 +452,7 @@ export async function POST(req: Request) {
       } else if (sheetType === 'vendors') {
         const title = findTitle(['VENDORS', 'Vendors', 'Vendor Directory']);
         range = `'${title}'!A1:L1000`;
-        (data as Vendor[]).forEach(item => {
+        (data as Vendor[]).filter(item => Boolean(item && item.vendorName && item.vendorName.trim() !== '')).forEach(item => {
           values.push(vendorMapper.toRow(headers, item));
         });
       } else if (sheetType === 'tasks') {

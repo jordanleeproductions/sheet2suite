@@ -234,7 +234,7 @@ export const vendorMapper = {
     const obj = mapRowToObject<Vendor>(headers, row, VENDOR_HEADERS);
     const rawId = String(obj.vendorId || '').trim();
     const vendorName = String(obj.vendorName || '').trim();
-    const vendorId = rawId !== '' ? rawId : (vendorName ? `V_${vendorName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` : `V_${Math.random().toString(36).substring(2, 7)}`);
+    const vendorId = rawId !== '' ? rawId : (vendorName ? `V_${vendorName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` : '');
     return {
       vendorId,
       vendorName,
