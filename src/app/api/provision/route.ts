@@ -217,39 +217,45 @@ export async function POST(req: NextRequest) {
           const partnerRows: any[][] = [];
           if (partner1?.firstName || partner1?.lastName) {
             partnerRows.push([
-              'G1',
-              partner1.firstName || 'Partner',
-              partner1.lastName || '1',
-              'Sweetheart Table',
-              'Attending',
-              'Adult',
-              'Sweetheart',
-              '',
-              partner1.email || '',
-              partner1.phone || '',
-              'Table 1'
+              'G1',                                    // Guest ID
+              partner1.firstName || 'Partner',         // First Name
+              partner1.lastName || '1',                // Last Name
+              'Wedding Party',                         // Party Group
+              'Adult',                                 // Age Category
+              'Attending',                             // RSVP Status
+              '',                                      // Dietary Restrictions
+              '',                                      // Meal Choice
+              'Sweetheart Table',                      // Reception Table
+              'Row 1 - Center',                        // Ceremony Seating
+              partner1.email || '',                    // Email Address
+              partner1.phone || '',                    // Phone Number
+              '',                                      // Mailing Address
+              'FALSE'                                  // Thanked
             ]);
           }
           if (partner2?.firstName || partner2?.lastName) {
             partnerRows.push([
-              `G${partnerRows.length + 1}`,
-              partner2.firstName || 'Partner',
-              partner2.lastName || '2',
-              'Sweetheart Table',
-              'Attending',
-              'Adult',
-              'Sweetheart',
-              '',
-              partner2.email || '',
-              partner2.phone || '',
-              'Table 1'
+              `G${partnerRows.length + 1}`,            // Guest ID
+              partner2.firstName || 'Partner',         // First Name
+              partner2.lastName || '2',                // Last Name
+              'Wedding Party',                         // Party Group
+              'Adult',                                 // Age Category
+              'Attending',                             // RSVP Status
+              '',                                      // Dietary Restrictions
+              '',                                      // Meal Choice
+              'Sweetheart Table',                      // Reception Table
+              'Row 1 - Center',                        // Ceremony Seating
+              partner2.email || '',                    // Email Address
+              partner2.phone || '',                    // Phone Number
+              '',                                      // Mailing Address
+              'FALSE'                                  // Thanked
             ]);
           }
 
           if (partnerRows.length > 0) {
             await sheets.spreadsheets.values.update({
               spreadsheetId: newSpreadsheetId,
-              range: `'${guestTitle}'!A2:K${1 + partnerRows.length}`,
+              range: `'${guestTitle}'!A2:N${1 + partnerRows.length}`,
               valueInputOption: 'USER_ENTERED',
               requestBody: { values: partnerRows },
             });
