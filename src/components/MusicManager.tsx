@@ -915,10 +915,10 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
         <div style={styles.modalOverlay} onClick={closeModal}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
-                {isAdding ? 'ADD NEW SONG' : 'EDIT SONG'}
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
+                {isAdding ? 'ADD NEW TRACK' : 'EDIT TRACK'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={closeModal}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
               </button>
             </div>

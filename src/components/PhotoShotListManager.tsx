@@ -623,11 +623,11 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           `}</style>
           <div className="photo-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
-                {isAddingShot ? 'ADD NEW PHOTO SHOT' : 'EDIT PHOTO SHOT'}
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
+                {isAddingShot ? 'ADD PHOTO SHOT' : 'EDIT PHOTO SHOT'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
-                <X size={20} />
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
+                <X size={18} />
               </button>
             </div>
 

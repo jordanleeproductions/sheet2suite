@@ -425,10 +425,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           `}</style>
           <div className="task-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }} className="modalTitle">
-                {isAdding ? 'ADD NEW TASK' : 'EDIT TASK'}
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
+                {isAdding ? 'ADD TASK' : 'EDIT TASK'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingTask(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingTask(null); }}>
                 <X size={18} />
               </button>
             </div>

@@ -191,9 +191,6 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
         newState.balanceOwing = total - deposit;
       }
       
-      if (field === 'totalContractValue' || field === 'depositPaid' || field === 'balanceOwing') {
-        newState[field] = Number(value) || 0;
-      }
       return newState;
     });
   };
@@ -775,7 +772,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   <input
                     style={styles.input}
                     type="number"
-                    value={formState.totalContractValue || 0}
+                    value={formState.totalContractValue !== undefined ? formState.totalContractValue : ''}
                     onChange={(e) => handleFormChange('totalContractValue', e.target.value)}
                   />
                 </div>
@@ -784,7 +781,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   <input
                     style={styles.input}
                     type="number"
-                    value={formState.depositPaid || 0}
+                    value={formState.depositPaid !== undefined ? formState.depositPaid : ''}
                     onChange={(e) => handleFormChange('depositPaid', e.target.value)}
                   />
                 </div>
@@ -793,7 +790,7 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
                   <input
                     style={styles.input}
                     type="number"
-                    value={formState.balanceOwing || 0}
+                    value={formState.balanceOwing !== undefined ? formState.balanceOwing : ''}
                     onChange={(e) => handleFormChange('balanceOwing', e.target.value)}
                   />
                 </div>
