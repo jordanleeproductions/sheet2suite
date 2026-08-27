@@ -26,8 +26,9 @@ export function proxy(req: NextRequest) {
   // Extract primary subdomain from hostname (e.g., 'vow' from 'vow.sheet2suite.com')
   const hostWithoutPort = hostname.split(':')[0].toLowerCase();
   
-  // If running on standard cloud root domains (e.g., yourproject.web.app, yourproject.firebaseapp.com)
+  // If running on standard cloud root domains (e.g., yourproject.hosted.app, yourproject.web.app, yourproject.firebaseapp.com)
   if (
+    hostWithoutPort.endsWith('.hosted.app') ||
     hostWithoutPort.endsWith('.web.app') ||
     hostWithoutPort.endsWith('.firebaseapp.com') ||
     hostWithoutPort.endsWith('.vercel.app') ||
