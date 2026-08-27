@@ -20,9 +20,12 @@ function getOAuth2Client(redirectUri?: string) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const host = req.headers.get('host') || 'localhost:3000';
-    const protocol = req.headers.get('x-forwarded-proto') || 'http';
-    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+    const forwardedHost = req.headers.get('x-forwarded-host');
+    const host = forwardedHost || req.headers.get('host') || 'localhost:3000';
+    const protocol = req.headers.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    
+    // Use configured environment redirect URI if available, or compute dynamically with correct forwarded headers
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${protocol}://${host}/api/auth/google/callback`;
 
     const oauth2Client = getOAuth2Client(redirectUri);
 
