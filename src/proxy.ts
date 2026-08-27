@@ -23,15 +23,16 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Extract primary subdomain from hostname (e.g., 'vow' from 'vow.sheet2suite.com')
+  // Extract primary subdomain from hostname
   const hostWithoutPort = hostname.split(':')[0].toLowerCase();
   
-  // If running on standard cloud root domains (e.g., yourproject.hosted.app, yourproject.web.app, yourproject.firebaseapp.com)
+  // If running on standard cloud provider / serverless internal domains:
   if (
-    hostWithoutPort.endsWith('.hosted.app') ||
-    hostWithoutPort.endsWith('.web.app') ||
-    hostWithoutPort.endsWith('.firebaseapp.com') ||
-    hostWithoutPort.endsWith('.vercel.app') ||
+    hostWithoutPort.includes('.hosted.app') ||
+    hostWithoutPort.includes('.run.app') ||
+    hostWithoutPort.includes('.web.app') ||
+    hostWithoutPort.includes('.firebaseapp.com') ||
+    hostWithoutPort.includes('.vercel.app') ||
     hostWithoutPort === 'localhost' ||
     hostWithoutPort === '127.0.0.1' ||
     hostWithoutPort === 'sheet2suite.com' ||
