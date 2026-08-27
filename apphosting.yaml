@@ -15,23 +15,13 @@ runConfig:
 # Environment Variables & Secrets
 env:
   - variable: NEXT_PUBLIC_APP_URL
-    value: "https://sheet2vow.web.app"
+    value: "https://sheet2suite--sheet2suite-7036e.us-east4.hosted.app"
     availability:
       - BUILD
       - RUNTIME
 
-  - variable: GOOGLE_CLIENT_ID
-    secret: GOOGLE_CLIENT_ID
-    availability:
-      - RUNTIME
-
-  - variable: GOOGLE_CLIENT_SECRET
-    secret: GOOGLE_CLIENT_SECRET
-    availability:
-      - RUNTIME
-
   - variable: GOOGLE_REDIRECT_URI
-    value: "https://sheet2vow.web.app/api/auth/google/callback"
+    value: "https://sheet2suite--sheet2suite-7036e.us-east4.hosted.app/api/auth/google/callback"
     availability:
       - RUNTIME
 
@@ -39,3 +29,4 @@ env:
     value: "1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI"
     availability:
       - RUNTIME
+
