@@ -8,7 +8,8 @@ import {
   vendorMapper, 
   taskMapper,
   photoMapper,
-  giftMapper 
+  giftMapper,
+  musicMapper 
 } from '@/lib/sheets/mapper';
 import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, WeddingData } from '@/lib/sheets/types';
 
@@ -104,6 +105,7 @@ export async function GET(req: Request) {
     const tasksTitle = findTitle(['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'To Do List', 'TASKS', 'Tasks']);
     const photosTitle = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
     const giftsTitle = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry', 'Gift_Registry']);
+    const musicTitle = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
     const dashTitle = availableTitles.some(t => t.toLowerCase() === 'dashboard') ? findTitle(['DASHBOARD', 'Dashboard']) : null;
     const ranges = [
       `'${settingsTitle}'!A1:B10`,
@@ -115,6 +117,7 @@ export async function GET(req: Request) {
       `'${tasksTitle}'!A1:H1000`,
       `'${photosTitle}'!A1:H1000`,
       `'${giftsTitle}'!A1:G1000`,
+      `'${musicTitle}'!A1:I1000`,
       `'${settingsTitle}'!Z1:Z3`,
     ];
     if (dashTitle) {
@@ -249,6 +252,11 @@ export async function GET(req: Request) {
     const giftHeaders = giftRows[0] || HEADERS_MAP.gifts;
     const gifts = giftRows.slice(1).filter(isNonEmptyRow).map(row => giftMapper.fromRow(giftHeaders, row));
 
+    // Parse Music Playlists
+    const musicRows = valueRanges[9]?.values || [];
+    const musicHeaders = musicRows[0] || HEADERS_MAP.music;
+    const music = musicRows.slice(1).filter(isNonEmptyRow).map(row => musicMapper.fromRow(musicHeaders, row));
+
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
     const actualCost = expenses.length > 0 
@@ -272,7 +280,7 @@ export async function GET(req: Request) {
       schedule,
       vendors,
       tasks,
-      music: [],
+      music: music.length > 0 ? music : mockDatabase.music,
       photos: photos.length > 0 ? photos : mockDatabase.photos,
       gifts: gifts.length > 0 ? gifts : mockDatabase.gifts
     };
@@ -515,6 +523,12 @@ export async function POST(req: Request) {
         range = `'${title}'!A1:G1000`;
         (data as GiftItem[]).forEach(item => {
           values.push(giftMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'music') {
+        const title = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
+        range = `'${title}'!A1:I1000`;
+        (data as Song[]).forEach(item => {
+          values.push(musicMapper.toRow(headers, item));
         });
       }
 

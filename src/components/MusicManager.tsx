@@ -161,8 +161,13 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
   const [iTunesQuery, setITunesQuery] = useState('');
   const [iTunesResults, setITunesResults] = useState<any[]>([]);
   const [isSearchingITunes, setIsSearchingITunes] = useState(false);
+  const skipSearchRef = React.useRef(false);
 
   useEffect(() => {
+    if (skipSearchRef.current) {
+      skipSearchRef.current = false;
+      return;
+    }
     if (!iTunesQuery || iTunesQuery.trim().length < 2) {
       setITunesResults([]);
       return;
@@ -185,6 +190,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
   }, [iTunesQuery]);
 
   const handleSelectITunesTrack = (track: any) => {
+    skipSearchRef.current = true;
     setFormState(prev => ({
       ...prev,
       title: track.trackName,
