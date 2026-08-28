@@ -129,16 +129,19 @@ export async function GET(req: Request) {
 
     const valueRanges = batchGetResponse.data.valueRanges || [];
     
-    // Parse SETTINGS Table A1:B10 (A2="Wedding Name" -> B2, A3="Wedding Budget" -> B3)
+    // Parse SETTINGS Table A1:B10 (A2="Wedding Name" -> B2, A3="Wedding Budget" -> B3, A4="Wedding Date", A5="Location Details", A6="Currency")
     const settingsTableRows = valueRanges[0]?.values || [];
     let weddingName = 'Our Wedding';
     let totalBudget = 30000;
+    let weddingDate = '';
+    let location = '';
+    let currency = 'USD';
     let foundInTable = false;
 
     for (const row of settingsTableRows) {
       const label = String(row[0] || '').toLowerCase().trim();
       const val = row[1];
-      if (label.includes('wedding name') || label.includes('couple name') || label.includes('name')) {
+      if (label.includes('wedding name') || label.includes('couple name')) {
         if (val) {
           weddingName = String(val).trim();
           foundInTable = true;
@@ -148,15 +151,36 @@ export async function GET(req: Request) {
           totalBudget = Number(String(val).replace(/[^0-9.]/g, '')) || 30000;
           foundInTable = true;
         }
+      } else if (label.includes('wedding date') || label === 'date') {
+        if (val) {
+          weddingDate = String(val).trim();
+          foundInTable = true;
+        }
+      } else if (label.includes('location') || label.includes('venue')) {
+        if (val) {
+          location = String(val).trim();
+          foundInTable = true;
+        }
+      } else if (label.includes('currency')) {
+        if (val) {
+          currency = String(val).trim();
+          foundInTable = true;
+        }
       }
     }
 
-    // Fallback: Check B2 directly if row index match, or legacy Z1/Z2/Z3
+    // Fallback: Check B2-B6 directly if row index match, or legacy Z1/Z2/Z3
     if (!foundInTable) {
       const b2Val = settingsTableRows[1]?.[1]; // B2
       const b3Val = settingsTableRows[2]?.[1]; // B3
+      const b4Val = settingsTableRows[3]?.[1]; // B4
+      const b5Val = settingsTableRows[4]?.[1]; // B5
+      const b6Val = settingsTableRows[5]?.[1]; // B6
       if (b2Val) weddingName = String(b2Val).trim();
       if (b3Val) totalBudget = Number(String(b3Val).replace(/[^0-9.]/g, '')) || 30000;
+      if (b4Val) weddingDate = String(b4Val).trim();
+      if (b5Val) location = String(b5Val).trim();
+      if (b6Val) currency = String(b6Val).trim();
 
       if (!b2Val && !b3Val) {
         const zRows = valueRanges[9]?.values || [];
@@ -173,6 +197,9 @@ export async function GET(req: Request) {
               const parsed = JSON.parse(z1Val);
               if (parsed.weddingName) weddingName = parsed.weddingName;
               if (parsed.budget) totalBudget = Number(parsed.budget) || 30000;
+              if (parsed.weddingDate) weddingDate = parsed.weddingDate;
+              if (parsed.location) location = parsed.location;
+              if (parsed.currency) currency = parsed.currency;
             }
           } catch (_) {}
         }
@@ -234,7 +261,10 @@ export async function GET(req: Request) {
         totalBudget,
         estimatedCost,
         actualCost,
-        remainingTasks
+        remainingTasks,
+        weddingDate,
+        location,
+        currency,
       },
       guests,
       budget,
@@ -360,14 +390,27 @@ export async function POST(req: Request) {
 
       const settingsTitle = findTitle(['SETTINGS', 'Settings']) || 'SETTINGS';
       const dashTitle = findTitle(['DASHBOARD', 'Dashboard']);
+      
+      const settingsValues: any[][] = [
+        ['Name', 'Value'],
+        ['Wedding Name', data.weddingName || 'Our Wedding'],
+        ['Wedding Budget', data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : 35000)],
+      ];
+
+      if (data.weddingDate !== undefined) {
+        settingsValues.push(['Wedding Date', data.weddingDate]);
+      }
+      if (data.location !== undefined) {
+        settingsValues.push(['Location Details', data.location]);
+      }
+      if (data.currency !== undefined) {
+        settingsValues.push(['Currency', data.currency]);
+      }
+
       const updateRanges: any[] = [
         {
-          range: `'${settingsTitle}'!A1:B3`,
-          values: [
-            ['Name', 'Value'],
-            ['Wedding Name', data.weddingName || 'Our Wedding'],
-            ['Wedding Budget', data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : 35000)]
-          ],
+          range: `'${settingsTitle}'!A1:B${settingsValues.length}`,
+          values: settingsValues,
         }
       ];
 

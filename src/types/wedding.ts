@@ -19,6 +19,9 @@ export interface DashboardSummary {
   estimatedCost: number;
   actualCost: number;
   remainingTasks: number;
+  weddingDate?: string;
+  location?: string;
+  currency?: string;
 }
 
 export interface Guest {

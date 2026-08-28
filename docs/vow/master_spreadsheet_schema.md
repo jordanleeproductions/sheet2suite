@@ -203,10 +203,13 @@ This document defines the authoritative tab structure and column header contract
 
 ## ⚙️ Tab 11: `SETTINGS` *(Config & System Metadata)*
 Contains two primary sections:
-1. **Settings Table (`A1:B3`)**:
+1. **Settings Table (`A1:B6`)**:
    - `A1`: `Name` | `B1`: `Value`
    - `A2`: `Wedding Name` | `B2`: `weddingName` string value (e.g. `Alex & Sam's Wedding`)
    - `A3`: `Wedding Budget` | `B3`: `budget` numeric value (e.g. `35000`)
+   - `A4`: `Wedding Date` | `B4`: `weddingDate` ISO string value (e.g. `2026-09-20`)
+   - `A5`: `Location Details` | `B5`: `location` string value (e.g. `Grand Ballroom, Toronto ON`)
+   - `A6`: `Currency` | `B6`: `currency` code string value (e.g. `USD`, `CAD`, `GBP`, `EUR`)
 2. **Master Dropdown Lookup Lists (`Columns C to O`)**:
    - `C`: Guest Age Category | `D`: Table Shapes | `E`: Priority Levels
    - `F`: RSVP Status | `G`: Payment Status | `H`: Task Status / Kanban Stage

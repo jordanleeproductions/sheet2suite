@@ -57,8 +57,21 @@ async function getOrCreateFolder(drive: any, folderName: string, parentId?: stri
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { accessToken, coupleName, productName = 'Sheet2Vow', budget, partner1, partner2 } = body;
+    const { 
+      accessToken, 
+      coupleName, 
+      productName = 'Sheet2Vow', 
+      budget, 
+      weddingDate, 
+      location, 
+      currency = 'USD', 
+      partner1, 
+      partner2 
+    } = body;
     const initialBudget = Number(budget) || 35000;
+    const sanitizedWeddingDate = weddingDate ? String(weddingDate).trim() : '';
+    const sanitizedLocation = location ? String(location).trim() : '';
+    const sanitizedCurrency = currency ? String(currency).trim() : 'USD';
 
     // Use passed token or cookie fallback
     const authHeader = req.headers.get('authorization');
@@ -188,11 +201,14 @@ export async function POST(req: NextRequest) {
         const settingsTitle = availableTitles.find(t => t.toLowerCase() === 'settings') || 'SETTINGS';
         const updateRanges: any[] = [
           {
-            range: `'${settingsTitle}'!A1:B3`,
+            range: `'${settingsTitle}'!A1:B6`,
             values: [
               ['Name', 'Value'],
               ['Wedding Name', sanitizedCoupleName],
-              ['Wedding Budget', initialBudget]
+              ['Wedding Budget', initialBudget],
+              ['Wedding Date', sanitizedWeddingDate],
+              ['Location Details', sanitizedLocation],
+              ['Currency', sanitizedCurrency]
             ],
           }
         ];

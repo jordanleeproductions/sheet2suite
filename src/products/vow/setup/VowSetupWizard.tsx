@@ -44,6 +44,7 @@ export interface PartnerProfile {
 export interface VowSetupConfig {
   weddingName: string;
   weddingDate: string;
+  location?: string;
   admin1Name?: string;
   admin1Email?: string;
   admin2Name?: string;
@@ -90,6 +91,7 @@ export default function VowSetupWizard({
   // Setup Form State: Wedding Details & Co-Admins
   const [weddingName, setWeddingName] = useState('');
   const [weddingDate, setWeddingDate] = useState('2026-09-20');
+  const [location, setLocation] = useState('');
   const [admin1Name, setAdmin1Name] = useState('');
   const [admin1Email, setAdmin1Email] = useState('');
   const [admin2Name, setAdmin2Name] = useState('');
@@ -186,6 +188,7 @@ export default function VowSetupWizard({
     onComplete({
       weddingName: derivedWeddingName,
       weddingDate,
+      location: location.trim() || undefined,
       admin1Name: partner1FirstName ? `${partner1FirstName} ${partner1LastName}`.trim() : admin1Name,
       admin1Email: partner1Email || admin1Email,
       admin2Name: partner2FirstName ? `${partner2FirstName} ${partner2LastName}`.trim() : (showAdmin2 ? admin2Name : undefined),
@@ -336,23 +339,36 @@ export default function VowSetupWizard({
           {/* Total Budget Input (if budget enabled) */}
           {modules.budget && (
             <div>
-              <label style={styles.fieldLabel}>TOTAL BUDGET *</label>
-              <input
-                type="number"
-                required
-                min="0"
-                placeholder="0"
-                value={budget}
-                onFocus={(e) => {
-                  if (budget === 0 || budget === '0' || budget === '') {
-                    setBudget('');
-                  } else {
-                    e.target.select();
-                  }
-                }}
-                onChange={(e) => setBudget(e.target.value)}
-                style={styles.inputField}
-              />
+              <label style={styles.fieldLabel}>TOTAL BUDGET & CURRENCY *</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  placeholder="0"
+                  value={budget}
+                  onFocus={(e) => {
+                    if (budget === 0 || budget === '0' || budget === '') {
+                      setBudget('');
+                    } else {
+                      e.target.select();
+                    }
+                  }}
+                  onChange={(e) => setBudget(e.target.value)}
+                  style={{ ...styles.inputField, flex: 1 }}
+                />
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  style={{ ...styles.inputField, width: '100px', cursor: 'pointer' }}
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="CAD">CAD ($)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="AUD">AUD ($)</option>
+                </select>
+              </div>
             </div>
           )}
 
@@ -364,6 +380,18 @@ export default function VowSetupWizard({
               required
               value={weddingDate}
               onChange={(e) => setWeddingDate(e.target.value)}
+              style={styles.inputField}
+            />
+          </div>
+
+          {/* Location Details Input */}
+          <div>
+            <label style={styles.fieldLabel}>LOCATION / VENUE DETAILS</label>
+            <input
+              type="text"
+              placeholder="e.g. Grand Ballroom, Toronto ON"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               style={styles.inputField}
             />
           </div>
@@ -466,6 +494,17 @@ export default function VowSetupWizard({
                   required
                   value={weddingDate}
                   onChange={(e) => setWeddingDate(e.target.value)}
+                  style={styles.inputField}
+                />
+              </div>
+
+              <div>
+                <label style={styles.fieldLabel}>LOCATION / VENUE DETAILS</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Grand Ballroom, Toronto ON"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                   style={styles.inputField}
                 />
               </div>
