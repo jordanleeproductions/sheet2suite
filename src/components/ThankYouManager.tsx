@@ -500,10 +500,10 @@ export default function ThankYouManager({
           `}</style>
           <div className="gift-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {isAddingGift ? 'LOG RECEIVED GIFT' : 'EDIT GIFT RECORD'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAddingGift(false); setEditingGift(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAddingGift(false); setEditingGift(null); }}>
                 <X size={20} />
               </button>
             </div>
@@ -957,22 +957,25 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
   },
   modalHeader: {
-    padding: '1rem 1.25rem',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid var(--color-muted)',
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-on-primary, #ffffff)',
     flexShrink: 0,
   },
   modalTitle: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.9rem',
-    fontWeight: 700,
+    fontSize: '1rem',
+    fontWeight: 600,
     margin: 0,
+    color: 'var(--color-on-primary, #ffffff)',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
+    color: 'var(--color-on-primary, #ffffff)',
     cursor: 'pointer',
   },
   modalBody: {

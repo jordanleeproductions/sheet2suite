@@ -284,19 +284,31 @@ button[type="submit"] {
 /* Modal Headers */
 .modalHeader,
 [class*="modalHeader"] {
-  background-color: var(--color-primary);
-  color: var(--color-on-primary);
+  background-color: var(--color-primary) !important;
+  color: var(--color-on-primary, #ffffff) !important;
 }
 
+.modalHeader *,
+.modalHeader h1,
+.modalHeader h2,
 .modalHeader h3,
+.modalHeader h4,
+.modalHeader span,
+.modalHeader p,
 .modalHeader [class*="modalTitle"],
+[class*="modalHeader"] *,
+[class*="modalHeader"] h1,
+[class*="modalHeader"] h2,
 [class*="modalHeader"] h3,
+[class*="modalHeader"] h4,
+[class*="modalHeader"] span,
+[class*="modalHeader"] p,
 [class*="modalHeader"] [class*="modalTitle"],
 .modalHeader button,
 [class*="modalHeader"] button,
 .modalHeader svg,
 [class*="modalHeader"] svg {
-  color: var(--color-on-primary);
+  color: var(--color-on-primary, #ffffff) !important;
 }
 
 /* Destructive Red Modal Headers */

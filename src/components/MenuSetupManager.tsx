@@ -328,11 +328,12 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
         <div style={styles.modalOverlay} onClick={() => { setIsAdding(false); setEditingItem(null); }}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-light)' }}>
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {isAdding ? 'ADD MENU ITEM' : `EDIT ITEM: ${editingItem?.name}`}
               </h3>
               <button
-                style={{ ...styles.closeBtn, color: 'var(--color-on-light)' }}
+                style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }}
+                className="closeBtn"
                 onClick={() => { setIsAdding(false); setEditingItem(null); }}
               >
                 <X size={18} />
@@ -686,24 +687,29 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
   },
   modalHeader: {
-    backgroundColor: 'var(--color-bg-subtle)',
-    borderBottom: '1px solid var(--color-border)',
-    padding: '1rem 1.25rem',
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-on-primary, #ffffff)',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexShrink: 0,
   },
   modalTitle: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.9rem',
-    fontWeight: 700,
+    fontSize: '1rem',
+    fontWeight: 600,
     margin: 0,
+    color: 'var(--color-on-primary, #ffffff)',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
+    color: 'var(--color-on-primary, #ffffff)',
     cursor: 'pointer',
     padding: 0,
+    display: 'flex',
+    alignItems: 'center',
   },
   form: {
     padding: '1.25rem',

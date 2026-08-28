@@ -1147,11 +1147,11 @@ export default function BudgetLedgerManager({
       {(isAdding || editingItem) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {editingItem ? 'EDIT BUDGET ITEM' : '+ NEW BUDGET'}
               </h3>
-              <button style={styles.closeBtn} onClick={closeModal}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
               </button>
             </div>
@@ -1281,11 +1281,11 @@ export default function BudgetLedgerManager({
       {(isAddingExpense || editingExpense) && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
+            <div style={styles.modalHeader} className="modalHeader">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {editingExpense ? 'EDIT EXPENSE' : '+ NEW EXPENSE'}
               </h3>
-              <button style={styles.closeBtn} onClick={closeExpenseModal}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeExpenseModal}>
                 <X size={18} />
               </button>
             </div>
@@ -1763,21 +1763,23 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '1rem 1.25rem',
-    borderBottom: '1px solid var(--color-border)',
+    padding: '1.25rem 1.5rem',
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-on-primary, #ffffff)',
+    flexShrink: 0,
   },
   modalTitle: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.9rem',
-    fontWeight: 800,
-    letterSpacing: '0.06em',
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
     margin: 0,
-    color: 'var(--color-text)',
+    color: 'var(--color-on-primary, #ffffff)',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
-    color: 'var(--color-muted)',
+    color: 'var(--color-on-primary, #ffffff)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
