@@ -80,7 +80,10 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
       (guest.tableAssignment || '').toLowerCase().includes(searchLower) ||
       (guest.phoneNumber || '').toLowerCase().includes(searchLower);
 
-    const matchesRsvp = rsvpFilter === 'All' || guest.rsvpStatus === rsvpFilter;
+    const matchesRsvp = rsvpFilter === 'All' || 
+      guest.rsvpStatus === rsvpFilter ||
+      ((rsvpFilter === 'Pending' || rsvpFilter === 'No Response') && 
+       (guest.rsvpStatus === 'Pending' || guest.rsvpStatus === 'No Response' || !guest.rsvpStatus));
     const matchesGroup = groupFilter === 'All' || guest.partyGroup === groupFilter;
     const matchesMeal = mealFilter === 'All' || (guest.mealChoice || '').toLowerCase() === mealFilter.toLowerCase();
     const matchesDiet = dietFilter === 'All' || 
@@ -294,7 +297,8 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
           <span style={styles.rsvpLabel}>RSVP STATUS:</span>
           <div style={styles.rsvpButtonGroup}>
             {(['No Response', 'Attending', 'Declined'] as RSVPStatus[]).map((status) => {
-              const isSelected = guest.rsvpStatus === status;
+              const isSelected = guest.rsvpStatus === status || 
+                (status === 'No Response' && (guest.rsvpStatus === 'Pending' || !guest.rsvpStatus));
               let btnStyle: React.CSSProperties = styles.rsvpToggleBtn;
 
               if (isSelected) {
@@ -379,7 +383,8 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                 <td style={{ padding: '0.6rem 0.75rem' }}>
                   <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
                     {(['No Response', 'Attending', 'Declined'] as RSVPStatus[]).map((status) => {
-                      const isSelected = guest.rsvpStatus === status;
+                      const isSelected = guest.rsvpStatus === status || 
+                        (status === 'No Response' && (guest.rsvpStatus === 'Pending' || !guest.rsvpStatus));
                       return (
                         <button
                           key={status}
@@ -877,7 +882,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
             style={styles.filterSelect}
           >
             <option value="All">ALL RSVPS</option>
-            <option value="No Response">NO RESPONSE</option>
+            <option value="No Response">PENDING / NO RESPONSE</option>
             <option value="Attending">ATTENDING</option>
             <option value="Declined">DECLINED</option>
           </select>

@@ -135,7 +135,15 @@ export const guestMapper = {
     const obj = mapRowToObject<Guest>(headers, row, GUEST_HEADERS);
     // Enforce default string values
     const ageCategory = (obj.ageCategory || 'Adult') as AgeCategory;
-    const rsvpStatus = (obj.rsvpStatus || 'No Response') as RSVPStatus;
+    const rawRsvp = String(obj.rsvpStatus || '').trim().toLowerCase();
+    let rsvpStatus: RSVPStatus = 'No Response';
+    if (rawRsvp === 'attending') {
+      rsvpStatus = 'Attending';
+    } else if (rawRsvp === 'declined') {
+      rsvpStatus = 'Declined';
+    } else if (rawRsvp === 'pending' || rawRsvp === 'no response') {
+      rsvpStatus = 'Pending';
+    }
     const rawThanked = String(obj.thankedSent || '').toLowerCase();
     const rawPlusOne = String(obj.hasPlusOne || '').toLowerCase();
     return {
