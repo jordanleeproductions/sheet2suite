@@ -161,24 +161,26 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
   const [iTunesQuery, setITunesQuery] = useState('');
   const [iTunesResults, setITunesResults] = useState<any[]>([]);
   const [isSearchingITunes, setIsSearchingITunes] = useState(false);
-  const skipSearchRef = React.useRef(false);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
-    if (skipSearchRef.current) {
-      skipSearchRef.current = false;
-      return;
-    }
-    if (!iTunesQuery || iTunesQuery.trim().length < 2) {
+    const query = iTunesQuery.trim();
+    if (!query || query.length < 2) {
       setITunesResults([]);
+      setShowResults(false);
       return;
     }
     const timer = setTimeout(async () => {
       try {
         setIsSearchingITunes(true);
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(iTunesQuery)}&entity=song&limit=5`);
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=5`);
         const data = await res.json();
-        if (data.results) {
+        if (data.results && data.results.length > 0) {
           setITunesResults(data.results);
+          setShowResults(true);
+        } else {
+          setITunesResults([]);
+          setShowResults(false);
         }
       } catch (err) {
         console.error('iTunes search error:', err);
@@ -190,7 +192,6 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
   }, [iTunesQuery]);
 
   const handleSelectITunesTrack = (track: any) => {
-    skipSearchRef.current = true;
     setFormState(prev => ({
       ...prev,
       title: track.trackName,
@@ -199,8 +200,10 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
       requestedBy: prev.requestedBy || 'Admin',
       playStatus: prev.playStatus || 'Must Play',
     }));
-    setITunesQuery(`${track.trackName} - ${track.artistName}`);
+    // Clear search query & results immediately so dropdown closes and does not trigger secondary search
+    setITunesQuery('');
     setITunesResults([]);
+    setShowResults(false);
   };
 
   const startAdd = () => {
@@ -955,7 +958,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                     {iTunesQuery && (
                       <button
                         type="button"
-                        onClick={() => { setITunesQuery(''); setITunesResults([]); }}
+                        onClick={() => { setITunesQuery(''); setITunesResults([]); setShowResults(false); }}
                         style={{
                           position: 'absolute',
                           right: '8px',
@@ -975,7 +978,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                       </button>
                     )}
 
-                    {iTunesResults.length > 0 && (
+                    {showResults && iTunesResults.length > 0 && (
                       <div style={{
                         position: 'absolute',
                         top: '100%',
