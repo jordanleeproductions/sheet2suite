@@ -240,7 +240,7 @@ export default function AdvancedSettingsModal({
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div style={styles.header} className="modalHeader">
+        <div style={styles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Sliders size={20} style={{ color: 'var(--color-primary)' }} />
             <div>
@@ -251,7 +251,7 @@ export default function AdvancedSettingsModal({
             </div>
           </div>
           <button style={styles.closeBtn} onClick={onClose} title="Close Advanced Settings">
-            <X size={20} />
+            <X size={20} style={{ color: 'var(--color-text)' }} />
           </button>
         </div>
 
