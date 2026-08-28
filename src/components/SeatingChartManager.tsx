@@ -975,13 +975,13 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                   {getInitials(selectedGuest)}
                 </div>
                 <div>
-                  <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+                  <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                     {selectedGuest.firstName} {selectedGuest.lastName}
                   </h3>
                   <span style={styles.modalSubtitleText}>Guest Profile & Table Assignment</span>
                 </div>
               </div>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => setSelectedGuest(null)}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => setSelectedGuest(null)}>
                 <X size={20} />
               </button>
             </div>
@@ -1092,11 +1092,11 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
             <div style={styles.modalHeader} className="modalHeader">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <UserPlus size={18} style={{ color: 'var(--color-highlight)' }} />
-                <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                   ASSIGN SEAT {targetSeatIndex ? `#${targetSeatIndex}` : ''}: {assignSeatTable.tableName.toUpperCase()}
                 </h3>
               </div>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setAssignSeatTable(null); setTargetSeatIndex(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setAssignSeatTable(null); setTargetSeatIndex(null); }}>
                 <X size={20} />
               </button>
             </div>
@@ -1114,7 +1114,6 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                     ...styles.inputField,
                     paddingLeft: '32px'
                   }}
-                  autoFocus
                 />
               </div>
 
@@ -1260,10 +1259,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
         <div style={styles.modalOverlay} onClick={() => { setIsAddingTable(false); setEditingTable(null); }}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {isAddingTable ? 'ADD NEW TABLE' : 'EDIT TABLE CONFIGURATION'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAddingTable(false); setEditingTable(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAddingTable(false); setEditingTable(null); }}>
                 <X size={20} />
               </button>
             </div>
