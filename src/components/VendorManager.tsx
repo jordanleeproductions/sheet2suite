@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Vendor, BudgetItem } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
+import { formatCurrency } from '@/lib/currency';
 
 interface VendorManagerProps {
   vendors: Vendor[];
@@ -11,6 +12,7 @@ interface VendorManagerProps {
   onUpdate: (updatedVendors: Vendor[]) => Promise<void>;
   onUpdateBudget?: (updatedBudget: BudgetItem[]) => Promise<void>;
   isSyncing: boolean;
+  currency?: string;
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
   spreadsheetId?: string;
   weddingName?: string;
@@ -18,7 +20,7 @@ interface VendorManagerProps {
   onOpenShareModal?: () => void;
 }
 
-export default function VendorManager({ vendors, budget = [], onUpdate, onUpdateBudget, isSyncing, onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
+export default function VendorManager({ vendors, budget = [], onUpdate, onUpdateBudget, isSyncing, currency = 'USD', onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
@@ -500,7 +502,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
             TOTAL CONTRACTS
           </div>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: '0.25rem' }}>
-            ${financialSummary.totalContracts.toLocaleString()}
+            {formatCurrency(financialSummary.totalContracts, currency)}
           </div>
         </div>
 
@@ -516,7 +518,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
             TOTAL DEPOSITS PAID
           </div>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-green, #10b981)', marginTop: '0.25rem' }}>
-            ${financialSummary.totalDeposits.toLocaleString()}
+            {formatCurrency(financialSummary.totalDeposits, currency)}
           </div>
         </div>
 
@@ -532,7 +534,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
             TOTAL AMOUNT OWING
           </div>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-red, #ef4444)', marginTop: '0.25rem' }}>
-            ${financialSummary.totalOwing.toLocaleString()}
+            {formatCurrency(financialSummary.totalOwing, currency)}
           </div>
         </div>
       </div>
@@ -601,10 +603,10 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                       <div>{item.contactName}</div>
                       {item.emailAddress && <a href={`mailto:${item.emailAddress}`} style={styles.link}>{item.emailAddress}</a>}
                     </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>${item.totalContractValue.toLocaleString()}</td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>${item.depositPaid.toLocaleString()}</td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>{formatCurrency(item.totalContractValue, currency)}</td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>{formatCurrency(item.depositPaid, currency)}</td>
                     <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
-                      ${item.balanceOwing.toLocaleString()}
+                      {formatCurrency(item.balanceOwing, currency)}
                     </td>
                     <td style={styles.td}>
                       {(() => {
@@ -693,18 +695,18 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--color-muted)' }}>
-                  <div>
+                  <div style={styles.cardCol}>
                     <div style={styles.cardLabel}>CONTRACT</div>
-                    <div style={styles.cardValue}>${item.totalContractValue.toLocaleString()}</div>
+                    <div style={styles.cardValue}>{formatCurrency(item.totalContractValue, currency)}</div>
                   </div>
-                  <div>
-                    <div style={styles.cardLabel}>DEPOSIT</div>
-                    <div style={styles.cardValue}>${item.depositPaid.toLocaleString()}</div>
+                  <div style={styles.cardCol}>
+                    <div style={styles.cardLabel}>PAID</div>
+                    <div style={styles.cardValue}>{formatCurrency(item.depositPaid, currency)}</div>
                   </div>
-                  <div>
-                    <div style={styles.cardLabel}>BALANCE DUE</div>
+                  <div style={styles.cardCol}>
+                    <div style={styles.cardLabel}>OWING</div>
                     <div style={{ ...styles.cardValue, fontWeight: 700, color: item.balanceOwing > 0 ? 'var(--color-red, #ef4444)' : 'var(--color-text)' }}>
-                      ${item.balanceOwing.toLocaleString()}
+                      {formatCurrency(item.balanceOwing, currency)}
                     </div>
                   </div>
                   <div>

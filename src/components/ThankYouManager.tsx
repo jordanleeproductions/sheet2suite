@@ -21,10 +21,12 @@ import {
   Check,
   UserCheck
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 interface ThankYouManagerProps {
   gifts: GiftItem[];
   guests: Guest[];
+  currency?: string;
   onUpdateGifts: (updatedGifts: GiftItem[]) => Promise<void>;
   onUpdateGuests: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing?: boolean;
@@ -33,6 +35,7 @@ interface ThankYouManagerProps {
 export default function ThankYouManager({
   gifts,
   guests,
+  currency = 'USD',
   onUpdateGifts,
   onUpdateGuests,
   isSyncing
@@ -254,7 +257,7 @@ export default function ThankYouManager({
         <div style={styles.kpiItem}>
           <span style={styles.kpiLabel}>TOTAL GIFTS RECEIVED</span>
           <span style={styles.kpiValue}>
-            {totalGifts} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>(${totalGiftValue.toLocaleString()})</span>
+            {totalGifts} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>({formatCurrency(totalGiftValue, currency)})</span>
           </span>
         </div>
         <div style={styles.kpiItem}>
@@ -386,7 +389,7 @@ export default function ThankYouManager({
                 <div style={styles.amountBox}>
                   <span style={styles.amountLabel}>EST. VALUE / CASH:</span>
                   <span style={styles.amountValue}>
-                    {gift.amount > 0 ? `$${gift.amount.toLocaleString()}` : 'N/A'}
+                    {gift.amount > 0 ? formatCurrency(gift.amount, currency) : 'N/A'}
                   </span>
                 </div>
               </div>

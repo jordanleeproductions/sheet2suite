@@ -661,7 +661,7 @@ export default function BudgetLedgerManager({
                     <div style={styles.categoryChipHeader}>
                       <span style={styles.categoryChipName}>{stat.category}</span>
                       {stat.isOver ? (
-                        <span style={styles.overBadgeMini}>+${stat.overAmount.toLocaleString()}</span>
+                        <span style={styles.overBadgeMini}>+{formatCurrency(stat.overAmount, currency)}</span>
                       ) : (
                         <span style={styles.categoryChipPercent}>{stat.percent}%</span>
                       )}
@@ -774,11 +774,11 @@ export default function BudgetLedgerManager({
                       <span>{item.vendorName}</span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={styles.monoText}>${item.estimatedCost.toLocaleString()}</span>
+                      <span style={styles.monoText}>{formatCurrency(item.estimatedCost, currency)}</span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span style={styles.monoText}>${displayActual.toLocaleString()}</span>
+                        <span style={styles.monoText}>{formatCurrency(displayActual, currency)}</span>
                         {expStats.count > 0 && (
                           <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 600 }}>
                             ({expStats.count} logged expense{expStats.count > 1 ? 's' : ''})
@@ -786,17 +786,17 @@ export default function BudgetLedgerManager({
                         )}
                         {displayActual > item.estimatedCost && (
                           <span style={styles.overBadgeTable}>
-                            <AlertTriangle size={10} style={{ marginRight: '2px' }} /> +${(displayActual - item.estimatedCost).toLocaleString()}
+                            <AlertTriangle size={10} style={{ marginRight: '2px' }} /> +{formatCurrency(displayActual - item.estimatedCost, currency)}
                           </span>
                         )}
                       </div>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={styles.monoText}>${displayPaid.toLocaleString()}</span>
+                      <span style={styles.monoText}>{formatCurrency(displayPaid, currency)}</span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
                       <span style={{ ...styles.monoText, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-muted)' }}>
-                        ${owing.toLocaleString()}
+                        {formatCurrency(owing, currency)}
                       </span>
                     </td>
                     <td style={styles.td}>
@@ -833,16 +833,16 @@ export default function BudgetLedgerManager({
               <tr style={styles.footerTr}>
                 <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>BUDGET TOTALS</td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>${totalEstimate.toLocaleString()}</span>
+                  <span style={styles.monoText}>{formatCurrency(totalEstimate, currency)}</span>
                 </td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>${totalActual.toLocaleString()}</span>
+                  <span style={styles.monoText}>{formatCurrency(totalActual, currency)}</span>
                 </td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>${totalPaid.toLocaleString()}</span>
+                  <span style={styles.monoText}>{formatCurrency(totalPaid, currency)}</span>
                 </td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                  <span style={styles.monoText}>${totalBalance.toLocaleString()}</span>
+                  <span style={styles.monoText}>{formatCurrency(totalBalance, currency)}</span>
                 </td>
                 <td colSpan={3} style={styles.td}></td>
               </tr>
@@ -858,19 +858,19 @@ export default function BudgetLedgerManager({
             <div style={styles.cardBody}>
               <div style={styles.cardRow}>
                 <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ESTIMATED TARGET</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalEstimate.toLocaleString()}</span>
+                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalEstimate, currency)}</span>
               </div>
               <div style={styles.cardRow}>
                 <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ACTUAL OUTLAY</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalActual.toLocaleString()}</span>
+                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalActual, currency)}</span>
               </div>
               <div style={styles.cardRow}>
                 <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>AMOUNT PAID</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalPaid.toLocaleString()}</span>
+                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalPaid, currency)}</span>
               </div>
               <div style={{ ...styles.cardRow, borderTop: '1px dotted var(--color-on-dark-subtle)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
                 <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>BALANCE DUE</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>${totalBalance.toLocaleString()}</span>
+                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalBalance, currency)}</span>
               </div>
             </div>
           </div>
@@ -907,7 +907,7 @@ export default function BudgetLedgerManager({
 
                 {isOver && (
                   <div style={styles.overBadgeCard}>
-                    <AlertTriangle size={11} style={{ marginRight: '0.25rem' }} /> OVER ESTIMATE (+${(displayActual - item.estimatedCost).toLocaleString()})
+                    <AlertTriangle size={11} style={{ marginRight: '0.25rem' }} /> OVER ESTIMATE (+{formatCurrency(displayActual - item.estimatedCost, currency)})
                   </div>
                 )}
                 <h3 style={{ ...styles.cardTitle, fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--color-muted)' }}>{item.vendorName}</h3>
@@ -915,22 +915,22 @@ export default function BudgetLedgerManager({
                 <div style={styles.cardBody}>
                   <div style={styles.cardRow}>
                     <span style={styles.cardLabel}>ESTIMATED</span>
-                    <span style={styles.cardValue}>${item.estimatedCost.toLocaleString()}</span>
+                    <span style={styles.cardValue}>{formatCurrency(item.estimatedCost, currency)}</span>
                   </div>
                   <div style={styles.cardRow}>
                     <span style={styles.cardLabel}>
                       ACTUAL
                       {expStats.count > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', marginLeft: '4px' }}>({expStats.count} exp)</span>}
                     </span>
-                    <span style={styles.cardValue}>${displayActual.toLocaleString()}</span>
+                    <span style={styles.cardValue}>{formatCurrency(displayActual, currency)}</span>
                   </div>
                   <div style={styles.cardRow}>
                     <span style={styles.cardLabel}>PAID</span>
-                    <span style={styles.cardValue}>${displayPaid.toLocaleString()}</span>
+                    <span style={styles.cardValue}>{formatCurrency(displayPaid, currency)}</span>
                   </div>
                   <div style={{ ...styles.cardRow, fontWeight: 600 }}>
                     <span style={styles.cardLabel}>BALANCE DUE</span>
-                    <span style={{ ...styles.cardValue, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-text)' }}>${owing.toLocaleString()}</span>
+                    <span style={{ ...styles.cardValue, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-text)' }}>{formatCurrency(owing, currency)}</span>
                   </div>
                 </div>
 
@@ -1055,7 +1055,7 @@ export default function BudgetLedgerManager({
                       <span style={styles.categoryCell}>{exp.category}</span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>${amt.toLocaleString()}</span>
+                      <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>{formatCurrency(amt, currency)}</span>
                     </td>
                     <td style={styles.td}>
                       <span style={styles.monoText}>{exp.purchaseDate || '-'}</span>
@@ -1087,7 +1087,7 @@ export default function BudgetLedgerManager({
               <tr style={styles.footerTr}>
                 <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>TOTAL LOGGED EXPENSES</td>
                 <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                  <span style={styles.monoText}>${filteredExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0).toLocaleString()}</span>
+                  <span style={styles.monoText}>{formatCurrency(filteredExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency)}</span>
                 </td>
                 <td colSpan={3} style={styles.td}></td>
               </tr>
@@ -1125,7 +1125,7 @@ export default function BudgetLedgerManager({
                     {exp.description}
                   </h4>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0 }}>
-                    ${amt.toLocaleString()}
+                    {formatCurrency(amt, currency)}
                   </span>
                 </div>
 

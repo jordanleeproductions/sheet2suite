@@ -2582,6 +2582,7 @@ export default function Sheet2VowDashboard() {
                   onUpdate={(data) => syncUpdate('vendors', data)}
                   onUpdateBudget={(data) => syncUpdate('budget', data)}
                   isSyncing={isSyncing}
+                  currency={currency}
                   spreadsheetId={spreadsheetId}
                   weddingName={weddingName}
                   driveFolder={driveFolder}
@@ -2626,6 +2627,7 @@ export default function Sheet2VowDashboard() {
                 <ThankYouManager
                   gifts={weddingData.gifts || []}
                   guests={weddingData.guests || []}
+                  currency={currency}
                   onUpdateGifts={(data: GiftItem[]) => syncUpdate('gifts', data)}
                   onUpdateGuests={(data: Guest[]) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}

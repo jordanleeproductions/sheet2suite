@@ -8,19 +8,24 @@ export const CURRENCY_OPTIONS: { code: CurrencyCode; label: string; symbol: stri
   { code: 'EUR', label: 'EUR — Euro (€)', symbol: '€', example: '€35,000' },
 ];
 
-export function formatCurrency(amount: number | undefined | null, currency: string = 'USD'): string {
-  const val = Math.round(amount || 0);
+export function formatCurrency(amount: number | undefined | null, currency: string = 'USD', forceDecimals?: boolean): string {
+  const num = Number(amount) || 0;
+  // If amount has cents (e.g. 100.5 or 100.50) or forceDecimals is requested, show 2 decimal places
+  const hasCents = forceDecimals !== undefined ? forceDecimals : !Number.isInteger(num);
+  const minDigits = hasCents ? 2 : 0;
+  const maxDigits = hasCents ? 2 : 0;
+
   switch (currency) {
     case 'GBP':
-      return `£${val.toLocaleString('en-GB')}`;
+      return `£${num.toLocaleString('en-GB', { minimumFractionDigits: minDigits, maximumFractionDigits: maxDigits })}`;
     case 'EUR':
-      return `€${val.toLocaleString('de-DE')}`;
+      return `€${num.toLocaleString('de-DE', { minimumFractionDigits: minDigits, maximumFractionDigits: maxDigits })}`;
     case 'CAD_FR':
-      return `${val.toLocaleString('fr-CA')} $`;
+      return `${num.toLocaleString('fr-CA', { minimumFractionDigits: minDigits, maximumFractionDigits: maxDigits })} $`;
     case 'CAD':
-      return `$${val.toLocaleString('en-CA')}`;
+      return `$${num.toLocaleString('en-CA', { minimumFractionDigits: minDigits, maximumFractionDigits: maxDigits })}`;
     case 'USD':
     default:
-      return `$${val.toLocaleString('en-US')}`;
+      return `$${num.toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: maxDigits })}`;
   }
 }
