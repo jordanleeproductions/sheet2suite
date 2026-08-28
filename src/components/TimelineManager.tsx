@@ -223,17 +223,63 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
 
   return (
     <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <h2 style={styles.title}>Wedding Day Timeline</h2>
-        <div style={styles.actionButtonGroup}>
+      {/* Scoped Responsive CSS for Timeline Header */}
+      <style>{`
+        .timeline-header-card {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-md);
+          padding: 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+          box-shadow: var(--box-shadow-subtle);
+        }
+        .timeline-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 640px) {
+          .timeline-header-card {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 1rem !important;
+            gap: 0.85rem !important;
+          }
+          .timeline-header-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+            width: 100% !important;
+            gap: 0.5rem !important;
+          }
+          .timeline-header-actions button {
+            width: 100% !important;
+            justify-content: center !important;
+            min-height: 38px !important;
+          }
+        }
+      `}</style>
+
+      {/* Header Panel */}
+      <div className="timeline-header-card anim-fade-in">
+        <div>
+          <h2 style={styles.title}>Wedding Day Timeline</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+            Coordinate day-of wedding milestones, vendor arrival times, and real-time ceremony schedule.
+          </p>
+        </div>
+        <div className="timeline-header-actions">
           <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
             <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
           </button>
           <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Day-Of Schedule">
             <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
           </button>
-          <button style={{ ...styles.addButton, color: '#000000' }} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD EVENT
           </button>
         </div>
@@ -379,10 +425,10 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
           `}</style>
           <div className="timeline-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#000000' }} className="modalTitle">
+              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {isAdding ? 'ADD TIMELINE MOMENT' : 'EDIT TIMELINE MOMENT'}
               </h3>
-              <button style={{ ...styles.closeBtn, color: '#000000' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingIndex(null); }}>
+              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingIndex(null); }}>
                 <X size={18} />
               </button>
             </div>
