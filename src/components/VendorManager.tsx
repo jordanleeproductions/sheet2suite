@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Vendor } from '@/lib/sheets/types';
+import { Vendor, BudgetItem } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 
 interface VendorManagerProps {
   vendors: Vendor[];
+  budget?: BudgetItem[];
   onUpdate: (updatedVendors: Vendor[]) => Promise<void>;
+  onUpdateBudget?: (updatedBudget: BudgetItem[]) => Promise<void>;
   isSyncing: boolean;
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
   spreadsheetId?: string;
@@ -16,7 +18,7 @@ interface VendorManagerProps {
   onOpenShareModal?: () => void;
 }
 
-export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
+export default function VendorManager({ vendors, budget = [], onUpdate, onUpdateBudget, isSyncing, onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
@@ -200,6 +202,8 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     if (isSyncing) return;
 
     let updatedVendors: Vendor[];
+    let savedVendor: Vendor;
+
     if (isAdding) {
       const newItem: Vendor = {
         vendorId: `V${vendors.length + 1}`,
@@ -215,14 +219,69 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
         contractLink: formState.contractLink || '',
         staffMealsRequired: formState.staffMealsRequired || 'No',
       };
+      savedVendor = newItem;
       updatedVendors = [...vendors, newItem];
     } else {
+      savedVendor = {
+        ...(editingItem || {}),
+        ...formState,
+      } as Vendor;
       updatedVendors = vendors.map(item => 
-        item.vendorId === editingItem?.vendorId ? { ...item, ...formState } as Vendor : item
+        item.vendorId === editingItem?.vendorId ? savedVendor : item
       );
     }
 
     await onUpdate(updatedVendors);
+
+    // Auto-sync financials with Budget Tracker tab [VND-BUDGET-SYNC]
+    if (onUpdateBudget && savedVendor.vendorName) {
+      const vendorNameClean = savedVendor.vendorName.trim().toLowerCase();
+      const existingBudgetIdx = budget.findIndex(b => 
+        (b.vendorName && b.vendorName.trim().toLowerCase() === vendorNameClean) ||
+        (editingItem && b.vendorName && b.vendorName.trim().toLowerCase() === editingItem.vendorName.trim().toLowerCase())
+      );
+
+      const estimatedCost = Number(savedVendor.totalContractValue) || 0;
+      const amountPaid = Number(savedVendor.depositPaid) || 0;
+      const actualCost = Number(savedVendor.totalContractValue) || 0;
+      const dueDate = savedVendor.paymentDueDate || '';
+      const paymentStatus = (estimatedCost > 0 && amountPaid >= estimatedCost) ? 'Paid' : (amountPaid > 0 ? 'Partial' : 'Pending');
+
+      let updatedBudgetList: BudgetItem[];
+      if (existingBudgetIdx >= 0) {
+        const existing = budget[existingBudgetIdx];
+        const updatedBudgetItem: BudgetItem = {
+          ...existing,
+          category: savedVendor.category || existing.category || 'General',
+          vendorName: savedVendor.vendorName,
+          estimatedCost: estimatedCost > 0 ? estimatedCost : existing.estimatedCost,
+          actualCost: actualCost > 0 ? actualCost : existing.actualCost,
+          amountPaid: amountPaid,
+          dueDate: dueDate || existing.dueDate,
+          paymentStatus: paymentStatus,
+        };
+        updatedBudgetList = budget.map((b, i) => i === existingBudgetIdx ? updatedBudgetItem : b);
+      } else if (estimatedCost > 0 || amountPaid > 0) {
+        // Create new budget item for this vendor
+        const newBudgetItem: BudgetItem = {
+          itemId: `item-v-${savedVendor.vendorId || Date.now()}`,
+          category: savedVendor.category || 'General',
+          vendorName: savedVendor.vendorName,
+          estimatedCost,
+          actualCost,
+          amountPaid,
+          dueDate,
+          paymentStatus,
+        };
+        updatedBudgetList = [newBudgetItem, ...budget];
+      } else {
+        updatedBudgetList = budget;
+      }
+
+      if (updatedBudgetList !== budget) {
+        await onUpdateBudget(updatedBudgetList);
+      }
+    }
     
     if (continueAdding) {
       setFormState({
@@ -249,6 +308,15 @@ export default function VendorManager({ vendors, onUpdate, isSyncing, onOpenPrin
     if (!vendorToDelete || isSyncing) return;
     const updated = vendors.filter(item => item.vendorId !== vendorToDelete.vendorId);
     await onUpdate(updated);
+
+    if (onUpdateBudget && vendorToDelete.vendorName) {
+      const vendorNameClean = vendorToDelete.vendorName.trim().toLowerCase();
+      const updatedBudget = budget.filter(b => (b.vendorName || '').trim().toLowerCase() !== vendorNameClean);
+      if (updatedBudget.length !== budget.length) {
+        await onUpdateBudget(updatedBudget);
+      }
+    }
+
     setVendorToDelete(null);
   };
 

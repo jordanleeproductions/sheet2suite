@@ -2578,7 +2578,9 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'vendors' && weddingData && (
                 <VendorManager
                   vendors={weddingData.vendors}
+                  budget={weddingData.budget}
                   onUpdate={(data) => syncUpdate('vendors', data)}
+                  onUpdateBudget={(data) => syncUpdate('budget', data)}
                   isSyncing={isSyncing}
                   spreadsheetId={spreadsheetId}
                   weddingName={weddingName}
