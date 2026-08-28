@@ -239,56 +239,100 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   };
 
   const renderGuestCard = (guest: Guest) => {
-    const rsvpColor = 
-      guest.rsvpStatus === 'Attending' ? 'var(--color-primary)' :
-      guest.rsvpStatus === 'Declined' ? 'var(--color-muted)' :
-      '#e6b800'; // dark gold/amber
-      // Note: using hardcoded for distinct RSVP visual; mapped to --color-amber-dark in dark themes
-
     return (
-      <div key={guest.guestId} style={styles.card} className="anim-slide-up anim-hover-scale anim-ripple">
+      <div key={guest.guestId} style={styles.card} className="guest-item-card anim-slide-up anim-hover-scale anim-ripple">
+        {/* Card Header: Group Badge + Age + Action */}
         <div style={styles.cardHeader}>
           <div style={styles.cardMeta}>
-            <span style={styles.upNextBadge} className="anim-badge-pulse">{guest.partyGroup.toUpperCase()}</span>
+            <span style={styles.upNextBadge} className="anim-badge-pulse" title={`Party Group: ${guest.partyGroup}`}>
+              {guest.partyGroup.toUpperCase()}
+            </span>
             <span style={{ ...styles.monoBadge, backgroundColor: 'var(--color-highlight)' }}>
               {guest.ageCategory.toUpperCase()}
             </span>
           </div>
-          <button style={styles.editBtn} className="anim-ripple" onClick={() => startEdit(guest)}>
-            <Edit2 size={12} />
+          <button style={styles.editBtn} className="anim-ripple" onClick={() => startEdit(guest)} title="Edit Guest Details">
+            <Edit2 size={13} />
           </button>
         </div>
 
-        <h3 style={styles.cardName}>{guest.firstName} {guest.lastName}</h3>
+        {/* Guest Name */}
+        <h3 style={styles.cardName} title={`${guest.firstName} ${guest.lastName}`}>
+          {guest.firstName} {guest.lastName}
+        </h3>
 
-        <div style={styles.cardDetails}>
-          <div style={styles.detailColumn}>
+        {/* Contact Info Row */}
+        {(guest.emailAddress || guest.phoneNumber) && (
+          <div style={styles.contactRow}>
             {guest.emailAddress && (
-              <div style={styles.detailItem}>
+              <a href={`mailto:${guest.emailAddress}`} style={styles.contactItem} title={guest.emailAddress}>
                 <Mail size={12} style={styles.icon} />
-                <span>{guest.emailAddress}</span>
-              </div>
+                <span style={styles.truncateText}>{guest.emailAddress}</span>
+              </a>
             )}
             {guest.phoneNumber && (
-              <div style={styles.detailItem}>
+              <a href={`tel:${guest.phoneNumber}`} style={styles.contactItem} title={guest.phoneNumber}>
                 <Phone size={12} style={styles.icon} />
                 <span>{guest.phoneNumber}</span>
-              </div>
+              </a>
             )}
           </div>
-          <div style={styles.detailColumn}>
-            <div style={styles.detailItem}>
-              <Coffee size={12} style={styles.icon} />
-              <span>Diet: {guest.dietaryRestrictions || 'None'}</span>
-            </div>
-            <div style={styles.detailItem}>
-              <Tag size={12} style={styles.icon} />
-              <span>Table: {guest.tableAssignment || 'Unassigned'}</span>
-            </div>
-            <div style={styles.detailItem}>
-              <Tag size={12} style={styles.icon} />
-              <span>Ceremony: {guest.ceremonySeating || '-'}</span>
-            </div>
+        )}
+
+        {/* Guest Key Attributes: Seating & Dining Chips Grid */}
+        <div style={styles.cardMetaGrid}>
+          {/* Table Assignment Chip */}
+          <div style={styles.metaChip} title={`Reception Table: ${guest.tableAssignment || 'Unassigned'}`}>
+            <span style={styles.metaChipLabel}>RECEPTION</span>
+            <span style={{ ...styles.metaChipValue, color: guest.tableAssignment ? 'var(--color-primary)' : 'var(--color-muted)' }}>
+              <Tag size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
+              <span style={styles.truncateText}>{guest.tableAssignment || 'Unassigned'}</span>
+            </span>
+          </div>
+
+          {/* Ceremony Seating Chip */}
+          <div style={styles.metaChip} title={`Ceremony Seating: ${guest.ceremonySeating || 'None'}`}>
+            <span style={styles.metaChipLabel}>CEREMONY</span>
+            <span style={styles.metaChipValue}>
+              <span style={styles.truncateText}>{guest.ceremonySeating || '—'}</span>
+            </span>
+          </div>
+
+          {/* Meal Choice Chip */}
+          <div style={styles.metaChip} title={`Meal Choice: ${guest.mealChoice || 'None'}`}>
+            <span style={styles.metaChipLabel}>MEAL</span>
+            <span style={styles.metaChipValue}>
+              <Utensils size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
+              <span style={styles.truncateText}>{guest.mealChoice || '—'}</span>
+            </span>
+          </div>
+
+          {/* Dietary Restrictions Chip */}
+          <div style={{
+            ...styles.metaChip,
+            borderColor: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-border)',
+            backgroundColor: guest.dietaryRestrictions ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-subtle)',
+          }} title={`Dietary Restrictions: ${guest.dietaryRestrictions || 'None'}`}>
+            <span style={{
+              ...styles.metaChipLabel,
+              color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
+            }}>
+              DIET
+            </span>
+            <span style={{
+              ...styles.metaChipValue,
+              color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
+              fontWeight: guest.dietaryRestrictions ? 700 : 500,
+            }}>
+              {guest.dietaryRestrictions ? (
+                <>
+                  <AlertTriangle size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
+                  <span style={styles.truncateText}>{guest.dietaryRestrictions}</span>
+                </>
+              ) : (
+                'None'
+              )}
+            </span>
           </div>
         </div>
 
@@ -306,25 +350,25 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
                   btnStyle = {
                     ...styles.rsvpToggleBtn,
                     backgroundColor: 'var(--color-red)',
-                    color: 'var(--color-on-light)',
-                    border: '2px solid var(--color-muted, #121824)',
+                    color: '#ffffff',
+                    borderColor: 'var(--color-red)',
                     fontWeight: 700,
                   };
                 } else if (status === 'Attending') {
                   btnStyle = {
                     ...styles.rsvpToggleBtn,
                     backgroundColor: 'var(--color-green)',
-                    color: 'var(--color-on-light)',
-                    border: '2px solid var(--color-muted, #121824)',
+                    color: '#ffffff',
+                    borderColor: 'var(--color-green)',
                     fontWeight: 700,
                   };
                 } else {
-                  // No Response / Pending / Yellow
+                  // No Response / Pending
                   btnStyle = {
                     ...styles.rsvpToggleBtn,
                     backgroundColor: 'var(--color-gold)',
-                    color: 'var(--color-on-light)',
-                    border: '2px solid var(--color-muted, #121824)',
+                    color: '#000000',
+                    borderColor: 'var(--color-gold)',
                     fontWeight: 700,
                   };
                 }
@@ -333,6 +377,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
               return (
                 <button 
                   key={status} 
+                  type="button"
                   style={btnStyle}
                   onClick={() => handleQuickRsvp(guest, status)}
                   disabled={isSyncing}
@@ -1418,9 +1463,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
     gap: '1rem',
-    marginTop: '0.5rem',
+    marginTop: '0.75rem',
   },
   card: {
     backgroundColor: 'var(--color-surface, #ffffff)',
@@ -1432,25 +1477,31 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: 'var(--box-shadow-subtle)',
     position: 'relative',
     transition: 'var(--transition-smooth)',
+    minWidth: 0,
+    overflow: 'hidden',
   },
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '0.75rem',
+    marginBottom: '0.5rem',
+    gap: '0.5rem',
   },
   cardMeta: {
     display: 'flex',
-    gap: '0.25rem',
+    gap: '0.35rem',
+    flexWrap: 'wrap',
+    alignItems: 'center',
   },
   monoBadge: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.625rem',
-    fontWeight: 600,
+    fontWeight: 700,
     backgroundColor: 'var(--color-bg-hover)',
     color: 'var(--color-text)',
-    padding: '0.125rem 0.375rem',
+    padding: '0.15rem 0.45rem',
     borderRadius: 'var(--border-radius-sm)',
+    letterSpacing: '0.04em',
   },
   editBtn: {
     background: 'none',
@@ -1458,32 +1509,80 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-muted)',
     cursor: 'pointer',
     padding: '0.25rem',
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: 'var(--border-radius-sm)',
+    transition: 'color 0.15s ease',
   },
   cardName: {
     fontFamily: 'var(--font-serif)',
-    fontSize: '1.25rem',
+    fontSize: '1.3rem',
     color: 'var(--color-primary)',
-    marginBottom: '0.75rem',
-    fontWeight: '600',
+    marginBottom: '0.5rem',
+    fontWeight: '700',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
-  cardDetails: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: '0.5rem',
-    marginBottom: '1rem',
-    fontSize: '0.8rem',
-    color: 'var(--color-text)',
-  },
-  detailColumn: {
+  contactRow: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.375rem',
+    gap: '0.3rem',
+    marginBottom: '0.75rem',
+    paddingBottom: '0.5rem',
+    borderBottom: '1px dotted var(--color-border)',
   },
-  detailItem: {
+  contactItem: {
     display: 'flex',
     alignItems: 'center',
+    gap: '0.45rem',
+    fontSize: '0.78rem',
+    fontFamily: 'var(--font-mono)',
+    color: 'var(--color-muted)',
+    textDecoration: 'none',
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+  cardMetaGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     gap: '0.5rem',
+    marginBottom: '1rem',
+  },
+  metaChip: {
+    backgroundColor: 'var(--color-bg-subtle, #f9fafb)',
+    border: '1px solid var(--color-border, #e5e7eb)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.4rem 0.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.15rem',
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+  metaChipLabel: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.6rem',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    color: 'var(--color-muted)',
+  },
+  metaChipValue: {
+    fontFamily: 'var(--font-sans)',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: 'var(--color-text)',
+    display: 'flex',
+    alignItems: 'center',
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+  truncateText: {
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'inline-block',
+    maxWidth: '100%',
   },
   icon: {
     color: 'var(--color-muted)',

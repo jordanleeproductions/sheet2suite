@@ -56,6 +56,7 @@
 - [x] **[GUEST-6] Desktop List Row View Toggle:** Switchable compact list table view for dense guest data management alongside card grid view.
 - [x] **[GUEST-7] Header Action Realignment & Subtitle:** Moved "Add Guest" button to right hand side with centered text and added a descriptive subtitle under "Guest Registry".
 - [x] **[GUEST-8] Dynamic Party Group Combo Dropdown:** Converted Party Group text input in guest modal to an interactive HTML5 combo dropdown pre-seeded with existing party groups.
+- [x] **[GUEST-CARD-REDESIGN] Responsive Guest Card Layout & Data Density:** Redesigned guest cards with dedicated contact row, 2x2 structured meta chips for Reception Table, Ceremony Seating, Meal Choice, and Dietary Restrictions with ellipsis truncation, eliminating content bleeding across mobile and desktop viewports.
 
 ---
 
