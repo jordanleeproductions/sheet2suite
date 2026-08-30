@@ -141,6 +141,18 @@ export interface ExpenseItem {
   notes?: string;
 }
 
+export interface MenuItem {
+  id: string;
+  category: 'entree' | 'appetizer' | 'dessert' | 'late night snack' | 'beverage' | string;
+  name: string;
+  description?: string;
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+  isGlutenFree?: boolean;
+  isNutFree?: boolean;
+  isGuestChoice?: boolean;
+}
+
 export interface EnabledModules {
   metrics: boolean;
   guests: boolean;
@@ -152,8 +164,10 @@ export interface EnabledModules {
   tasks: boolean;
   music: boolean;
   photos: boolean;
+  gifts: boolean;
   thanks: boolean;
   print: boolean;
+  catering: boolean;
 }
 
 export interface WeddingData {
@@ -167,4 +181,5 @@ export interface WeddingData {
   music: Song[];
   photos: PhotoShot[];
   gifts: GiftItem[];
+  catering?: MenuItem[];
 }

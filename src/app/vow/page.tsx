@@ -760,7 +760,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts' | 'catering', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
@@ -2512,6 +2512,7 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'guests' && weddingData && (
                 <GuestListManager
                   guests={weddingData.guests}
+                  catering={weddingData.catering}
                   onUpdate={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
                   initialRsvpFilter={guestInitialFilter}
@@ -2525,8 +2526,11 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'menu' && weddingData && (
                 <MenuSetupManager
                   guests={weddingData.guests}
+                  catering={weddingData.catering}
+                  onUpdateCatering={(data) => syncUpdate('catering', data)}
                   onUpdateGuests={(data) => syncUpdate('guests', data)}
                   onOpenGuestRegistry={() => switchTab('guests')}
+                  isSyncing={isSyncing}
                 />
               )}
 

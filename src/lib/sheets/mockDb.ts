@@ -95,6 +95,14 @@ export let mockDatabase: WeddingData = {
     { giftId: 'G3', description: 'Le Creuset Enameled Cast Iron Dutch Oven (5.5 qt)', giverName: 'Grandma Mary & Grandpa Joe', category: 'Kitchen & Dining', amount: 420, thankYouSent: false, notes: 'Delivered to home address' },
     { giftId: 'G4', description: 'Dyson V15 Detect Cordless Vacuum', giverName: 'David & Emily Miller', category: 'Home Appliances', amount: 750, thankYouSent: false, notes: 'Target wedding registry' },
     { giftId: 'G5', description: 'Egyptian Cotton Sheet Set (King)', giverName: 'Rachel Green', category: 'Bed & Bath', amount: 180, thankYouSent: false, notes: 'Crate & Barrel registry' },
+  ],
+  catering: [
+    { id: 'M101', category: 'entree', name: 'Filet Mignon', description: 'Grilled 8oz beef tenderloin with truffle mash and seasonal vegetables', isGuestChoice: true, isVegetarian: false, isVegan: false, isGlutenFree: true, isNutFree: true },
+    { id: 'M102', category: 'entree', name: 'Pan-Seared Salmon', description: 'Fresh herb-crusted Atlantic salmon with wild rice pilaf and asparagus', isGuestChoice: true, isVegetarian: false, isVegan: false, isGlutenFree: true, isNutFree: true },
+    { id: 'M103', category: 'entree', name: 'Vegan Risotto', description: 'Creamy arborio rice with roasted foraged mushrooms, peas, and truffle oil', isGuestChoice: true, isVegetarian: true, isVegan: true, isGlutenFree: true, isNutFree: true },
+    { id: 'M104', category: 'entree', name: 'Kids Chicken Tenders', description: 'Crispy chicken tenders with french fries and honey mustard dip', isGuestChoice: true, isVegetarian: false, isVegan: false, isGlutenFree: false, isNutFree: true },
+    { id: 'M105', category: 'appetizer', name: 'Caprese Skewers', description: 'Cherry tomatoes with fresh mozzarella, basil, and balsamic reduction', isGuestChoice: false, isVegetarian: true, isVegan: false, isGlutenFree: true, isNutFree: true },
+    { id: 'M106', category: 'dessert', name: 'Vanilla Almond Wedding Cake', description: '3-tier vanilla sponge cake with almond buttercream and gold leaf accents', isGuestChoice: false, isVegetarian: true, isVegan: false, isGlutenFree: false, isNutFree: false },
   ]
 };
 

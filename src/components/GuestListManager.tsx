@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Guest, AgeCategory, RSVPStatus } from '@/lib/sheets/types';
+import { Guest, AgeCategory, RSVPStatus, MenuItem } from '@/lib/sheets/types';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
 
 interface GuestListManagerProps {
   guests: Guest[];
+  catering?: MenuItem[];
   onUpdate: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing: boolean;
   availableTables?: string[];
@@ -14,7 +15,7 @@ interface GuestListManagerProps {
   initialRsvpFilter?: RSVPStatus | 'All';
 }
 
-export default function GuestListManager({ guests, onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter }: GuestListManagerProps) {
+export default function GuestListManager({ guests, catering, onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
@@ -48,12 +49,21 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
   const [menuOptions, setMenuOptions] = useState<string[]>([]);
 
   React.useEffect(() => {
+    if (catering && catering.length > 0) {
+      const entrees = catering
+        .filter(i => (i.category || '').toLowerCase() === 'entree' && i.isGuestChoice !== false)
+        .map(i => i.name);
+      if (entrees.length > 0) {
+        setMenuOptions(entrees);
+        return;
+      }
+    }
     try {
       const saved = localStorage.getItem('s2v_catering_menu');
       if (saved) {
         const parsed = JSON.parse(saved);
         const entrees = parsed
-          .filter((i: any) => i.category === 'entree' && i.isGuestChoice !== false)
+          .filter((i: any) => (i.category || '').toLowerCase() === 'entree' && i.isGuestChoice !== false)
           .map((i: any) => i.name);
         if (entrees.length > 0) {
           setMenuOptions(entrees);
@@ -64,7 +74,7 @@ export default function GuestListManager({ guests, onUpdate, isSyncing, availabl
     // If no menu configured, collect distinct meal choices from existing guests
     const distinctGuestMeals = Array.from(new Set(guests.map(g => (g.mealChoice || '').trim()).filter(Boolean)));
     setMenuOptions(distinctGuestMeals);
-  }, [guests]);
+  }, [guests, catering]);
 
   // Unique list of groups for filtering
   const groups = Array.from(new Set(guests.map(g => g.partyGroup).filter(Boolean)));

@@ -7,15 +7,37 @@ import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, Chev
 
 interface MenuSetupManagerProps {
   guests: Guest[];
+  catering?: MenuItem[];
+  onUpdateCatering?: (updatedItems: MenuItem[]) => Promise<void>;
   onUpdateGuests?: (updatedGuests: Guest[]) => Promise<void>;
   onOpenGuestRegistry?: () => void;
+  isSyncing?: boolean;
 }
 
-export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRegistry }: MenuSetupManagerProps) {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+export default function MenuSetupManager({ guests, catering, onUpdateCatering, onUpdateGuests, onOpenGuestRegistry, isSyncing }: MenuSetupManagerProps) {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(catering && catering.length > 0 ? catering : DEFAULT_MENU_ITEMS);
   const [activeCategory, setActiveCategory] = useState<'all' | 'entree' | 'appetizer' | 'dessert'>('all');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+
+  // Synchronize when catering prop updates from sheets
+  useEffect(() => {
+    if (catering && catering.length > 0) {
+      setMenuItems(catering);
+      try {
+        localStorage.setItem('s2v_catering_menu', JSON.stringify(catering));
+      } catch (e) {}
+    } else {
+      const saved = localStorage.getItem('s2v_catering_menu');
+      if (saved) {
+        try {
+          setMenuItems(JSON.parse(saved));
+        } catch (e) {
+          setMenuItems(DEFAULT_MENU_ITEMS);
+        }
+      }
+    }
+  }, [catering]);
 
   // Form State
   const [formState, setFormState] = useState<Partial<MenuItem>>({
@@ -29,24 +51,13 @@ export default function MenuSetupManager({ guests, onUpdateGuests, onOpenGuestRe
     isGuestChoice: true,
   });
 
-  // Load menu items from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('s2v_catering_menu');
-    if (saved) {
-      try {
-        setMenuItems(JSON.parse(saved));
-      } catch (e) {
-        setMenuItems(DEFAULT_MENU_ITEMS);
-      }
-    } else {
-      setMenuItems(DEFAULT_MENU_ITEMS);
-    }
-  }, []);
-
-  // Save to localStorage when changed
+  // Save to state, localStorage and 2-way Google Sheets sync
   const saveMenuItemsToStorage = (items: MenuItem[]) => {
     setMenuItems(items);
     localStorage.setItem('s2v_catering_menu', JSON.stringify(items));
+    if (onUpdateCatering) {
+      onUpdateCatering(items).catch(err => console.error('Error syncing catering to Google Sheets:', err));
+    }
   };
 
   // Reset to default menu

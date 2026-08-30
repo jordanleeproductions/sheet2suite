@@ -201,7 +201,23 @@ This document defines the authoritative tab structure and column header contract
 
 ---
 
-## ⚙️ Tab 11: `SETTINGS` *(Config & System Metadata)*
+## 🍽️ Tab 11: `CATERING` *(Food & Beverage Menu Items)*
+
+| Column Header | JSON Key | Data Type | Notes / Description |
+| :--- | :--- | :--- | :--- |
+| `Item ID` | `id` | Text | Unique menu item ID (e.g. `M101`) |
+| `Course Category` | `category` | Dropdown (`=SETTINGS!$P$2:$P$50`) | `Entree`, `Appetizer`, `Dessert`, `Late Night Snack`, `Beverage` |
+| `Item Name` | `name` | Text | Menu item name displayed on RSVP meal choices |
+| `Description` | `description` | Text | Ingredients, preparation, and presentation description |
+| `Is Guest Choice` | `isGuestChoice` | Checkbox | `TRUE` if selectable by guests on RSVP; `FALSE` for set courses |
+| `Vegetarian` | `isVegetarian` | Checkbox | `TRUE`, `FALSE` |
+| `Vegan` | `isVegan` | Checkbox | `TRUE`, `FALSE` |
+| `Gluten-Free` | `isGlutenFree` | Checkbox | `TRUE`, `FALSE` |
+| `Nut-Free` | `isNutFree` | Checkbox | `TRUE`, `FALSE` |
+
+---
+
+## ⚙️ Tab 12: `SETTINGS` *(Config & System Metadata)*
 Contains two primary sections:
 1. **Settings Table (`A1:B6`)**:
    - `A1`: `Name` | `B1`: `Value`
@@ -210,20 +226,21 @@ Contains two primary sections:
    - `A4`: `Wedding Date` | `B4`: `weddingDate` ISO string value (e.g. `2026-09-20`)
    - `A5`: `Location Details` | `B5`: `location` string value (e.g. `Grand Ballroom, Toronto ON`)
    - `A6`: `Currency` | `B6`: `currency` code string value (e.g. `USD`, `CAD`, `GBP`, `EUR`)
-2. **Master Dropdown Lookup Lists (`Columns C to O`)**:
+2. **Master Dropdown Lookup Lists (`Columns C to P`)**:
    - `C`: Guest Age Category | `D`: Table Shapes | `E`: Priority Levels
    - `F`: RSVP Status | `G`: Payment Status | `H`: Task Status / Kanban Stage
    - `I`: Decor Category | `J`: Vendor Category | `K`: Budget Category
    - `L`: Task Category | `M`: Gift Type | `N`: Approval Status | `O`: Play Status
+   - `P`: Course Category (`Entree`, `Appetizer`, `Dessert`, `Late Night Snack`, `Beverage`)
 
 ---
 
-## 📊 Tab 12: `DASHBOARD` *(User Visual Overview)*
+## 📊 Tab 13: `DASHBOARD` *(User Visual Overview)*
 Pure human-readable visual dashboard containing aggregate summary KPI cards (`Total Invited`, `Accepted`, `Declined`, `Pending`, `Total Estimated Budget`, `Actual Budget`, `Amount Paid`, `Tasks To Do`, `Tasks Completed`) and visual charts (`Guest RSVP Breakdown`, `Estimated vs Actual Budget`).
 
 ---
 
-## ⚙️ Tab 13: `Calc_Data` *(System Internal)*
+## ⚙️ Tab 14: `Calc_Data` *(System Internal)*
 Metric lookup table (`Metric Category`, `Metric Name`, `Value`) calculated from `GUESTS`, `BUDGET`, and `TO DO` sheets for dashboard widgets.
 
 ---

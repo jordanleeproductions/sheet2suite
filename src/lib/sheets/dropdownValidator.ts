@@ -92,6 +92,12 @@ export const MASTER_DROPDOWN_RULES: DropdownRuleConfig[] = [
     columnHeaderMatches: ['Category', 'Decor Category'],
     settingsRange: '=SETTINGS!$I$2:$I$50',
   },
+  // CATERING tab (Course Category -> SETTINGS!P)
+  {
+    tabCandidateNames: ['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food'],
+    columnHeaderMatches: ['Course Category', 'Category', 'Course'],
+    settingsRange: '=SETTINGS!$P$2:$P$50',
+  },
 ];
 
 /**

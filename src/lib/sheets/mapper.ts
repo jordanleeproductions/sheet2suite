@@ -1,4 +1,4 @@
-import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -382,5 +382,69 @@ export const musicMapper = {
   },
   toRow(headers: string[], song: Song): any[] {
     return mapObjectToRow(headers, song, MUSIC_HEADERS);
+  }
+};
+
+export const CATERING_HEADERS: Record<string, keyof MenuItem> = {
+  'Item ID': 'id',
+  'Course Category': 'category',
+  'Category': 'category',
+  'Course': 'category',
+  'Item Name': 'name',
+  'Name': 'name',
+  'Description': 'description',
+  'Is Guest Choice': 'isGuestChoice',
+  'Guest Choice': 'isGuestChoice',
+  'Vegetarian': 'isVegetarian',
+  'Vegan': 'isVegan',
+  'Gluten-Free': 'isGlutenFree',
+  'Gluten Free': 'isGlutenFree',
+  'Nut-Free': 'isNutFree',
+  'Nut Free': 'isNutFree',
+};
+
+export const cateringMapper = {
+  fromRow(headers: string[], row: any[]): MenuItem {
+    const obj = mapRowToObject<MenuItem>(headers, row, CATERING_HEADERS);
+    const toBool = (val: any, defaultVal = false): boolean => {
+      if (typeof val === 'boolean') return val;
+      const s = String(val || '').trim().toLowerCase();
+      if (s === 'true' || s === 'yes' || s === 'y' || s === '1') return true;
+      if (s === 'false' || s === 'no' || s === 'n' || s === '0') return false;
+      return defaultVal;
+    };
+
+    let cat = String(obj.category || 'entree').trim().toLowerCase();
+    if (cat.includes('entree') || cat.includes('main')) cat = 'entree';
+    else if (cat.includes('appetizer') || cat.includes('starter')) cat = 'appetizer';
+    else if (cat.includes('dessert') || cat.includes('sweet') || cat.includes('cake')) cat = 'dessert';
+    else if (cat.includes('late') || cat.includes('snack')) cat = 'late night snack';
+    else if (cat.includes('beverage') || cat.includes('drink')) cat = 'beverage';
+
+    return {
+      id: String(obj.id || `M${Date.now()}`),
+      category: cat,
+      name: String(obj.name || ''),
+      description: String(obj.description || ''),
+      isGuestChoice: toBool(obj.isGuestChoice, true),
+      isVegetarian: toBool(obj.isVegetarian, false),
+      isVegan: toBool(obj.isVegan, false),
+      isGlutenFree: toBool(obj.isGlutenFree, false),
+      isNutFree: toBool(obj.isNutFree, false),
+    };
+  },
+  toRow(headers: string[], item: MenuItem): any[] {
+    // Format category nicely (e.g. 'Entree', 'Appetizer', 'Dessert')
+    const displayCategory = item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Entree';
+    const formattedItem = {
+      ...item,
+      category: displayCategory,
+      isGuestChoice: item.isGuestChoice !== false ? 'TRUE' : 'FALSE',
+      isVegetarian: item.isVegetarian ? 'TRUE' : 'FALSE',
+      isVegan: item.isVegan ? 'TRUE' : 'FALSE',
+      isGlutenFree: item.isGlutenFree ? 'TRUE' : 'FALSE',
+      isNutFree: item.isNutFree ? 'TRUE' : 'FALSE',
+    };
+    return mapObjectToRow(headers, formattedItem as any, CATERING_HEADERS);
   }
 };

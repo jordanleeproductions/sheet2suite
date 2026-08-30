@@ -9,9 +9,10 @@ import {
   taskMapper,
   photoMapper,
   giftMapper,
-  musicMapper 
+  musicMapper,
+  cateringMapper,
 } from '@/lib/sheets/mapper';
-import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, WeddingData } from '@/lib/sheets/types';
+import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 import { CellGuard } from '@/lib/core/CellGuard';
@@ -27,7 +28,8 @@ const HEADERS_MAP = {
   tasks: ['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links'],
   music: ['Song ID', 'Song Title', 'Artist', 'Occasion', 'Play Status', 'Requested By', 'Notes', 'Approval Status', 'Link'],
   photos: ['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes'],
-  gifts: ['Item ID', 'Gift Description / Name', 'Giver / From', 'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes']
+  gifts: ['Item ID', 'Gift Description / Name', 'Giver / From', 'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes'],
+  catering: ['Item ID', 'Course Category', 'Item Name', 'Description', 'Is Guest Choice', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Nut-Free'],
 };
 
 export async function GET(req: Request) {
@@ -106,6 +108,7 @@ export async function GET(req: Request) {
     const photosTitle = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
     const giftsTitle = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry', 'Gift_Registry']);
     const musicTitle = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
+    const cateringTitle = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
     const dashTitle = availableTitles.some(t => t.toLowerCase() === 'dashboard') ? findTitle(['DASHBOARD', 'Dashboard']) : null;
     const ranges = [
       `'${settingsTitle}'!A1:B10`,
@@ -118,6 +121,7 @@ export async function GET(req: Request) {
       `'${photosTitle}'!A1:H1000`,
       `'${giftsTitle}'!A1:G1000`,
       `'${musicTitle}'!A1:I1000`,
+      `'${cateringTitle}'!A1:I1000`,
       `'${settingsTitle}'!Z1:Z3`,
     ];
     if (dashTitle) {
@@ -186,7 +190,7 @@ export async function GET(req: Request) {
       if (b6Val) currency = String(b6Val).trim();
 
       if (!b2Val && !b3Val) {
-        const zRows = valueRanges[9]?.values || [];
+        const zRows = valueRanges[11]?.values || [];
         const z1Val = zRows[0]?.[0] || '';
         const z2Val = zRows[1]?.[0] || '';
         const z3Val = zRows[2]?.[0] || '';
@@ -257,6 +261,11 @@ export async function GET(req: Request) {
     const musicHeaders = musicRows[0] || HEADERS_MAP.music;
     const music = musicRows.slice(1).filter(isNonEmptyRow).map(row => musicMapper.fromRow(musicHeaders, row));
 
+    // Parse Catering Menu
+    const cateringRows = valueRanges[10]?.values || [];
+    const cateringHeaders = cateringRows[0] || HEADERS_MAP.catering;
+    const catering = cateringRows.slice(1).filter(isNonEmptyRow).map(row => cateringMapper.fromRow(cateringHeaders, row));
+
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
     const actualCost = expenses.length > 0 
@@ -282,7 +291,8 @@ export async function GET(req: Request) {
       tasks,
       music: music.length > 0 ? music : mockDatabase.music,
       photos: photos.length > 0 ? photos : mockDatabase.photos,
-      gifts: gifts.length > 0 ? gifts : mockDatabase.gifts
+      gifts: gifts.length > 0 ? gifts : mockDatabase.gifts,
+      catering: catering.length > 0 ? catering : (mockDatabase.catering || []),
     };
 
     return NextResponse.json({
@@ -345,6 +355,8 @@ export async function POST(req: Request) {
         mockDatabase.music = data as Song[];
       } else if (sheetType === 'gifts') {
         mockDatabase.gifts = data as GiftItem[];
+      } else if (sheetType === 'catering') {
+        mockDatabase.catering = data as MenuItem[];
       }
 
       // Recompute metrics
@@ -529,6 +541,12 @@ export async function POST(req: Request) {
         range = `'${title}'!A1:I1000`;
         (data as Song[]).forEach(item => {
           values.push(musicMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'catering') {
+        const title = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
+        range = `'${title}'!A1:I1000`;
+        (data as MenuItem[]).forEach(item => {
+          values.push(cateringMapper.toRow(headers, item));
         });
       }
 
