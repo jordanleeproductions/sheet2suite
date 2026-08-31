@@ -57,7 +57,7 @@
 - [x] **[GUEST-7] Header Action Realignment & Subtitle:** Moved "Add Guest" button to right hand side with centered text and added a descriptive subtitle under "Guest Registry".
 - [x] **[GUEST-8] Dynamic Party Group Combo Dropdown:** Converted Party Group text input in guest modal to an interactive HTML5 combo dropdown pre-seeded with existing party groups.
 - [x] **[GUEST-CARD-REDESIGN] Responsive Guest Card Layout & Data Density:** Redesigned guest cards with dedicated contact row, 2x2 structured meta chips for Reception Table, Ceremony Seating, Meal Choice, and Dietary Restrictions with ellipsis truncation, eliminating content bleeding across mobile and desktop viewports.
-- [x] **[GUEST-DECLINED-LOCK] Declined RSVP Meal & Seating Invalidation Rule:** Automatically clears and disables reception table assignments, ceremony seating, and meal choice selections when a guest's RSVP is set to `Declined`. Excludes declined guests from seating assignment picker modals.
+- [x] **[GUEST-DECLINED-LOCK] Declined RSVP Meal & Seating Invalidation Rule:** Automatically clears and disables reception table assignments, ceremony seating, and meal choice selections when a guest's RSVP is set to `Declined`. Hides the 4 inner meta chips (*Reception*, *Ceremony*, *Meal*, *Diet*) on the guest card for a cleaner declined view, and excludes declined guests from seating assignment picker modals.
 
 ---
 

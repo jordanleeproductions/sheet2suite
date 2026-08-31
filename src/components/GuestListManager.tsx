@@ -322,62 +322,64 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
           </div>
         )}
 
-        {/* Guest Key Attributes: Seating & Dining Chips Grid */}
-        <div style={styles.cardMetaGrid}>
-          {/* Table Assignment Chip */}
-          <div style={styles.metaChip} title={`Reception Table: ${guest.tableAssignment || 'Unassigned'}`}>
-            <span style={styles.metaChipLabel}>RECEPTION</span>
-            <span style={{ ...styles.metaChipValue, color: guest.tableAssignment ? 'var(--color-primary)' : 'var(--color-muted)' }}>
-              <Tag size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
-              <span style={styles.truncateText}>{guest.tableAssignment || 'Unassigned'}</span>
-            </span>
-          </div>
+        {/* Guest Key Attributes: Seating & Dining Chips Grid (Hidden when Declined) */}
+        {guest.rsvpStatus !== 'Declined' && (
+          <div style={styles.cardMetaGrid}>
+            {/* Table Assignment Chip */}
+            <div style={styles.metaChip} title={`Reception Table: ${guest.tableAssignment || 'Unassigned'}`}>
+              <span style={styles.metaChipLabel}>RECEPTION</span>
+              <span style={{ ...styles.metaChipValue, color: guest.tableAssignment ? 'var(--color-primary)' : 'var(--color-muted)' }}>
+                <Tag size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
+                <span style={styles.truncateText}>{guest.tableAssignment || 'Unassigned'}</span>
+              </span>
+            </div>
 
-          {/* Ceremony Seating Chip */}
-          <div style={styles.metaChip} title={`Ceremony Seating: ${guest.ceremonySeating || 'None'}`}>
-            <span style={styles.metaChipLabel}>CEREMONY</span>
-            <span style={styles.metaChipValue}>
-              <span style={styles.truncateText}>{guest.ceremonySeating || '—'}</span>
-            </span>
-          </div>
+            {/* Ceremony Seating Chip */}
+            <div style={styles.metaChip} title={`Ceremony Seating: ${guest.ceremonySeating || 'None'}`}>
+              <span style={styles.metaChipLabel}>CEREMONY</span>
+              <span style={styles.metaChipValue}>
+                <span style={styles.truncateText}>{guest.ceremonySeating || '—'}</span>
+              </span>
+            </div>
 
-          {/* Meal Choice Chip */}
-          <div style={styles.metaChip} title={`Meal Choice: ${guest.mealChoice || 'None'}`}>
-            <span style={styles.metaChipLabel}>MEAL</span>
-            <span style={styles.metaChipValue}>
-              <Utensils size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
-              <span style={styles.truncateText}>{guest.mealChoice || '—'}</span>
-            </span>
-          </div>
+            {/* Meal Choice Chip */}
+            <div style={styles.metaChip} title={`Meal Choice: ${guest.mealChoice || 'None'}`}>
+              <span style={styles.metaChipLabel}>MEAL</span>
+              <span style={styles.metaChipValue}>
+                <Utensils size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
+                <span style={styles.truncateText}>{guest.mealChoice || '—'}</span>
+              </span>
+            </div>
 
-          {/* Dietary Restrictions Chip */}
-          <div style={{
-            ...styles.metaChip,
-            borderColor: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-border)',
-            backgroundColor: guest.dietaryRestrictions ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-subtle)',
-          }} title={`Dietary Restrictions: ${guest.dietaryRestrictions || 'None'}`}>
-            <span style={{
-              ...styles.metaChipLabel,
-              color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
-            }}>
-              DIET
-            </span>
-            <span style={{
-              ...styles.metaChipValue,
-              color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
-              fontWeight: guest.dietaryRestrictions ? 700 : 500,
-            }}>
-              {guest.dietaryRestrictions ? (
-                <>
-                  <AlertTriangle size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
-                  <span style={styles.truncateText}>{guest.dietaryRestrictions}</span>
-                </>
-              ) : (
-                'None'
-              )}
-            </span>
+            {/* Dietary Restrictions Chip */}
+            <div style={{
+              ...styles.metaChip,
+              borderColor: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-border)',
+              backgroundColor: guest.dietaryRestrictions ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-subtle)',
+            }} title={`Dietary Restrictions: ${guest.dietaryRestrictions || 'None'}`}>
+              <span style={{
+                ...styles.metaChipLabel,
+                color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
+              }}>
+                DIET
+              </span>
+              <span style={{
+                ...styles.metaChipValue,
+                color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
+                fontWeight: guest.dietaryRestrictions ? 700 : 500,
+              }}>
+                {guest.dietaryRestrictions ? (
+                  <>
+                    <AlertTriangle size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
+                    <span style={styles.truncateText}>{guest.dietaryRestrictions}</span>
+                  </>
+                ) : (
+                  'None'
+                )}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* RSVP Status Selector Toggle */}
         <div style={styles.rsvpToggleSection}>
