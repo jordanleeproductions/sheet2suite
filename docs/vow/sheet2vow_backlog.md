@@ -6,11 +6,12 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 
 ## 📋 Pending Sheet2Vow Features & Enhancements
 
-### 🍽️ Guest Registry & Seating
+### 🍽️ Guest Registry, Catering & Seating
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[GUEST-9]`** | Dual Table Assignment Columns — Split single `tableAssignment` field into **`Ceremony Seating`** and **`Reception Table`**. | `src/types/wedding.ts`, `src/lib/sheets/mapper.ts` | 🔴 High | ⚡ High (~3-4 turns) | ✅ Completed |
-| **`[CATERING-1]`** | 2-Way Sync Catering Food Menu Items to Google Spreadsheet — Currently, custom catering menu options (`s2v_catering_menu`) are stored in `localStorage`. Sync catering menu items directly to a dedicated lookup column in the **`SETTINGS`** tab (e.g. Column P: `Meal Options / Catering Menu`) or dedicated `CATERING` table in the Master Sheet, enabling custom in-cell dropdown validation for `Meal Choice` in `GUESTS` tab and cross-device sync. | `src/components/GuestListManager.tsx`, `src/lib/sheets/dropdownValidator.ts`, `src/app/api/sync/route.ts`, `docs/vow/master_spreadsheet_schema.md` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[CATERING-1]`** | 2-Way Sync Catering Food Menu Items to Google Spreadsheet (`CATERING` Tab). | `src/components/MenuSetupManager.tsx`, `src/lib/sheets/dropdownValidator.ts`, `src/app/api/sync/route.ts`, `docs/vow/master_spreadsheet_schema.md` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
+| **`[GUEST-BAR-EST]`** | Guest Drinker Status & Pay-Per-Drink Bar Cost Estimator — Add a "Drinker Status" column/field in Guest Registry (`Non-Drinker`, `Light Drinker`, `Heavy Drinker`). Calculate dynamic estimated alcohol/bar consumption costs based on drink pricing in the Catering page, and project total estimated bar expenses into the Budget & Expenses tracker. | `src/components/GuestListManager.tsx`, `src/components/MenuSetupManager.tsx`, `src/components/BudgetLedgerManager.tsx`, `src/types/wedding.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | 📝 Backlog |
 
 ### 🖨️ Print Studio & Canva Exporter
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
@@ -29,6 +30,7 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 |---|---|---|---|---|---|
 | **`[SYS-8]`** | Google Calendar 1-Click Itinerary Sync Engine (`calendar.events` scope) | `TimelineManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[SYS-9]`** | Google Tasks 1-Click Kanban Checklist Sync Engine (`tasks` scope) | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
+| **`[TASK-AUTO-SUGGEST]`** | Dynamic Task Category & Assignee Autocomplete Suggestions — In the Add/Edit Task modal, suggest existing task categories and assignees in combo dropdowns (`<datalist>` or custom searchable select) while allowing users to type and save new custom values. | `src/components/KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | 📝 Backlog |
 
 ### 💼 Vendor Directory & Document Storage
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |

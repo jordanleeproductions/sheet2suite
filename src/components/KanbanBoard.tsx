@@ -183,13 +183,13 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       {/* Header */}
       <div style={styles.header} className="kanban-header">
         <div className="kanban-header-top">
-          <div>
+          <div className="kanban-header-text">
             <h2 style={styles.title}>Kanban Checklist</h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
               Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
             </p>
           </div>
-          <button style={styles.addButton} className="kanban-add-btn-mobile" onClick={() => startAdd('To Do')} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: 'var(--color-on-light)' }} className="kanban-add-btn-mobile" onClick={() => startAdd('To Do')} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD TASK
           </button>
         </div>
@@ -560,26 +560,29 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
 
       {/* IN-APP DELETE TASK CONFIRMATION MODAL */}
       {taskToDelete && (
-        <div style={styles.modalOverlay} onClick={() => setTaskToDelete(null)}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalOverlay} className="task-delete-overlay" onClick={() => setTaskToDelete(null)}>
+          <div style={{ ...styles.modalContent, maxWidth: '440px' }} className="task-delete-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-on-dark)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <AlertTriangle size={20} />
-                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-dark)' }} className="modalTitle">
-                  DELETE TASK CONFIRMATION
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE TASK
                 </h3>
               </div>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-dark)' }} className="closeBtn" onClick={() => setTaskToDelete(null)}>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setTaskToDelete(null)}>
                 <X size={20} />
               </button>
             </div>
 
-            <div style={styles.modalBody}>
-              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)' }}>
-                Are you sure you want to delete task <strong style={{ color: 'var(--color-red)' }}>"{taskToDelete.taskName}"</strong>?
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }} className="task-delete-body">
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.5 }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{taskToDelete.taskName}"</strong>?
+              </p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: 0, lineHeight: 1.4 }}>
+                This will permanently remove the task from your wedding planning board and Google Sheet checklist.
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+              <div className="task-delete-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <button
                   type="button"
                   style={{
@@ -590,7 +593,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                     color: 'var(--color-text)',
                     border: '1px solid var(--color-muted)',
                     borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.625rem 1.25rem',
+                    padding: '0.75rem 1.25rem',
                     cursor: 'pointer'
                   }}
                   onClick={() => setTaskToDelete(null)}
@@ -605,15 +608,20 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     backgroundColor: 'var(--color-red)',
-                    color: 'var(--color-on-dark)',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.625rem 1.25rem',
-                    cursor: 'pointer'
+                    padding: '0.75rem 1.25rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
                   }}
                   onClick={confirmDeleteTask}
                   disabled={isSyncing}
                 >
+                  <Trash2 size={15} />
                   {isSyncing ? 'DELETING...' : 'DELETE TASK'}
                 </button>
               </div>
@@ -753,7 +761,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         })}
       </div>
 
-      {/* CSS details to ensure columns and header switch properly on mobile */}
+      {/* CSS details to ensure columns, header, and delete modal switch properly on mobile */}
       <style jsx global>{`
         @media (max-width: 767px) {
           .mobile-hidden {
@@ -774,9 +782,16 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           }
           .kanban-header-top {
             display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
             width: 100% !important;
+          }
+          .kanban-add-btn-mobile {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0.65rem 1rem !important;
+            font-size: 0.85rem !important;
           }
           .kanban-header-actions {
             width: 100% !important;
@@ -795,6 +810,17 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           }
           .kanban-add-btn-desktop {
             display: none !important;
+          }
+          .task-delete-content {
+            width: 100% !important;
+            margin: 0.5rem !important;
+          }
+          .task-delete-actions {
+            flex-direction: column !important;
+          }
+          .task-delete-actions button {
+            width: 100% !important;
+            justify-content: center !important;
           }
         }
 

@@ -87,6 +87,8 @@
 - [x] **[TASK-1] Clickable Kanban Task Edit Modal:** Clicking any task card on the Kanban board opens its edit modal window.
 - [x] **[TASK-2] Switchable Progress Cards / Progress Bar Header:** Added switchable progress view mode toggle (Progress Cards vs Multi-color Progress Bar) above the Kanban board.
 - [x] **[TASK-3] Header Methodology Description:** Added a descriptive subtitle under the header explaining Kanban task management workflow.
+- [x] **[TASK-DELETE-MODAL] Delete Task Modal Redesign:** Upgraded task deletion confirmation popup with high-contrast alert styling, permanent removal notice, comfortable desktop/mobile padding, and full-width mobile action buttons.
+- [x] **[TASK-MOBILE-HEADER] Mobile "Add Task" Button Dedicated Row:** Realigned the mobile "Add Task" button onto its own full-width row under the title and description, preventing text compression.
 
 ---
 
