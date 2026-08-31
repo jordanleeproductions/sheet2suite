@@ -157,15 +157,36 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
 
   // Handle Form Input Changes
   const handleInputChange = (field: keyof Guest, value: string) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+    setFormState(prev => {
+      const updated = { ...prev, [field]: value };
+      // If status changed to Declined, clear meal choice and seating
+      if (field === 'rsvpStatus' && value === 'Declined') {
+        updated.mealChoice = '';
+        updated.tableAssignment = '';
+        updated.ceremonySeating = '';
+        updated.seatNumber = undefined;
+      }
+      return updated;
+    });
   };
 
   // Handle Quick RSVP Change directly on card
   const handleQuickRsvp = async (guest: Guest, newStatus: RSVPStatus) => {
     if (isSyncing) return;
-    const updated = guests.map(g => 
-      g.guestId === guest.guestId ? { ...g, rsvpStatus: newStatus } : g
-    );
+    const updated = guests.map(g => {
+      if (g.guestId !== guest.guestId) return g;
+      if (newStatus === 'Declined') {
+        return {
+          ...g,
+          rsvpStatus: newStatus,
+          mealChoice: '',
+          tableAssignment: '',
+          ceremonySeating: '',
+          seatNumber: undefined,
+        };
+      }
+      return { ...g, rsvpStatus: newStatus };
+    });
     await onUpdate(updated);
   };
 
@@ -179,12 +200,24 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
       return;
     }
 
+    const guestToSave: Guest = {
+      ...(formState as Guest),
+      ...(formState.rsvpStatus === 'Declined'
+        ? {
+            mealChoice: '',
+            tableAssignment: '',
+            ceremonySeating: '',
+            seatNumber: undefined,
+          }
+        : {}),
+    };
+
     let updatedGuests: Guest[];
     if (isAdding) {
-      updatedGuests = [...guests, formState as Guest];
+      updatedGuests = [...guests, guestToSave];
     } else {
       updatedGuests = guests.map(g => 
-        g.guestId === editingGuest?.guestId ? (formState as Guest) : g
+        g.guestId === editingGuest?.guestId ? guestToSave : g
       );
     }
 
@@ -1186,12 +1219,25 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>RECEPTION TABLE ASSIGNMENT</label>
+                  <label style={styles.label}>
+                    RECEPTION TABLE ASSIGNMENT
+                    {formState.rsvpStatus === 'Declined' && (
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
+                        (N/A — Guest Declined)
+                      </span>
+                    )}
+                  </label>
                   {existingTables.length > 0 ? (
                     <select
-                      value={formState.tableAssignment || ''}
+                      value={formState.rsvpStatus === 'Declined' ? '' : (formState.tableAssignment || '')}
                       onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
-                      style={styles.select}
+                      disabled={formState.rsvpStatus === 'Declined'}
+                      style={{
+                        ...styles.select,
+                        opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
+                        cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
+                        backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                      }}
                     >
                       <option value="">Unassigned</option>
                       {existingTables.map(t => (
@@ -1206,22 +1252,48 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>CEREMONY SEATING (ROW / SIDE)</label>
+                  <label style={styles.label}>
+                    CEREMONY SEATING (ROW / SIDE)
+                    {formState.rsvpStatus === 'Declined' && (
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
+                        (N/A — Guest Declined)
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="text"
-                    value={formState.ceremonySeating || ''}
+                    value={formState.rsvpStatus === 'Declined' ? '' : (formState.ceremonySeating || '')}
                     onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
-                    placeholder="e.g. Row 1 - Bride Side, Front Aisle"
-                    style={styles.input}
+                    disabled={formState.rsvpStatus === 'Declined'}
+                    placeholder={formState.rsvpStatus === 'Declined' ? 'Not Applicable (Declined)' : 'e.g. Row 1 - Bride Side, Front Aisle'}
+                    style={{
+                      ...styles.input,
+                      opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
+                      cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'text',
+                      backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                    }}
                   />
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>MEAL SELECTION</label>
+                  <label style={styles.label}>
+                    MEAL SELECTION
+                    {formState.rsvpStatus === 'Declined' && (
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
+                        (N/A — Guest Declined)
+                      </span>
+                    )}
+                  </label>
                   <select
-                    value={formState.mealChoice || 'Unassigned / Pending'}
+                    value={formState.rsvpStatus === 'Declined' ? '' : (formState.mealChoice || 'Unassigned / Pending')}
                     onChange={(e) => handleInputChange('mealChoice', e.target.value)}
-                    style={styles.select}
+                    disabled={formState.rsvpStatus === 'Declined'}
+                    style={{
+                      ...styles.select,
+                      opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
+                      cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
+                      backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                    }}
                   >
                     <option value="Unassigned / Pending">Unassigned / Pending</option>
                     {menuOptions.map((item) => (

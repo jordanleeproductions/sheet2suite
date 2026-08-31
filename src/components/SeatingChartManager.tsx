@@ -1139,6 +1139,7 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
                   };
 
                   const sortedGuests = guests
+                    .filter(g => (g.rsvpStatus || '').toLowerCase() !== 'declined')
                     .filter(g => `${g.firstName} ${g.lastName} ${g.partyGroup || ''}`.toLowerCase().includes(assignSearch.toLowerCase()))
                     .sort((a, b) => {
                       const scoreA = getPriorityScore(a);
