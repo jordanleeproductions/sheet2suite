@@ -31,8 +31,16 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   const [sortField, setSortField] = useState<'default' | 'priority' | 'dueDate'>('default');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Progress Header View Mode ('cards' | 'bar') [TASK-2]
-  const [progressViewMode, setProgressViewMode] = useState<'cards' | 'bar'>('cards');
+  // Compute dynamic suggestions for Categories & Assignees from existing tasks [TASK-AUTO-SUGGEST]
+  const existingCategories = Array.from(new Set([
+    'Venue', 'Attire', 'Catering', 'Florals', 'Photography', 'Music', 'Guests', 'Decor', 'Invitations', 'Legal', 'Personal',
+    ...tasks.map(t => (t.category || '').trim()).filter(Boolean)
+  ])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  const existingAssignees = Array.from(new Set([
+    'Bride', 'Groom', 'Bride & Groom', 'Maid of Honor', 'Best Man', 'Wedding Planner',
+    ...tasks.map(t => (t.assignedTo || '').trim()).filter(Boolean)
+  ])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
   const handleSortClick = (field: 'priority' | 'dueDate') => {
     if (sortField === field) {
@@ -477,22 +485,34 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   <label style={styles.label}>CATEGORY</label>
                   <input
                     type="text"
-                    placeholder="e.g. Florals, Attire"
+                    list="task-category-suggestions"
+                    placeholder="e.g. Florals, Attire, Venue"
                     value={formState.category || ''}
                     onChange={(e) => handleInputChange('category', e.target.value)}
                     style={styles.input}
                   />
+                  <datalist id="task-category-suggestions">
+                    {existingCategories.map((cat) => (
+                      <option key={cat} value={cat} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>ASSIGNED TO</label>
                   <input
                     type="text"
-                    placeholder="e.g. John"
+                    list="task-assignee-suggestions"
+                    placeholder="e.g. John, Maid of Honor"
                     value={formState.assignedTo || ''}
                     onChange={(e) => handleInputChange('assignedTo', e.target.value)}
                     style={styles.input}
                   />
+                  <datalist id="task-assignee-suggestions">
+                    {existingAssignees.map((assignee) => (
+                      <option key={assignee} value={assignee} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div style={styles.fieldGroup}>

@@ -30,7 +30,7 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 |---|---|---|---|---|---|
 | **`[SYS-8]`** | Google Calendar 1-Click Itinerary Sync Engine (`calendar.events` scope) | `TimelineManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
 | **`[SYS-9]`** | Google Tasks 1-Click Kanban Checklist Sync Engine (`tasks` scope) | `KanbanBoard.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | Pending |
-| **`[TASK-AUTO-SUGGEST]`** | Dynamic Task Category & Assignee Autocomplete Suggestions — In the Add/Edit Task modal, suggest existing task categories and assignees in combo dropdowns (`<datalist>` or custom searchable select) while allowing users to type and save new custom values. | `src/components/KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | 📝 Backlog |
+| **`[TASK-AUTO-SUGGEST]`** | Dynamic Task Category & Assignee Autocomplete Suggestions — In the Add/Edit Task modal, suggest existing task categories and assignees in combo dropdowns (`<datalist>`) while allowing users to type and save new custom values. | `src/components/KanbanBoard.tsx` | 🟢 Low | ⚡ Low (~1-2 turns) | ✅ Completed |
 
 ### 💼 Vendor Directory & Document Storage
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
