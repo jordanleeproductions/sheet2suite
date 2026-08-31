@@ -27,12 +27,15 @@ export async function GET(req: NextRequest) {
     // Use configured environment redirect URI if available, or compute dynamically with correct forwarded headers
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${protocol}://${host}/api/auth/google/callback`;
 
+    const url = req.nextUrl;
+    const promptParam = url.searchParams.get('prompt') || 'consent';
+
     const oauth2Client = getOAuth2Client(redirectUri);
 
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: 'consent',
+      prompt: promptParam,
     });
 
     return NextResponse.json({
@@ -79,6 +82,23 @@ export async function POST(req: NextRequest) {
     // Fetch user profile info to store email
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const userInfo = await oauth2.userinfo.get();
+    const userEmail = userInfo.data.email;
+
+    // Persist refresh token to Firestore / Local storage
+    if (userEmail && tokenData.refresh_token) {
+      try {
+        const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+        LocalFirestore.setDoc('auth_tokens', userEmail, {
+          userEmail,
+          refreshToken: tokenData.refresh_token,
+          accessToken: tokenData.access_token,
+          expiryDate: tokenData.expiry_date,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('[OAuth] Could not save token document:', err);
+      }
+    }
 
     const response = NextResponse.json({
       success: true,

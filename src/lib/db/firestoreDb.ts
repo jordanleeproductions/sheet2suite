@@ -41,6 +41,16 @@ export interface WorkspaceDocument {
   lastActiveAt: string;
 }
 
+export interface AuthTokenDocument {
+  id: string; // Document ID (userEmail or spreadsheetId)
+  userEmail?: string;
+  spreadsheetId?: string;
+  refreshToken?: string;
+  accessToken?: string;
+  expiryDate?: number;
+  updatedAt: string;
+}
+
 export interface UserDocument {
   id: string; // Document ID (userEmail)
   email: string;

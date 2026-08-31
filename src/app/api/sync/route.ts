@@ -66,7 +66,8 @@ export async function GET(req: Request) {
       });
     }
 
-    const sheetsClient = getSheetsClient(accessToken);
+    const auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(accessToken, spreadsheetId);
+    const sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
 
     // Step 1: Fetch spreadsheet metadata to get exact available sheet titles
     const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
@@ -381,7 +382,8 @@ export async function POST(req: Request) {
       });
     }
 
-    const sheetsClient = getSheetsClient(accessToken);
+    const auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(accessToken, spreadsheetId);
+    const sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
 
     if (sheetType === 'repair_dropdowns') {
       const res = await applyDropdownValidations(sheetsClient, spreadsheetId);

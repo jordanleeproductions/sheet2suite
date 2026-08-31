@@ -110,6 +110,32 @@ export async function GET(req: NextRequest) {
 
     const userPicture = userInfo.data.picture || undefined;
 
+    // Persist refresh token and token metadata in Firestore / Local storage for long-lived silent re-auth
+    try {
+      if (userEmail) {
+        LocalFirestore.setDoc('auth_tokens', userEmail, {
+          userEmail,
+          spreadsheetId: provisionData?.spreadsheetId,
+          refreshToken: tokens.refresh_token,
+          accessToken: tokens.access_token,
+          expiryDate: tokens.expiry_date,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      if (provisionData?.spreadsheetId) {
+        LocalFirestore.setDoc('auth_tokens', provisionData.spreadsheetId, {
+          userEmail,
+          spreadsheetId: provisionData.spreadsheetId,
+          refreshToken: tokens.refresh_token,
+          accessToken: tokens.access_token,
+          expiryDate: tokens.expiry_date,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch (tokenSaveErr) {
+      console.warn('[OAuth] Could not save refresh token to Firestore:', tokenSaveErr);
+    }
+
     const payload = JSON.stringify({
       type: 'GOOGLE_AUTH_SUCCESS',
       user: { email: userEmail, name: userName, picture: userPicture },

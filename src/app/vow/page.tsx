@@ -146,7 +146,7 @@ export default function Sheet2VowDashboard() {
   const handleReauth = async () => {
     setIsReauthenticating(true);
     try {
-      const res = await fetch('/api/auth/google');
+      const res = await fetch('/api/auth/google?prompt=select_account');
       const data = await res.json();
 
       if (data.authUrl && typeof window !== 'undefined') {

@@ -166,6 +166,7 @@
 - [x] **[LIFE-3] Multi-Workspace Switcher Dropdown:** Header & Quick Settings dropdown storing `s2v_workspaces[]` list so pro planners can switch client weddings in 1 click.
 - [x] **[LIFE-4] Post-Activation & Reconnection Guidance Banner:** Reassuring notification banner displaying Google Drive folder path, re-entry bookmark URL, and Spreadsheet ID.
 - [x] **[LIFE-5] Sheet2Suite Shared Activation Engine:** Subdomain route middleware (`src/middleware.ts`), multi-SKU Order ID verification, and Sheet2Suite Product Hub selector.
+- [x] **[AUTH-REFRESH-LONG-LIVED] Long-Lived Google OAuth Sessions & Silent Token Refresh:** Stores Google `refresh_token` in Firestore/local storage on authentication. Automatically refreshes expired 1-hour access tokens via `getGoogleAuthAsync()` in `/api/sync` routes without interrupting user workflow, and uses `prompt=select_account` during manual reauth to skip permission re-consent.
 - [x] **[ACTIVATION-1] Mobile-Optimized Order Verification & Step 1 Setup Flow (`/activate`):** Fluid responsive card padding, 16px iOS auto-zoom prevention inputs, 48px touch targets, full-width Google Drive target directory pills, and stacked Quick vs. Guided cards with selectable states.
 - [x] **[ACTIVATION-3] Redesigned 4-Screen Guided Setup Wizard Flow (`/activate`):**
   - **Screen 1**: Wedding Details (Couple Name/Title, Wedding Date) + Up to 2 Additional Co-Admin User Access.
