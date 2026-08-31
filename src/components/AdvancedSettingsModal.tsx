@@ -38,6 +38,7 @@ interface AdvancedSettingsModalProps {
   spreadsheetId: string;
   weddingName: string;
   weddingDate: string;
+  locationDetails?: string;
   driveFolder: string;
   enabledModules: ModuleConfig;
   isMockMode: boolean;
@@ -66,6 +67,7 @@ export default function AdvancedSettingsModal({
   spreadsheetId,
   weddingName: initialName,
   weddingDate: initialDate,
+  locationDetails: initialLocation = '',
   driveFolder,
   enabledModules,
   isMockMode,
@@ -92,12 +94,25 @@ export default function AdvancedSettingsModal({
   const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
   const [activeTab, setActiveTab] = useState<'details' | 'visual' | 'drive' | 'modules' | 'security' | 'feedback'>('details');
 
-  // Form states
+  // Form states - synchronized from SETTINGS sheet / dashboard
   const [weddingName, setWeddingName] = useState(initialName || 'Our Wedding');
   const [weddingDate, setWeddingDate] = useState(initialDate || '');
-  const [locationDetails, setLocationDetails] = useState('Los Angeles, CA');
+  const [locationDetails, setLocationDetails] = useState(initialLocation || '');
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Sync state when props update
+  React.useEffect(() => {
+    if (initialName) setWeddingName(initialName);
+  }, [initialName]);
+
+  React.useEffect(() => {
+    if (initialDate !== undefined) setWeddingDate(initialDate);
+  }, [initialDate]);
+
+  React.useEffect(() => {
+    if (initialLocation !== undefined) setLocationDetails(initialLocation);
+  }, [initialLocation]);
 
   // Partner Co-Planning State [SHARE-4]
   const [coPlannersList, setCoPlannersList] = useState<string[]>(initialCoPlanners || []);

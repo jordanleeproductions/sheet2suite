@@ -41,6 +41,7 @@ export default function Sheet2VowDashboard() {
   const [isMockMode, setIsMockMode] = useState<boolean>(false);
   const [weddingName, setWeddingName] = useState<string>('');
   const [weddingDate, setWeddingDate] = useState<string>('');
+  const [locationDetails, setLocationDetails] = useState<string>('');
   const [budgetThreshold, setBudgetThreshold] = useState<number>(35000);
   const [driveFolder, setDriveFolder] = useState<string>('My Drive/Wedding Planning');
   const [selectedTasks, setSelectedTasks] = useState<string[]>(ALL_DEFAULT_TASKS.map(t => t.taskName));
@@ -368,13 +369,23 @@ export default function Sheet2VowDashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleUpdateWeddingDetails = async (name: string, date: string) => {
+  const handleUpdateWeddingDetails = async (name: string, date: string, location?: string) => {
     setWeddingName(name);
     setWeddingDate(date);
+    if (location !== undefined) setLocationDetails(location);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_wedding_name', name);
+      localStorage.setItem('s2v_wedding_date', date);
+      if (location !== undefined) localStorage.setItem('s2v_location', location);
+    }
     if (weddingData) {
       await syncUpdate('dashboard', {
+        totalBudget: weddingData.dashboard.totalBudget,
         budget: weddingData.dashboard.totalBudget,
         weddingName: name,
+        weddingDate: date,
+        location: location !== undefined ? location : locationDetails,
+        currency: currency,
       });
     }
   };
@@ -530,8 +541,10 @@ export default function Sheet2VowDashboard() {
     if (savedMock === 'true') setIsMockMode(true);
     if (savedDemo === 'true') setIsDemoMode(true);
 
+    const savedLocation = localStorage.getItem('s2v_location');
     if (savedName) setWeddingName(savedName);
     if (savedDate) setWeddingDate(savedDate);
+    if (savedLocation) setLocationDetails(savedLocation);
     if (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') setStyleTheme(savedStyleTheme);
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
@@ -658,6 +671,19 @@ export default function Sheet2VowDashboard() {
         setWeddingData(res.data);
         if (res.weddingName) {
           setWeddingName(res.weddingName);
+          if (typeof window !== 'undefined') localStorage.setItem('s2v_wedding_name', res.weddingName);
+        }
+        if (res.data?.dashboard?.weddingDate) {
+          setWeddingDate(res.data.dashboard.weddingDate);
+          if (typeof window !== 'undefined') localStorage.setItem('s2v_wedding_date', res.data.dashboard.weddingDate);
+        }
+        if (res.data?.dashboard?.location) {
+          setLocationDetails(res.data.dashboard.location);
+          if (typeof window !== 'undefined') localStorage.setItem('s2v_location', res.data.dashboard.location);
+        }
+        if (res.data?.dashboard?.currency) {
+          setCurrency(res.data.dashboard.currency);
+          if (typeof window !== 'undefined') localStorage.setItem('s2v_currency', res.data.dashboard.currency);
         }
         // Sync welcome card dismissal state
         const localDismissed = typeof window !== 'undefined' ? localStorage.getItem(`s2v_welcome_dismissed_${spreadsheetId}`) : null;
@@ -2220,6 +2246,7 @@ export default function Sheet2VowDashboard() {
           spreadsheetId={spreadsheetId}
           weddingName={weddingName}
           weddingDate={weddingDate}
+          locationDetails={locationDetails || weddingData?.dashboard?.location || ''}
           driveFolder={driveFolder}
           enabledModules={enabledModules}
           isMockMode={isMockMode}
