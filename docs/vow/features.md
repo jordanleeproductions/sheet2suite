@@ -140,6 +140,10 @@
 - [x] **[VND-BUDGET-SYNC] Auto-Sync Vendor Financials to Budget Tracker:** Adding, updating, or deleting a Vendor with contract values, estimates, categories, and deposits automatically creates or updates the corresponding line item in the Budget Tracker and recalculates totals and payment statuses.
 - [x] **[BUDGET-CATEGORY-DROPDOWN-AUTO-CLEAR] Category Dropdown & Auto-Clearing Zero Input UX:** Added wedding category selection dropdown populated with standard categories (`Venue`, `Catering`, `Florals`, `DJ`, `Photography`, etc.) + custom typing option. Number inputs for Estimated Cost, Actual Cost, and Amount Paid automatically clear the default `0` on focus and allow instant typing without leading zeroes.
 - [x] **[BUDGET-DEFAULT-DUEDATE] Default Due Date to Wedding Date:** When adding a new budget line item or using "Save & Add Another", the Due Date input defaults automatically to the couple's Wedding Date from the `SETTINGS` tab.
+- [x] **[BUDGET-CONSISTENT-DATES-EXPENSE-MATCH] Standardized Date Formats & Specific Line Item Expense Matching:**
+  - Standardized all Due Date and Purchase Date renderings across tables and card views into a unified format (`YYYY-MM-DD`).
+  - Refactored expense matching logic so itemized purchases only update specific budget line items when the Expense Description matches the Budget Line Item / Vendor name (or if a single overview line item exists for that category), preventing separate vendor actual costs (e.g. florist contracts) from being overwritten by unrelated purchases (e.g. terracotta pots).
+  - Added pre-populated category suggestions and zero-clearing on focus to the New Expense modal.
 
 ---
 

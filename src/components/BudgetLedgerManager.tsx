@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag } from 'lucide-react';
 
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, formatDateConsistent } from '@/lib/currency';
 
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
@@ -107,7 +107,53 @@ export default function BudgetLedgerManager({
     setCategoryFilter('All');
   };
 
-  // Dynamic Expenses calculations per category
+  // Dynamic Expenses calculations per Line Item / Vendor (matching description or category)
+  const getLineItemExpenseTotals = (item: BudgetItem) => {
+    const itemVendor = (item.vendorName || '').toLowerCase().trim();
+    const itemCat = (item.category || '').toLowerCase().trim();
+
+    // 1. Direct match: Expense description matches Budget Line Item / Vendor Name
+    const directMatches = expenses.filter(e => {
+      const expDesc = (e.description || '').toLowerCase().trim();
+      const expCat = (e.category || '').toLowerCase().trim();
+      return expDesc === itemVendor || (itemVendor.length > 2 && expDesc.includes(itemVendor)) || (expDesc.length > 2 && itemVendor.includes(expDesc));
+    });
+
+    if (directMatches.length > 0) {
+      const actualCost = directMatches.reduce((sum, e) => sum + (e.actualCost || 0), 0);
+      const amountPaid = directMatches.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
+      return {
+        count: directMatches.length,
+        actualCost,
+        amountPaid,
+        hasMatched: true,
+      };
+    }
+
+    // 2. Fallback: If only 1 budget item exists for this category, or if vendorName is generic overview
+    const sameCatBudgetItems = budget.filter(b => (b.category || '').toLowerCase().trim() === itemCat);
+    if (sameCatBudgetItems.length === 1 || itemVendor.includes('overview') || itemVendor === itemCat) {
+      const catExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === itemCat);
+      if (catExpenses.length > 0) {
+        const actualCost = catExpenses.reduce((sum, e) => sum + (e.actualCost || 0), 0);
+        const amountPaid = catExpenses.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
+        return {
+          count: catExpenses.length,
+          actualCost,
+          amountPaid,
+          hasMatched: true,
+        };
+      }
+    }
+
+    return {
+      count: 0,
+      actualCost: item.actualCost,
+      amountPaid: item.amountPaid,
+      hasMatched: false,
+    };
+  };
+
   const getCategoryExpenseTotals = (category: string) => {
     const catExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === (category || '').toLowerCase().trim());
     const actualCost = catExpenses.reduce((sum, e) => sum + (e.actualCost || 0), 0);
@@ -152,25 +198,26 @@ export default function BudgetLedgerManager({
   // Dynamic Budget Totals (integrating Expenses)
   const totalEstimate = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
 
-  // Categories with expenses logged
-  const categoriesWithLoggedExpenses = new Set(expenses.map(e => (e.category || '').toLowerCase().trim()));
+  // Compute total actual outlay across all budget items (using line item expense matches or logged expenses)
   const totalLoggedExpensesActual = expenses.reduce((sum, e) => sum + e.actualCost, 0);
-  const budgetWithoutExpensesActual = budget
-    .filter(b => !categoriesWithLoggedExpenses.has((b.category || '').toLowerCase().trim()))
-    .reduce((sum, b) => sum + b.actualCost, 0);
+  const totalLoggedExpensesPaid = expenses.reduce((sum, e) => sum + e.amountPaid, 0);
 
-  // If expenses exist, actual cost combines total expenses + un-logged budget items; else uses budget actual cost
+  const budgetActualSum = budget.reduce((sum, item) => {
+    const stats = getLineItemExpenseTotals(item);
+    return sum + (stats.hasMatched ? stats.actualCost : item.actualCost);
+  }, 0);
+
+  const budgetPaidSum = budget.reduce((sum, item) => {
+    const stats = getLineItemExpenseTotals(item);
+    return sum + (stats.hasMatched ? stats.amountPaid : item.amountPaid);
+  }, 0);
+
   const totalActual = expenses.length > 0
-    ? (totalLoggedExpensesActual + budgetWithoutExpensesActual)
+    ? Math.max(budgetActualSum, totalLoggedExpensesActual)
     : budget.reduce((sum, item) => sum + item.actualCost, 0);
 
-  const totalLoggedExpensesPaid = expenses.reduce((sum, e) => sum + e.amountPaid, 0);
-  const budgetWithoutExpensesPaid = budget
-    .filter(b => !categoriesWithLoggedExpenses.has((b.category || '').toLowerCase().trim()))
-    .reduce((sum, b) => sum + b.amountPaid, 0);
-
   const totalPaid = expenses.length > 0
-    ? (totalLoggedExpensesPaid + budgetWithoutExpensesPaid)
+    ? Math.max(budgetPaidSum, totalLoggedExpensesPaid)
     : budget.reduce((sum, item) => sum + item.amountPaid, 0);
 
   const totalBalance = totalActual - totalPaid;
@@ -395,7 +442,7 @@ export default function BudgetLedgerManager({
       setExpenseFormState({
         description: '',
         category: targetCategory,
-        amount: 0,
+        amount: '' as any,
         actualCost: 0,
         amountPaid: 0,
         purchaseDate: new Date().toISOString().split('T')[0],
@@ -787,7 +834,7 @@ export default function BudgetLedgerManager({
             </thead>
             <tbody>
               {filteredBudget.map((item) => {
-                const expStats = getCategoryExpenseTotals(item.category);
+                const expStats = getLineItemExpenseTotals(item);
                 const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
                 const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
                 const owing = displayActual - displayPaid;
@@ -827,7 +874,7 @@ export default function BudgetLedgerManager({
                       </span>
                     </td>
                     <td style={styles.td}>
-                      <span style={styles.monoText}>{item.dueDate || '-'}</span>
+                      <span style={styles.monoText}>{formatDateConsistent(item.dueDate)}</span>
                     </td>
                     <td style={styles.td}>
                       <span className={
@@ -903,7 +950,7 @@ export default function BudgetLedgerManager({
           </div>
 
           {filteredBudget.map(item => {
-            const expStats = getCategoryExpenseTotals(item.category);
+            const expStats = getLineItemExpenseTotals(item);
             const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
             const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
             const owing = displayActual - displayPaid;
@@ -962,7 +1009,7 @@ export default function BudgetLedgerManager({
                 </div>
 
                 <div style={styles.cardFooter}>
-                  <span style={styles.monoText}>{item.dueDate || 'No Date'}</span>
+                  <span style={styles.monoText}>{formatDateConsistent(item.dueDate)}</span>
                   <span className={
                     item.paymentStatus === 'Paid' ? 'badge-green' :
                       item.paymentStatus === 'Overdue' ? 'badge-red' :
@@ -1085,7 +1132,7 @@ export default function BudgetLedgerManager({
                       <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>{formatCurrency(amt, currency)}</span>
                     </td>
                     <td style={styles.td}>
-                      <span style={styles.monoText}>{exp.purchaseDate || '-'}</span>
+                      <span style={styles.monoText}>{formatDateConsistent(exp.purchaseDate)}</span>
                     </td>
                     <td style={styles.td}>
                       <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
@@ -1158,7 +1205,7 @@ export default function BudgetLedgerManager({
 
                 {(exp.purchaseDate || exp.notes) && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', paddingTop: '0.35rem', borderTop: '1px dotted var(--color-border)' }}>
-                    <span>{exp.purchaseDate || 'No Date'}</span>
+                    <span>{formatDateConsistent(exp.purchaseDate)}</span>
                     {exp.notes && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>📝 {exp.notes}</span>}
                   </div>
                 )}
