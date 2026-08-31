@@ -10,6 +10,7 @@ interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
   expenses?: ExpenseItem[];
   budgetTarget?: number;
+  weddingDate?: string;
   onUpdateBudgetTarget?: (newTarget: number) => Promise<void>;
   onUpdate: (updatedBudget: BudgetItem[]) => Promise<void>;
   onUpdateExpenses?: (updatedExpenses: ExpenseItem[]) => Promise<void>;
@@ -46,6 +47,7 @@ export default function BudgetLedgerManager({
   budget,
   expenses = [],
   budgetTarget = 0,
+  weddingDate = '',
   onUpdateBudgetTarget,
   onUpdate,
   onUpdateExpenses,
@@ -215,7 +217,7 @@ export default function BudgetLedgerManager({
       estimatedCost: '' as any,
       actualCost: '' as any,
       amountPaid: '' as any,
-      dueDate: '',
+      dueDate: weddingDate || '',
       paymentStatus: 'Pending',
     });
     setIsAdding(true);
@@ -264,7 +266,7 @@ export default function BudgetLedgerManager({
         estimatedCost: Number(formState.estimatedCost) || 0,
         actualCost: Number(formState.actualCost) || 0,
         amountPaid: Number(formState.amountPaid) || 0,
-        dueDate: formState.dueDate || '',
+        dueDate: formState.dueDate || weddingDate || '',
         paymentStatus: formState.paymentStatus || 'Pending',
       };
       updatedBudget = [newItem, ...budget];
@@ -279,7 +281,7 @@ export default function BudgetLedgerManager({
         estimatedCost: '' as any,
         actualCost: '' as any,
         amountPaid: '' as any,
-        dueDate: '',
+        dueDate: weddingDate || '',
         paymentStatus: 'Pending',
       });
       setIsAdding(true);

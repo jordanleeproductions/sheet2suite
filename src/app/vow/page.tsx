@@ -2580,6 +2580,7 @@ export default function Sheet2VowDashboard() {
                   budget={weddingData.budget}
                   expenses={weddingData.expenses || []}
                   budgetTarget={weddingData.dashboard?.totalBudget ?? budgetThreshold ?? 0}
+                  weddingDate={weddingDate || weddingData.dashboard?.weddingDate || ''}
                   onUpdateBudgetTarget={async (newTarget) => {
                     setBudgetThreshold(newTarget);
                     if (weddingData) {
