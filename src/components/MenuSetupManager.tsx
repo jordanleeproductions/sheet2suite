@@ -88,17 +88,23 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
     setEditingItem(null);
   };
 
+  const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
+
   const startEdit = (item: MenuItem) => {
     setEditingItem(item);
     setFormState({ ...item, isGuestChoice: item.isGuestChoice !== false });
     setIsAdding(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this menu item?')) {
-      const updated = menuItems.filter(item => item.id !== id);
-      saveMenuItemsToStorage(updated);
-    }
+  const handleDeleteClick = (item: MenuItem) => {
+    setItemToDelete(item);
+  };
+
+  const confirmDelete = () => {
+    if (!itemToDelete) return;
+    const updated = menuItems.filter(item => item.id !== itemToDelete.id);
+    saveMenuItemsToStorage(updated);
+    setItemToDelete(null);
   };
 
   const handleSave = (e: React.FormEvent, continueAdding = false) => {
@@ -280,7 +286,7 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                   <button style={styles.iconBtn} onClick={() => startEdit(item)} title="Edit Menu Item">
                     <Edit2 size={14} style={{ color: 'var(--color-text)' }} />
                   </button>
-                  <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => handleDelete(item.id)} title="Delete Item">
+                  <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => handleDeleteClick(item)} title="Delete Item">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -469,6 +475,78 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE MENU ITEM CONFIRMATION MODAL */}
+      {itemToDelete && (
+        <div style={styles.modalOverlay} className="menu-delete-overlay" onClick={() => setItemToDelete(null)}>
+          <div style={{ ...styles.modalContent, maxWidth: '440px' }} className="menu-delete-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <Trash2 size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  DELETE MENU ITEM
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setItemToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }} className="menu-delete-body">
+              <p style={{ fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.5 }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{itemToDelete.name}"</strong>?
+              </p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: 0, lineHeight: 1.4 }}>
+                This will remove the item from your catering menu and Google Sheet. Any guests who previously selected this meal will retain their selection text until re-assigned.
+              </p>
+
+              <div className="menu-delete-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem 1.25rem',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setItemToDelete(null)}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--color-red)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem 1.25rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                  }}
+                  onClick={confirmDelete}
+                  disabled={isSyncing}
+                >
+                  <Trash2 size={15} />
+                  {isSyncing ? 'DELETING...' : 'DELETE ITEM'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

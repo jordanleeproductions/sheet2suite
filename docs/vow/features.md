@@ -64,6 +64,7 @@
 ## 🍽️ 5. Menu & Catering Setup (`MenuSetupManager.tsx`)
 - [x] **[MENU-1] Header Action Realignment:** Moved "Add Menu Item" button to the far right side of the header.
 - [x] **[CATERING-2WAY-SYNC] 2-Way Google Sheets Sync for Catering Menu (`CATERING` Tab):** Full bi-directional synchronization between the app and the `CATERING` spreadsheet tab. Automatically links Course Category to `=SETTINGS!$P$2:$P$50`, populates entree choices into the Guest Registry, and retains cross-device menu changes.
+- [x] **[MENU-DELETE-MODAL] In-App Delete Menu Item Confirmation Modal:** Replaced native browser `window.confirm()` popup with a styled, accessible in-app modal featuring item name highlights, descriptive impact details, and responsive action buttons.
 
 ---
 
