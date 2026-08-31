@@ -157,6 +157,7 @@
 - [x] **[SYS-1] Purchase Activation Flow (`/activate`):** Etsy order verification API with Quick Setup and 4-screen Guided Setup Wizard.
 - [x] **[SYS-2] Multi-Currency Formatting Engine:** Support for USD $, CAD $, French Canadian 35 000 $, GBP £, and EUR €.
 - [x] **[SYS-3] Advanced Settings Portal & Metadata 2-Way Sync:** Metadata editor, currency selector, drive inspector, feature toggles, and dev mock controls. Full 2-way synchronization with `SETTINGS` tab (Wedding Title `B2`, Budget `B3`, Wedding Date `B4`, Location/Venue Details `B5`, and Currency `B6`). State is continuously restored from live sheet data across devices.
+- [x] **[CLEAN-WORKSPACE-ZERO-MOCK-FALLBACK] Zero-Mock Clean Sheet Hydration:** Removed legacy mock fallbacks for `photos`, `gifts` (Thanks page), `music`, and `catering` in the Google Sheets sync API. New workspaces connected to fresh Google Sheets start completely clean with zero sample data unless the user explicitly launches in Demo / Mock Mode.
 - [x] **[GEN-1] Dropdown to Checkbox Standard:** Converted binary Yes/No dropdown fields to native checkboxes (e.g. Staff Meals Required).
 - [x] **[GEN-2] Desktop Wide-Screen Layout Optimization:** Expanded max-width container bounds to 1680px for desktop viewports.
 - [x] **[GEN-3] Toast Notification System:** Brief "Saved!" popup on settings/modal saves and data sync updates.

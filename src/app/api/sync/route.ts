@@ -276,10 +276,10 @@ export async function GET(req: Request) {
       schedule,
       vendors,
       tasks,
-      music: music.length > 0 ? music : mockDatabase.music,
-      photos: photos.length > 0 ? photos : mockDatabase.photos,
-      gifts: gifts.length > 0 ? gifts : mockDatabase.gifts,
-      catering: catering.length > 0 ? catering : (mockDatabase.catering || []),
+      music,
+      photos,
+      gifts,
+      catering,
       tables,
     };
 
