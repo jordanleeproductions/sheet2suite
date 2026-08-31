@@ -11,8 +11,9 @@ import {
   giftMapper,
   musicMapper,
   cateringMapper,
+  tableMapper,
 } from '@/lib/sheets/mapper';
-import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, WeddingData } from '@/lib/sheets/types';
+import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 import { CellGuard } from '@/lib/core/CellGuard';
@@ -21,6 +22,7 @@ import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
 // Map sheet columns to standard header lists so that we can write files correctly
 const HEADERS_MAP = {
   guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
+  tables: ['Table ID', 'Table Name', 'Table Shape', 'Max Seats', 'Include End Seats', 'Single Side Seating'],
   budget: ['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status'],
   expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'],
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],
@@ -110,6 +112,7 @@ export async function GET(req: Request) {
     const giftsTitle = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry', 'Gift_Registry']);
     const musicTitle = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
     const cateringTitle = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
+    const tablesTitle = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
     const dashTitle = availableTitles.some(t => t.toLowerCase() === 'dashboard') ? findTitle(['DASHBOARD', 'Dashboard']) : null;
     const ranges = [
       `'${settingsTitle}'!A1:B10`,
@@ -123,6 +126,7 @@ export async function GET(req: Request) {
       `'${giftsTitle}'!A1:G1000`,
       `'${musicTitle}'!A1:I1000`,
       `'${cateringTitle}'!A1:I1000`,
+      `'${tablesTitle}'!A1:F1000`,
       `'${settingsTitle}'!Z1:Z3`,
     ];
     if (dashTitle) {
@@ -137,66 +141,43 @@ export async function GET(req: Request) {
 
     const valueRanges = batchGetResponse.data.valueRanges || [];
     
-    // Parse SETTINGS Table A1:B10 (A2="Wedding Name" -> B2, A3="Wedding Budget" -> B3, A4="Wedding Date", A5="Location Details", A6="Currency")
     const settingsTableRows = valueRanges[0]?.values || [];
     let weddingName = 'Our Wedding';
     let totalBudget = 30000;
     let weddingDate = '';
     let location = '';
-    let currency = 'USD';
-    let foundInTable = false;
+    let currency = 'USD ($)';
 
-    for (const row of settingsTableRows) {
-      const label = String(row[0] || '').toLowerCase().trim();
-      const val = row[1];
-      if (label.includes('wedding name') || label.includes('couple name')) {
-        if (val) {
-          weddingName = String(val).trim();
-          foundInTable = true;
+    if (settingsTableRows.length > 0) {
+      settingsTableRows.forEach((row: any[]) => {
+        if (!row || row.length < 2) return;
+        const key = String(row[0] || '').trim().toLowerCase();
+        const val = String(row[1] || '').trim();
+        
+        if (key.includes('wedding name') || key.includes('couple') || key.includes('title')) {
+          if (val) weddingName = val;
+        } else if (key.includes('budget')) {
+          const num = Number(val.replace(/[^0-9.-]+/g, ''));
+          if (!isNaN(num) && num > 0) totalBudget = num;
+        } else if (key.includes('date')) {
+          if (val) weddingDate = val;
+        } else if (key.includes('location') || key.includes('venue')) {
+          if (val) location = val;
+        } else if (key.includes('currency')) {
+          if (val) currency = val;
         }
-      } else if (label.includes('budget') || label.includes('wedding budget')) {
-        if (val) {
-          totalBudget = Number(String(val).replace(/[^0-9.]/g, '')) || 30000;
-          foundInTable = true;
-        }
-      } else if (label.includes('wedding date') || label === 'date') {
-        if (val) {
-          weddingDate = String(val).trim();
-          foundInTable = true;
-        }
-      } else if (label.includes('location') || label.includes('venue')) {
-        if (val) {
-          location = String(val).trim();
-          foundInTable = true;
-        }
-      } else if (label.includes('currency')) {
-        if (val) {
-          currency = String(val).trim();
-          foundInTable = true;
-        }
-      }
+      });
     }
 
-    // Fallback: Check B2-B6 directly if row index match, or legacy Z1/Z2/Z3
-    if (!foundInTable) {
-      const b2Val = settingsTableRows[1]?.[1]; // B2
-      const b3Val = settingsTableRows[2]?.[1]; // B3
-      const b4Val = settingsTableRows[3]?.[1]; // B4
-      const b5Val = settingsTableRows[4]?.[1]; // B5
-      const b6Val = settingsTableRows[5]?.[1]; // B6
-      if (b2Val) weddingName = String(b2Val).trim();
-      if (b3Val) totalBudget = Number(String(b3Val).replace(/[^0-9.]/g, '')) || 30000;
-      if (b4Val) weddingDate = String(b4Val).trim();
-      if (b5Val) location = String(b5Val).trim();
-      if (b6Val) currency = String(b6Val).trim();
+    // Parse legacy Settings!Z1:Z3 if standard table was blank
+    if (valueRanges[12]?.values) {
+      const zRows = valueRanges[12].values;
+      if (zRows && zRows.length > 0) {
+        const z1Val = zRows[0]?.[0];
+        const z2Val = zRows[1]?.[0];
+        const z3Val = zRows[2]?.[0];
 
-      if (!b2Val && !b3Val) {
-        const zRows = valueRanges[11]?.values || [];
-        const z1Val = zRows[0]?.[0] || '';
-        const z2Val = zRows[1]?.[0] || '';
-        const z3Val = zRows[2]?.[0] || '';
-
-        if (z2Val) weddingName = String(z2Val).trim();
+        if (z2Val && !weddingName) weddingName = z2Val;
         if (z3Val) totalBudget = Number(z3Val) || 30000;
 
         if (!z2Val && !z3Val && z1Val) {
@@ -267,6 +248,11 @@ export async function GET(req: Request) {
     const cateringHeaders = cateringRows[0] || HEADERS_MAP.catering;
     const catering = cateringRows.slice(1).filter(isNonEmptyRow).map(row => cateringMapper.fromRow(cateringHeaders, row));
 
+    // Parse Tables
+    const tableRows = valueRanges[11]?.values || [];
+    const tableHeaders = tableRows[0] || HEADERS_MAP.tables;
+    const tables = tableRows.slice(1).filter(isNonEmptyRow).map(row => tableMapper.fromRow(tableHeaders, row));
+
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
     const actualCost = expenses.length > 0 
@@ -294,6 +280,7 @@ export async function GET(req: Request) {
       photos: photos.length > 0 ? photos : mockDatabase.photos,
       gifts: gifts.length > 0 ? gifts : mockDatabase.gifts,
       catering: catering.length > 0 ? catering : (mockDatabase.catering || []),
+      tables,
     };
 
     return NextResponse.json({
@@ -358,6 +345,8 @@ export async function POST(req: Request) {
         mockDatabase.gifts = data as GiftItem[];
       } else if (sheetType === 'catering') {
         mockDatabase.catering = data as MenuItem[];
+      } else if (sheetType === 'tables') {
+        mockDatabase.tables = data as TableConfig[];
       }
 
       // Recompute metrics
@@ -549,6 +538,12 @@ export async function POST(req: Request) {
         range = `'${title}'!A1:I1000`;
         (data as MenuItem[]).forEach(item => {
           values.push(cateringMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'tables') {
+        const title = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
+        range = `'${title}'!A1:F1000`;
+        (data as TableConfig[]).forEach(item => {
+          values.push(tableMapper.toRow(headers, item));
         });
       }
 

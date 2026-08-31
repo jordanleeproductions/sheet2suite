@@ -29,22 +29,52 @@ import {
 
 interface SeatingChartManagerProps {
   guests: Guest[];
+  tables?: TableConfig[];
   onUpdateGuests: (updatedGuests: Guest[]) => Promise<void>;
+  onUpdateTables?: (updatedTables: TableConfig[]) => Promise<void>;
   isSyncing?: boolean;
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
-// Default Table Configurations if none exist
+// Default Table Configurations if none exist (Only sweetheart table)
 const INITIAL_TABLES: TableConfig[] = [
   { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Bride & Groom)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
-  { tableId: 'table-1', tableName: 'Table 1 - Head Table', shape: 'circle', capacity: 8 },
-  { tableId: 'table-2', tableName: 'Table 2 - Family VIP', shape: 'square', capacity: 8 },
-  { tableId: 'table-3', tableName: 'Table 3 - Bridal Party', shape: 'rectangle', capacity: 10 },
-  { tableId: 'table-4', tableName: 'Table 4 - Friends & College', shape: 'circle', capacity: 6 },
 ];
 
-export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing, onOpenPrintStudio }: SeatingChartManagerProps) {
-  const [tables, setTables] = useState<TableConfig[]>(INITIAL_TABLES);
+export default function SeatingChartManager({ guests, tables: tablesProp, onUpdateGuests, onUpdateTables, isSyncing, onOpenPrintStudio }: SeatingChartManagerProps) {
+  const [tables, setTables] = useState<TableConfig[]>(() => {
+    if (tablesProp && tablesProp.length > 0) return tablesProp;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('s2v_tables_config');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return INITIAL_TABLES;
+  });
+
+  // Synchronize when tables prop updates from sheets
+  React.useEffect(() => {
+    if (tablesProp !== undefined) {
+      setTables(tablesProp.length > 0 ? tablesProp : INITIAL_TABLES);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('s2v_tables_config', JSON.stringify(tablesProp.length > 0 ? tablesProp : INITIAL_TABLES));
+      }
+    }
+  }, [tablesProp]);
+
+  // Helper to persist tables to state, localStorage, and 2-way Google Sheets sync
+  const saveTables = (updatedTables: TableConfig[]) => {
+    setTables(updatedTables);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_tables_config', JSON.stringify(updatedTables));
+    }
+    if (onUpdateTables) {
+      onUpdateTables(updatedTables).catch(err => console.error('Error syncing tables to Google Sheets:', err));
+    }
+  };
   
   // Modals & Active Selections
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
@@ -168,10 +198,10 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
     let updatedTables: TableConfig[];
     if (isAddingTable) {
       updatedTables = [...tables, tableData];
-      setTables(updatedTables);
+      saveTables(updatedTables);
     } else if (editingTable) {
       updatedTables = tables.map(t => t.tableId === editingTable.tableId ? tableData : t);
-      setTables(updatedTables);
+      saveTables(updatedTables);
     } else {
       return;
     }
@@ -195,7 +225,8 @@ export default function SeatingChartManager({ guests, onUpdateGuests, isSyncing,
   // Delete Table Confirmation Handler
   const confirmDeleteTable = () => {
     if (!tableToDelete) return;
-    setTables(tables.filter(t => t.tableId !== tableToDelete.tableId));
+    const updatedTables = tables.filter(t => t.tableId !== tableToDelete.tableId);
+    saveTables(updatedTables);
 
     // Unassign guests at this table
     const updated = guests.map(g => 

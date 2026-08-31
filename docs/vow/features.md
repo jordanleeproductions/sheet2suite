@@ -12,6 +12,7 @@
 - [x] **[SEAT-5] Visual Table Diagrams & Numbered Seat Maps for Coordinators (`PrintTemplatesModal.tsx`):** Renders dynamic SVG/CSS shape diagrams (Circle, Rectangle, Square, Sweetheart) on printable Table Roster cards with numbered seat nodes (`#1`, `#2`, `#3`...) matching the numbered guest roster for day-of venue setup. Includes a toggle option in Print Studio.
 - [x] **[SEAT-6] Unassigned Guests Drawer Initials Avatar:** Display guest initial avatar circles to the left of names inside the Unassigned Guests drawer.
 - [x] **[SEAT-7] Seating KPI Card Value Font Consistency:** Matched KPI card value typography with Summary Dashboard monospace fonts (`var(--font-mono)`).
+- [x] **[SEAT-2WAY-SYNC] 2-Way Google Sheets Sync for Tables & Clean Initial State (`TABLES` Tab):** Full bi-directional synchronization between the app and the `TABLES` spreadsheet tab. Persists custom table additions, edits, and deletions across devices. Cleaned default initial state so only the Sweetheart table is present by default instead of cluttering mock tables.
 
 ---
 

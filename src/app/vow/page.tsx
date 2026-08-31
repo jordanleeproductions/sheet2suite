@@ -786,7 +786,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts' | 'catering', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'tables' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts' | 'catering', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
@@ -2564,7 +2564,9 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'tables' && weddingData && (
                 <SeatingChartManager
                   guests={weddingData.guests}
+                  tables={weddingData.tables}
                   onUpdateGuests={(data) => syncUpdate('guests', data)}
+                  onUpdateTables={(data) => syncUpdate('tables', data)}
                   isSyncing={isSyncing}
                   onOpenPrintStudio={(tmpl) => {
                     setPrintModalInitialTemplate(tmpl);

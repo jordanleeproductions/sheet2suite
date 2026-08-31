@@ -1,4 +1,4 @@
-import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -446,5 +446,65 @@ export const cateringMapper = {
       isNutFree: item.isNutFree ? 'TRUE' : 'FALSE',
     };
     return mapObjectToRow(headers, formattedItem as any, CATERING_HEADERS);
+  }
+};
+
+export const TABLES_HEADERS: Record<string, keyof TableConfig> = {
+  'Table ID': 'tableId',
+  'ID': 'tableId',
+  'Table Name': 'tableName',
+  'Name': 'tableName',
+  'Table Shape': 'shape',
+  'Shape': 'shape',
+  'Max Seats': 'capacity',
+  'Capacity': 'capacity',
+  'Seats': 'capacity',
+  'Include End Seats': 'includeEndSeats',
+  'Single Side Seating': 'singleSideSeating',
+};
+
+export const tableMapper = {
+  fromRow(headers: string[], row: any[]): TableConfig {
+    const obj = mapRowToObject<TableConfig>(headers, row, TABLES_HEADERS);
+    const toBool = (val: any, defaultVal = false): boolean => {
+      if (typeof val === 'boolean') return val;
+      const s = String(val || '').trim().toLowerCase();
+      if (s === 'true' || s === 'yes' || s === 'y' || s === '1') return true;
+      if (s === 'false' || s === 'no' || s === 'n' || s === '0') return false;
+      return defaultVal;
+    };
+
+    let shapeStr = String(obj.shape || 'circle').trim().toLowerCase();
+    let shape: 'circle' | 'rectangle' | 'square' = 'circle';
+    if (shapeStr.includes('rect') || shapeStr.includes('sweetheart') || shapeStr.includes('head') || shapeStr.includes('oval')) {
+      shape = 'rectangle';
+    } else if (shapeStr.includes('square')) {
+      shape = 'square';
+    }
+
+    const capacity = parseInt(String(obj.capacity || '8'), 10) || 8;
+
+    return {
+      tableId: String(obj.tableId || `table-${Date.now()}`),
+      tableName: String(obj.tableName || ''),
+      shape,
+      capacity,
+      includeEndSeats: toBool(obj.includeEndSeats, false),
+      singleSideSeating: toBool(obj.singleSideSeating, false),
+    };
+  },
+  toRow(headers: string[], item: TableConfig): any[] {
+    let shapeDisplay = 'Circle';
+    if (item.shape === 'rectangle') shapeDisplay = 'Rectangle';
+    else if (item.shape === 'square') shapeDisplay = 'Square';
+
+    const formattedItem = {
+      ...item,
+      shape: shapeDisplay,
+      capacity: item.capacity,
+      includeEndSeats: item.includeEndSeats ? 'TRUE' : 'FALSE',
+      singleSideSeating: item.singleSideSeating ? 'TRUE' : 'FALSE',
+    };
+    return mapObjectToRow(headers, formattedItem as any, TABLES_HEADERS);
   }
 };

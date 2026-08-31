@@ -173,6 +173,7 @@ export interface EnabledModules {
 export interface WeddingData {
   dashboard: DashboardSummary;
   guests: Guest[];
+  tables?: TableConfig[];
   budget: BudgetItem[];
   expenses?: ExpenseItem[];
   schedule: ScheduleEvent[];
