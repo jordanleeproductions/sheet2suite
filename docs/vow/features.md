@@ -138,6 +138,7 @@
 - [x] **[BUDGET-3] Optional Unset Budget Tracking Mode:** Toggle mode to track expenses without requiring a fixed overall budget limit.
 - [x] **[BUDGET-4] Secondary Expenses Log Table & Dynamic Budget Calculations:** Added dedicated secondary Expenses table (`'EXPENSES'` tab / `'Expenses'` sheet table) to record individual itemized purchases (`Item ID`, `Description`, `Category`, `Actual Cost`, `Amount Paid`, `Purchase Date`, `Notes`). Renamed primary header button to `NEW BUDGET` and added secondary header button `NEW EXPENSE`. Logged expenses dynamically calculate category actual costs, amounts paid, remaining headroom, and summary dashboard metrics.
 - [x] **[VND-BUDGET-SYNC] Auto-Sync Vendor Financials to Budget Tracker:** Adding, updating, or deleting a Vendor with contract values, estimates, categories, and deposits automatically creates or updates the corresponding line item in the Budget Tracker and recalculates totals and payment statuses.
+- [x] **[BUDGET-CATEGORY-DROPDOWN-AUTO-CLEAR] Category Dropdown & Auto-Clearing Zero Input UX:** Added wedding category selection dropdown populated with standard categories (`Venue`, `Catering`, `Florals`, `DJ`, `Photography`, etc.) + custom typing option. Number inputs for Estimated Cost, Actual Cost, and Amount Paid automatically clear the default `0` on focus and allow instant typing without leading zeroes.
 
 ---
 

@@ -17,6 +17,31 @@ interface BudgetLedgerManagerProps {
   currency?: string;
 }
 
+// Standard Wedding Budget Categories from Master Schema / SETTINGS
+const STANDARD_BUDGET_CATEGORIES = [
+  'Venue & Catering',
+  'Venue',
+  'Catering',
+  'Photography',
+  'Videography',
+  'Attire',
+  'Florals',
+  'Music/DJ',
+  'DJ',
+  'Hair & Makeup',
+  'Decor & Rentals',
+  'Stationery & Invitations',
+  'Cake & Desserts',
+  'Transportation',
+  'Favors & Gifts',
+  'Officiant',
+  'Planner & Coordinator',
+  'Jewelry & Rings',
+  'Rehearsal Dinner',
+  'Honeymoon',
+  'General',
+];
+
 export default function BudgetLedgerManager({
   budget,
   expenses = [],
@@ -60,7 +85,7 @@ export default function BudgetLedgerManager({
   // Unique categories for summaries & dropdowns
   const budgetCategories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
   const expenseCategories = Array.from(new Set(expenses.map(item => item.category).filter(Boolean)));
-  const allCategories = Array.from(new Set([...budgetCategories, ...expenseCategories])).filter(Boolean);
+  const allCategories = Array.from(new Set([...STANDARD_BUDGET_CATEGORIES, ...budgetCategories, ...expenseCategories])).filter(Boolean);
 
   const toggleCategoryFilter = (cat: string) => {
     setSelectedCategories(prev => {
@@ -187,9 +212,9 @@ export default function BudgetLedgerManager({
     setFormState({
       category: '',
       vendorName: '',
-      estimatedCost: 0,
-      actualCost: 0,
-      amountPaid: 0,
+      estimatedCost: '' as any,
+      actualCost: '' as any,
+      amountPaid: '' as any,
       dueDate: '',
       paymentStatus: 'Pending',
     });
@@ -213,7 +238,7 @@ export default function BudgetLedgerManager({
     setFormState(prev => ({
       ...prev,
       [field]: field === 'estimatedCost' || field === 'actualCost' || field === 'amountPaid'
-        ? Number(value) || 0
+        ? (value === '' ? '' : (isNaN(Number(value)) ? value : Number(value)))
         : value
     }));
   };
@@ -251,9 +276,9 @@ export default function BudgetLedgerManager({
       setFormState({
         category: formState.category || '',
         vendorName: '',
-        estimatedCost: 0,
-        actualCost: 0,
-        amountPaid: 0,
+        estimatedCost: '' as any,
+        actualCost: '' as any,
+        amountPaid: '' as any,
         dueDate: '',
         paymentStatus: 'Pending',
       });
@@ -276,7 +301,7 @@ export default function BudgetLedgerManager({
     setExpenseFormState({
       description: '',
       category: allCategories[0] || 'General',
-      amount: 0,
+      amount: '' as any,
       actualCost: 0,
       amountPaid: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
@@ -1160,18 +1185,38 @@ export default function BudgetLedgerManager({
               <div style={styles.formBody}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>CATEGORY</label>
-                  <input
-                    type="text"
-                    list="budget-categories-list"
-                    value={formState.category || ''}
-                    onChange={(e) => handleFormChange('category', e.target.value)}
-                    style={styles.input}
-                    placeholder="e.g. Venue, Catering, Florals"
-                    required
-                  />
-                  <datalist id="budget-categories-list">
-                    {allCategories.map(cat => <option key={cat} value={cat} />)}
-                  </datalist>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <select
+                      value={allCategories.includes(formState.category || '') ? formState.category : '__custom__'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__custom__') {
+                          handleFormChange('category', '');
+                        } else {
+                          handleFormChange('category', val);
+                        }
+                      }}
+                      style={styles.select}
+                    >
+                      <option value="" disabled>-- Select Wedding Category --</option>
+                      {allCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="__custom__">+ Custom Category / Type New...</option>
+                    </select>
+
+                    {(!allCategories.includes(formState.category || '') || formState.category === '') && (
+                      <input
+                        type="text"
+                        value={formState.category || ''}
+                        onChange={(e) => handleFormChange('category', e.target.value)}
+                        style={styles.input}
+                        placeholder="Type custom category name..."
+                        required
+                        autoFocus
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div style={styles.formGroup}>
@@ -1181,7 +1226,7 @@ export default function BudgetLedgerManager({
                     value={formState.vendorName || ''}
                     onChange={(e) => handleFormChange('vendorName', e.target.value)}
                     style={styles.input}
-                    placeholder="e.g. Grand Plaza Hall"
+                    placeholder="e.g. Grand Plaza Hall, DJ Brennan"
                     required
                   />
                 </div>
@@ -1191,11 +1236,16 @@ export default function BudgetLedgerManager({
                     <label style={styles.label}>ESTIMATED COST ($)</label>
                     <input
                       type="number"
-                      value={formState.estimatedCost ?? 0}
+                      value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
                       onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
+                      onFocus={(e) => {
+                        if (e.target.value === '0') handleFormChange('estimatedCost', '');
+                        e.target.select();
+                      }}
                       style={styles.input}
                       min="0"
                       step="any"
+                      placeholder="0"
                     />
                   </div>
 
@@ -1203,11 +1253,16 @@ export default function BudgetLedgerManager({
                     <label style={styles.label}>ACTUAL COST ($)</label>
                     <input
                       type="number"
-                      value={formState.actualCost ?? 0}
+                      value={formState.actualCost !== undefined && formState.actualCost !== null ? formState.actualCost : ''}
                       onChange={(e) => handleFormChange('actualCost', e.target.value)}
+                      onFocus={(e) => {
+                        if (e.target.value === '0') handleFormChange('actualCost', '');
+                        e.target.select();
+                      }}
                       style={styles.input}
                       min="0"
                       step="any"
+                      placeholder="0"
                     />
                   </div>
                 </div>
@@ -1217,11 +1272,16 @@ export default function BudgetLedgerManager({
                     <label style={styles.label}>AMOUNT PAID ($)</label>
                     <input
                       type="number"
-                      value={formState.amountPaid ?? 0}
+                      value={formState.amountPaid !== undefined && formState.amountPaid !== null ? formState.amountPaid : ''}
                       onChange={(e) => handleFormChange('amountPaid', e.target.value)}
+                      onFocus={(e) => {
+                        if (e.target.value === '0') handleFormChange('amountPaid', '');
+                        e.target.select();
+                      }}
                       style={styles.input}
                       min="0"
                       step="any"
+                      placeholder="0"
                     />
                   </div>
 
@@ -1309,9 +1369,9 @@ export default function BudgetLedgerManager({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     <select
                       value={
-                        budgetCategories.includes(expenseFormState.category || '')
+                        allCategories.includes(expenseFormState.category || '')
                           ? expenseFormState.category
-                          : (expenseFormState.category ? '__custom__' : (budgetCategories[0] || 'General'))
+                          : (expenseFormState.category ? '__custom__' : (allCategories[0] || 'General'))
                       }
                       onChange={(e) => {
                         const val = e.target.value;
@@ -1323,13 +1383,13 @@ export default function BudgetLedgerManager({
                       }}
                       style={styles.select}
                     >
-                      {budgetCategories.map(cat => (
+                      {allCategories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                       <option value="__custom__">+ Add New / Custom Category...</option>
                     </select>
 
-                    {(!budgetCategories.includes(expenseFormState.category || '') || expenseFormState.category === '') && (
+                    {(!allCategories.includes(expenseFormState.category || '') || expenseFormState.category === '') && (
                       <input
                         type="text"
                         value={expenseFormState.category || ''}
@@ -1347,11 +1407,16 @@ export default function BudgetLedgerManager({
                   <label style={styles.label}>AMOUNT ($)</label>
                   <input
                     type="number"
-                    value={expenseFormState.amount ?? expenseFormState.actualCost ?? expenseFormState.amountPaid ?? 0}
+                    value={expenseFormState.amount !== undefined && expenseFormState.amount !== null ? expenseFormState.amount : ''}
                     onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
+                    onFocus={(e) => {
+                      if (e.target.value === '0') handleExpenseFormChange('amount', '');
+                      e.target.select();
+                    }}
                     style={styles.input}
                     min="0"
                     step="any"
+                    placeholder="0"
                     required
                   />
                 </div>
