@@ -45,7 +45,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
   - **Safe Bottom Padding:** Automatically applies `padding-bottom: 5.5rem` on mobile viewports to prevent content clipping behind the fixed floating tab bar.
 - **Streamlined Quick Settings Dropdown:** Header settings icon triggers a lightweight dropdown for fast visual tweaks: Design Style (`Editorial` vs `Neo-Brutalism`), Color Mode (`Light` vs `Dark`), Primary Accent Color picker, and a direct launch button for **`ADVANCED SETTINGS`**.
 - **Advanced Settings & Configuration Portal (`AdvancedSettingsModal.tsx`):**
-  - 💒 **Wedding Details & Location:** Edit Wedding Title, Event Date (with live countdown sync), and Venue/Location details (synced to `Settings!B2`).
+  - 💒 **Wedding Details & Location:** Edit Wedding Title, Event Date (with live countdown sync), Venue/Location details, and Total Target Budget (synced to `Settings!B2:B3`).
   - 📁 **Drive & Data Source Inspector:** Displays Google Spreadsheet ID, direct link to open Google Sheet, and Drive folder path (`My Drive/Wedding Planning`).
   - ⚙️ **Feature Module Controls:** Toggle active tabs (*Guest Registry*, *Seating Chart*, *Budget Ledger*, *Day-Of Timeline*, *Vendor Directory*, *Kanban Checklist*, *Music Playlist*, *Photo Shot List*, *Thank You Tracker*). Disabled modules automatically hide from navbar and summary dashboard.
   - 🛡️ **Security & Access Control:** Read-only vendor portal summary, spouse/partner co-planning admin invitation input (`GRANT ADMIN ACCESS` with Phase 3 Germin8 integration badge), and master workspace disconnect button.

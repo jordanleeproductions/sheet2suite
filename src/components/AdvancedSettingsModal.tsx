@@ -39,6 +39,7 @@ interface AdvancedSettingsModalProps {
   weddingName: string;
   weddingDate: string;
   locationDetails?: string;
+  totalBudget?: number;
   driveFolder: string;
   enabledModules: ModuleConfig;
   isMockMode: boolean;
@@ -48,7 +49,7 @@ interface AdvancedSettingsModalProps {
   timeFormat: '12h' | '24h';
   currency?: string;
   showTopNav?: boolean;
-  onUpdateWeddingDetails: (name: string, date: string, location?: string) => Promise<void>;
+  onUpdateWeddingDetails: (name: string, date: string, location?: string, budget?: number) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
   onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => void;
   onUpdateTheme: (theme: 'light' | 'dark') => void;
@@ -68,6 +69,7 @@ export default function AdvancedSettingsModal({
   weddingName: initialName,
   weddingDate: initialDate,
   locationDetails: initialLocation = '',
+  totalBudget: initialBudget,
   driveFolder,
   enabledModules,
   isMockMode,
@@ -98,6 +100,7 @@ export default function AdvancedSettingsModal({
   const [weddingName, setWeddingName] = useState(initialName || 'Our Wedding');
   const [weddingDate, setWeddingDate] = useState(initialDate || '');
   const [locationDetails, setLocationDetails] = useState(initialLocation || '');
+  const [totalBudget, setTotalBudget] = useState<number | string>(initialBudget ?? '');
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -113,6 +116,10 @@ export default function AdvancedSettingsModal({
   React.useEffect(() => {
     if (initialLocation !== undefined) setLocationDetails(initialLocation);
   }, [initialLocation]);
+
+  React.useEffect(() => {
+    if (initialBudget !== undefined) setTotalBudget(initialBudget);
+  }, [initialBudget]);
 
   // Partner Co-Planning State [SHARE-4]
   const [coPlannersList, setCoPlannersList] = useState<string[]>(initialCoPlanners || []);
@@ -223,7 +230,8 @@ export default function AdvancedSettingsModal({
     e.preventDefault();
     try {
       setIsSavingDetails(true);
-      await onUpdateWeddingDetails(weddingName, weddingDate, locationDetails);
+      const parsedBudget = totalBudget !== '' && !isNaN(Number(totalBudget)) ? Number(totalBudget) : undefined;
+      await onUpdateWeddingDetails(weddingName, weddingDate, locationDetails, parsedBudget);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
     } catch (err) {
@@ -795,6 +803,22 @@ export default function AdvancedSettingsModal({
                     placeholder="e.g. Grand Plaza Hotel, Los Angeles, CA"
                     style={styles.input}
                   />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>TOTAL TARGET BUDGET</label>
+                  <input
+                    type="number"
+                    value={totalBudget}
+                    onChange={(e) => setTotalBudget(e.target.value)}
+                    placeholder="e.g. 35000"
+                    style={styles.input}
+                    min="0"
+                    step="any"
+                  />
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.25rem' }}>
+                    Synced with cell <code>Settings!B3</code> and updates Financial Ledger and Summary KPI meters.
+                  </span>
                 </div>
 
                 <div style={styles.formGroup}>

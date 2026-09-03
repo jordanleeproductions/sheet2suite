@@ -27,6 +27,9 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [formState, setFormState] = useState<Partial<Task>>({});
 
+  // View mode for Progress Metrics ('cards' | 'bar')
+  const [progressViewMode, setProgressViewMode] = useState<'cards' | 'bar'>('cards');
+
   // Sorting state
   const [sortField, setSortField] = useState<'default' | 'priority' | 'dueDate'>('default');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');

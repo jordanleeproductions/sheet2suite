@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
 import { LocalLicensingDb } from '@/lib/db/licensingDb';
+import { LocalFirestore } from '@/lib/db/firestoreDb';
 
 function getOAuth2Client(redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';

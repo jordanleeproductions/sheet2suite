@@ -213,6 +213,11 @@
   - **Domain & Spreadsheet Schema Update**: Separated guest seating into `ceremonySeating` (`Ceremony Seating` column) and `tableAssignment` (`Reception Table` column), resolving value override conflicts.
   - **UI & Seating Chart Integration**: Added `CEREMONY SEATING (ROW / SIDE)` form input in Add/Edit Guest modal (`GuestListManager.tsx`), table/card badges, and ceremony row/aisle assignment support in `SeatingChartManager.tsx`.
   - **Export Engine Compatibility**: Updated `masterTemplateExporter.ts`, `xlsxGenerator.ts`, and `PrintTemplatesModal.tsx` Canva CSV exporters to include `Ceremony Seating`.
+- [x] **[FETCH-SETTINGS-ON-LOGIN-RECONNECT] Wedding Date, Location & Budget Hydration from SETTINGS Sheet:**
+  - **Direct Sheet Hydration on Mobile / Web OAuth Reconnect (`src/app/vow/page.tsx`)**: Fixed mobile session reconnection bug where `weddingDate`, `locationDetails`, and `budgetThreshold` were not populated from the connected Google Sheet's `SETTINGS` tab. Now immediately invokes `fetchWeddingData(accessToken, provision.spreadsheetId)` during `handleAuthMessage` rather than waiting on asynchronous state dependency effects.
+  - **Dual-Argument `fetchWeddingData` Engine**: Updated `fetchWeddingData` signature to accept `(overrideToken?: string, overrideSpreadsheetId?: string)`, avoiding empty/stale `spreadsheetId` closures during login transitions.
+  - **Settings Budget Ledger & KPI Meter Synchronization**: Hydrates `totalBudget` from `data.dashboard.totalBudget` directly into `budgetThreshold` state and `localStorage` (`s2v_budget_threshold`) upon login and mount, ensuring countdown timers and budget meters reflect the Google Sheet immediately.
+  - **Total Budget Configuration in Advanced Settings (`AdvancedSettingsModal.tsx`)**: Added `TOTAL TARGET BUDGET` input to the Wedding Details tab, enabling couples to view and update cell `Settings!B3` directly from the settings dialog.
 
 ---
 ---

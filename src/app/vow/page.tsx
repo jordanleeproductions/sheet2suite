@@ -100,6 +100,8 @@ export default function Sheet2VowDashboard() {
               setIsMockMode(false);
               setIsOnboarded(true);
               addToast(`Welcome back ${user.email}! Reconnected active workspace.`, 'success');
+              // Fetch latest metadata (wedding date, location, budget) directly from Google Sheet SETTINGS
+              fetchWeddingData(accessToken, provision.spreadsheetId);
             } else {
               setSpreadsheetId('');
               setIsMockMode(false);
@@ -369,24 +371,37 @@ export default function Sheet2VowDashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleUpdateWeddingDetails = async (name: string, date: string, location?: string) => {
+  const handleUpdateWeddingDetails = async (name: string, date: string, location?: string, budget?: number) => {
     setWeddingName(name);
     setWeddingDate(date);
     if (location !== undefined) setLocationDetails(location);
+    if (budget !== undefined && !isNaN(budget) && budget > 0) {
+      setBudgetThreshold(budget);
+    }
     if (typeof window !== 'undefined') {
       localStorage.setItem('s2v_wedding_name', name);
       localStorage.setItem('s2v_wedding_date', date);
       if (location !== undefined) localStorage.setItem('s2v_location', location);
+      if (budget !== undefined && !isNaN(budget) && budget > 0) {
+        localStorage.setItem('s2v_budget_threshold', String(budget));
+      }
     }
     if (weddingData) {
-      await syncUpdate('dashboard', {
-        totalBudget: weddingData.dashboard.totalBudget,
-        budget: weddingData.dashboard.totalBudget,
+      const newTotalBudget = (budget !== undefined && !isNaN(budget) && budget > 0) ? budget : weddingData.dashboard.totalBudget;
+      const updatedDash = {
+        ...weddingData.dashboard,
+        totalBudget: newTotalBudget,
+        budget: newTotalBudget,
         weddingName: name,
         weddingDate: date,
         location: location !== undefined ? location : locationDetails,
         currency: currency,
+      };
+      setWeddingData({
+        ...weddingData,
+        dashboard: updatedDash,
       });
+      await syncUpdate('dashboard', updatedDash);
     }
   };
 
@@ -542,9 +557,11 @@ export default function Sheet2VowDashboard() {
     if (savedDemo === 'true') setIsDemoMode(true);
 
     const savedLocation = localStorage.getItem('s2v_location');
+    const savedBudget = localStorage.getItem('s2v_budget_threshold');
     if (savedName) setWeddingName(savedName);
     if (savedDate) setWeddingDate(savedDate);
     if (savedLocation) setLocationDetails(savedLocation);
+    if (savedBudget && !isNaN(Number(savedBudget))) setBudgetThreshold(Number(savedBudget));
     if (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') setStyleTheme(savedStyleTheme);
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
@@ -643,7 +660,7 @@ export default function Sheet2VowDashboard() {
     }
   }, [isOnboarded, spreadsheetId, activeTab]);
 
-  const fetchWeddingData = async (overrideToken?: string) => {
+  const fetchWeddingData = async (overrideToken?: string, overrideSpreadsheetId?: string) => {
     setIsLoading(true);
     setSyncError(null);
     try {
@@ -657,7 +674,13 @@ export default function Sheet2VowDashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`/api/sync?spreadsheetId=${spreadsheetId}`, {
+      const targetSheetId = overrideSpreadsheetId || spreadsheetId;
+      if (!targetSheetId) {
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/sync?spreadsheetId=${targetSheetId}`, {
         method: 'GET',
         headers
       });
@@ -681,12 +704,16 @@ export default function Sheet2VowDashboard() {
           setLocationDetails(res.data.dashboard.location);
           if (typeof window !== 'undefined') localStorage.setItem('s2v_location', res.data.dashboard.location);
         }
+        if (res.data?.dashboard?.totalBudget !== undefined && !isNaN(Number(res.data.dashboard.totalBudget)) && Number(res.data.dashboard.totalBudget) > 0) {
+          setBudgetThreshold(Number(res.data.dashboard.totalBudget));
+          if (typeof window !== 'undefined') localStorage.setItem('s2v_budget_threshold', String(res.data.dashboard.totalBudget));
+        }
         if (res.data?.dashboard?.currency) {
           setCurrency(res.data.dashboard.currency);
           if (typeof window !== 'undefined') localStorage.setItem('s2v_currency', res.data.dashboard.currency);
         }
         // Sync welcome card dismissal state
-        const localDismissed = typeof window !== 'undefined' ? localStorage.getItem(`s2v_welcome_dismissed_${spreadsheetId}`) : null;
+        const localDismissed = typeof window !== 'undefined' ? localStorage.getItem(`s2v_welcome_dismissed_${targetSheetId}`) : null;
         if (localDismissed === 'true' || res.hasDismissedWelcomeCard === true) {
           setHasDismissedWelcomeCard(true);
         } else {
@@ -2247,6 +2274,7 @@ export default function Sheet2VowDashboard() {
           weddingName={weddingName}
           weddingDate={weddingDate}
           locationDetails={locationDetails || weddingData?.dashboard?.location || ''}
+          totalBudget={budgetThreshold || weddingData?.dashboard?.totalBudget}
           driveFolder={driveFolder}
           enabledModules={enabledModules}
           isMockMode={isMockMode}
