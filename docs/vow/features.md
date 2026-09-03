@@ -58,6 +58,12 @@
 - [x] **[GUEST-7] Header Action Realignment & Subtitle:** Moved "Add Guest" button to right hand side with centered text and added a descriptive subtitle under "Guest Registry".
 - [x] **[GUEST-8] Dynamic Party Group Combo Dropdown:** Converted Party Group text input in guest modal to an interactive HTML5 combo dropdown pre-seeded with existing party groups.
 - [x] **[GUEST-CARD-REDESIGN] Responsive Guest Card Layout & Data Density:** Redesigned guest cards with dedicated contact row, 2x2 structured meta chips for Reception Table, Ceremony Seating, Meal Choice, and Dietary Restrictions with ellipsis truncation, eliminating content bleeding across mobile and desktop viewports.
+- [x] **[GUEST-MOBILE-HEADER-UI-REFACTOR] Mobile View Header & Filter Ergonomics:** Moved grouping selector (`ALL GUESTS`, `BY SEATING TABLE`, `BY PARTY GROUP`) above the search bar in the filter section for cleaner thumb access. Placed `+ ADD GUEST` button on its own dedicated full-width row with responsive sizing matching other managers, freeing up top actions to hold Cards/List layout switcher and CSV/Print studio shortcuts.
+- [x] **[RECEPTION-TABLES-SYNC-AND-GUEST-LINK] Reception Table Seating Sync & Guest Table ID Linkage (`TABLES` & `GUESTS` Tab):**
+  - Eliminated phantom/ghost tables by removing fallback generated timestamp IDs during row hydration and strictly filtering empty rows without valid `tableId` in `GET /api/sync`, `POST /api/sync`, and `SeatingChartManager.tsx`.
+  - Linked guest `tableAssignment` directly to canonical `tableId` matching the `TABLES` tab Column A while seamlessly supporting legacy name matching.
+  - Updated Add/Edit guest dropdown in `GuestListManager.tsx` to list configured tables with `tableId` values and `${tableName} (${tableId})` labels.
+  - Synchronized Print Studio (`PrintTemplatesModal.tsx`), table reassignment popups, seating diagrams, and relational capacity calculations (`relationalSync.ts`) to resolve human-readable table names from `tableId`.
 - [x] **[GUEST-DECLINED-LOCK] Declined RSVP Meal & Seating Invalidation Rule:** Automatically clears and disables reception table assignments, ceremony seating, and meal choice selections when a guest's RSVP is set to `Declined`. Hides the 4 inner meta chips (*Reception*, *Ceremony*, *Meal*, *Diet*) on the guest card for a cleaner declined view, and excludes declined guests from seating assignment picker modals.
 
 ---

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Guest, ScheduleEvent, Vendor } from '@/lib/sheets/types';
+import { Guest, ScheduleEvent, Vendor, TableConfig } from '@/lib/sheets/types';
 import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, MapPin, Sparkles, Scissors, Music } from 'lucide-react';
 import { formatTimeDisplay } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
@@ -13,6 +13,7 @@ interface PrintTemplatesModalProps {
   guests?: Guest[];
   schedule?: ScheduleEvent[];
   vendors?: Vendor[];
+  tables?: TableConfig[];
   weddingName?: string;
   weddingDate?: string;
   timeFormat?: '12h' | '24h';
@@ -25,6 +26,7 @@ export default function PrintTemplatesModal({
   guests = [],
   schedule = [],
   vendors = [],
+  tables = [],
   weddingName = 'Our Wedding',
   weddingDate = '',
   timeFormat = '12h',
@@ -54,8 +56,30 @@ export default function PrintTemplatesModal({
   const [showCropMarks, setShowCropMarks] = useState<boolean>(true);
   const [showBleedGuard, setShowBleedGuard] = useState<boolean>(true);
 
-  // Filtered Lists
-  const tablesList = Array.from(new Set(guests.map(g => g.tableAssignment).filter(Boolean)));
+  // Filtered Lists & Table Resolution
+  const resolveTableName = (tableIdOrName?: string): string => {
+    if (!tableIdOrName || tableIdOrName === 'Unassigned') return 'Unassigned';
+    const found = tables.find(t => t.tableId === tableIdOrName || t.tableName === tableIdOrName);
+    return found?.tableName || tableIdOrName;
+  };
+
+  const isGuestAtTable = (guest: Guest, tableIdOrName: string): boolean => {
+    if (!guest.tableAssignment) return false;
+    const target = tableIdOrName.trim().toLowerCase();
+    const assignment = guest.tableAssignment.trim().toLowerCase();
+    if (assignment === target) return true;
+    const found = tables.find(t => t.tableId.toLowerCase() === target || t.tableName.toLowerCase() === target);
+    if (found) {
+      return assignment === found.tableId.toLowerCase() || assignment === found.tableName.toLowerCase();
+    }
+    return false;
+  };
+
+  const tablesList = Array.from(new Set([
+    ...tables.filter(t => Boolean(t && t.tableId && t.tableId.trim() !== '')).map(t => t.tableId),
+    ...guests.map(g => (g.tableAssignment || '').trim()).filter(Boolean)
+  ])).filter(t => t !== 'Unassigned');
+
   const rolesList = Array.from(new Set(
     schedule.flatMap(e => (e.responsibility || '').split(/[,/]/).map(r => r.trim()).filter(Boolean))
   ));
@@ -66,7 +90,7 @@ export default function PrintTemplatesModal({
   
   const filteredPlaceCardGuests = attendingGuests.filter(g => {
     if (selectedTableFilter === 'ALL') return true;
-    return (g.tableAssignment || '').toLowerCase() === selectedTableFilter.toLowerCase();
+    return isGuestAtTable(g, selectedTableFilter);
   });
 
   const filteredTimelineEvents = schedule.filter(e => {
@@ -585,7 +609,7 @@ export default function PrintTemplatesModal({
                     >
                       <option value="ALL">ALL TABLES ({tablesList.length} Tables)</option>
                       {tablesList.map(tbl => (
-                        <option key={tbl} value={tbl}>{tbl}</option>
+                        <option key={tbl} value={tbl}>{resolveTableName(tbl)}</option>
                       ))}
                     </select>
                   </div>
@@ -771,17 +795,18 @@ export default function PrintTemplatesModal({
                       ).map((tableChunk, chunkIdx, chunksArray) => (
                         <div key={chunkIdx} style={{ pageBreakAfter: chunkIdx === chunksArray.length - 1 ? 'auto' : 'always', marginBottom: '2rem' }}>
                           <div style={styles.tableCardsGrid}>
-                            {tableChunk.map((tableName) => {
-                              const tableGuests = attendingGuests.filter(g => (g.tableAssignment || '').toLowerCase() === tableName.toLowerCase());
+                            {tableChunk.map((tableKey) => {
+                              const tableGuests = attendingGuests.filter(g => isGuestAtTable(g, tableKey));
+                              const displayTitle = resolveTableName(tableKey);
                               return (
-                                <div key={tableName} style={styles.tableTentCard}>
+                                <div key={tableKey} style={styles.tableTentCard}>
                                   <div style={styles.tableTentHeader}>
-                                    <h3 style={styles.tableTentTitle}>{tableName.toUpperCase()}</h3>
+                                    <h3 style={styles.tableTentTitle}>{displayTitle.toUpperCase()}</h3>
                                     <span style={styles.tableTentSubtitle}>{tableGuests.length} Guests Assigned</span>
                                   </div>
 
                                   {/* Coordinator Visual Table Diagram */}
-                                  {showSeatMaps && renderTableDiagram(tableName, tableGuests)}
+                                  {showSeatMaps && renderTableDiagram(displayTitle, tableGuests)}
 
                                   <div style={styles.tableTentGuestList}>
                                     {tableGuests.length === 0 ? (
@@ -1125,11 +1150,12 @@ export default function PrintTemplatesModal({
                           RECEPTION HALL FLOOR PLAN OVERVIEW
                         </h4>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem', marginTop: '0.75rem' }}>
-                          {tablesList.map((tableName) => {
-                            const count = guests.filter(g => g.tableAssignment?.toLowerCase() === tableName.toLowerCase()).length;
+                          {tablesList.map((tableKey) => {
+                            const count = guests.filter(g => isGuestAtTable(g, tableKey)).length;
+                            const displayTitle = resolveTableName(tableKey);
                             return (
-                              <div key={tableName} style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.5rem', backgroundColor: '#ffffff', textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>{tableName.toUpperCase()}</div>
+                              <div key={tableKey} style={{ border: '1px solid #111827', borderRadius: '4px', padding: '0.5rem', backgroundColor: '#ffffff', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>{displayTitle.toUpperCase()}</div>
                                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: '#6b7280' }}>{count} Guests Seated</div>
                               </div>
                             );
@@ -1139,20 +1165,21 @@ export default function PrintTemplatesModal({
 
                       {/* Detailed Table Roster Cards */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                        {tablesList.map((tableName) => {
-                          const tableGuests = guests.filter(g => (g.tableAssignment || '').toLowerCase() === tableName.toLowerCase());
+                        {tablesList.map((tableKey) => {
+                          const tableGuests = guests.filter(g => isGuestAtTable(g, tableKey));
+                          const displayTitle = resolveTableName(tableKey);
                           return (
-                            <div key={tableName} style={{ border: '2px solid #111827', borderRadius: '6px', padding: '1rem', backgroundColor: '#ffffff' }}>
+                            <div key={tableKey} style={{ border: '2px solid #111827', borderRadius: '6px', padding: '1rem', backgroundColor: '#ffffff' }}>
                               <div style={{ borderBottom: '2px solid #111827', paddingBottom: '0.4rem', marginBottom: '0.65rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', margin: 0, color: '#111827' }}>
-                                  {tableName.toUpperCase()}
+                                  {displayTitle.toUpperCase()}
                                 </h4>
                                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', backgroundColor: '#f3f4f6', padding: '0.15rem 0.4rem', borderRadius: '3px', fontWeight: 700 }}>
                                   {tableGuests.length} Seats
                                 </span>
                               </div>
 
-                              {showSeatMaps && renderTableDiagram(tableName, tableGuests)}
+                              {showSeatMaps && renderTableDiagram(displayTitle, tableGuests)}
 
                               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', marginTop: '0.65rem' }}>
                                 <thead>

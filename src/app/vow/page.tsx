@@ -2259,6 +2259,7 @@ export default function Sheet2VowDashboard() {
           guests={weddingData?.guests || []}
           schedule={weddingData?.schedule || []}
           vendors={weddingData?.vendors || []}
+          tables={weddingData?.tables || []}
           weddingName={weddingName}
           weddingDate={weddingDate}
           timeFormat={timeFormat}
@@ -2568,6 +2569,7 @@ export default function Sheet2VowDashboard() {
                 <GuestListManager
                   guests={weddingData.guests}
                   catering={weddingData.catering}
+                  tables={weddingData.tables}
                   onUpdate={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
                   initialRsvpFilter={guestInitialFilter}

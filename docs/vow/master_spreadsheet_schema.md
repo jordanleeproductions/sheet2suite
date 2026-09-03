@@ -36,7 +36,7 @@ This document defines the authoritative tab structure and column header contract
 | `Last Name` | `lastName` | Text | Guest last name |
 | `Guest Age Category` | `ageCategory` | Dropdown | `Adult`, `Child`, `Infant` |
 | `Ceremony Seating` | `ceremonySeating` | Text / Dropdown | Row & side assignment in ceremony aisle planner (e.g. `Row 3 - Bride Side`). Separate from reception table. |
-| `Reception Table` | `tableAssignment` | Dropdown | Assigned reception dinner table name / ID (e.g. `Table 1 - Head Table`). Linked to `TABLES` tab. |
+| `Reception Table` | `tableAssignment` | Dropdown | Assigned reception dinner table ID matching `TABLES` tab Column A `Table ID` (e.g. `table-1`, `table-sweetheart`). Display labels resolve corresponding `Table Name`. Backward-compatible with legacy table names. |
 | `Plus-One?` | `hasPlusOne` | Checkbox | `TRUE`, `FALSE` |
 | `Plus-One Name` | `plusOneName` | Text | Name of guest's plus-one |
 | `RSVP Status` | `rsvpStatus` | Dropdown | `Attending`, `Declined`, `Pending` |

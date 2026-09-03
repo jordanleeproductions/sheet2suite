@@ -58,11 +58,14 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Active Vendor Share Links & Access Control Card (`VendorShareLinkManager.tsx`):** Displays generated vendor share links, active/expired/revoked status, copy/preview buttons, and individual/master link revocation controls.
 
 ### 2.3 Guest Registry (`GuestListManager.tsx`)
-- RSVP status tracking (`Attending`, `Declined`, `Pending`), dietary restrictions, table assignments, plus-ones, and contact info.
-- Native CSV export and printable layout.
+- RSVP status tracking (`Attending`, `Declined`, `Pending`), dietary restrictions, table assignments (persisted as canonical `tableId` linked to `TABLES` tab), plus-ones, and contact info.
+- Native CSV export, printable layout, and switchable Cards vs Compact List view.
+- Responsive mobile header ergonomics with dedicated full-width `+ ADD GUEST` button and quick-filter cluster grouping bar above the search input.
 
 ### 2.4 Visual Table Seating Plan (`SeatingChartManager.tsx`)
 - Multiple table shapes: **Round Circle Tables** (radial trigonometric node layout), **Rectangle Banquet Tables** (dynamic length scaling, optional head/foot end seats), **Square Tables** (4 or 8 seats on all 4 sides), and **Sweetheart / Single-Side Tables**.
+- Reliable 2-way Google Sheets sync to the `TABLES` tab, filtering out blank/empty ghost rows lacking a valid `tableId`.
+- Direct relational guest seating assignments mapping `guest.tableAssignment` to `tableId` with backward-compatible display resolution.
 - Seat ID persistence (`seatNumber`) per guest.
 - Interactive seat nodes with initials avatar, guest profile popups, and unassigned guest drawer.
 

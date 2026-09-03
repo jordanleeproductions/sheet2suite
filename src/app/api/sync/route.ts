@@ -248,10 +248,14 @@ export async function GET(req: Request) {
     const cateringHeaders = cateringRows[0] || HEADERS_MAP.catering;
     const catering = cateringRows.slice(1).filter(isNonEmptyRow).map(row => cateringMapper.fromRow(cateringHeaders, row));
 
-    // Parse Tables
+    // Parse Tables (filter out blank/empty rows with no Table ID)
     const tableRows = valueRanges[11]?.values || [];
     const tableHeaders = tableRows[0] || HEADERS_MAP.tables;
-    const tables = tableRows.slice(1).filter(isNonEmptyRow).map(row => tableMapper.fromRow(tableHeaders, row));
+    const tables = tableRows
+      .slice(1)
+      .filter(isNonEmptyRow)
+      .map(row => tableMapper.fromRow(tableHeaders, row))
+      .filter(table => Boolean(table.tableId && table.tableId.trim() !== ''));
 
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
@@ -346,7 +350,7 @@ export async function POST(req: Request) {
       } else if (sheetType === 'catering') {
         mockDatabase.catering = data as MenuItem[];
       } else if (sheetType === 'tables') {
-        mockDatabase.tables = data as TableConfig[];
+        mockDatabase.tables = (data as TableConfig[]).filter(t => Boolean(t && t.tableId && t.tableId.trim() !== ''));
       }
 
       // Recompute metrics
@@ -542,7 +546,8 @@ export async function POST(req: Request) {
       } else if (sheetType === 'tables') {
         const title = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
         range = `'${title}'!A1:F1000`;
-        (data as TableConfig[]).forEach(item => {
+        const validTables = (data as TableConfig[]).filter(item => Boolean(item && item.tableId && item.tableId.trim() !== ''));
+        validTables.forEach(item => {
           values.push(tableMapper.toRow(headers, item));
         });
       }

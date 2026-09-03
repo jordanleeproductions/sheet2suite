@@ -70,16 +70,19 @@ export function calculateRelationalCateringSummary(
         if (!dietaryMap[restriction]) {
           dietaryMap[restriction] = [];
         }
+        const matchedTable = tables.find(t => 
+          (guest.tableAssignment && (t.tableId === guest.tableAssignment || t.tableName === guest.tableAssignment))
+        );
         dietaryMap[restriction].push({
           guestName: `${guest.firstName} ${guest.lastName}`.trim(),
           restriction,
           mealChoice: meal,
-          tableName: guest.tableAssignment || 'Unassigned',
+          tableName: matchedTable?.tableName || guest.tableAssignment || 'Unassigned',
         });
       }
 
       // Table seat tracking
-      if (guest.tableAssignment) {
+      if (guest.tableAssignment && guest.tableAssignment !== 'Unassigned') {
         tableAssignmentCounts[guest.tableAssignment] = (tableAssignmentCounts[guest.tableAssignment] || 0) + 1;
       } else {
         unassignedAttending.push(guest);
@@ -93,9 +96,10 @@ export function calculateRelationalCateringSummary(
   });
 
   // Convert Meal Map to Array
-  const mealChoiceBreakdown: MealChoiceBreakdown[] = Object.entries(mealMap).map(([meal, count]) => {
-    return { meal, count };
-  });
+  const mealChoiceBreakdown: MealChoiceBreakdown[] = Object.entries(mealMap).map(([meal, count]) => ({
+    meal,
+    count,
+  }));
 
   // Convert Dietary Map to Array
   const dietaryBreakdown: DietaryRestrictionBreakdown[] = Object.entries(dietaryMap).map(([restriction, guestsList]) => ({
@@ -106,7 +110,13 @@ export function calculateRelationalCateringSummary(
 
   // Compute Table Capacity Status
   const tableCapacityAlerts: TableCapacityAlert[] = tables.map(table => {
-    const assignedCount = tableAssignmentCounts[table.tableName] || tableAssignmentCounts[table.tableId] || 0;
+    // Check assignments count by either tableId or legacy tableName (avoid double counting if key differs)
+    let assignedCount = 0;
+    if (tableAssignmentCounts[table.tableId] && tableAssignmentCounts[table.tableName] && table.tableId !== table.tableName) {
+      assignedCount = tableAssignmentCounts[table.tableId] + tableAssignmentCounts[table.tableName];
+    } else {
+      assignedCount = tableAssignmentCounts[table.tableId] || tableAssignmentCounts[table.tableName] || 0;
+    }
     const maxCapacity = table.capacity || 8;
 
     let status: 'NORMAL' | 'FULL' | 'OVER_CAPACITY' = 'NORMAL';

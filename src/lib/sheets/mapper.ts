@@ -485,8 +485,8 @@ export const tableMapper = {
     const capacity = parseInt(String(obj.capacity || '8'), 10) || 8;
 
     return {
-      tableId: String(obj.tableId || `table-${Date.now()}`),
-      tableName: String(obj.tableName || ''),
+      tableId: String(obj.tableId || '').trim(),
+      tableName: String(obj.tableName || '').trim(),
       shape,
       capacity,
       includeEndSeats: toBool(obj.includeEndSeats, false),

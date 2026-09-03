@@ -42,13 +42,22 @@ const INITIAL_TABLES: TableConfig[] = [
 ];
 
 export default function SeatingChartManager({ guests, tables: tablesProp, onUpdateGuests, onUpdateTables, isSyncing, onOpenPrintStudio }: SeatingChartManagerProps) {
+  // Filter out any ghost/empty records with no tableId
+  const sanitizeTables = (raw?: TableConfig[]): TableConfig[] => {
+    if (!raw) return [];
+    return raw.filter(t => Boolean(t && t.tableId && t.tableId.trim() !== ''));
+  };
+
   const [tables, setTables] = useState<TableConfig[]>(() => {
-    if (tablesProp && tablesProp.length > 0) return tablesProp;
+    const valid = sanitizeTables(tablesProp);
+    if (valid.length > 0) return valid;
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('s2v_tables_config');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          const sanitizedSaved = sanitizeTables(parsed);
+          if (sanitizedSaved.length > 0) return sanitizedSaved;
         } catch (e) {}
       }
     }
@@ -58,22 +67,42 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
   // Synchronize when tables prop updates from sheets
   React.useEffect(() => {
     if (tablesProp !== undefined) {
-      setTables(tablesProp.length > 0 ? tablesProp : INITIAL_TABLES);
+      const valid = sanitizeTables(tablesProp);
+      const toSet = valid.length > 0 ? valid : INITIAL_TABLES;
+      setTables(toSet);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('s2v_tables_config', JSON.stringify(tablesProp.length > 0 ? tablesProp : INITIAL_TABLES));
+        localStorage.setItem('s2v_tables_config', JSON.stringify(toSet));
       }
     }
   }, [tablesProp]);
 
   // Helper to persist tables to state, localStorage, and 2-way Google Sheets sync
-  const saveTables = (updatedTables: TableConfig[]) => {
-    setTables(updatedTables);
+  const saveTables = async (updatedTables: TableConfig[]) => {
+    const valid = sanitizeTables(updatedTables);
+    setTables(valid);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('s2v_tables_config', JSON.stringify(updatedTables));
+      localStorage.setItem('s2v_tables_config', JSON.stringify(valid));
     }
     if (onUpdateTables) {
-      onUpdateTables(updatedTables).catch(err => console.error('Error syncing tables to Google Sheets:', err));
+      try {
+        await onUpdateTables(valid);
+      } catch (err) {
+        console.error('Error syncing tables to Google Sheets:', err);
+      }
     }
+  };
+
+  // Helper to check if a guest belongs to a given table (supporting tableId or legacy tableName)
+  const isGuestAtTable = (guest: Guest, table: TableConfig): boolean => {
+    if (!guest.tableAssignment) return false;
+    const assignment = guest.tableAssignment.trim().toLowerCase();
+    return assignment === table.tableId.toLowerCase() || assignment === table.tableName.toLowerCase();
+  };
+
+  // Helper to resolve table display name for a guest
+  const getTableForGuest = (guest: Guest): TableConfig | undefined => {
+    if (!guest.tableAssignment || guest.tableAssignment === 'Unassigned') return undefined;
+    return tables.find(t => isGuestAtTable(guest, t));
   };
   
   // Modals & Active Selections
@@ -132,15 +161,25 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
     return 'badge-gold';
   };
 
-  // Helper to assign a guest to a table and specific seat number
-  const assignGuestToTable = async (guestId: string, tableName: string, seatNumber?: number, isCeremonyMode = false) => {
+  // Helper to assign a guest to a table (by tableId or tableName) and specific seat number
+  const assignGuestToTable = async (guestId: string, tableIdOrName: string, seatNumber?: number, isCeremonyMode = false) => {
     if (isSyncing) return;
+    
+    // If not Unassigned, resolve the canonical tableId if available
+    let targetAssignment = tableIdOrName;
+    if (!isCeremonyMode && tableIdOrName !== 'Unassigned') {
+      const foundTable = tables.find(t => t.tableId === tableIdOrName || t.tableName === tableIdOrName);
+      if (foundTable) {
+        targetAssignment = foundTable.tableId;
+      }
+    }
+
     const updated = guests.map(g => {
       if (g.guestId !== guestId) return g;
       if (isCeremonyMode) {
-        return { ...g, ceremonySeating: tableName === 'Unassigned' ? '' : tableName };
+        return { ...g, ceremonySeating: tableIdOrName === 'Unassigned' ? '' : tableIdOrName };
       }
-      return { ...g, tableAssignment: tableName, seatNumber: tableName === 'Unassigned' ? undefined : seatNumber };
+      return { ...g, tableAssignment: targetAssignment, seatNumber: tableIdOrName === 'Unassigned' ? undefined : seatNumber };
     });
     await onUpdateGuests(updated);
     
@@ -228,9 +267,9 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
     const updatedTables = tables.filter(t => t.tableId !== tableToDelete.tableId);
     saveTables(updatedTables);
 
-    // Unassign guests at this table
+    // Unassign guests at this table (matching by tableId or legacy tableName)
     const updated = guests.map(g => 
-      g.tableAssignment === tableToDelete.tableName ? { ...g, tableAssignment: 'Unassigned' } : g
+      isGuestAtTable(g, tableToDelete) ? { ...g, tableAssignment: 'Unassigned', seatNumber: undefined } : g
     );
     onUpdateGuests(updated);
     setTableToDelete(null);
@@ -722,7 +761,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
           {/* Main Floorplan Canvas Grid */}
           <div style={styles.floorplanGrid}>
         {filteredTables.map(table => {
-          const seatedGuests = guests.filter(g => g.tableAssignment === table.tableName);
+          const seatedGuests = guests.filter(g => isGuestAtTable(g, table));
           const isOverCapacity = seatedGuests.length > table.capacity;
 
           // Helper to resolve specific guest at physical seat number (1..capacity)
@@ -1035,15 +1074,15 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
               <div style={styles.reassignBox}>
                 <label style={styles.fieldLabel}>SEATING ASSIGNMENT</label>
                 <select
-                  value={selectedGuest.tableAssignment || 'Unassigned'}
+                  value={getTableForGuest(selectedGuest)?.tableId || selectedGuest.tableAssignment || 'Unassigned'}
                   onChange={(e) => assignGuestToTable(selectedGuest.guestId, e.target.value)}
                   style={styles.selectInput}
                   disabled={isSyncing}
                 >
                   <option value="Unassigned">Unassigned (No Table)</option>
                   {tables.map(t => (
-                    <option key={t.tableId} value={t.tableName}>
-                      {t.tableName} ({guests.filter(g => g.tableAssignment === t.tableName).length}/{t.capacity} seats)
+                    <option key={t.tableId} value={t.tableId}>
+                      {t.tableName} ({guests.filter(g => isGuestAtTable(g, t)).length}/{t.capacity} seats)
                     </option>
                   ))}
                 </select>
@@ -1157,7 +1196,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                 {(() => {
                   const seatedPartyGroups = new Set(
                     guests
-                      .filter(g => g.tableAssignment === assignSeatTable.tableName && g.partyGroup)
+                      .filter(g => isGuestAtTable(g, assignSeatTable) && g.partyGroup)
                       .map(g => g.partyGroup.toLowerCase().trim())
                   );
 
@@ -1188,7 +1227,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                   }
 
                   return sortedGuests.map(guest => {
-                    const isAlreadyHere = guest.tableAssignment === assignSeatTable.tableName && guest.seatNumber === (targetSeatIndex || undefined);
+                    const isAlreadyHere = isGuestAtTable(guest, assignSeatTable) && guest.seatNumber === (targetSeatIndex || undefined);
                     const isUnassigned = !guest.tableAssignment || guest.tableAssignment === 'Unassigned';
                     const matchesSameParty = isUnassigned && guest.partyGroup && seatedPartyGroups.has(guest.partyGroup.toLowerCase().trim());
 
@@ -1216,7 +1255,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                         }}
                         onClick={() => {
                           if (!isAlreadyHere) {
-                            assignGuestToTable(guest.guestId, assignSeatTable.tableName, targetSeatIndex || undefined);
+                            assignGuestToTable(guest.guestId, assignSeatTable.tableId, targetSeatIndex || undefined);
                             setAssignSeatTable(null);
                             setTargetSeatIndex(null);
                             setAssignSearch('');
@@ -1272,7 +1311,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                               borderRadius: '4px',
                               border: '1px solid var(--color-muted)'
                             }}>
-                              Seated at {guest.tableAssignment}
+                              Seated at {getTableForGuest(guest)?.tableName || guest.tableAssignment}
                             </span>
                           )}
                         </div>
@@ -1469,10 +1508,10 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                 Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{tableToDelete.tableName}"</strong>?
               </p>
 
-              {guests.filter(g => g.tableAssignment === tableToDelete.tableName).length > 0 && (
+              {guests.filter(g => isGuestAtTable(g, tableToDelete)).length > 0 && (
                 <div style={{ ...styles.reassignBox, borderColor: 'var(--color-red)', backgroundColor: 'var(--color-red-muted)' }}>
                   <span style={{ ...styles.fieldLabel, color: 'var(--color-red)' }}>
-                    SEATED GUESTS IMPACT ({guests.filter(g => g.tableAssignment === tableToDelete.tableName).length} guests)
+                    SEATED GUESTS IMPACT ({guests.filter(g => isGuestAtTable(g, tableToDelete)).length} guests)
                   </span>
                   <p style={{ fontSize: '0.8rem', color: 'var(--color-text)', margin: '0.25rem 0 0 0' }}>
                     Deleting this table will automatically unassign all seated guests and move them back into the Unassigned Pool.

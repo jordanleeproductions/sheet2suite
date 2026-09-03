@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Guest, AgeCategory, RSVPStatus, MenuItem } from '@/lib/sheets/types';
+import { Guest, AgeCategory, RSVPStatus, MenuItem, TableConfig } from '@/lib/sheets/types';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
 
 interface GuestListManagerProps {
   guests: Guest[];
   catering?: MenuItem[];
+  tables?: TableConfig[];
   onUpdate: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing: boolean;
   availableTables?: string[];
@@ -15,7 +16,7 @@ interface GuestListManagerProps {
   initialRsvpFilter?: RSVPStatus | 'All';
 }
 
-export default function GuestListManager({ guests, catering, onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter }: GuestListManagerProps) {
+export default function GuestListManager({ guests, catering, tables = [], onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
@@ -35,11 +36,31 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Guest>>({});
 
+  // Helper to resolve table display name from tableId or legacy tableName
+  const getTableDisplayName = (tableIdOrName?: string): string => {
+    if (!tableIdOrName || tableIdOrName === 'Unassigned') return 'Unassigned';
+    const found = tables.find(t => t.tableId === tableIdOrName || t.tableName === tableIdOrName);
+    if (found) {
+      return found.tableName ? `${found.tableName} (${found.tableId})` : found.tableId;
+    }
+    return tableIdOrName;
+  };
+
+  const getTableShortName = (tableIdOrName?: string): string => {
+    if (!tableIdOrName || tableIdOrName === 'Unassigned') return 'Unassigned';
+    const found = tables.find(t => t.tableId === tableIdOrName || t.tableName === tableIdOrName);
+    return found ? (found.tableName || found.tableId) : tableIdOrName;
+  };
+
   // Derive known tables from props and existing guests
-  const existingTables = Array.from(new Set([
-    ...(availableTables || []),
-    ...guests.map(g => (g.tableAssignment || '').trim()).filter(Boolean)
-  ])).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  const existingTablesList = tables.filter(t => Boolean(t && t.tableId && t.tableId.trim() !== ''));
+  const existingTables = existingTablesList.length > 0
+    ? existingTablesList.map(t => ({ id: t.tableId, label: t.tableName ? `${t.tableName} (${t.tableId})` : t.tableId }))
+    : Array.from(new Set([
+        ...(availableTables || []),
+        ...guests.map(g => (g.tableAssignment || '').trim()).filter(Boolean)
+      ])).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+        .map(t => ({ id: t, label: t }));
 
   // View Display State: Grouping Mode ('all' | 'seating' | 'party') & Layout Mode ('cards' | 'list') [GUEST-6]
   const [groupingMode, setGroupingMode] = useState<'all' | 'seating' | 'party'>('all');
@@ -326,11 +347,11 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
         {guest.rsvpStatus !== 'Declined' && (
           <div style={styles.cardMetaGrid}>
             {/* Table Assignment Chip */}
-            <div style={styles.metaChip} title={`Reception Table: ${guest.tableAssignment || 'Unassigned'}`}>
+            <div style={styles.metaChip} title={`Reception Table: ${getTableDisplayName(guest.tableAssignment)}`}>
               <span style={styles.metaChipLabel}>RECEPTION</span>
               <span style={{ ...styles.metaChipValue, color: guest.tableAssignment ? 'var(--color-primary)' : 'var(--color-muted)' }}>
                 <Tag size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
-                <span style={styles.truncateText}>{guest.tableAssignment || 'Unassigned'}</span>
+                <span style={styles.truncateText}>{getTableDisplayName(guest.tableAssignment)}</span>
               </span>
             </div>
 
@@ -515,7 +536,7 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
                   )}
                 </td>
                 <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600 }}>
-                  {guest.tableAssignment || 'Unassigned'}
+                  {getTableDisplayName(guest.tableAssignment)}
                 </td>
                 <td style={{ padding: '0.6rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-muted)' }}>
                   {guest.ceremonySeating || '-'}
@@ -595,6 +616,30 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
           justify-content: center;
           min-height: 34px;
         }
+        .guest-add-row {
+          display: flex;
+          width: 100%;
+        }
+        .guest-add-btn {
+          width: 100%;
+          min-height: 42px;
+          font-size: 0.82rem;
+          letter-spacing: 0.03em;
+        }
+        .guest-grouping-selector-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+        }
+        .guest-grouping-label {
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: var(--color-muted);
+          letter-spacing: 0.05em;
+        }
         @media (max-width: 768px) {
           .guest-header-card {
             flex-direction: column !important;
@@ -604,39 +649,45 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
           }
           .guest-header-actions {
             display: flex !important;
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.5rem !important;
+            align-items: center !important;
+            justify-content: space-between !important;
             width: 100% !important;
-          }
-          .guest-toggles-row {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
             gap: 0.5rem !important;
-            width: 100% !important;
           }
           .guest-view-toggle {
-            width: 100% !important;
             display: flex !important;
           }
           .guest-view-toggle button {
-            flex: 1 1 auto !important;
-            padding: 0.45rem 0.35rem !important;
-            min-height: 38px !important;
-            font-size: 0.68rem !important;
+            padding: 0.45rem 0.6rem !important;
+            min-height: 36px !important;
+            font-size: 0.7rem !important;
           }
           .guest-action-buttons-row {
-            display: grid !important;
-            grid-template-columns: auto auto 1fr !important;
+            display: flex !important;
             gap: 0.5rem !important;
-            width: 100% !important;
-            margin-left: 0 !important;
+            margin-left: auto !important;
           }
           .guest-action-buttons-row button {
-            min-height: 38px !important;
+            min-height: 36px !important;
+            padding: 0.45rem 0.65rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+          }
+          .guest-grouping-selector-bar {
+            width: 100% !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.4rem !important;
+          }
+          .guest-grouping-selector-bar .guest-view-toggle {
+            width: 100% !important;
+          }
+          .guest-grouping-selector-bar .guest-view-toggle button {
+            flex: 1 1 auto !important;
+            padding: 0.45rem 0.5rem !important;
+            min-height: 38px !important;
+            font-size: 0.72rem !important;
           }
         }
       `}</style>
@@ -650,77 +701,46 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
           </p>
         </div>
         <div className="guest-header-actions">
-          <div className="guest-toggles-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* Grouping Mode Toggle (ALL | SEATING | GROUPS) */}
-            <div className="guest-view-toggle">
-              <button
-                style={{
-                  backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
-                  color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-                }}
-                onClick={() => setGroupingMode('all')}
-                title="All Guests View"
-              >
-                <Grid size={13} style={{ marginRight: '0.2rem' }} /> ALL
-              </button>
-              <button
-                style={{
-                  backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
-                  color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-                }}
-                onClick={() => setGroupingMode('seating')}
-                title="Seating Chart Grouping View"
-              >
-                <Utensils size={13} style={{ marginRight: '0.2rem' }} /> SEATING
-              </button>
-              <button
-                style={{
-                  backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
-                  color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-                }}
-                onClick={() => setGroupingMode('party')}
-                title="Party Grouping View"
-              >
-                <Users size={13} style={{ marginRight: '0.2rem' }} /> GROUPS
-              </button>
-            </div>
-
-            {/* Independent Layout Mode Toggle (CARDS vs LIST) [GUEST-6] */}
-            <div className="guest-view-toggle">
-              <button
-                style={{
-                  backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-                }}
-                onClick={() => setLayoutMode('cards')}
-                title="Card Grid Cards Layout"
-              >
-                <Grid size={13} style={{ marginRight: '0.2rem' }} /> CARDS
-              </button>
-              <button
-                style={{
-                  backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
-                  color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-                }}
-                onClick={() => setLayoutMode('list')}
-                title="Compact Desktop List Rows Layout [GUEST-6]"
-              >
-                <List size={13} style={{ marginRight: '0.2rem' }} /> LIST
-              </button>
-            </div>
+          {/* Independent Layout Mode Toggle (CARDS vs LIST) [GUEST-6] */}
+          <div className="guest-view-toggle">
+            <button
+              style={{
+                backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setLayoutMode('cards')}
+              title="Card Grid Cards Layout"
+            >
+              <Grid size={13} style={{ marginRight: '0.2rem' }} /> CARDS
+            </button>
+            <button
+              style={{
+                backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
+                color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setLayoutMode('list')}
+              title="Compact Desktop List Rows Layout [GUEST-6]"
+            >
+              <List size={13} style={{ marginRight: '0.2rem' }} /> LIST
+            </button>
           </div>
 
-          <div className="guest-action-buttons-row" style={{ ...styles.actionButtonGroup, marginLeft: 'auto' }}>
+          {/* Quick Export & Print Actions */}
+          <div className="guest-action-buttons-row" style={styles.actionButtonGroup}>
             <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
               <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
             </button>
             <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Guest Registry">
               <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
             </button>
-            <button style={styles.addButton} onClick={startAdd} disabled={isSyncing}>
-              <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD GUEST
-            </button>
           </div>
+        </div>
+
+        {/* Dedicated Add Guest Row */}
+        <div className="guest-add-row">
+          <button style={{ ...styles.addButton, ...styles.guestAddBtn }} className="guest-add-btn" onClick={startAdd} disabled={isSyncing}>
+            <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD GUEST
+          </button>
         </div>
       </div>
 
@@ -955,8 +975,45 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
         );
       })()}
 
-      {/* Filter and Search Bar */}
+      {/* Filter and Search Bar with Grouping Mode Selector above */}
       <div style={styles.filterBar}>
+        {/* Grouping Mode Selector (ALL | SEATING | GROUPS) */}
+        <div className="guest-grouping-selector-bar">
+          <span className="guest-grouping-label">GROUPING VIEW:</span>
+          <div className="guest-view-toggle">
+            <button
+              style={{
+                backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
+                color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setGroupingMode('all')}
+              title="All Guests View"
+            >
+              <Grid size={13} style={{ marginRight: '0.2rem' }} /> ALL GUESTS
+            </button>
+            <button
+              style={{
+                backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
+                color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setGroupingMode('seating')}
+              title="Seating Chart Grouping View"
+            >
+              <Utensils size={13} style={{ marginRight: '0.2rem' }} /> BY SEATING TABLE
+            </button>
+            <button
+              style={{
+                backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
+                color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+              }}
+              onClick={() => setGroupingMode('party')}
+              title="Party Grouping View"
+            >
+              <Users size={13} style={{ marginRight: '0.2rem' }} /> BY PARTY GROUP
+            </button>
+          </div>
+        </div>
+
         <input
           type="text"
           placeholder="SEARCH GUEST, EMAIL, DIET, OR TABLE..."
@@ -1053,7 +1110,7 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
                   <div style={styles.clusterTitleRow}>
                     <Utensils size={18} style={{ color: isUnassigned ? 'var(--color-red)' : 'var(--color-primary)' }} />
                     <h3 style={{ ...styles.clusterTitle, color: isUnassigned ? 'var(--color-red)' : 'var(--color-primary)' }}>
-                      {isUnassigned ? 'UNASSIGNED SEATING' : table.toUpperCase()}
+                      {isUnassigned ? 'UNASSIGNED SEATING' : getTableDisplayName(table).toUpperCase()}
                     </h3>
                     {isUnassigned && (
                       <span style={styles.unassignedBadge}>
@@ -1243,7 +1300,7 @@ export default function GuestListManager({ guests, catering, onUpdate, isSyncing
                     >
                       <option value="">Unassigned</option>
                       {existingTables.map(t => (
-                        <option key={t} value={t}>{t}</option>
+                        <option key={t.id} value={t.id}>{t.label}</option>
                       ))}
                     </select>
                   ) : (
@@ -1510,6 +1567,13 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     textAlign: 'center',
     transition: 'var(--transition-smooth)',
+  },
+  guestAddBtn: {
+    width: '100%',
+    padding: '0.625rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    boxShadow: 'var(--box-shadow-subtle)',
   },
   filterBar: {
     display: 'flex',
