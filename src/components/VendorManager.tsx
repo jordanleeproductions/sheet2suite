@@ -36,24 +36,6 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
 
   const categories = Array.from(new Set(vendors.map(v => v.category).filter(Boolean)));
 
-  // Category breakdown calculation [VND-3]
-  const categoryStats = React.useMemo(() => {
-    const map: Record<string, { count: number; totalCost: number }> = {};
-    vendors.forEach(v => {
-      const cat = (v.category || 'Uncategorized').trim();
-      if (!map[cat]) {
-        map[cat] = { count: 0, totalCost: 0 };
-      }
-      map[cat].count += 1;
-      map[cat].totalCost += (v.totalContractValue || 0);
-    });
-    return Object.entries(map).map(([category, data]) => ({
-      category,
-      count: data.count,
-      totalCost: data.totalCost,
-    })).sort((a, b) => b.count - a.count);
-  }, [vendors]);
-
   // Financial summary KPI metrics
   const financialSummary = React.useMemo(() => {
     return vendors.reduce(
@@ -439,54 +421,6 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
           </button>
         </div>
       </div>
-
-      {/* Vendor Category Breakdown Cards & Quick Filters [VND-3] */}
-      {categoryStats.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-          {categoryStats.map((stat) => {
-            const isSelected = categoryFilter.toLowerCase() === stat.category.toLowerCase();
-            return (
-              <button
-                key={stat.category}
-                type="button"
-                onClick={() => setCategoryFilter(prev => prev.toLowerCase() === stat.category.toLowerCase() ? 'All' : stat.category)}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg)',
-                  color: isSelected ? 'var(--color-on-primary)' : 'var(--color-text)',
-                  border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: '0.4rem 0.75rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isSelected ? 'var(--box-shadow-subtle)' : 'none',
-                }}
-                title={`Click to filter list by ${stat.category}`}
-              >
-                <span>{stat.category.toUpperCase()}</span>
-                <span style={{
-                  backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'var(--color-muted-bg, rgba(0,0,0,0.05))',
-                  color: isSelected ? '#ffffff' : 'var(--color-primary)',
-                  fontWeight: 700,
-                  fontSize: '0.7rem',
-                  padding: '0.1rem 0.35rem',
-                  borderRadius: 'var(--border-radius-sm)',
-                }}>
-                  {stat.count}
-                </span>
-                <span style={{ fontSize: '0.7rem', opacity: 0.85 }}>
-                  (${stat.totalCost.toLocaleString()})
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {/* Financial KPI Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', margin: '0.75rem 0' }}>
