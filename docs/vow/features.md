@@ -64,6 +64,10 @@
   - Linked guest `tableAssignment` directly to canonical `tableId` matching the `TABLES` tab Column A while seamlessly supporting legacy name matching.
   - Updated Add/Edit guest dropdown in `GuestListManager.tsx` to list configured tables with `tableId` values and `${tableName} (${tableId})` labels.
   - Synchronized Print Studio (`PrintTemplatesModal.tsx`), table reassignment popups, seating diagrams, and relational capacity calculations (`relationalSync.ts`) to resolve human-readable table names from `tableId`.
+- [x] **[SEATING-SEQUENTIAL-TABLE-IDS] Human-Readable Sequential & Semantic Table ID Generation (`SeatingChartManager.tsx`):**
+  - Replaced machine timestamp IDs (`table-1725...`) with human-readable sequence-based (`table-1`, `table-2`, `table-3`) and semantic (`table-sweetheart`, `table-vip-head`) IDs.
+  - Integrated smart gap-filling for suggested table numbers (`getNextSuggestedTableNumber`) and robust collision handling with suffix increments.
+  - Keeps Column A of the `TABLES` tab and manual guest table assignments in Google Sheets clean, predictable, and human-friendly.
 - [x] **[GUEST-DECLINED-LOCK] Declined RSVP Meal & Seating Invalidation Rule:** Automatically clears and disables reception table assignments, ceremony seating, and meal choice selections when a guest's RSVP is set to `Declined`. Hides the 4 inner meta chips (*Reception*, *Ceremony*, *Meal*, *Diet*) on the guest card for a cleaner declined view, and excludes declined guests from seating assignment picker modals.
 
 ---

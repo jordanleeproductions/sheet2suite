@@ -41,6 +41,69 @@ const INITIAL_TABLES: TableConfig[] = [
   { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Bride & Groom)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
 ];
 
+// Generate clean, human-readable, sequence-based table IDs (e.g. table-1, table-2, table-sweetheart)
+export function generateNextTableId(tableName: string, existingTables: TableConfig[]): string {
+  const existingIds = new Set(existingTables.map(t => (t.tableId || '').trim().toLowerCase()));
+
+  const trimmedName = (tableName || '').trim();
+
+  // 1. If table name specifies a number like "Table 3", "Table 3 - VIP", or "T3"
+  const nameNumberMatch = trimmedName.match(/^(?:table|t)\s*(\d+)/i);
+  if (nameNumberMatch) {
+    const specifiedNum = parseInt(nameNumberMatch[1], 10);
+    const candidate = `table-${specifiedNum}`;
+    if (!existingIds.has(candidate.toLowerCase())) {
+      return candidate;
+    }
+  }
+
+  // 2. If custom semantic name like "Sweetheart Table", "Head Table", "Kids Table", etc.
+  // Strip leading or trailing "table" word so "Sweetheart Table" -> "sweetheart"
+  const cleanSlug = trimmedName
+    .toLowerCase()
+    .replace(/^table\s*[-_]?/i, '')
+    .replace(/[-_\s]?table$/i, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  if (cleanSlug && cleanSlug !== 'table' && !/^\d+$/.test(cleanSlug)) {
+    const candidate = `table-${cleanSlug}`;
+    if (!existingIds.has(candidate.toLowerCase())) {
+      return candidate;
+    }
+    let counter = 2;
+    while (existingIds.has(`${candidate}-${counter}`.toLowerCase())) {
+      counter++;
+    }
+    return `${candidate}-${counter}`;
+  }
+
+  // 3. Fallback: compact sequence (table-${nextAvailableNumber})
+  let nextNum = 1;
+  while (existingIds.has(`table-${nextNum}`.toLowerCase())) {
+    nextNum++;
+  }
+  return `table-${nextNum}`;
+}
+
+// Calculate the next suggested display table number based on existing tables
+export function getNextSuggestedTableNumber(existingTables: TableConfig[]): number {
+  const usedNumbers = new Set<number>();
+  existingTables.forEach(t => {
+    const matchName = (t.tableName || '').match(/Table\s*(\d+)/i);
+    const matchId = (t.tableId || '').match(/^table[-_]?(\d+)$/i);
+    if (matchName) usedNumbers.add(parseInt(matchName[1], 10));
+    if (matchId) usedNumbers.add(parseInt(matchId[1], 10));
+  });
+
+  // Find lowest available positive integer (1, 2, 3...)
+  let candidate = 1;
+  while (usedNumbers.has(candidate)) {
+    candidate++;
+  }
+  return candidate;
+}
+
 export default function SeatingChartManager({ guests, tables: tablesProp, onUpdateGuests, onUpdateTables, isSyncing, onOpenPrintStudio }: SeatingChartManagerProps) {
   // Filter out any ghost/empty records with no tableId
   const sanitizeTables = (raw?: TableConfig[]): TableConfig[] => {
@@ -191,8 +254,9 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
 
   // Open Add Table Modal
   const startAddTable = () => {
+    const nextTableNumber = getNextSuggestedTableNumber(tables);
     setTableFormState({
-      tableName: `Table ${tables.length + 1}`,
+      tableName: `Table ${nextTableNumber}`,
       shape: 'circle',
       capacity: 8,
       includeEndSeats: false,
@@ -226,7 +290,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
     }
 
     const tableData: TableConfig = {
-      tableId: isAddingTable ? `table-${Date.now()}` : editingTable!.tableId,
+      tableId: isAddingTable ? generateNextTableId(tableFormState.tableName, tables) : editingTable!.tableId,
       tableName: tableFormState.tableName,
       shape: finalShape,
       capacity: finalCapacity,
@@ -246,8 +310,9 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
     }
 
     if (continueAdding) {
+      const nextTableNumber = getNextSuggestedTableNumber(updatedTables);
       setTableFormState({
-        tableName: `Table ${updatedTables.length + 1}`,
+        tableName: `Table ${nextTableNumber}`,
         shape: tableFormState.shape || 'circle',
         capacity: tableFormState.capacity || 8,
         includeEndSeats: false,

@@ -66,6 +66,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Multiple table shapes: **Round Circle Tables** (radial trigonometric node layout), **Rectangle Banquet Tables** (dynamic length scaling, optional head/foot end seats), **Square Tables** (4 or 8 seats on all 4 sides), and **Sweetheart / Single-Side Tables**.
 - Reliable 2-way Google Sheets sync to the `TABLES` tab, filtering out blank/empty ghost rows lacking a valid `tableId`.
 - Direct relational guest seating assignments mapping `guest.tableAssignment` to `tableId` with backward-compatible display resolution.
+- Human-readable sequential and semantic table ID generation (`table-1`, `table-2`, `table-sweetheart`, etc.) with intelligent gap-filling and collision avoidance.
 - Seat ID persistence (`seatNumber`) per guest.
 - Interactive seat nodes with initials avatar, guest profile popups, and unassigned guest drawer.
 
