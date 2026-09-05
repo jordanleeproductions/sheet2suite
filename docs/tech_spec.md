@@ -87,6 +87,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 ### 2.8 Kanban Checklist (`KanbanBoard.tsx`)
 - Categorized checklist (*To Do*, *In Progress*, *Done*) with priority badges, target due dates, and isolated 1-click stage advancement arrows without triggering the card edit modal.
 - **Interactive Category & Assignee Combobox (`[TASK-CATEGORY-COMBOBOX]`):** Add/Edit Task modal features an interactive Combobox with a visible chevron dropdown button (`ChevronDown`). Displays all existing categories and assignees in a scrollable, search-filtered menu while preserving 100% free-text typing and overwrite ability for custom inputs.
+- **Overdue Task Due Date Highlighting (`[TASK-OVERDUE-RED-HIGHLIGHT]`):** Tasks in `To Do` or `In Progress` whose due dates are in the past render their due date font and calendar icon in a distinct red (`var(--color-red, #ef4444)`) with font weight `600`, providing instant visual prioritization of overdue items. Add/Edit modal similarly displays a `PAST DUE` red badge and border.
 
 ### 2.9 Wedding Playlist & Music (`MusicManager.tsx`)
 - Categorized music tracks (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned / Do Not Play*).

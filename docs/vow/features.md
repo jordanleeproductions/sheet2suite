@@ -240,6 +240,10 @@
   - Displays a visible chevron dropdown toggle button (`ChevronDown`) indicating available options on desktop and mobile.
   - Clicking the chevron or focusing opens a styled popup list of all existing wedding categories (and assignees) with hover feedback, checkmark indicator for the active item, and instant search filtering.
   - Retains 100% free-text typing and overwrite ability so users can edit or type custom categories on demand.
+- [x] **[TASK-OVERDUE-RED-HIGHLIGHT] Distinct Red Highlighting for Overdue Tasks (`KanbanBoard.tsx`):**
+  - Evaluates task due dates against current local date midnight.
+  - For incomplete tasks (`kanbanStage !== 'Done'`) whose due dates are in the past, renders the due date text and calendar icon in a distinct red (`var(--color-red, #ef4444)`) with font weight `600` and an informative tooltip.
+  - In the Add/Edit Task modal, displays a prominent `PAST DUE` red badge with a red border and text on the date picker whenever an overdue date is selected or edited.
 
 ---
 ---

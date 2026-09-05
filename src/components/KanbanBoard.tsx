@@ -251,6 +251,37 @@ function TaskCombobox({ label, value, onChange, options, placeholder, fieldId }:
   );
 }
 
+export const isDueDatePast = (dueDateStr?: string, stage?: KanbanStage): boolean => {
+  if (!dueDateStr || !dueDateStr.trim()) return false;
+  if (stage === 'Done') return false;
+
+  const trimmed = dueDateStr.trim();
+
+  let dueYear: number, dueMonth: number, dueDay: number;
+
+  const isoMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  const usMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+
+  if (isoMatch) {
+    dueYear = parseInt(isoMatch[1], 10);
+    dueMonth = parseInt(isoMatch[2], 10) - 1;
+    dueDay = parseInt(isoMatch[3], 10);
+  } else if (usMatch) {
+    dueMonth = parseInt(usMatch[1], 10) - 1;
+    dueDay = parseInt(usMatch[2], 10);
+    dueYear = parseInt(usMatch[3], 10);
+  } else {
+    const parsed = new Date(trimmed);
+    if (isNaN(parsed.getTime())) return false;
+    dueYear = parsed.getFullYear();
+    dueMonth = parsed.getMonth();
+    dueDay = parsed.getDate();
+  }
+
+  const dueEndOfDay = new Date(dueYear, dueMonth, dueDay, 23, 59, 59, 999);
+  return dueEndOfDay.getTime() < Date.now();
+};
+
 export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }: KanbanBoardProps) {
   // Mobile Column Selector
   const [activeMobileStage, setActiveMobileStage] = useState<KanbanStage>(initialStage || 'To Do');
@@ -749,12 +780,24 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>DUE DATE</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={styles.label}>DUE DATE</label>
+                    {isDueDatePast(formState.dueDate, formState.kanbanStage) && (
+                      <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-red, #ef4444)' }}>
+                        PAST DUE
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="date"
                     value={formState.dueDate || ''}
                     onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      color: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'var(--color-red, #ef4444)' : undefined,
+                      borderColor: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'var(--color-red, #ef4444)' : undefined,
+                      fontWeight: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 600 : undefined,
+                    }}
                   />
                 </div>
 
@@ -967,12 +1010,28 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                                 <span>{task.assignedTo}</span>
                               </div>
                             )}
-                            {task.dueDate && (
-                              <div style={styles.metaItem}>
-                                <Calendar size={12} style={styles.icon} />
-                                <span>{task.dueDate}</span>
-                              </div>
-                            )}
+                            {task.dueDate && (() => {
+                              const isPastDue = isDueDatePast(task.dueDate, stage);
+                              return (
+                                <div 
+                                  style={{
+                                    ...styles.metaItem,
+                                    color: isPastDue ? 'var(--color-red, #ef4444)' : 'var(--color-muted)',
+                                    fontWeight: isPastDue ? 600 : 400,
+                                  }}
+                                  title={isPastDue ? `Past due date (${task.dueDate})` : `Due date: ${task.dueDate}`}
+                                >
+                                  <Calendar 
+                                    size={12} 
+                                    style={{
+                                      ...styles.icon,
+                                      color: isPastDue ? 'var(--color-red, #ef4444)' : 'var(--color-muted)',
+                                    }} 
+                                  />
+                                  <span>{task.dueDate}</span>
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* Quick movement controls */}
