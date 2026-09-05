@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Task, KanbanStage } from '@/lib/sheets/types';
 import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2, ChevronDown, Check } from 'lucide-react';
+import { formatDateConsistent, formatDateToMMDDYYYY } from '@/lib/currency';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -252,33 +253,15 @@ function TaskCombobox({ label, value, onChange, options, placeholder, fieldId }:
 }
 
 export const isDueDatePast = (dueDateStr?: string, stage?: KanbanStage): boolean => {
-  if (!dueDateStr || !dueDateStr.trim()) return false;
-  if (stage === 'Done') return false;
+  if (!dueDateStr || !dueDateStr.trim() || stage === 'Done') return false;
 
-  const trimmed = dueDateStr.trim();
+  const ymd = formatDateConsistent(dueDateStr);
+  if (!ymd || ymd === '-') return false;
 
-  let dueYear: number, dueMonth: number, dueDay: number;
+  const parts = ymd.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return false;
 
-  const isoMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  const usMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-
-  if (isoMatch) {
-    dueYear = parseInt(isoMatch[1], 10);
-    dueMonth = parseInt(isoMatch[2], 10) - 1;
-    dueDay = parseInt(isoMatch[3], 10);
-  } else if (usMatch) {
-    dueMonth = parseInt(usMatch[1], 10) - 1;
-    dueDay = parseInt(usMatch[2], 10);
-    dueYear = parseInt(usMatch[3], 10);
-  } else {
-    const parsed = new Date(trimmed);
-    if (isNaN(parsed.getTime())) return false;
-    dueYear = parsed.getFullYear();
-    dueMonth = parsed.getMonth();
-    dueDay = parsed.getDate();
-  }
-
-  const dueEndOfDay = new Date(dueYear, dueMonth, dueDay, 23, 59, 59, 999);
+  const dueEndOfDay = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999);
   return dueEndOfDay.getTime() < Date.now();
 };
 
@@ -346,8 +329,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
 
-        const timeA = new Date(a.dueDate).getTime();
-        const timeB = new Date(b.dueDate).getTime();
+        const dateA = new Date(formatDateConsistent(a.dueDate)).getTime();
+        const dateB = new Date(formatDateConsistent(b.dueDate)).getTime();
+        const timeA = isNaN(dateA) ? 0 : dateA;
+        const timeB = isNaN(dateB) ? 0 : dateB;
         return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
       }
 
@@ -380,7 +365,11 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
 
   const startEdit = (task: Task) => {
     setEditingTask(task);
-    setFormState(task);
+    const ymd = formatDateConsistent(task.dueDate);
+    setFormState({
+      ...task,
+      dueDate: ymd === '-' ? '' : ymd,
+    });
     setIsAdding(false);
   };
 
@@ -781,7 +770,9 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
 
                 <div style={styles.fieldGroup}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={styles.label}>DUE DATE</label>
+                    <label style={styles.label}>
+                      DUE DATE {formState.dueDate ? `(${formatDateToMMDDYYYY(formState.dueDate)})` : ''}
+                    </label>
                     {isDueDatePast(formState.dueDate, formState.kanbanStage) && (
                       <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-red, #ef4444)' }}>
                         PAST DUE
@@ -790,7 +781,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   </div>
                   <input
                     type="date"
-                    value={formState.dueDate || ''}
+                    value={formatDateConsistent(formState.dueDate) === '-' ? '' : formatDateConsistent(formState.dueDate)}
                     onChange={(e) => handleInputChange('dueDate', e.target.value)}
                     style={{
                       ...styles.input,
@@ -1012,6 +1003,8 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                             )}
                             {task.dueDate && (() => {
                               const isPastDue = isDueDatePast(task.dueDate, stage);
+                              const formattedDate = formatDateToMMDDYYYY(task.dueDate);
+                              if (!formattedDate) return null;
                               return (
                                 <div 
                                   style={{
@@ -1019,7 +1012,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                                     color: isPastDue ? 'var(--color-red, #ef4444)' : 'var(--color-muted)',
                                     fontWeight: isPastDue ? 600 : 400,
                                   }}
-                                  title={isPastDue ? `Past due date (${task.dueDate})` : `Due date: ${task.dueDate}`}
+                                  title={isPastDue ? `Past due date (${formattedDate})` : `Due date: ${formattedDate}`}
                                 >
                                   <Calendar 
                                     size={12} 
@@ -1028,7 +1021,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                                       color: isPastDue ? 'var(--color-red, #ef4444)' : 'var(--color-muted)',
                                     }} 
                                   />
-                                  <span>{task.dueDate}</span>
+                                  <span>{formattedDate}</span>
                                 </div>
                               );
                             })()}

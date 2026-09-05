@@ -71,3 +71,51 @@ export function formatDateConsistent(dateStr: string | undefined | null): string
 
   return clean;
 }
+
+/**
+ * Formats date string into consistent MM/DD/YYYY format
+ */
+export function formatDateToMMDDYYYY(dateStr: string | undefined | null): string {
+  if (!dateStr || dateStr.trim() === '' || dateStr.trim() === '-') return '';
+  const clean = dateStr.trim();
+
+  // If already MM/DD/YYYY with two-digit month and day
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(clean)) {
+    return clean;
+  }
+
+  // If YYYY-MM-DD or YYYY/MM/DD
+  const isoMatch = clean.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    const year = isoMatch[1];
+    const month = isoMatch[2].padStart(2, '0');
+    const day = isoMatch[3].padStart(2, '0');
+    return `${month}/${day}/${year}`;
+  }
+
+  // If M/D/YYYY or MM/DD/YYYY
+  const usMatch = clean.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (usMatch) {
+    const month = usMatch[1].padStart(2, '0');
+    const day = usMatch[2].padStart(2, '0');
+    const year = usMatch[3];
+    return `${month}/${day}/${year}`;
+  }
+
+  // If valid parseable date
+  const parsed = new Date(clean);
+  if (!isNaN(parsed.getTime())) {
+    if (clean.includes('T')) {
+      const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getUTCDate()).padStart(2, '0');
+      const year = parsed.getUTCFullYear();
+      return `${month}/${day}/${year}`;
+    }
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const year = parsed.getFullYear();
+    return `${month}/${day}/${year}`;
+  }
+
+  return clean;
+}

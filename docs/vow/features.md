@@ -244,6 +244,9 @@
   - Evaluates task due dates against current local date midnight.
   - For incomplete tasks (`kanbanStage !== 'Done'`) whose due dates are in the past, renders the due date text and calendar icon in a distinct red (`var(--color-red, #ef4444)`) with font weight `600` and an informative tooltip.
   - In the Add/Edit Task modal, displays a prominent `PAST DUE` red badge with a red border and text on the date picker whenever an overdue date is selected or edited.
+- [x] **[TASK-DUE-DATE-FORMAT-MMDDYYYY] Unified MM/DD/YYYY Due Date Display Normalization (`KanbanBoard.tsx`, `currency.ts`):**
+  - Implemented `formatDateToMMDDYYYY` helper converting raw spreadsheet dates (ISO `YYYY-MM-DD`, `YYYY/MM/DD`, or mixed `M/D/YYYY`) into a strictly unified `MM/DD/YYYY` presentation across all task cards and modal headers.
+  - Ensures date input forms accept and render ISO format seamlessly while presenting users with uniform `MM/DD/YYYY` dates.
 
 ---
 ---
