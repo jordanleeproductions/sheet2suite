@@ -247,6 +247,14 @@
 - [x] **[TASK-DUE-DATE-FORMAT-MMDDYYYY] Unified MM/DD/YYYY Due Date Display Normalization (`KanbanBoard.tsx`, `currency.ts`):**
   - Implemented `formatDateToMMDDYYYY` helper converting raw spreadsheet dates (ISO `YYYY-MM-DD`, `YYYY/MM/DD`, or mixed `M/D/YYYY`) into a strictly unified `MM/DD/YYYY` presentation across all task cards and modal headers.
   - Ensures date input forms accept and render ISO format seamlessly while presenting users with uniform `MM/DD/YYYY` dates.
+- [x] **[TASK-CATEGORY-FILTER-DROPDOWN] Category Dropdown Filter with 'General' Fallback and 1-Click Clear (`KanbanBoard.tsx`):**
+  - Added an interactive Category `<select>` dropdown filter to the Kanban board header controls, positioned alongside the Sort controls.
+  - Automatically identifies all unique categories across tasks and computes live task counts per category.
+  - Treats all default tasks without a category (blank, null, or whitespace) as **`General`**, matching the card badges.
+  - Includes an `"ALL CATEGORIES"` option to view all tasks, plus an explicit `RESET` button that appears when an active category filter is applied for instantaneous 1-click clearing.
+  - Dynamically updates Kanban columns, mobile stage tab counters, empty column messages, and top progress metrics / progress bar cards to reflect the filtered category subset.
+  - Pre-populates the filtered category when creating a new task from the board, streamlining batch task creation.
+  - Fully responsive on desktop and mobile viewports with dedicated column/flex wrapping rules.
 
 ---
 ---

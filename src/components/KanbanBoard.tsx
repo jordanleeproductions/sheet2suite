@@ -252,6 +252,11 @@ function TaskCombobox({ label, value, onChange, options, placeholder, fieldId }:
   );
 }
 
+export const getTaskCategory = (task: Task): string => {
+  const cat = (task.category || '').trim();
+  return cat ? cat : 'General';
+};
+
 export const isDueDatePast = (dueDateStr?: string, stage?: KanbanStage): boolean => {
   if (!dueDateStr || !dueDateStr.trim() || stage === 'Done') return false;
 
@@ -287,6 +292,27 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   // Sorting state
   const [sortField, setSortField] = useState<'default' | 'priority' | 'dueDate'>('default');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Category Filter state ('ALL' or specific category name) [TASK-CATEGORY-FILTER]
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  // Compute available categories from tasks, with empty/unspecified category mapping to 'General'
+  const categoryOptions = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const task of tasks) {
+      const cat = getTaskCategory(task);
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    return Object.keys(counts)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      .map(name => ({ name, count: counts[name] }));
+  }, [tasks]);
+
+  // Filter tasks based on category selection
+  const filteredTasks = React.useMemo(() => {
+    if (selectedCategory === 'ALL') return tasks;
+    return tasks.filter(t => getTaskCategory(t).toLowerCase() === selectedCategory.toLowerCase());
+  }, [tasks, selectedCategory]);
 
   // Compute dynamic suggestions for Categories & Assignees from existing tasks [TASK-AUTO-SUGGEST]
   const existingCategories = Array.from(new Set([
@@ -378,7 +404,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       taskId: `T${tasks.length + 1}`,
       taskName: '',
       kanbanStage: stage,
-      category: '',
+      category: selectedCategory !== 'ALL' && selectedCategory.toLowerCase() !== 'general' ? selectedCategory : '',
       priority: 'Medium',
       assignedTo: '',
       dueDate: '',
@@ -417,7 +443,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         taskId: `T${updated.length + 1}`,
         taskName: '',
         kanbanStage: formState.kanbanStage || 'To Do',
-        category: formState.category || '',
+        category: selectedCategory !== 'ALL' && selectedCategory.toLowerCase() !== 'general' ? selectedCategory : (formState.category || ''),
         priority: formState.priority || 'Medium',
         assignedTo: formState.assignedTo || '',
         dueDate: '',
@@ -466,46 +492,96 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         </div>
 
         <div style={styles.headerActions} className="kanban-header-actions">
-          <div style={styles.sortGroup} className="kanban-sort-bar">
-            <span style={styles.sortLabel}>SORT:</span>
-            <button
-              style={{
-                ...styles.sortBtn,
-                backgroundColor: sortField === 'priority' ? 'var(--color-primary)' : 'transparent',
-                color: sortField === 'priority' ? 'var(--color-on-primary)' : 'var(--color-text)',
-                borderColor: sortField === 'priority' ? 'var(--color-primary)' : 'var(--color-muted)'
-              }}
-              className="kanban-sort-btn"
-              onClick={() => handleSortClick('priority')}
-              title="Sort by Priority"
-            >
-              <AlertTriangle size={13} style={{ marginRight: '0.25rem' }} />
-              PRIORITY {sortField === 'priority' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
-            </button>
-            <button
-              style={{
-                ...styles.sortBtn,
-                backgroundColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'transparent',
-                color: sortField === 'dueDate' ? 'var(--color-on-primary)' : 'var(--color-text)',
-                borderColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'var(--color-muted)'
-              }}
-              className="kanban-sort-btn"
-              onClick={() => handleSortClick('dueDate')}
-              title="Sort by Due Date"
-            >
-              <Clock size={13} style={{ marginRight: '0.25rem' }} />
-              DUE DATE {sortField === 'dueDate' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
-            </button>
-            {sortField !== 'default' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }} className="kanban-controls-row">
+            {/* Category Filter Dropdown [TASK-CATEGORY-FILTER] */}
+            <div style={styles.sortGroup} className="kanban-category-filter-bar">
+              <span style={styles.sortLabel}>CATEGORY:</span>
+              <div className="kanban-category-select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  style={{
+                    padding: '0.35rem 0.6rem',
+                    fontSize: '0.675rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    backgroundColor: selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'transparent',
+                    color: selectedCategory !== 'ALL' ? 'var(--color-on-primary)' : 'var(--color-text)',
+                    border: `1px solid ${selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-muted)'}`,
+                    borderRadius: 'var(--border-radius-sm)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    transition: 'var(--transition-smooth)',
+                  }}
+                  className="kanban-category-select"
+                  title="Filter tasks by category"
+                >
+                  <option value="ALL" style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                    ALL CATEGORIES ({tasks.length})
+                  </option>
+                  {categoryOptions.map(cat => (
+                    <option key={cat.name} value={cat.name} style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                      {cat.name.toUpperCase()} ({cat.count})
+                    </option>
+                  ))}
+                </select>
+
+                {selectedCategory !== 'ALL' && (
+                  <button
+                    type="button"
+                    style={styles.clearSortBtn}
+                    className="kanban-filter-reset"
+                    onClick={() => setSelectedCategory('ALL')}
+                    title="Remove category filter (Select all categories)"
+                  >
+                    RESET
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Sort Bar */}
+            <div style={styles.sortGroup} className="kanban-sort-bar">
+              <span style={styles.sortLabel}>SORT:</span>
               <button
-                style={styles.clearSortBtn}
-                className="kanban-sort-reset"
-                onClick={() => setSortField('default')}
-                title="Reset Sorting"
+                style={{
+                  ...styles.sortBtn,
+                  backgroundColor: sortField === 'priority' ? 'var(--color-primary)' : 'transparent',
+                  color: sortField === 'priority' ? 'var(--color-on-primary)' : 'var(--color-text)',
+                  borderColor: sortField === 'priority' ? 'var(--color-primary)' : 'var(--color-muted)'
+                }}
+                className="kanban-sort-btn"
+                onClick={() => handleSortClick('priority')}
+                title="Sort by Priority"
               >
-                RESET
+                <AlertTriangle size={13} style={{ marginRight: '0.25rem' }} />
+                PRIORITY {sortField === 'priority' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
               </button>
-            )}
+              <button
+                style={{
+                  ...styles.sortBtn,
+                  backgroundColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'transparent',
+                  color: sortField === 'dueDate' ? 'var(--color-on-primary)' : 'var(--color-text)',
+                  borderColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'var(--color-muted)'
+                }}
+                className="kanban-sort-btn"
+                onClick={() => handleSortClick('dueDate')}
+                title="Sort by Due Date"
+              >
+                <Clock size={13} style={{ marginRight: '0.25rem' }} />
+                DUE DATE {sortField === 'dueDate' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
+              </button>
+              {sortField !== 'default' && (
+                <button
+                  style={styles.clearSortBtn}
+                  className="kanban-sort-reset"
+                  onClick={() => setSortField('default')}
+                  title="Reset Sorting"
+                >
+                  RESET
+                </button>
+              )}
+            </div>
           </div>
 
           <button style={{ ...styles.addButton, color: 'var(--color-on-light)' }} className="kanban-add-btn-desktop" onClick={() => startAdd('To Do')} disabled={isSyncing}>
@@ -516,10 +592,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
 
       {/* Switchable Progress Cards / Progress Bar Header [TASK-2] */}
       {(() => {
-        const total = tasks.length;
-        const toDoCount = tasks.filter(t => t.kanbanStage === 'To Do').length;
-        const inProgressCount = tasks.filter(t => t.kanbanStage === 'In Progress').length;
-        const doneCount = tasks.filter(t => t.kanbanStage === 'Done').length;
+        const total = filteredTasks.length;
+        const toDoCount = filteredTasks.filter(t => t.kanbanStage === 'To Do').length;
+        const inProgressCount = filteredTasks.filter(t => t.kanbanStage === 'In Progress').length;
+        const doneCount = filteredTasks.filter(t => t.kanbanStage === 'Done').length;
         const percentDone = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
         return (
@@ -535,7 +611,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
-                TASK PROGRESS & COMPLETION METRICS
+                TASK PROGRESS & COMPLETION METRICS {selectedCategory !== 'ALL' ? `• ${selectedCategory.toUpperCase()}` : ''}
               </span>
               <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--color-bg, #f3f4f6)', padding: '2px', borderRadius: 'var(--border-radius-sm)' }}>
                 <button
@@ -920,7 +996,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       {/* Mobile Tab Swapper */}
       <div style={styles.mobileTabs}>
         {stages.map(stage => {
-          const count = tasks.filter(t => t.kanbanStage === stage).length;
+          const count = filteredTasks.filter(t => t.kanbanStage === stage).length;
           const isActive = activeMobileStage === stage;
           return (
             <button
@@ -942,7 +1018,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       {/* Desktop side-by-side Columns */}
       <div style={styles.boardGrid} className="kanban-grid">
         {stages.map(stage => {
-          const stageTasks = getSortedTasks(tasks.filter(t => t.kanbanStage === stage));
+          const stageTasks = getSortedTasks(filteredTasks.filter(t => t.kanbanStage === stage));
           const isMobileVisible = activeMobileStage === stage;
           
           return (
@@ -967,7 +1043,9 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
               {/* Tasks List */}
               <div style={styles.taskList}>
                 {stageTasks.length === 0 ? (
-                  <div style={styles.emptyState}>No tasks here.</div>
+                  <div style={styles.emptyState}>
+                    {selectedCategory !== 'ALL' ? `No ${selectedCategory} tasks in ${stage}.` : 'No tasks here.'}
+                  </div>
                 ) : (
                   stageTasks.map(task => {
                     const priColors = getPriorityColor(task.priority);
@@ -1117,6 +1195,29 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
             font-size: 0.85rem !important;
           }
           .kanban-header-actions {
+            width: 100% !important;
+          }
+          .kanban-controls-row {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            gap: 0.625rem !important;
+          }
+          .kanban-category-filter-bar {
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 0.35rem !important;
+          }
+          .kanban-category-select-wrapper {
+            flex: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.35rem !important;
+          }
+          .kanban-category-select {
+            flex: 1 !important;
             width: 100% !important;
           }
           .kanban-sort-bar {
