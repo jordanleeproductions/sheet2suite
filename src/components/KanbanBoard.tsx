@@ -746,18 +746,31 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                           </div>
 
                           {/* Quick movement controls */}
-                          <div style={styles.quickMoves}>
+                          <div 
+                            style={styles.quickMoves}
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button 
+                              type="button"
                               style={styles.cardActionBtn}
-                              onClick={() => startEdit(task)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEdit(task);
+                              }}
+                              title="Edit task"
                             >
                               <Edit2 size={12} />
                             </button>
                             
                             {stage !== 'To Do' && (
                               <button 
+                                type="button"
                                 style={styles.cardActionBtn}
-                                onClick={() => moveTask(task, 'backward')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveTask(task, 'backward');
+                                }}
+                                disabled={isSyncing}
                                 title="Move back"
                               >
                                 <ArrowLeft size={12} />
@@ -765,8 +778,13 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                             )}
                             {stage !== 'Done' && (
                               <button 
+                                type="button"
                                 style={styles.cardActionBtn}
-                                onClick={() => moveTask(task, 'forward')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveTask(task, 'forward');
+                                }}
+                                disabled={isSyncing}
                                 title="Move forward"
                               >
                                 <ArrowRight size={12} />

@@ -85,7 +85,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Vendor Contract Document Storage (`[VND-6]` - Backlog):** Integrated PDF/image contract uploader in Add/Edit Vendor modal. Automatically uploads attachments to a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the Drive URL to the vendor entry.
 
 ### 2.8 Kanban Checklist (`KanbanBoard.tsx`)
-- Categorized checklist (*To Do*, *In Progress*, *Done*) with priority badges and target due dates.
+- Categorized checklist (*To Do*, *In Progress*, *Done*) with priority badges, target due dates, and isolated 1-click stage advancement arrows without triggering the card edit modal.
 
 ### 2.9 Wedding Playlist & Music (`MusicManager.tsx`)
 - Categorized music tracks (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned / Do Not Play*).

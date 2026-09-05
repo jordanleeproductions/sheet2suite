@@ -107,6 +107,7 @@
 - [x] **[TASK-DELETE-MODAL] Delete Task Modal Redesign:** Upgraded task deletion confirmation popup with high-contrast alert styling, permanent removal notice, comfortable desktop/mobile padding, and full-width mobile action buttons.
 - [x] **[TASK-MOBILE-HEADER] Mobile "Add Task" Button Dedicated Row:** Realigned the mobile "Add Task" button onto its own full-width row under the title and description, preventing text compression.
 - [x] **[TASK-AUTO-SUGGEST] Dynamic Task Category & Assignee Autocomplete Suggestions:** Pre-seeds HTML5 `<datalist>` auto-suggestions for task categories and assignees based on standard defaults and active tasks on the board, while supporting freeform user text entry.
+- [x] **[TASK-QUICK-MOVE-STOP-PROPAGATION] 1-Click Status Progression Isolation:** Added event bubbling cancellation (`e.stopPropagation()`) to quick movement forward/backward arrow buttons (`ArrowRight`, `ArrowLeft`) on task cards, allowing instantaneous single-click stage advancement without opening the task edit modal.
 
 ---
 
