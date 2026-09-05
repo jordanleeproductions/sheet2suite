@@ -69,7 +69,8 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Direct relational guest seating assignments mapping `guest.tableAssignment` to `tableId` with backward-compatible display resolution.
 - Human-readable sequential and semantic table ID generation (`table-1`, `table-2`, `table-sweetheart`, etc.) with intelligent gap-filling and collision avoidance.
 - Seat ID persistence (`seatNumber`) per guest.
-- Interactive seat nodes with initials avatar, guest profile popups, and unassigned guest drawer.
+- Interactive seat nodes with initials avatar, guest profile popups (featuring meal choice display above dietary restrictions and friendly table name unassignment), and unassigned guest drawer.
+- Navigation button uses dedicated chair icon (`Armchair`) across mobile drawer, sidebar, and module selectors.
 
 ### 2.5 Budget Ledger (`BudgetLedgerManager.tsx`)
 - Itemized financial ledger (Estimated vs Actual Cost vs Amount Paid vs Balance Owing).

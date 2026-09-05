@@ -68,6 +68,10 @@
   - Replaced machine timestamp IDs (`table-1725...`) with human-readable sequence-based (`table-1`, `table-2`, `table-3`) and semantic (`table-sweetheart`, `table-vip-head`) IDs.
   - Integrated smart gap-filling for suggested table numbers (`getNextSuggestedTableNumber`) and robust collision handling with suffix increments.
   - Keeps Column A of the `TABLES` tab and manual guest table assignments in Google Sheets clean, predictable, and human-friendly.
+- [x] **[SEATING-POPUP-ENHANCE] Seated Guest Profile Popup & Seating Icon Upgrade (`SeatingChartManager.tsx`, `src/app/vow/page.tsx`):**
+  - Replaced generic `Grid` icon with `Armchair` chair icon across mobile navigation drawer, desktop sidebar, and module selector menus.
+  - Updated seated guest popup "Unassign Seat" button to reference the human-readable Table Name instead of raw Table ID (e.g. `UNASSIGN SEAT FROM SWEETHEART TABLE`).
+  - Removed contact info (email/phone) from seating popup and placed Meal Selection prominently above Dietary Restrictions.
 - [x] **[GUEST-DECLINED-LOCK] Declined RSVP Meal & Seating Invalidation Rule:** Automatically clears and disables reception table assignments, ceremony seating, and meal choice selections when a guest's RSVP is set to `Declined`. Hides the 4 inner meta chips (*Reception*, *Ceremony*, *Meal*, *Diet*) on the guest card for a cleaner declined view, and excludes declined guests from seating assignment picker modals.
 
 ---

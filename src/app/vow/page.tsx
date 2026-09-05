@@ -22,7 +22,7 @@ import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -988,7 +988,7 @@ export default function Sheet2VowDashboard() {
                   {[
                     { id: 'guests', label: 'Guest Registry', icon: Users },
                     { id: 'menu', label: 'Catering Menu', icon: Utensils },
-                    { id: 'tables', label: 'Seating Chart', icon: Grid },
+                    { id: 'tables', label: 'Seating Chart', icon: Armchair },
                     { id: 'thanks', label: 'Thank You Gifts', icon: Heart },
                   ]
                     .filter(tab => (enabledModules as any)[tab.id] ?? true)
@@ -1261,7 +1261,7 @@ export default function Sheet2VowDashboard() {
                 { id: 'home', label: 'Summary', icon: LayoutDashboard },
                 { id: 'guests', label: 'Guest List', icon: Users },
                 { id: 'menu', label: 'Catering', icon: Utensils },
-                { id: 'tables', label: 'Seating', icon: Grid },
+                { id: 'tables', label: 'Seating', icon: Armchair },
                 { id: 'budget', label: 'Ledger', icon: DollarSign },
                 { id: 'schedule', label: 'Timeline', icon: Calendar },
                 { id: 'vendors', label: 'Vendors', icon: Briefcase },
@@ -2977,7 +2977,7 @@ export default function Sheet2VowDashboard() {
                     { id: 'budget', label: 'Financials', sub: 'Ledger & Deposits', icon: DollarSign, color: '#f59e0b' },
                     { id: 'schedule', label: 'Day Timeline', sub: 'Run of Show', icon: Calendar, color: '#8b5cf6' },
                     { id: 'menu', label: 'Catering', sub: 'Dishes & Allergens', icon: Utensils, color: '#ec4899' },
-                    { id: 'tables', label: 'Seating Chart', sub: 'Floor & Head Table', icon: Grid, color: '#06b6d4' },
+                    { id: 'tables', label: 'Seating Chart', sub: 'Floor & Head Table', icon: Armchair, color: '#06b6d4' },
                     { id: 'tasks', label: 'Checklist', sub: 'Kanban Stages', icon: ListTodo, color: '#f97316' },
                     { id: 'vendors', label: 'Vendors', sub: 'Contracts & Contacts', icon: Briefcase, color: '#6366f1' },
                   ]

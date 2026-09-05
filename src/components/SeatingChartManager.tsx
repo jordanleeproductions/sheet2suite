@@ -14,8 +14,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   HelpCircle, 
-  Mail, 
-  Phone, 
   Utensils, 
   User, 
   UserCheck, 
@@ -1153,35 +1151,25 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                 </select>
               </div>
 
-              {/* Dietary Restrictions & Details */}
+              {/* Meal Selection & Dietary Restrictions */}
               <div style={styles.detailsGrid}>
                 <div style={styles.detailCard}>
                   <div style={styles.detailLabel}>
                     <Utensils size={14} style={{ marginRight: '6px', color: 'var(--color-highlight)' }} />
+                    MEAL SELECTION
+                  </div>
+                  <p style={styles.detailValue}>
+                    {selectedGuest.mealChoice || 'None selected'}
+                  </p>
+                </div>
+
+                <div style={styles.detailCard}>
+                  <div style={styles.detailLabel}>
+                    <AlertCircle size={14} style={{ marginRight: '6px', color: 'var(--color-highlight)' }} />
                     DIETARY RESTRICTIONS
                   </div>
                   <p style={styles.detailValue}>
                     {selectedGuest.dietaryRestrictions || 'None specified'}
-                  </p>
-                </div>
-
-                <div style={styles.detailCard}>
-                  <div style={styles.detailLabel}>
-                    <Mail size={14} style={{ marginRight: '6px', color: 'var(--color-highlight)' }} />
-                    EMAIL ADDRESS
-                  </div>
-                  <p style={styles.detailValue}>
-                    {selectedGuest.emailAddress || 'No email on file'}
-                  </p>
-                </div>
-
-                <div style={styles.detailCard}>
-                  <div style={styles.detailLabel}>
-                    <Phone size={14} style={{ marginRight: '6px', color: 'var(--color-highlight)' }} />
-                    PHONE NUMBER
-                  </div>
-                  <p style={styles.detailValue}>
-                    {selectedGuest.phoneNumber || 'No phone number'}
                   </p>
                 </div>
               </div>
@@ -1212,7 +1200,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                     setSelectedGuest(null);
                   }}
                 >
-                  <Trash2 size={16} /> UNASSIGN SEAT FROM {selectedGuest.tableAssignment.toUpperCase()}
+                  <Trash2 size={16} /> UNASSIGN SEAT FROM {(getTableForGuest(selectedGuest)?.tableName || selectedGuest.tableAssignment).toUpperCase()}
                 </button>
               )}
             </div>
