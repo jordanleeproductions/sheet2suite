@@ -2,13 +2,253 @@
 
 import React, { useState } from 'react';
 import { Task, KanbanStage } from '@/lib/sheets/types';
-import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2 } from 'lucide-react';
+import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2, ChevronDown, Check } from 'lucide-react';
 
 interface KanbanBoardProps {
   tasks: Task[];
   onUpdate: (updatedTasks: Task[]) => Promise<void>;
   isSyncing: boolean;
   initialStage?: KanbanStage;
+}
+
+interface TaskComboboxProps {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  options: string[];
+  placeholder?: string;
+  fieldId: string;
+}
+
+function TaskCombobox({ label, value, onChange, options, placeholder, fieldId }: TaskComboboxProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [filterText, setFilterText] = useState<string | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handlePointerDown = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setFilterText(null);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
+  const displayFilter = filterText !== null ? filterText : '';
+  const filtered = displayFilter.trim()
+    ? options.filter(opt => opt.toLowerCase().includes(displayFilter.toLowerCase().trim()))
+    : options;
+
+  const isCustom = Boolean(
+    value &&
+    value.trim() &&
+    !options.some(opt => opt.toLowerCase() === value.trim().toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          id={fieldId}
+          type="text"
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setFilterText(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => {
+            setFilterText(null);
+            setIsOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false);
+              setFilterText(null);
+            }
+          }}
+          placeholder={placeholder}
+          style={{
+            padding: '0.5rem 2.25rem 0.5rem 0.5rem',
+            border: '1px solid var(--color-muted, #cbd5e1)',
+            borderRadius: 'var(--border-radius-sm, 4px)',
+            fontSize: '0.85rem',
+            width: '100%',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            color: 'var(--color-text)',
+            boxSizing: 'border-box',
+          }}
+          autoComplete="off"
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setFilterText(null);
+            setIsOpen(prev => !prev);
+          }}
+          title={`Show ${label.toLowerCase()} dropdown`}
+          style={{
+            position: 'absolute',
+            right: '4px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'transparent',
+            border: 'none',
+            padding: '6px',
+            cursor: 'pointer',
+            color: 'var(--color-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 'var(--border-radius-sm, 4px)',
+          }}
+        >
+          <ChevronDown
+            size={16}
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'none',
+              transition: 'transform 0.15s ease',
+              color: isOpen ? 'var(--color-primary)' : 'var(--color-muted)',
+            }}
+          />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 1200,
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border, #cbd5e1)',
+            borderRadius: 'var(--border-radius-sm, 6px)',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            maxHeight: '210px',
+            overflowY: 'auto',
+            padding: '4px 0',
+          }}
+        >
+          <div
+            style={{
+              padding: '5px 10px 5px',
+              fontSize: '0.65rem',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              color: 'var(--color-muted)',
+              borderBottom: '1px solid var(--color-border, #e2e8f0)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span>SELECT OR TYPE TO OVERWRITE</span>
+            {filterText !== null && (
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setFilterText(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '0.65rem',
+                  color: 'var(--color-primary)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'underline',
+                }}
+              >
+                Show all ({options.length})
+              </button>
+            )}
+          </div>
+
+          {filtered.length > 0 ? (
+            filtered.map((opt) => {
+              const isSelected = value.trim().toLowerCase() === opt.toLowerCase();
+              return (
+                <div
+                  key={opt}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onChange(opt);
+                    setIsOpen(false);
+                    setFilterText(null);
+                  }}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: isSelected ? 'var(--color-bg-hover, rgba(0,0,0,0.06))' : 'transparent',
+                    color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+                    fontWeight: isSelected ? 600 : 400,
+                    transition: 'background-color 0.1s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--color-bg-hover, rgba(0,0,0,0.04))';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <span>{opt}</span>
+                  {isSelected && <Check size={14} style={{ color: 'var(--color-primary)' }} />}
+                </div>
+              );
+            })
+          ) : (
+            <div
+              style={{
+                padding: '0.6rem 0.75rem',
+                fontSize: '0.78rem',
+                color: 'var(--color-muted)',
+                fontStyle: 'italic',
+              }}
+            >
+              No matching preset found.
+            </div>
+          )}
+
+          {value.trim() && isCustom && (
+            <div
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setIsOpen(false);
+                setFilterText(null);
+              }}
+              style={{
+                padding: '0.5rem 0.75rem',
+                borderTop: '1px dashed var(--color-border, #e2e8f0)',
+                fontSize: '0.78rem',
+                color: 'var(--color-primary)',
+                cursor: 'pointer',
+                backgroundColor: 'rgba(26, 127, 75, 0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+              }}
+            >
+              <Plus size={13} />
+              <span>Use custom: <strong>&ldquo;{value.trim()}&rdquo;</strong></span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }: KanbanBoardProps) {
@@ -486,36 +726,26 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
 
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>CATEGORY</label>
-                  <input
-                    type="text"
-                    list="task-category-suggestions"
+                  <TaskCombobox
+                    label="Category"
+                    fieldId="task-category-input"
                     placeholder="e.g. Florals, Attire, Venue"
                     value={formState.category || ''}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
-                    style={styles.input}
+                    onChange={(val) => handleInputChange('category', val)}
+                    options={existingCategories}
                   />
-                  <datalist id="task-category-suggestions">
-                    {existingCategories.map((cat) => (
-                      <option key={cat} value={cat} />
-                    ))}
-                  </datalist>
                 </div>
 
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>ASSIGNED TO</label>
-                  <input
-                    type="text"
-                    list="task-assignee-suggestions"
+                  <TaskCombobox
+                    label="Assigned To"
+                    fieldId="task-assignee-input"
                     placeholder="e.g. John, Maid of Honor"
                     value={formState.assignedTo || ''}
-                    onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                    style={styles.input}
+                    onChange={(val) => handleInputChange('assignedTo', val)}
+                    options={existingAssignees}
                   />
-                  <datalist id="task-assignee-suggestions">
-                    {existingAssignees.map((assignee) => (
-                      <option key={assignee} value={assignee} />
-                    ))}
-                  </datalist>
                 </div>
 
                 <div style={styles.fieldGroup}>
@@ -1158,7 +1388,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '0.875rem',
-    padding: '1.25rem',
+    padding: '1.25rem 1.25rem 3.5rem 1.25rem',
     overflowY: 'auto',
     flex: 1,
   },

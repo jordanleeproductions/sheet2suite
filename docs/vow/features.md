@@ -235,6 +235,11 @@
   - **Dual-Argument `fetchWeddingData` Engine**: Updated `fetchWeddingData` signature to accept `(overrideToken?: string, overrideSpreadsheetId?: string)`, avoiding empty/stale `spreadsheetId` closures during login transitions.
   - **Settings Budget Ledger & KPI Meter Synchronization**: Hydrates `totalBudget` from `data.dashboard.totalBudget` directly into `budgetThreshold` state and `localStorage` (`s2v_budget_threshold`) upon login and mount, ensuring countdown timers and budget meters reflect the Google Sheet immediately.
   - **Total Budget Configuration in Advanced Settings (`AdvancedSettingsModal.tsx`)**: Added `TOTAL TARGET BUDGET` input to the Wedding Details tab, enabling couples to view and update cell `Settings!B3` directly from the settings dialog.
+- [x] **[TASK-CATEGORY-COMBOBOX] Interactive Category & Assignee Combobox with Free-Text Overwrite (`KanbanBoard.tsx`):**
+  - Upgraded task Add/Edit modal Category and Assigned To fields from plain inputs with invisible browser `<datalist>` elements into a responsive Combobox.
+  - Displays a visible chevron dropdown toggle button (`ChevronDown`) indicating available options on desktop and mobile.
+  - Clicking the chevron or focusing opens a styled popup list of all existing wedding categories (and assignees) with hover feedback, checkmark indicator for the active item, and instant search filtering.
+  - Retains 100% free-text typing and overwrite ability so users can edit or type custom categories on demand.
 
 ---
 ---
