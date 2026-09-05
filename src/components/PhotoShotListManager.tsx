@@ -54,7 +54,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
   const totalShots = photos.length;
   const capturedShots = photos.filter(p => p.status === 'Captured').length;
   const pendingShots = photos.filter(p => p.status === 'Pending').length;
-  const mustHaveShots = photos.filter(p => p.priority === 'Must Have').length;
+  const mustHaveShots = photos.filter(p => p.priority === 'Must Have' || (p.priority as any) === 'High').length;
 
   // Filtered Shots
   const filteredPhotos = photos.filter(photo => {
@@ -64,7 +64,11 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
       (photo.people || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'All' || photo.status === statusFilter;
-    const matchesPriority = priorityFilter === 'All' || photo.priority === priorityFilter;
+    const matchesPriority = priorityFilter === 'All' || 
+      photo.priority === priorityFilter ||
+      (priorityFilter === 'Must Have' && (photo.priority as any) === 'High') ||
+      (priorityFilter === 'Nice To Have' && (photo.priority as any) === 'Medium') ||
+      (priorityFilter === 'Optional' && (photo.priority as any) === 'Low');
 
     return matchesSearch && matchesStatus && matchesPriority;
   });
@@ -172,8 +176,9 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
     
     let bodyText = `Hi!\n\nHere is our official Wedding Photography Shot List:\n\n`;
 
-    const mustHave = photos.filter(p => p.priority === 'Must Have');
-    const niceToHave = photos.filter(p => p.priority !== 'Must Have');
+    const mustHave = photos.filter(p => p.priority === 'Must Have' || (p.priority as any) === 'High');
+    const niceToHave = photos.filter(p => p.priority === 'Nice To Have' || (p.priority as any) === 'Medium');
+    const optional = photos.filter(p => p.priority === 'Optional' || (p.priority as any) === 'Low');
 
     if (mustHave.length > 0) {
       bodyText += `--- MUST HAVE SHOTS (${mustHave.length}) ---\n`;
@@ -190,6 +195,18 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
     if (niceToHave.length > 0) {
       bodyText += `--- NICE TO HAVE SHOTS (${niceToHave.length}) ---\n`;
       niceToHave.forEach((p, idx) => {
+        bodyText += `${idx + 1}. [${p.shotId}] ${p.description}\n`;
+        if (p.location) bodyText += `   Location: ${p.location}\n`;
+        if (p.shotTime) bodyText += `   Est. Time: ${p.shotTime}\n`;
+        if (p.people) bodyText += `   People Included: ${p.people}\n`;
+        if (p.notes) bodyText += `   Notes: ${p.notes}\n`;
+        bodyText += `\n`;
+      });
+    }
+
+    if (optional.length > 0) {
+      bodyText += `--- OPTIONAL SHOTS (${optional.length}) ---\n`;
+      optional.forEach((p, idx) => {
         bodyText += `${idx + 1}. [${p.shotId}] ${p.description}\n`;
         if (p.location) bodyText += `   Location: ${p.location}\n`;
         if (p.shotTime) bodyText += `   Est. Time: ${p.shotTime}\n`;
@@ -469,6 +486,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
             <option value="All">All Priorities</option>
             <option value="Must Have">Must Have</option>
             <option value="Nice To Have">Nice To Have</option>
+            <option value="Optional">Optional</option>
           </select>
         </div>
       </div>
@@ -477,7 +495,9 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
       <div className="photo-shots-list">
         {filteredPhotos.map(shot => {
           const isCaptured = (shot.status || '').toLowerCase() === 'captured' || (shot.status || '').toLowerCase() === 'completed';
-          const isMustHave = shot.priority === 'Must Have';
+          const isMustHave = shot.priority === 'Must Have' || (shot.priority as any) === 'High';
+          const isOptional = shot.priority === 'Optional' || (shot.priority as any) === 'Low';
+          const displayPriority = isMustHave ? 'Must Have' : isOptional ? 'Optional' : 'Nice To Have';
 
           return (
             <div 
@@ -497,11 +517,11 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
                   {shot.priority && (
                     <span style={{
                       ...styles.priorityBadge,
-                      backgroundColor: isMustHave ? 'var(--color-gold-muted)' : 'var(--color-bg)',
-                      color: isMustHave ? 'var(--color-gold)' : 'var(--color-text)',
+                      backgroundColor: isMustHave ? 'var(--color-gold-muted)' : isOptional ? 'var(--color-bg)' : 'var(--color-bg-subtle, rgba(59, 130, 246, 0.1))',
+                      color: isMustHave ? 'var(--color-gold)' : isOptional ? 'var(--color-muted)' : 'var(--color-primary)',
                       borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-muted)'
                     }}>
-                      {shot.priority}
+                      {displayPriority}
                     </span>
                   )}
                   {shot.location && (
@@ -690,6 +710,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
                     >
                       <option value="Must Have">Must Have</option>
                       <option value="Nice To Have">Nice To Have</option>
+                      <option value="Optional">Optional</option>
                     </select>
                   </div>
                 </div>

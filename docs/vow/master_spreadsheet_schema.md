@@ -150,6 +150,7 @@ This document defines the authoritative tab structure and column header contract
 | `Estimated Time` | `shotTime` | Text | Scheduled photo time |
 | `Included People` | `people` | Text | Names of people required |
 | `Status` | `status` | Dropdown | `Pending`, `Captured` |
+| `Priority` | `priority` | Dropdown (`=SETTINGS!$E$2:$E$50`) | Sheet stores `High`, `Medium`, `Low` matching SETTINGS Priority Levels; App UI bi-directionally translates to/from `Must Have`, `Nice To Have`, and `Optional` |
 | `Notes` | `notes` | Text | Lighting or composition notes |
 
 ---

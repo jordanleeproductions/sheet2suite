@@ -166,6 +166,7 @@
 ## 📸 12. Photography & Shot List Manager (`PhotoShotListManager.tsx`)
 - [x] **[PHOTO-1] Photography Shot List Enhancements:** Unchecked cards have solid black borders, section headers black text, and desktop view single-row layout.
 - [x] **[PHOTO-2] Auto-Populate Photographer Email:** Automatically prepopulates the `TO` email address with the Photographer's email from the Vendor Directory when emailing the Shot List.
+- [x] **[PHOTO-PRIORITY-SETTINGS-SYNC] Bi-Directional Priority Translation (`PhotoShotListManager.tsx`, `mapper.ts`):** Retains photographer-intuitive priority labels (`Must Have`, `Nice To Have`, and `Optional`) in the web app UI while bi-directionally translating to and from Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`Must Have` ↔ `High`, `Nice To Have` ↔ `Medium`, `Optional` ↔ `Low`). Eliminates spreadsheet validation warnings while keeping photography terminology seamless.
 
 ---
 

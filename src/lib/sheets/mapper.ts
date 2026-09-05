@@ -296,9 +296,40 @@ export const PHOTO_HEADERS: Record<string, keyof PhotoShot> = {
   'Notes': 'notes',
 };
 
+export const PHOTO_PRIORITY_TO_SHEET: Record<string, string> = {
+  'Must Have': 'High',
+  'Nice To Have': 'Medium',
+  'Optional': 'Low',
+  'High': 'High',
+  'Medium': 'Medium',
+  'Low': 'Low',
+};
+
+export const PHOTO_PRIORITY_FROM_SHEET: Record<string, 'Must Have' | 'Nice To Have' | 'Optional'> = {
+  'High': 'Must Have',
+  'Medium': 'Nice To Have',
+  'Low': 'Optional',
+  'Must Have': 'Must Have',
+  'Nice To Have': 'Nice To Have',
+  'Optional': 'Optional',
+};
+
 export const photoMapper = {
   fromRow(headers: string[], row: any[]): PhotoShot {
     const obj = mapRowToObject<PhotoShot>(headers, row, PHOTO_HEADERS);
+    const rawPri = String(obj.priority || '').trim();
+    let priority: 'Must Have' | 'Nice To Have' | 'Optional' = 'Must Have';
+
+    if (PHOTO_PRIORITY_FROM_SHEET[rawPri]) {
+      priority = PHOTO_PRIORITY_FROM_SHEET[rawPri];
+    } else if (rawPri.toLowerCase().includes('high') || rawPri.toLowerCase().includes('must')) {
+      priority = 'Must Have';
+    } else if (rawPri.toLowerCase().includes('low') || rawPri.toLowerCase().includes('opt')) {
+      priority = 'Optional';
+    } else if (rawPri.toLowerCase().includes('med') || rawPri.toLowerCase().includes('nice')) {
+      priority = 'Nice To Have';
+    }
+
     return {
       shotId: String(obj.shotId || ''),
       description: String(obj.description || ''),
@@ -306,12 +337,18 @@ export const photoMapper = {
       shotTime: String(obj.shotTime || ''),
       people: String(obj.people || ''),
       status: (obj.status || 'Pending') as any,
-      priority: (obj.priority || 'Must Have') as any,
+      priority,
       notes: String(obj.notes || ''),
     };
   },
   toRow(headers: string[], photo: PhotoShot): any[] {
-    return mapObjectToRow(headers, photo, PHOTO_HEADERS);
+    const rawPri = String(photo.priority || 'Must Have').trim();
+    const sheetPriority = PHOTO_PRIORITY_TO_SHEET[rawPri] || 'High';
+    const formattedPhoto = {
+      ...photo,
+      priority: sheetPriority,
+    };
+    return mapObjectToRow(headers, formattedPhoto as any, PHOTO_HEADERS);
   }
 };
 

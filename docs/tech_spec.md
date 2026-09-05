@@ -98,6 +98,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 
 ### 2.10 Photography Shot List (`PhotoShotListManager.tsx`)
 - Required photography moments (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
+- Priority levels support photographer-friendly enums (`Must Have`, `Nice To Have`, `Optional`) in the UI, bi-directionally translated to Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`High`, `Medium`, `Low`).
 - Interactive `Captured` vs `Pending` checkoff toggles and **`EMAIL LIST`** photographer email generator (`mailto:`).
 
 ### 2.12 Print & Export Studio (`PrintTemplatesModal.tsx`)

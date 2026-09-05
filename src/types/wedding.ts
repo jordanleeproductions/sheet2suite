@@ -109,6 +109,8 @@ export interface Song {
   played?: boolean;
 }
 
+export type PhotoPriority = 'Must Have' | 'Nice To Have' | 'Optional';
+
 export interface PhotoShot {
   shotId: string;
   description: string;
@@ -117,7 +119,7 @@ export interface PhotoShot {
   people: string;
   status: 'Pending' | 'Captured' | 'Skipped';
   notes?: string;
-  priority?: 'Must Have' | 'Nice To Have';
+  priority?: PhotoPriority | 'High' | 'Medium' | 'Low';
 }
 
 export interface GiftItem {

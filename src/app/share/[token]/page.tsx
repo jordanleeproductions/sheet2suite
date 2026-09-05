@@ -455,9 +455,17 @@ export default function VendorSharePage() {
                         <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: borderColor, color: textColor }}>
                           {photo.shotId}
                         </span>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: photo.priority === 'Must Have' ? '#f59e0b' : '#3b82f6', color: '#ffffff' }}>
-                          {photo.priority || 'Must Have'}
-                        </span>
+                        {(() => {
+                          const isMust = photo.priority === 'Must Have' || photo.priority === 'High';
+                          const isOpt = photo.priority === 'Optional' || photo.priority === 'Low';
+                          const label = isMust ? 'Must Have' : isOpt ? 'Optional' : 'Nice To Have';
+                          const bg = isMust ? '#f59e0b' : isOpt ? '#64748b' : '#3b82f6';
+                          return (
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: bg, color: '#ffffff' }}>
+                              {label}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       <h3 style={{ ...styles.itemTitle, color: textColor }}>{photo.description}</h3>
