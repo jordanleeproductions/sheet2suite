@@ -246,7 +246,13 @@ export async function GET(req: Request) {
     // Parse Catering Menu
     const cateringRows = valueRanges[10]?.values || [];
     const cateringHeaders = cateringRows[0] || HEADERS_MAP.catering;
-    const catering = cateringRows.slice(1).filter(isNonEmptyRow).map(row => cateringMapper.fromRow(cateringHeaders, row));
+    const catering = cateringRows.slice(1).filter(isNonEmptyRow).map((row, idx) => {
+      const item = cateringMapper.fromRow(cateringHeaders, row);
+      if (!item.id) {
+        item.id = `M${101 + idx}`;
+      }
+      return item;
+    });
 
     // Parse Tables (filter out blank/empty rows with no Table ID)
     const tableRows = valueRanges[11]?.values || [];

@@ -70,3 +70,30 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
     isNutFree: false,
   },
 ];
+
+/**
+ * Generates a clean, sequential Menu Item ID (e.g. M101, M102, M108) matching the master template contract.
+ * Automatically gap-fills missing numbers and preserves 3-digit catalog convention (or 1-digit if custom).
+ */
+export function generateNextMenuItemId(existingItems: MenuItem[] = []): string {
+  const existingIds = new Set(existingItems.map(item => (item.id || '').trim().toUpperCase()));
+  const usedNumbers = new Set<number>();
+
+  existingItems.forEach(item => {
+    const id = (item.id || '').trim();
+    const match = id.match(/^M(\d+)$/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num)) usedNumbers.add(num);
+    }
+  });
+
+  const hasTripleDigits = Array.from(usedNumbers).some(n => n >= 100);
+  let candidate = hasTripleDigits || usedNumbers.size === 0 ? 101 : 1;
+
+  while (usedNumbers.has(candidate) || existingIds.has(`M${candidate}`)) {
+    candidate++;
+  }
+
+  return `M${candidate}`;
+}

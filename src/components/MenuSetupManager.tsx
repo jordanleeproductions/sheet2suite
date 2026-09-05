@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MenuItem, DEFAULT_MENU_ITEMS } from '@/lib/menuData';
+import { MenuItem, DEFAULT_MENU_ITEMS, generateNextMenuItemId } from '@/lib/menuData';
 import { Guest } from '@/lib/sheets/types';
 import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, ChevronRight, RefreshCw } from 'lucide-react';
 
@@ -74,7 +74,7 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
 
   const startAdd = () => {
     setFormState({
-      id: `menu-${Date.now()}`,
+      id: generateNextMenuItemId(menuItems),
       category: 'entree',
       name: '',
       description: '',
@@ -115,7 +115,7 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
     }
 
     const newItem: MenuItem = {
-      id: formState.id || `menu-${Date.now()}`,
+      id: editingItem ? editingItem.id : (formState.id || generateNextMenuItemId(menuItems)),
       category: formState.category || 'entree',
       name: formState.name.trim(),
       description: formState.description?.trim() || '',
@@ -151,7 +151,9 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
     }
 
     if (continueAdding) {
+      const updatedList = [...menuItems, newItem];
       setFormState({
+        id: generateNextMenuItemId(updatedList),
         category: formState.category || 'entree',
         name: '',
         description: '',
@@ -270,6 +272,22 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                   }}>
                     {item.category.toUpperCase()}
                   </span>
+
+                  {item.id && (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: 'var(--color-bg-subtle, rgba(0,0,0,0.05))',
+                      color: 'var(--color-muted, #64748b)',
+                      border: '1px solid var(--color-border, rgba(0,0,0,0.1))'
+                    }}>
+                      {item.id}
+                    </span>
+                  )}
 
                   {item.isGuestChoice !== false && (
                     <span style={{

@@ -61,6 +61,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - RSVP status tracking (`Attending`, `Declined`, `Pending`), dietary restrictions, table assignments (persisted as canonical `tableId` linked to `TABLES` tab), plus-ones, and contact info.
 - Native CSV export, printable layout, and switchable Cards vs Compact List view.
 - Responsive mobile header ergonomics with dedicated full-width `+ ADD GUEST` button and quick-filter cluster grouping bar above the search input.
+- Catering & Menu Setup (`MenuSetupManager.tsx`) with 2-way Google Sheets sync to the `CATERING` tab, automatic guest meal choice linkage, and human-readable sequential catalog ID generation (`M101`, `M102`, `M103`...).
 
 ### 2.4 Visual Table Seating Plan (`SeatingChartManager.tsx`)
 - Multiple table shapes: **Round Circle Tables** (radial trigonometric node layout), **Rectangle Banquet Tables** (dynamic length scaling, optional head/foot end seats), **Square Tables** (4 or 8 seats on all 4 sides), and **Sweetheart / Single-Side Tables**.

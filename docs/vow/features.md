@@ -76,6 +76,7 @@
 - [x] **[MENU-1] Header Action Realignment:** Moved "Add Menu Item" button to the far right side of the header.
 - [x] **[CATERING-2WAY-SYNC] 2-Way Google Sheets Sync for Catering Menu (`CATERING` Tab):** Full bi-directional synchronization between the app and the `CATERING` spreadsheet tab. Automatically links Course Category to `=SETTINGS!$P$2:$P$50`, populates entree choices into the Guest Registry, and retains cross-device menu changes.
 - [x] **[MENU-DELETE-MODAL] In-App Delete Menu Item Confirmation Modal:** Replaced native browser `window.confirm()` popup with a styled, accessible in-app modal featuring item name highlights, descriptive impact details, and responsive action buttons.
+- [x] **[MENU-SEQUENTIAL-ITEM-IDS] Human-Readable Sequential Catalog Code Generation (`M101`, `M102`, ...):** Replaced random machine timestamp IDs (`menu-1725...`) with clean, sequential catalog codes (`M101`, `M102`, `M108`, etc.) matching the master spreadsheet schema contract. Added smart gap-filling for deleted items and visible monospace SKU badges on menu cards for effortless cross-referencing with the `CATERING` tab.
 
 ---
 

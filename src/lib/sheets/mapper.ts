@@ -421,8 +421,9 @@ export const cateringMapper = {
     else if (cat.includes('late') || cat.includes('snack')) cat = 'late night snack';
     else if (cat.includes('beverage') || cat.includes('drink')) cat = 'beverage';
 
+    const rawId = String(obj.id || '').trim();
     return {
-      id: String(obj.id || `M${Date.now()}`),
+      id: rawId,
       category: cat,
       name: String(obj.name || ''),
       description: String(obj.description || ''),
