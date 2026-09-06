@@ -198,13 +198,19 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
     rightLabel: "Groom's Side (Right)",
   });
 
-  // Ceremony Capacity Calculations: Accepted + Pending (excluding Declined)
-  const ceremonyRequiredGuests = guests.filter(g => (g.rsvpStatus || '').toLowerCase() !== 'declined');
+  // Seating Capacity Calculations: Accepted + Pending RSVP (excluding Declined)
+  const eligibleSeatingGuests = guests.filter(g => (g.rsvpStatus || '').toLowerCase() !== 'declined');
+  const ceremonyRequiredGuests = eligibleSeatingGuests;
   const ceremonyDeclinedCount = guests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'declined').length;
   const totalCeremonyCapacity = ceremonyConfig.rowsCount * ceremonyConfig.chairsPerSide * 2;
 
-  // Calculate assigned vs unassigned guests
-  const unassignedGuests = guests.filter(g => !g.tableAssignment || g.tableAssignment.trim() === '' || g.tableAssignment === 'Unassigned');
+  // Calculate assigned vs unassigned guests (excluding Declined guests)
+  const unassignedGuests = eligibleSeatingGuests.filter(
+    g => !g.tableAssignment || g.tableAssignment.trim() === '' || g.tableAssignment === 'Unassigned'
+  );
+  const seatedGuestsCount = eligibleSeatingGuests.filter(
+    g => g.tableAssignment && g.tableAssignment.trim() !== '' && g.tableAssignment !== 'Unassigned'
+  ).length;
   
   // Helper to compute guest initials (e.g. "Jane Doe" -> "JD")
   const getInitials = (guest: Guest): string => {
@@ -810,7 +816,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
             <div style={styles.kpiItem}>
               <span style={styles.kpiLabel}>SEATED GUESTS</span>
               <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-                {guests.length - unassignedGuests.length} / {guests.length}
+                {seatedGuestsCount} / {eligibleSeatingGuests.length}
               </span>
             </div>
             <div style={styles.kpiItem}>
@@ -1241,7 +1247,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
               </div>
 
               <span style={{ ...styles.fieldLabel, marginBottom: '0.5rem', display: 'block' }}>
-                GUEST REGISTRY ({guests.filter(g => g.tableAssignment === 'Unassigned' || !g.tableAssignment).length} unassigned)
+                GUEST REGISTRY ({unassignedGuests.length} unassigned)
               </span>
 
               {/* Guest Selection List */}

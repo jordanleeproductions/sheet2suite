@@ -13,6 +13,10 @@
 - [x] **[SEAT-6] Unassigned Guests Drawer Initials Avatar:** Display guest initial avatar circles to the left of names inside the Unassigned Guests drawer.
 - [x] **[SEAT-7] Seating KPI Card Value Font Consistency:** Matched KPI card value typography with Summary Dashboard monospace fonts (`var(--font-mono)`).
 - [x] **[SEAT-2WAY-SYNC] 2-Way Google Sheets Sync for Tables & Clean Initial State (`TABLES` Tab):** Full bi-directional synchronization between the app and the `TABLES` spreadsheet tab. Persists custom table additions, edits, and deletions across devices. Cleaned default initial state so only the Sweetheart table is present by default instead of cluttering mock tables.
+- [x] **[SEAT-DECLINED-EXCLUSION] Exclude Declined Guests from Seated & Unassigned Seating Counts (`SeatingChartManager.tsx`):**
+  - Updated "Seated Guests" KPI card to strictly count guests who have Accepted (Attending) or Pending RSVP, excluding Declined guests from both the numerator and the total denominator (`seatedGuestsCount / eligibleSeatingGuests.length`).
+  - Filtered "Unassigned Guests" pool and KPI counter to only account for unassigned guests with Accepted or Pending RSVP, removing Declined guests who do not require a seat.
+  - Synchronized Unassigned Guests drawer count and Add/Assign seat dialog header unassigned counters.
 
 ---
 
