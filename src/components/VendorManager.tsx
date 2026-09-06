@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Vendor, BudgetItem } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
+import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency } from '@/lib/currency';
 
 interface VendorManagerProps {
@@ -339,6 +340,11 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
           min-width: 36px;
           min-height: 34px;
         }
+        @media (max-width: 768px) {
+          .vendor-add-btn {
+            display: none !important;
+          }
+        }
         @media (max-width: 640px) {
           .vendor-header-container {
             flex-direction: column !important;
@@ -416,7 +422,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
               <Printer size={15} style={{ marginRight: '0.35rem' }} /> PRINT ROSTER
             </button>
           )}
-          <button className="vendor-action-btn" style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} onClick={startAdd} disabled={isSyncing}>
+          <button className="vendor-action-btn vendor-add-btn" style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD VENDOR
           </button>
         </div>
@@ -974,6 +980,9 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAdd} label="Add Vendor" disabled={isSyncing} />
     </div>
   );
 }

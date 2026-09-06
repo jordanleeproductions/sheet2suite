@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Guest, AgeCategory, RSVPStatus, MenuItem, TableConfig } from '@/lib/sheets/types';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 
 interface GuestListManagerProps {
   guests: Guest[];
@@ -619,6 +620,11 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         .guest-add-row {
           display: flex;
           width: 100%;
+        }
+        @media (max-width: 768px) {
+          .guest-add-row {
+            display: none !important;
+          }
         }
         .guest-add-btn {
           width: 100%;
@@ -1434,6 +1440,9 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAdd} label="Add Guest" disabled={isSyncing} />
     </div>
   );
 }

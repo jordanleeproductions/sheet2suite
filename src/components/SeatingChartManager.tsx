@@ -24,6 +24,7 @@ import {
   Heart,
   Printer
 } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 
 interface SeatingChartManagerProps {
   guests: Guest[];
@@ -465,7 +466,14 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
             UNASSIGNED GUESTS ({unassignedGuests.length})
           </button>
 
-          <button style={styles.addButton} onClick={startAddTable} disabled={isSyncing}>
+          <style>{`
+            @media (max-width: 768px) {
+              .seating-add-table-btn {
+                display: none !important;
+              }
+            }
+          `}</style>
+          <button style={styles.addButton} className="seating-add-table-btn" onClick={startAddTable} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD TABLE
           </button>
         </div>
@@ -1643,6 +1651,9 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAddTable} label="Add Table" disabled={isSyncing} />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import {
   Tag,
   Mail
 } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
@@ -342,6 +343,11 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           border-top: 1px dashed var(--color-muted);
           font-size: 0.75rem;
         }
+        @media (max-width: 768px) {
+          .photo-add-btn {
+            display: none !important;
+          }
+        }
         @media (max-width: 640px) {
           .photo-header-container {
             flex-direction: column;
@@ -350,7 +356,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           }
           .photo-header-actions {
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: 1fr !important;
             gap: 0.5rem !important;
             width: 100% !important;
           }
@@ -428,7 +434,7 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
             <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
           </button>
 
-          <button style={styles.addButton} onClick={startAddShot}>
+          <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
             <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
           </button>
         </div>
@@ -812,6 +818,8 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           </div>
         </div>
       )}
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAddShot} label="Add Photo Shot" />
     </div>
   );
 }

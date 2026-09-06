@@ -21,6 +21,7 @@ import {
   Check,
   UserCheck
 } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency } from '@/lib/currency';
 
 interface ThankYouManagerProps {
@@ -245,8 +246,15 @@ export default function ThankYouManager({
           </p>
         </div>
 
+        <style>{`
+          @media (max-width: 768px) {
+            .thankyou-add-btn {
+              display: none !important;
+            }
+          }
+        `}</style>
         {subTab === 'gifts' && (
-          <button style={styles.addButton} onClick={startAddGift}>
+          <button style={styles.addButton} className="thankyou-add-btn" onClick={startAddGift}>
             <Plus size={16} style={{ marginRight: '6px' }} /> LOG RECEIVED GIFT
           </button>
         )}
@@ -657,6 +665,11 @@ export default function ThankYouManager({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      {subTab === 'gifts' && (
+        <MobileFAB onClick={startAddGift} label="Log Received Gift" />
       )}
     </div>
   );

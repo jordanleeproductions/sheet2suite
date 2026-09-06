@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MenuItem, DEFAULT_MENU_ITEMS, generateNextMenuItemId } from '@/lib/menuData';
 import { Guest } from '@/lib/sheets/types';
 import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, ChevronRight, RefreshCw } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 
 interface MenuSetupManagerProps {
   guests: Guest[];
@@ -191,6 +192,13 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
           </p>
         </div>
 
+        <style>{`
+          @media (max-width: 768px) {
+            .menu-add-btn {
+              display: none !important;
+            }
+          }
+        `}</style>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
           <button
             type="button"
@@ -200,7 +208,7 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
           >
             <RefreshCw size={14} style={{ marginRight: '4px' }} /> RESET SAMPLE MENU
           </button>
-          <button type="button" onClick={startAdd} style={styles.primaryBtn}>
+          <button type="button" onClick={startAdd} style={styles.primaryBtn} className="menu-add-btn">
             <Plus size={16} style={{ marginRight: '4px' }} /> ADD MENU ITEM
           </button>
         </div>
@@ -568,6 +576,9 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAdd} label="Add Menu Item" disabled={isSyncing} />
     </div>
   );
 }

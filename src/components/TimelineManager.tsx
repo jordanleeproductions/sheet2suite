@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ScheduleEvent } from '@/lib/sheets/types';
 import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
   if (!timeStr) return '';
@@ -243,6 +244,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
           gap: 0.5rem;
           flex-wrap: wrap;
         }
+        @media (max-width: 768px) {
+          .timeline-add-btn {
+            display: none !important;
+          }
+        }
         @media (max-width: 640px) {
           .timeline-header-card {
             flex-direction: column !important;
@@ -252,7 +258,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
           }
           .timeline-header-actions {
             display: grid !important;
-            grid-template-columns: 1fr 1fr 1fr !important;
+            grid-template-columns: 1fr 1fr !important;
             width: 100% !important;
             gap: 0.5rem !important;
           }
@@ -279,7 +285,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
           <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Day-Of Schedule">
             <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
           </button>
-          <button style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} className="timeline-add-btn" onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD EVENT
           </button>
         </div>
@@ -752,6 +758,9 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
           })
         )}
       </div>
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAdd} label="Add Timeline Moment" disabled={isSyncing} />
     </div>
   );
 }

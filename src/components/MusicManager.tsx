@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Song, SongListType, Vendor } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2, QrCode, Radio, ChevronDown } from 'lucide-react';
+import MobileFAB from '@/components/MobileFAB';
 
 type DeduplicatedSong = Song & { requestCount: number };
 
@@ -486,6 +487,11 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           margin-left: auto;
           position: relative;
         }
+        @media (max-width: 768px) {
+          .music-add-btn {
+            display: none !important;
+          }
+        }
         @media (max-width: 640px) {
           .music-header-container {
             flex-direction: column !important;
@@ -655,7 +661,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           </div>
 
           {/* Primary Action Button */}
-          <button style={{ ...styles.addButton, width: '100%', justifyContent: 'center' }} onClick={startAdd} disabled={isSyncing}>
+          <button style={{ ...styles.addButton, width: '100%', justifyContent: 'center' }} className="music-add-btn" onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD SONG
           </button>
         </div>
@@ -1209,6 +1215,8 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           </div>
         </div>
       )}
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={startAdd} label="Add Song" disabled={isSyncing} />
     </div>
   );
 }

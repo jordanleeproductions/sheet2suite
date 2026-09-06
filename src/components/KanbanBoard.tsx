@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Task, KanbanStage } from '@/lib/sheets/types';
 import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2, ChevronDown, Check } from 'lucide-react';
 import { formatDateConsistent, formatDateToMMDDYYYY } from '@/lib/currency';
+import MobileFAB from '@/components/MobileFAB';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -486,9 +487,6 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
               Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
             </p>
           </div>
-          <button style={{ ...styles.addButton, color: 'var(--color-on-light)' }} className="kanban-add-btn-mobile" onClick={() => startAdd('To Do')} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD TASK
-          </button>
         </div>
 
         <div style={styles.headerActions} className="kanban-header-actions">
@@ -1252,11 +1250,11 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           .kanban-header-top {
             display: contents !important;
           }
-          .kanban-add-btn-mobile {
-            display: none !important;
-          }
         }
       `}</style>
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB onClick={() => startAdd('To Do')} label="Add Task" disabled={isSyncing} />
     </div>
   );
 }

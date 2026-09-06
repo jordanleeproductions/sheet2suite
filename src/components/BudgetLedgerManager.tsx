@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag } from 'lucide-react';
-
+import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, formatDateConsistent } from '@/lib/currency';
 
 interface BudgetLedgerManagerProps {
@@ -528,12 +528,10 @@ export default function BudgetLedgerManager({
             min-width: 42px !important;
             min-height: 38px !important;
           }
-          .budget-add-btn {
-            flex: 1 1 auto !important;
-            justify-content: center !important;
-            min-height: 38px !important;
-            padding: 0.5rem 0.85rem !important;
-            font-size: 0.78rem !important;
+          @media (max-width: 768px) {
+            .budget-add-btn {
+              display: none !important;
+            }
           }
         }
       `}</style>
@@ -1575,6 +1573,27 @@ export default function BudgetLedgerManager({
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) with Speed-Dial */}
+      <MobileFAB
+        label="Add Financial Record"
+        onClick={startAddExpense}
+        subActions={[
+          {
+            label: '+ New Expense',
+            onClick: startAddExpense,
+            icon: ShoppingBag,
+            color: 'var(--color-primary, #0f172a)',
+          },
+          {
+            label: '+ New Budget Item',
+            onClick: startAddBudget,
+            icon: Plus,
+            color: 'var(--color-surface, #ffffff)',
+          },
+        ]}
+        disabled={isSyncing}
+      />
     </div>
   );
 }
