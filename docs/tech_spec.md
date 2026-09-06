@@ -71,6 +71,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Seat ID persistence (`seatNumber`) per guest.
 - Interactive seat nodes with initials avatar, guest profile popups (featuring meal choice display above dietary restrictions and friendly table name unassignment), and unassigned guest drawer.
 - **Declined RSVP Seating Exclusion (`[SEAT-DECLINED-EXCLUSION]`):** Seated Guests KPI card (`seatedGuestsCount / eligibleSeatingGuests.length`) and Unassigned Guests KPI counter strictly account for guests with Accepted (Attending) or Pending RSVP. Declined guests are excluded from the seating totals, unassigned counts, and the unassigned guest drawer.
+- **Table Card Visuals & Numbering Offset (`[SEAT-SHAPE-COLOR-AND-SWEETHEART-NUMBERING-OFFSET]`):** Table shape icons match the Table Name color (`var(--color-text, currentColor)`). `getNextSuggestedTableNumber` recognizes Sweetheart and Head tables, subtracting 1 so that the first table after Sweetheart/Head defaults to "Table 1" rather than "Table 2".
 - Navigation button uses dedicated chair icon (`Armchair`) across mobile drawer, sidebar, and module selectors.
 
 ### 2.5 Budget Ledger (`BudgetLedgerManager.tsx`)

@@ -17,6 +17,9 @@
   - Updated "Seated Guests" KPI card to strictly count guests who have Accepted (Attending) or Pending RSVP, excluding Declined guests from both the numerator and the total denominator (`seatedGuestsCount / eligibleSeatingGuests.length`).
   - Filtered "Unassigned Guests" pool and KPI counter to only account for unassigned guests with Accepted or Pending RSVP, removing Declined guests who do not require a seat.
   - Synchronized Unassigned Guests drawer count and Add/Assign seat dialog header unassigned counters.
+- [x] **[SEAT-SHAPE-COLOR-AND-SWEETHEART-NUMBERING-OFFSET] Table Card Shape Icon Color Sync & Sweetheart Table Numbering Offset (`SeatingChartManager.tsx`):**
+  - Synchronized the table geometry icon color (Circle, Square, Rectangle) in table card headers to match the Table Name typography color (`var(--color-text, currentColor)`), replacing hardcoded highlight gold.
+  - Updated `getNextSuggestedTableNumber` to check for non-numbered Sweetheart or Head tables. When dynamically calculating default table numbers from total tables, it offsets special tables by 1 so the first numbered table created after a Sweetheart or Head table correctly defaults to "Table 1" instead of "Table 2".
 
 ---
 

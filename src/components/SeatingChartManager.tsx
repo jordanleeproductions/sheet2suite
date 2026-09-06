@@ -86,16 +86,40 @@ export function generateNextTableId(tableName: string, existingTables: TableConf
 
 // Calculate the next suggested display table number based on existing tables
 export function getNextSuggestedTableNumber(existingTables: TableConfig[]): number {
+  const isSpecialTable = (t: TableConfig): boolean => {
+    const name = (t.tableName || '').toLowerCase();
+    const id = (t.tableId || '').toLowerCase();
+    return name.includes('sweetheart') || name.includes('head') || id.includes('sweetheart') || id.includes('head');
+  };
+
+  const hasSpecialTable = existingTables.some(isSpecialTable);
+
+  // Collect numbers currently in use by numbered tables (ignore special sweetheart / head tables)
   const usedNumbers = new Set<number>();
   existingTables.forEach(t => {
+    if (isSpecialTable(t)) return;
     const matchName = (t.tableName || '').match(/Table\s*(\d+)/i);
     const matchId = (t.tableId || '').match(/^table[-_]?(\d+)$/i);
     if (matchName) usedNumbers.add(parseInt(matchName[1], 10));
-    if (matchId) usedNumbers.add(parseInt(matchId[1], 10));
+    else if (matchId) usedNumbers.add(parseInt(matchId[1], 10));
   });
 
-  // Find lowest available positive integer (1, 2, 3...)
-  let candidate = 1;
+  // Dynamically set based on total number of tables; if Sweetheart or Head table exists, subtract 1
+  // Example: 1 Sweetheart Table -> (1 - 1) + 1 = 1 -> "Table 1"
+  const countOffset = hasSpecialTable ? 1 : 0;
+  const targetNumber = Math.max(1, (existingTables.length - countOffset) + 1);
+
+  // If targetNumber is not already used, fill lowest gap if one exists below it, otherwise use targetNumber
+  if (!usedNumbers.has(targetNumber)) {
+    let lowestGap = 1;
+    while (usedNumbers.has(lowestGap)) {
+      lowestGap++;
+    }
+    return Math.min(lowestGap, targetNumber);
+  }
+
+  // Otherwise find lowest available positive integer
+  let candidate = targetNumber;
   while (usedNumbers.has(candidate)) {
     candidate++;
   }
@@ -862,11 +886,11 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
               <div style={styles.tableCardHeader}>
                 <div style={styles.tableNameGroup}>
                   {table.shape === 'circle' ? (
-                    <Circle size={16} style={{ color: 'var(--color-highlight)' }} />
+                    <Circle size={16} style={{ color: 'var(--color-text, currentColor)' }} />
                   ) : table.shape === 'square' ? (
-                    <Square size={16} style={{ color: 'var(--color-highlight)' }} />
+                    <Square size={16} style={{ color: 'var(--color-text, currentColor)' }} />
                   ) : (
-                    <Square size={16} style={{ color: 'var(--color-highlight)', transform: 'scaleX(1.3)' }} />
+                    <Square size={16} style={{ color: 'var(--color-text, currentColor)', transform: 'scaleX(1.3)' }} />
                   )}
                   <h3 style={styles.tableName}>{table.tableName}</h3>
                 </div>
@@ -980,7 +1004,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                             alignItems: 'center',
                             padding: '8px'
                           }}>
-                            <Square size={20} style={{ color: 'var(--color-highlight)', marginBottom: '4px' }} />
+                            <Square size={20} style={{ color: 'var(--color-text, currentColor)', marginBottom: '4px' }} />
                             <span style={{ ...styles.discLabel, fontSize: '0.95rem' }}>{table.tableName}</span>
                             <span style={{ ...styles.discSubLabel, fontSize: '0.7rem' }}>{seatedGuests.length} / {table.capacity} Seated</span>
                           </div>
