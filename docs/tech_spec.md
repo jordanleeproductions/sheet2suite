@@ -78,6 +78,11 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 ### 2.5 Budget Ledger (`BudgetLedgerManager.tsx`)
 - Itemized financial ledger (Estimated vs Actual Cost vs Amount Paid vs Balance Owing).
 - Payment status tags (`Paid`, `Pending`, `Overdue`) and category over-budget alerts.
+- **Desktop Master-Detail Split-View (`[FINANCIALS-MASTER-DETAIL-VIEW]`):**
+  - **Responsive Shell**: On screens `< lg` (<1024px), maintains existing stacked view (budget cards/table above expenses ledger). On screens `>= lg`, transitions to a two-column grid (`lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start`).
+  - **Master Rail (Left Column - ~5 cols / `lg:col-span-5`)**: Scrollable category budget list bounded to viewport (`lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2`) prioritized by active/alert allocations. Features prominent active selection highlighting (`selectedCategoryId`), serif category titles, mini utilization progress tracks, and CAP / OUTLAY / CUSHION tabular metrics. Clicking any card updates selection.
+  - **Detail Ledger (Right Column - ~7 cols / `lg:col-span-7`)**: Dynamic Category Snapshot header displaying Target Allocation Cap, Total Expenses Logged, and Remaining Cushion (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to the selected category, with empty-state guidance for categories without logged items. Full dynamic recalculation updates category cards and the global progress meter immediately upon adding, editing, or deleting expenses.
+  - **Desktop Compact Active/Alert Filter Pills**: Replaces the large 20+ item chip cloud on desktop with a compact horizontal pill list showing only categories with activity or over-budget alerts.
 
 ### 2.6 Day-Of Timeline (`TimelineManager.tsx`)
 - Day-Of itinerary timeline with "UP NEXT" active moment banner ticker.

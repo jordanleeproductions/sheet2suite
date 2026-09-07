@@ -84,6 +84,11 @@ export default function BudgetLedgerManager({
   const [expenseSearchTerm, setExpenseSearchTerm] = useState('');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
 
+  // Desktop Master-Detail State
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [masterCategorySearch, setMasterCategorySearch] = useState<string>('');
+  const [detailExpenseSearch, setDetailExpenseSearch] = useState<string>('');
+
   // Unique categories for summaries & dropdowns
   const budgetCategories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
   const expenseCategories = Array.from(new Set(expenses.map(item => item.category).filter(Boolean)));
@@ -241,6 +246,7 @@ export default function BudgetLedgerManager({
 
     const expStats = getCategoryExpenseTotals(cat);
     const catActual = expStats.count > 0 ? expStats.actualCost : catBudgetItems.reduce((sum, i) => sum + i.actualCost, 0);
+    const catPaid = expStats.count > 0 ? expStats.amountPaid : catBudgetItems.reduce((sum, i) => sum + i.amountPaid, 0);
     const catPercent = catEstimate > 0 ? Math.min(Math.round((catActual / catEstimate) * 100), 150) : (catActual > 0 ? 100 : 0);
     const isOver = catActual > catEstimate;
     const overAmount = catActual - catEstimate;
@@ -249,17 +255,71 @@ export default function BudgetLedgerManager({
       category: cat,
       estimated: catEstimate,
       actual: catActual,
+      paid: catPaid,
       percent: catPercent,
       isOver,
       overAmount,
       expenseCount: expStats.count,
+      budgetItemCount: catBudgetItems.length,
+      budgetItems: catBudgetItems,
     };
   });
 
+  // Active or Alert Categories (with expenses, budget caps, or over-budget flag)
+  const activeOrAlertStats = categoryStats.filter(
+    stat => stat.actual > 0 || stat.estimated > 0 || stat.isOver || stat.expenseCount > 0 || stat.budgetItemCount > 0
+  );
+
+  // Resolved active category selection for Desktop Master-Detail split-view
+  const effectiveSelectedCategoryId = selectedCategoryId || (activeOrAlertStats[0]?.category) || (allCategories[0] || 'Venue & Catering');
+
+  const selectedCatStat = categoryStats.find(c => c.category.toLowerCase() === effectiveSelectedCategoryId.toLowerCase()) || {
+    category: effectiveSelectedCategoryId,
+    estimated: 0,
+    actual: 0,
+    paid: 0,
+    percent: 0,
+    isOver: false,
+    overAmount: 0,
+    expenseCount: 0,
+    budgetItemCount: 0,
+    budgetItems: [],
+  };
+
+  const selectedCatBudgetItems = budget.filter(i => (i.category || '').toLowerCase() === effectiveSelectedCategoryId.toLowerCase());
+  const selectedCatExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === effectiveSelectedCategoryId.toLowerCase().trim());
+  const selectedCatExpensesTotal = selectedCatExpenses.reduce((sum, e) => sum + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0);
+  const remainingCushion = selectedCatStat.estimated - selectedCatExpensesTotal;
+
+  // Master Category List filtered and sorted (active first, then matching search)
+  const displayedMasterStats = (() => {
+    let list = categoryStats;
+    if (masterCategorySearch.trim()) {
+      list = list.filter(c => c.category.toLowerCase().includes(masterCategorySearch.toLowerCase().trim()));
+    }
+    return [...list].sort((a, b) => {
+      const aActive = (a.actual > 0 || a.estimated > 0 || a.expenseCount > 0 || a.budgetItemCount > 0);
+      const bActive = (b.actual > 0 || b.estimated > 0 || b.expenseCount > 0 || b.budgetItemCount > 0);
+      if (aActive && !bActive) return -1;
+      if (!aActive && bActive) return 1;
+      return a.category.localeCompare(b.category);
+    });
+  })();
+
+  // Detail Expenses filtered by search within selected category
+  const displayedDetailExpenses = selectedCatExpenses.filter(exp => {
+    if (!detailExpenseSearch.trim()) return true;
+    const term = detailExpenseSearch.toLowerCase().trim();
+    return (
+      (exp.description || '').toLowerCase().includes(term) ||
+      (exp.notes || '').toLowerCase().includes(term)
+    );
+  });
+
   // Budget Item Actions
-  const startAddBudget = () => {
+  const startAddBudget = (presetCategory?: string) => {
     setFormState({
-      category: '',
+      category: presetCategory || effectiveSelectedCategoryId || '',
       vendorName: '',
       estimatedCost: '' as any,
       actualCost: '' as any,
@@ -346,10 +406,10 @@ export default function BudgetLedgerManager({
   };
 
   // Expense Item Actions
-  const startAddExpense = () => {
+  const startAddExpense = (presetCategory?: string) => {
     setExpenseFormState({
       description: '',
-      category: allCategories[0] || 'General',
+      category: presetCategory || effectiveSelectedCategoryId || allCategories[0] || 'General',
       amount: '' as any,
       actualCost: 0,
       amountPaid: 0,
@@ -528,11 +588,76 @@ export default function BudgetLedgerManager({
             min-width: 42px !important;
             min-height: 38px !important;
           }
-          @media (max-width: 768px) {
-            .budget-add-btn {
-              display: none !important;
-            }
+        }
+        @media (max-width: 768px) {
+          .budget-add-btn {
+            display: none !important;
           }
+        }
+
+        /* Responsive Master-Detail Split-View for Desktop (>= lg / 1024px) */
+        @media (min-width: 1024px) {
+          .budget-mobile-stacked-view {
+            display: none !important;
+          }
+          .budget-desktop-split-view {
+            display: grid !important;
+            grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+            gap: 1.5rem !important;
+            align-items: start !important;
+          }
+          .budget-master-rail {
+            grid-column: span 5 / span 5 !important;
+            max-height: calc(100vh - 220px) !important;
+            overflow-y: auto !important;
+            padding-right: 0.5rem !important;
+          }
+          .budget-detail-ledger {
+            grid-column: span 7 / span 7 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1.25rem !important;
+          }
+          .budget-desktop-pills-bar {
+            display: flex !important;
+          }
+          .budget-mobile-chips-container {
+            display: none !important;
+          }
+        }
+
+        /* Stacked Mobile View (< lg / 1023px) */
+        @media (max-width: 1023px) {
+          .budget-desktop-split-view {
+            display: none !important;
+          }
+          .budget-mobile-stacked-view {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1.25rem !important;
+          }
+          .budget-desktop-pills-bar {
+            display: none !important;
+          }
+          .budget-mobile-chips-container {
+            display: flex !important;
+          }
+        }
+
+        /* Custom Scrollbar for Master Rail */
+        .budget-master-rail::-webkit-scrollbar {
+          width: 5px;
+        }
+        .budget-master-rail::-webkit-scrollbar-track {
+          background: var(--color-bg-subtle, #f8fafc);
+          border-radius: 4px;
+        }
+        .budget-master-rail::-webkit-scrollbar-thumb {
+          background: var(--color-border, #cbd5e1);
+          border-radius: 4px;
+        }
+        .budget-master-rail::-webkit-scrollbar-thumb:hover {
+          background: var(--color-muted, #94a3b8);
         }
       `}</style>
 
@@ -688,530 +813,1081 @@ export default function BudgetLedgerManager({
           }} />
         </div>
 
-        {/* Category Breakdown Progress Meters */}
+        {/* Category Breakdown: Responsive Desktop Pills vs Mobile Chips */}
         {categoryStats.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-muted)' }}>
-                CATEGORY QUICK FILTERS (CLICK TO TOGGLE MULTIPLE)
-              </span>
-              {selectedCategories.length > 0 && (
+            {/* Desktop View: Compact Horizontal Pill/Chip List of Active or Alert Categories */}
+            <div className="budget-desktop-pills-bar" style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.06em' }}>
+                  ACTIVE & ALERT CATEGORIES (SELECT TO VIEW DETAIL LEDGER)
+                </span>
+                {selectedCategoryId && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategoryId('')}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      backgroundColor: 'transparent',
+                      color: 'var(--color-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    RESET SELECTION
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center' }}>
+                {activeOrAlertStats.length === 0 ? (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic', fontFamily: 'var(--font-mono)' }}>
+                    No active category caps or expenses recorded yet. Select any category below to begin logging.
+                  </span>
+                ) : (
+                  activeOrAlertStats.map(stat => {
+                    const isSelected = effectiveSelectedCategoryId.toLowerCase() === stat.category.toLowerCase();
+                    return (
+                      <button
+                        key={stat.category}
+                        type="button"
+                        onClick={() => setSelectedCategoryId(stat.category)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          padding: '0.25rem 0.65rem',
+                          borderRadius: '999px',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          backgroundColor: isSelected
+                            ? 'var(--color-primary)'
+                            : (stat.isOver ? '#fee2e2' : 'var(--color-bg-subtle)'),
+                          color: isSelected
+                            ? 'var(--color-on-primary, #ffffff)'
+                            : (stat.isOver ? '#b91c1c' : 'var(--color-text)'),
+                          border: `1px solid ${
+                            isSelected
+                              ? 'var(--color-primary)'
+                              : (stat.isOver ? '#fca5a5' : 'var(--color-border)')
+                          }`,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          boxShadow: isSelected ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
+                        }}
+                      >
+                        <span>{stat.category}</span>
+                        {stat.isOver ? (
+                          <span style={{
+                            fontSize: '0.625rem',
+                            fontWeight: 800,
+                            color: isSelected ? '#fecaca' : '#b91c1c',
+                            backgroundColor: isSelected ? 'rgba(0,0,0,0.25)' : 'transparent',
+                            padding: isSelected ? '1px 4px' : '0',
+                            borderRadius: '3px',
+                          }}>
+                            +{formatCurrency(stat.overAmount, currency)}
+                          </span>
+                        ) : (
+                          <span style={{
+                            fontSize: '0.625rem',
+                            opacity: isSelected ? 0.9 : 0.7,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>
+                            {stat.percent}%
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Mobile View: Category Filter Chip Cloud */}
+            <div className="budget-mobile-chips-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-muted)' }}>
+                  CATEGORY QUICK FILTERS (CLICK TO TOGGLE MULTIPLE)
+                </span>
+                {selectedCategories.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearCategoryFilters}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      backgroundColor: 'transparent',
+                      color: 'var(--color-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    CLEAR FILTERS ({selectedCategories.length})
+                  </button>
+                )}
+              </div>
+
+              <div style={styles.categoryChipsGrid}>
+                {categoryStats.map(stat => {
+                  const isSelected = selectedCategories.some(c => c.toLowerCase() === stat.category.toLowerCase());
+                  return (
+                    <div
+                      key={stat.category}
+                      onClick={() => toggleCategoryFilter(stat.category)}
+                      style={{
+                        ...styles.categoryChip,
+                        borderColor: isSelected ? 'var(--color-primary)' : stat.isOver ? 'var(--color-red)' : 'var(--color-border)',
+                        backgroundColor: isSelected ? 'rgba(26, 127, 75, 0.08)' : 'var(--color-surface)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={styles.categoryChipHeader}>
+                        <span style={styles.categoryChipName}>{stat.category}</span>
+                        {stat.isOver ? (
+                          <span style={styles.overBadgeMini}>+{formatCurrency(stat.overAmount, currency)}</span>
+                        ) : (
+                          <span style={styles.categoryChipPercent}>{stat.percent}%</span>
+                        )}
+                      </div>
+                      <div style={styles.miniTrack}>
+                        <div style={{
+                          ...styles.miniFill,
+                          width: `${Math.min(stat.percent, 100)}%`,
+                          backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)'
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================ */}
+      {/* DESKTOP SPLIT VIEW: MASTER RAIL (LEFT ~5 COLS) & DETAIL (RIGHT ~7 COLS) */}
+      {/* ============================================================ */}
+      <div className="budget-desktop-split-view lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start">
+        {/* Left Column: Master Rail */}
+        <div className="budget-master-rail lg:col-span-5 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Rail Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px solid var(--color-border)' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
+                  📊 CATEGORY BUDGETS
+                </h3>
+                <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                  {activeOrAlertStats.length} active allocation{activeOrAlertStats.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <button
+                type="button"
+                style={{ ...styles.addButton, fontSize: '0.7rem', padding: '0.35rem 0.65rem' }}
+                onClick={() => startAddBudget(effectiveSelectedCategoryId)}
+                disabled={isSyncing}
+                title="Add New Target Budget Cap"
+              >
+                <Plus size={13} style={{ marginRight: '0.2rem' }} /> NEW BUDGET
+              </button>
+            </div>
+
+            {/* Master Category Search */}
+            <div>
+              <input
+                type="text"
+                placeholder="FILTER CATEGORIES..."
+                value={masterCategorySearch}
+                onChange={(e) => setMasterCategorySearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.45rem 0.65rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  backgroundColor: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                }}
+              />
+            </div>
+
+            {/* Master Category List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+              {displayedMasterStats.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--color-muted)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+                  No categories found matching "{masterCategorySearch}"
+                </div>
+              ) : (
+                displayedMasterStats.map(stat => {
+                  const isSelected = effectiveSelectedCategoryId.toLowerCase() === stat.category.toLowerCase();
+                  const cushion = stat.estimated - stat.actual;
+
+                  return (
+                    <div
+                      key={stat.category}
+                      onClick={() => setSelectedCategoryId(stat.category)}
+                      style={{
+                        backgroundColor: isSelected ? 'rgba(13, 27, 42, 0.04)' : 'var(--color-surface)',
+                        border: isSelected
+                          ? '2px solid var(--color-primary)'
+                          : (stat.isOver ? '1px solid var(--color-red)' : '1px solid var(--color-border)'),
+                        boxShadow: isSelected ? '0 0 0 2px rgba(13, 27, 42, 0.12), var(--box-shadow-subtle)' : 'var(--box-shadow-subtle)',
+                        borderRadius: 'var(--border-radius-md)',
+                        padding: '0.85rem 1rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      {/* Card Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{
+                          fontFamily: 'var(--font-serif)',
+                          fontSize: '1.05rem',
+                          fontWeight: 700,
+                          color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+                        }}>
+                          {stat.category}
+                        </span>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          {stat.isOver && (
+                            <span style={styles.overBadgeCard}>
+                              <AlertTriangle size={11} style={{ marginRight: '2px' }} /> +{formatCurrency(stat.overAmount, currency)}
+                            </span>
+                          )}
+                          {isSelected && (
+                            <span style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.6rem',
+                              fontWeight: 800,
+                              backgroundColor: 'var(--color-primary)',
+                              color: 'var(--color-on-primary, #ffffff)',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '4px',
+                              letterSpacing: '0.04em',
+                            }}>
+                              ACTIVE
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Mini Track */}
+                      <div style={{
+                        height: '4px',
+                        width: '100%',
+                        backgroundColor: 'var(--color-bg-subtle)',
+                        borderRadius: '999px',
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${Math.min(stat.percent, 100)}%`,
+                          backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)'
+                        }} />
+                      </div>
+
+                      {/* Numbers Grid */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '0.35rem',
+                        marginTop: '0.2rem',
+                        fontSize: '0.725rem',
+                        fontFamily: 'var(--font-mono)',
+                      }}>
+                        <div>
+                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>CAP</span>
+                          <span style={{ fontWeight: 700, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stat.estimated, currency)}</span>
+                        </div>
+                        <div>
+                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>OUTLAY</span>
+                          <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stat.actual, currency)}</span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>CUSHION</span>
+                          <span style={{
+                            fontWeight: 700,
+                            color: cushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)',
+                            fontVariantNumeric: 'tabular-nums'
+                          }}>
+                            {formatCurrency(cushion, currency)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Sub-details */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '0.675rem',
+                        color: 'var(--color-muted)',
+                        fontFamily: 'var(--font-mono)',
+                        borderTop: '1px dotted var(--color-border)',
+                        paddingTop: '0.35rem',
+                        marginTop: '0.15rem',
+                      }}>
+                        <span>{stat.expenseCount} logged expense{stat.expenseCount === 1 ? '' : 's'}</span>
+                        <span>{stat.percent}% utilized</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Detail Ledger */}
+        <div className="budget-detail-ledger lg:col-span-7">
+          {/* 1. Dynamic Category Snapshot Header */}
+          <div style={{
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--border-radius-lg, 1rem)',
+            padding: '1.25rem 1.5rem',
+            boxShadow: 'var(--box-shadow-subtle)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.85rem',
+          }}>
+            {/* Snapshot Top Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.08em' }}>
+                    CATEGORY SNAPSHOT
+                  </span>
+                  {selectedCatStat.isOver && (
+                    <span style={styles.overBadgeMini}>
+                      OVER BUDGET (+{formatCurrency(selectedCatStat.overAmount, currency)})
+                    </span>
+                  )}
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', fontWeight: 700, color: 'var(--color-primary)', margin: '0.1rem 0 0' }}>
+                  {effectiveSelectedCategoryId}
+                </h3>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <button
                   type="button"
-                  onClick={clearCategoryFilters}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-primary)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  onClick={() => startAddExpense(effectiveSelectedCategoryId)}
+                  style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
+                  disabled={isSyncing}
                 >
-                  CLEAR FILTERS ({selectedCategories.length})
+                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> + ADD EXPENSE
                 </button>
+              </div>
+            </div>
+
+            {/* Snapshot 3-Metric Tiles */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+              <div style={styles.snapshotTile}>
+                <span style={styles.snapshotTileLabel}>TARGET ALLOCATION CAP</span>
+                <span style={styles.snapshotTileValue}>{formatCurrency(selectedCatStat.estimated, currency)}</span>
+                <span style={styles.snapshotTileSub}>{selectedCatBudgetItems.length} budget line item{selectedCatBudgetItems.length === 1 ? '' : 's'}</span>
+              </div>
+
+              <div style={styles.snapshotTile}>
+                <span style={styles.snapshotTileLabel}>TOTAL EXPENSES LOGGED</span>
+                <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency)}</span>
+                <span style={styles.snapshotTileSub}>{selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'} recorded</span>
+              </div>
+
+              <div style={styles.snapshotTile}>
+                <span style={styles.snapshotTileLabel}>REMAINING CUSHION</span>
+                <span style={{
+                  ...styles.snapshotTileValue,
+                  color: remainingCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
+                }}>
+                  {formatCurrency(remainingCushion, currency)}
+                </span>
+                <span style={{
+                  ...styles.snapshotTileSub,
+                  color: remainingCushion < 0 ? '#b91c1c' : '#15803d',
+                  fontWeight: 700
+                }}>
+                  {remainingCushion < 0 ? `Over Cap by ${formatCurrency(Math.abs(remainingCushion), currency)}` : 'Cushion Available'}
+                </span>
+              </div>
+            </div>
+
+            {/* Target Cap Breakdown Line Items if present */}
+            {selectedCatBudgetItems.length > 0 && (
+              <div style={{
+                borderTop: '1px dashed var(--color-border)',
+                paddingTop: '0.65rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
+                    TARGET BUDGET LINE ITEMS ({selectedCatBudgetItems.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => startAddBudget(effectiveSelectedCategoryId)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    + ADD BUDGET CAP
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {selectedCatBudgetItems.map(item => (
+                    <div
+                      key={item.itemId}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        backgroundColor: 'var(--color-bg-subtle)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        padding: '0.25rem 0.5rem',
+                        fontSize: '0.725rem',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    >
+                      <span style={{ fontWeight: 600 }}>{item.vendorName}:</span>
+                      <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{formatCurrency(item.estimatedCost, currency)}</span>
+                      <button
+                        type="button"
+                        onClick={() => startEditBudget(item)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '0 2px' }}
+                        title="Edit Budget Item"
+                      >
+                        <Edit2 size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 2. Itemized Expenses Detail Table */}
+          <div style={{
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--border-radius-lg, 1rem)',
+            padding: '1.25rem',
+            boxShadow: 'var(--box-shadow-subtle)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
+                  ITEMIZED EXPENSES FOR {effectiveSelectedCategoryId.toUpperCase()}
+                </h4>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                  {displayedDetailExpenses.length} of {selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'}
+                </span>
+              </div>
+
+              {selectedCatExpenses.length > 0 && (
+                <input
+                  type="text"
+                  placeholder="SEARCH THIS CATEGORY..."
+                  value={detailExpenseSearch}
+                  onChange={(e) => setDetailExpenseSearch(e.target.value)}
+                  style={{
+                    padding: '0.35rem 0.6rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.725rem',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    width: '200px',
+                  }}
+                />
               )}
             </div>
 
-            <div style={styles.categoryChipsGrid}>
-              {categoryStats.map(stat => {
-                const isSelected = selectedCategories.some(c => c.toLowerCase() === stat.category.toLowerCase());
-                return (
-                  <div
-                    key={stat.category}
-                    onClick={() => toggleCategoryFilter(stat.category)}
-                    style={{
-                      ...styles.categoryChip,
-                      borderColor: isSelected ? 'var(--color-primary)' : stat.isOver ? 'var(--color-red)' : 'var(--color-border)',
-                      backgroundColor: isSelected ? 'rgba(26, 127, 75, 0.08)' : 'var(--color-surface)',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={styles.categoryChipHeader}>
-                      <span style={styles.categoryChipName}>{stat.category}</span>
-                      {stat.isOver ? (
-                        <span style={styles.overBadgeMini}>+{formatCurrency(stat.overAmount, currency)}</span>
-                      ) : (
-                        <span style={styles.categoryChipPercent}>{stat.percent}%</span>
-                      )}
-                    </div>
-                    <div style={styles.miniTrack}>
-                      <div style={{
-                        ...styles.miniFill,
-                        width: `${Math.min(stat.percent, 100)}%`,
-                        backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)'
-                      }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* Table or Empty State */}
+            {displayedDetailExpenses.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '3rem 1.5rem',
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '1px dashed var(--color-border)',
+                borderRadius: 'var(--border-radius-md)',
+                color: 'var(--color-muted)',
+              }}>
+                <ShoppingBag size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.4, color: 'var(--color-primary)' }} />
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', margin: '0 0 0.35rem', color: 'var(--color-text)' }}>
+                  No itemized expenses logged for {effectiveSelectedCategoryId}
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: '0 0 1.25rem', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  Record receipts, deposits, vendor retainers, and day-of purchases to monitor your actual costs against this category cap.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => startAddExpense(effectiveSelectedCategoryId)}
+                  style={{ ...styles.addButton, margin: '0 auto', color: 'var(--color-on-dark)' }}
+                >
+                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> + LOG FIRST EXPENSE
+                </button>
+              </div>
+            ) : (
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>DESCRIPTION</th>
+                      <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
+                      <th style={styles.th}>PURCHASE DATE</th>
+                      <th style={styles.th}>NOTES</th>
+                      <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedDetailExpenses.map(exp => {
+                      const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
+                      return (
+                        <tr key={exp.itemId} style={styles.tr}>
+                          <td style={styles.td}>
+                            <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'right' }}>
+                            <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                              {formatCurrency(amt, currency)}
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={{ ...styles.monoText, fontVariantNumeric: 'tabular-nums' }}>{formatDateConsistent(exp.purchaseDate)}</span>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'center' }}>
+                            <div style={styles.actionsCell}>
+                              <button style={styles.actionBtn} onClick={() => startEditExpense(exp)} title="Edit Expense">
+                                <Edit2 size={12} />
+                              </button>
+                              {onUpdateExpenses && (
+                                <button
+                                  style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
+                                  onClick={() => setExpenseToDelete(exp)}
+                                  disabled={isSyncing}
+                                  title="Delete Expense"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {/* Footer Row */}
+                    <tr style={styles.footerTr}>
+                      <td style={{ ...styles.td, fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                        TOTAL FOR {effectiveSelectedCategoryId.toUpperCase()}
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
+                        <span style={{ ...styles.monoText, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                          {formatCurrency(displayedDetailExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency)}
+                        </span>
+                      </td>
+                      <td colSpan={3} style={styles.td}></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* ============================================================ */}
-      {/* SECTION 1: 📊 BUDGET TRACKER TABLE & CARDS                   */}
+      {/* MOBILE STACKED VIEW (< lg): BUDGET TRACKER & EXPENSES LEDGER */}
       {/* ============================================================ */}
-      <div className="section-header-banner">
-        <div>
-          <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
-            📊 BUDGET TRACKER
-          </h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--color-muted)', margin: '0.15rem 0 0' }}>
-            Target baseline allocations & category caps
-          </p>
-        </div>
-        <button
-          className="budget-add-btn"
-          style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
-          onClick={startAddBudget}
-          disabled={isSyncing}
-        >
-          <Plus size={15} style={{ marginRight: '0.25rem' }} /> NEW BUDGET
-        </button>
-      </div>
-
-      {/* Filter and Search Bar for Budget */}
-      <div style={styles.filterBar}>
-        <input
-          type="text"
-          placeholder="SEARCH CATEGORY OR VENDOR..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
-        />
-
-        <div style={styles.filtersGroup}>
-          <select
-            value={selectedCategories.length === 1 ? selectedCategories[0] : categoryFilter}
-            onChange={(e) => {
-              const val = e.target.value;
-              setCategoryFilter(val);
-              setSelectedCategories(val === 'All' ? [] : [val]);
-            }}
-            style={styles.filterSelect}
-          >
-            <option value="All">{selectedCategories.length > 1 ? `FILTERED (${selectedCategories.length} SELECTED)` : 'ALL CATEGORIES'}</option>
-            {allCategories.map(cat => (
-              <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-            ))}
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            style={styles.filterSelect}
-          >
-            <option value="All">ALL STATUSES</option>
-            <option value="Paid">PAID</option>
-            <option value="Pending">PENDING</option>
-          </select>
-        </div>
-      </div>
-
-      {viewMode === 'table' ? (
-        /* Ledger Table View */
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>CATEGORY</th>
-                <th style={styles.th}>LINE ITEM / VENDOR</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>ESTIMATED</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>ACTUAL</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>PAID</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>OWING</th>
-                <th style={styles.th}>DUE DATE</th>
-                <th style={styles.th}>STATUS</th>
-                <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBudget.map((item) => {
-                const expStats = getLineItemExpenseTotals(item);
-                const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
-                const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
-                const owing = displayActual - displayPaid;
-
-                return (
-                  <tr key={item.itemId} style={styles.tr}>
-                    <td style={styles.td}>
-                      <span style={styles.categoryCell}>{item.category}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span>{item.vendorName}</span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={styles.monoText}>{formatCurrency(item.estimatedCost, currency)}</span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span style={styles.monoText}>{formatCurrency(displayActual, currency)}</span>
-                        {expStats.count > 0 && (
-                          <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 600 }}>
-                            ({expStats.count} logged expense{expStats.count > 1 ? 's' : ''})
-                          </span>
-                        )}
-                        {displayActual > item.estimatedCost && (
-                          <span style={styles.overBadgeTable}>
-                            <AlertTriangle size={10} style={{ marginRight: '2px' }} /> +{formatCurrency(displayActual - item.estimatedCost, currency)}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={styles.monoText}>{formatCurrency(displayPaid, currency)}</span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
-                      <span style={{ ...styles.monoText, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-muted)' }}>
-                        {formatCurrency(owing, currency)}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.monoText}>{formatDateConsistent(item.dueDate)}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span className={
-                        item.paymentStatus === 'Paid' ? 'badge-green' :
-                          item.paymentStatus === 'Overdue' ? 'badge-red' :
-                            'badge-gold'
-                      } style={styles.statusTag}>
-                        {item.paymentStatus.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>
-                      <div style={styles.actionsCell}>
-                        <button style={styles.actionBtn} onClick={() => startEditBudget(item)}>
-                          <Edit2 size={12} />
-                        </button>
-                        <button
-                          style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
-                          onClick={() => setItemToDelete(item)}
-                          disabled={isSyncing}
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {/* Table Footer Totals */}
-              <tr style={styles.footerTr}>
-                <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>BUDGET TOTALS</td>
-                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>{formatCurrency(totalEstimate, currency)}</span>
-                </td>
-                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>{formatCurrency(totalActual, currency)}</span>
-                </td>
-                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
-                  <span style={styles.monoText}>{formatCurrency(totalPaid, currency)}</span>
-                </td>
-                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                  <span style={styles.monoText}>{formatCurrency(totalBalance, currency)}</span>
-                </td>
-                <td colSpan={3} style={styles.td}></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        /* Card View Layout */
-        <div style={styles.cardGrid}>
-          {/* Ledger Total Card */}
-          <div style={{ ...styles.card, ...styles.totalCard }} className="totalCard">
-            <h3 style={{ ...styles.categoryCell, fontFamily: 'var(--font-header, var(--font-serif))', fontSize: '1.25rem', color: 'var(--color-on-dark)' }}>BUDGET SUMMARY</h3>
-            <div style={styles.cardBody}>
-              <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ESTIMATED TARGET</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalEstimate, currency)}</span>
-              </div>
-              <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ACTUAL OUTLAY</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalActual, currency)}</span>
-              </div>
-              <div style={styles.cardRow}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>AMOUNT PAID</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalPaid, currency)}</span>
-              </div>
-              <div style={{ ...styles.cardRow, borderTop: '1px dotted var(--color-on-dark-subtle)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>BALANCE DUE</span>
-                <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalBalance, currency)}</span>
-              </div>
-            </div>
+      <div className="budget-mobile-stacked-view">
+        {/* SECTION 1: 📊 BUDGET TRACKER TABLE & CARDS */}
+        <div className="section-header-banner">
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
+              📊 BUDGET TRACKER
+            </h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--color-muted)', margin: '0.15rem 0 0' }}>
+              Target baseline allocations & category caps
+            </p>
           </div>
-
-          {filteredBudget.map(item => {
-            const expStats = getLineItemExpenseTotals(item);
-            const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
-            const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
-            const owing = displayActual - displayPaid;
-            const isOver = displayActual > item.estimatedCost;
-
-            return (
-              <div
-                key={item.itemId}
-                className={`budget-item-card ${isOver ? 'is-over-budget' : ''}`}
-                style={{
-                  ...styles.card,
-                  borderColor: isOver ? 'var(--color-red)' : 'var(--color-muted)'
-                }}
-              >
-                <div style={styles.cardHeader}>
-                  <div style={styles.cardMeta}>
-                    <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.25rem', textTransform: 'none' }}>{item.category}</span>
-                  </div>
-                  <div style={styles.cardActions}>
-                    <button style={styles.actionBtn} onClick={() => startEditBudget(item)}>
-                      <Edit2 size={12} />
-                    </button>
-                    <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setItemToDelete(item)} disabled={isSyncing}>
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                </div>
-
-                {isOver && (
-                  <div style={styles.overBadgeCard}>
-                    <AlertTriangle size={11} style={{ marginRight: '0.25rem' }} /> OVER ESTIMATE (+{formatCurrency(displayActual - item.estimatedCost, currency)})
-                  </div>
-                )}
-                <h3 style={{ ...styles.cardTitle, fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--color-muted)' }}>{item.vendorName}</h3>
-
-                <div style={styles.cardBody}>
-                  <div style={styles.cardRow}>
-                    <span style={styles.cardLabel}>ESTIMATED</span>
-                    <span style={styles.cardValue}>{formatCurrency(item.estimatedCost, currency)}</span>
-                  </div>
-                  <div style={styles.cardRow}>
-                    <span style={styles.cardLabel}>
-                      ACTUAL
-                      {expStats.count > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', marginLeft: '4px' }}>({expStats.count} exp)</span>}
-                    </span>
-                    <span style={styles.cardValue}>{formatCurrency(displayActual, currency)}</span>
-                  </div>
-                  <div style={styles.cardRow}>
-                    <span style={styles.cardLabel}>PAID</span>
-                    <span style={styles.cardValue}>{formatCurrency(displayPaid, currency)}</span>
-                  </div>
-                  <div style={{ ...styles.cardRow, fontWeight: 600 }}>
-                    <span style={styles.cardLabel}>BALANCE DUE</span>
-                    <span style={{ ...styles.cardValue, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-text)' }}>{formatCurrency(owing, currency)}</span>
-                  </div>
-                </div>
-
-                <div style={styles.cardFooter}>
-                  <span style={styles.monoText}>{formatDateConsistent(item.dueDate)}</span>
-                  <span className={
-                    item.paymentStatus === 'Paid' ? 'badge-green' :
-                      item.paymentStatus === 'Overdue' ? 'badge-red' :
-                        'badge-gold'
-                  } style={styles.statusTag}>
-                    {item.paymentStatus.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* SECTION 2: 💳 EXPENSES TABLE & CARDS                          */}
-      {/* ============================================================ */}
-      <div className="section-header-banner">
-        <div>
-          <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
-            💳 EXPENSES
-          </h3>
-          <p style={{ fontSize: '0.78rem', color: 'var(--color-muted)', margin: '0.15rem 0 0' }}>
-            Individual logged purchases & outlays by category
-          </p>
-        </div>
-        {onUpdateExpenses && (
           <button
             className="budget-add-btn"
             style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
-            onClick={startAddExpense}
+            onClick={() => startAddBudget(effectiveSelectedCategoryId)}
             disabled={isSyncing}
           >
-            <Plus size={15} style={{ marginRight: '0.25rem' }} /> NEW EXPENSE
+            <Plus size={15} style={{ marginRight: '0.25rem' }} /> NEW BUDGET
           </button>
-        )}
-      </div>
-
-      {/* Expenses Filter and Search Bar */}
-      <div style={styles.filterBar}>
-        <input
-          type="text"
-          placeholder="SEARCH EXPENSE DESCRIPTION OR NOTES..."
-          value={expenseSearchTerm}
-          onChange={(e) => setExpenseSearchTerm(e.target.value)}
-          style={styles.searchInput}
-        />
-
-        <div style={styles.filtersGroup}>
-          <select
-            value={expenseCategoryFilter}
-            onChange={(e) => setExpenseCategoryFilter(e.target.value)}
-            style={styles.filterSelect}
-          >
-            <option value="All">ALL CATEGORIES ({expenses.length})</option>
-            {allCategories.map(cat => (
-              <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-            ))}
-          </select>
         </div>
-      </div>
 
-      {/* Expenses Table View */}
-      {filteredExpenses.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '2.5rem 1.5rem',
-          backgroundColor: 'var(--color-surface)',
-          border: '1px dashed var(--color-border)',
-          borderRadius: 'var(--border-radius-md)',
-          color: 'var(--color-muted)',
-        }}>
-          <ShoppingBag size={28} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
-          <p style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>No expenses logged yet</p>
-          <p style={{ fontSize: '0.78rem', margin: '0.25rem 0 1rem' }}>Click "+ NEW EXPENSE" to record purchases for your wedding categories.</p>
-          {onUpdateExpenses && (
-            <button
-              onClick={startAddExpense}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                padding: '0.5rem 1rem',
-                backgroundColor: 'var(--color-primary)',
-                color: 'var(--color-on-primary)',
-                border: 'none',
-                borderRadius: 'var(--border-radius-sm)',
-                cursor: 'pointer',
+        {/* Filter and Search Bar for Budget */}
+        <div style={styles.filterBar}>
+          <input
+            type="text"
+            placeholder="SEARCH CATEGORY OR VENDOR..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={styles.searchInput}
+          />
+
+          <div style={styles.filtersGroup}>
+            <select
+              value={selectedCategories.length === 1 ? selectedCategories[0] : categoryFilter}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCategoryFilter(val);
+                setSelectedCategories(val === 'All' ? [] : [val]);
               }}
+              style={styles.filterSelect}
             >
-              + NEW EXPENSE
-            </button>
-          )}
+              <option value="All">{selectedCategories.length > 1 ? `FILTERED (${selectedCategories.length} SELECTED)` : 'ALL CATEGORIES'}</option>
+              {allCategories.map(cat => (
+                <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+              ))}
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              style={styles.filterSelect}
+            >
+              <option value="All">ALL STATUSES</option>
+              <option value="Paid">PAID</option>
+              <option value="Pending">PENDING</option>
+            </select>
+          </div>
         </div>
-      ) : viewMode === 'table' ? (
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>DESCRIPTION</th>
-                <th style={styles.th}>CATEGORY</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
-                <th style={styles.th}>PURCHASE DATE</th>
-                <th style={styles.th}>NOTES</th>
-                <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredExpenses.map((exp) => {
-                const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
-                return (
-                  <tr key={exp.itemId} style={styles.tr}>
-                    <td style={styles.td}>
-                      <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.categoryCell}>{exp.category}</span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>{formatCurrency(amt, currency)}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.monoText}>{formatDateConsistent(exp.purchaseDate)}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>
-                      <div style={styles.actionsCell}>
-                        <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
-                          <Edit2 size={12} />
-                        </button>
-                        {onUpdateExpenses && (
+
+        {viewMode === 'table' ? (
+          /* Ledger Table View */
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>CATEGORY</th>
+                  <th style={styles.th}>LINE ITEM / VENDOR</th>
+                  <th style={{ ...styles.th, textAlign: 'right' }}>ESTIMATED</th>
+                  <th style={{ ...styles.th, textAlign: 'right' }}>ACTUAL</th>
+                  <th style={{ ...styles.th, textAlign: 'right' }}>PAID</th>
+                  <th style={{ ...styles.th, textAlign: 'right' }}>OWING</th>
+                  <th style={styles.th}>DUE DATE</th>
+                  <th style={styles.th}>STATUS</th>
+                  <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBudget.map((item) => {
+                  const expStats = getLineItemExpenseTotals(item);
+                  const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
+                  const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
+                  const owing = displayActual - displayPaid;
+
+                  return (
+                    <tr key={item.itemId} style={styles.tr}>
+                      <td style={styles.td}>
+                        <span style={styles.categoryCell}>{item.category}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span>{item.vendorName}</span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right' }}>
+                        <span style={styles.monoText}>{formatCurrency(item.estimatedCost, currency)}</span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                          <span style={styles.monoText}>{formatCurrency(displayActual, currency)}</span>
+                          {expStats.count > 0 && (
+                            <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 600 }}>
+                              ({expStats.count} logged expense{expStats.count > 1 ? 's' : ''})
+                            </span>
+                          )}
+                          {displayActual > item.estimatedCost && (
+                            <span style={styles.overBadgeTable}>
+                              <AlertTriangle size={10} style={{ marginRight: '2px' }} /> +{formatCurrency(displayActual - item.estimatedCost, currency)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right' }}>
+                        <span style={styles.monoText}>{formatCurrency(displayPaid, currency)}</span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: 600 }}>
+                        <span style={{ ...styles.monoText, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-muted)' }}>
+                          {formatCurrency(owing, currency)}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.monoText}>{formatDateConsistent(item.dueDate)}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span className={
+                          item.paymentStatus === 'Paid' ? 'badge-green' :
+                            item.paymentStatus === 'Overdue' ? 'badge-red' :
+                              'badge-gold'
+                        } style={styles.statusTag}>
+                          {item.paymentStatus.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <div style={styles.actionsCell}>
+                          <button style={styles.actionBtn} onClick={() => startEditBudget(item)}>
+                            <Edit2 size={12} />
+                          </button>
                           <button
                             style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
-                            onClick={() => setExpenseToDelete(exp)}
+                            onClick={() => setItemToDelete(item)}
                             disabled={isSyncing}
                           >
                             <Trash2 size={12} />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
 
-              {/* Expense Table Footer Totals */}
-              <tr style={styles.footerTr}>
-                <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>TOTAL LOGGED EXPENSES</td>
-                <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                  <span style={styles.monoText}>{formatCurrency(filteredExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency)}</span>
-                </td>
-                <td colSpan={3} style={styles.td}></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        /* Condensed Expenses Card View Layout */
-        <div style={styles.cardGrid}>
-          {filteredExpenses.map((exp) => {
-            const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
-            return (
-              <div
-                key={exp.itemId}
-                style={{ ...styles.card, padding: '0.85rem 1rem', gap: '0.4rem' }}
-              >
-                <div style={styles.cardHeader}>
-                  <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.05rem', textTransform: 'none' }}>
-                    {exp.category}
-                  </span>
-                  <div style={styles.cardActions}>
-                    <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
-                      <Edit2 size={12} />
-                    </button>
-                    {onUpdateExpenses && (
-                      <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setExpenseToDelete(exp)} disabled={isSyncing}>
+                {/* Table Footer Totals */}
+                <tr style={styles.footerTr}>
+                  <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>BUDGET TOTALS</td>
+                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
+                    <span style={styles.monoText}>{formatCurrency(totalEstimate, currency)}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
+                    <span style={styles.monoText}>{formatCurrency(totalActual, currency)}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700 }}>
+                    <span style={styles.monoText}>{formatCurrency(totalPaid, currency)}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
+                    <span style={styles.monoText}>{formatCurrency(totalBalance, currency)}</span>
+                  </td>
+                  <td colSpan={3} style={styles.td}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Card View Layout */
+          <div style={styles.cardGrid}>
+            {/* Ledger Total Card */}
+            <div style={{ ...styles.card, ...styles.totalCard }} className="totalCard">
+              <h3 style={{ ...styles.categoryCell, fontFamily: 'var(--font-header, var(--font-serif))', fontSize: '1.25rem', color: 'var(--color-on-dark)' }}>BUDGET SUMMARY</h3>
+              <div style={styles.cardBody}>
+                <div style={styles.cardRow}>
+                  <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ESTIMATED TARGET</span>
+                  <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalEstimate, currency)}</span>
+                </div>
+                <div style={styles.cardRow}>
+                  <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>ACTUAL OUTLAY</span>
+                  <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalActual, currency)}</span>
+                </div>
+                <div style={styles.cardRow}>
+                  <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>AMOUNT PAID</span>
+                  <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalPaid, currency)}</span>
+                </div>
+                <div style={{ ...styles.cardRow, borderTop: '1px dotted var(--color-on-dark-subtle)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                  <span style={{ ...styles.cardLabel, color: 'var(--color-on-dark)' }}>BALANCE DUE</span>
+                  <span style={{ ...styles.cardValue, color: 'var(--color-on-primary)' }}>{formatCurrency(totalBalance, currency)}</span>
+                </div>
+              </div>
+            </div>
+
+            {filteredBudget.map(item => {
+              const expStats = getLineItemExpenseTotals(item);
+              const displayActual = expStats.count > 0 ? expStats.actualCost : item.actualCost;
+              const displayPaid = expStats.count > 0 ? expStats.amountPaid : item.amountPaid;
+              const owing = displayActual - displayPaid;
+              const isOver = displayActual > item.estimatedCost;
+
+              return (
+                <div
+                  key={item.itemId}
+                  className={`budget-item-card ${isOver ? 'is-over-budget' : ''}`}
+                  style={{
+                    ...styles.card,
+                    borderColor: isOver ? 'var(--color-red)' : 'var(--color-muted)'
+                  }}
+                >
+                  <div style={styles.cardHeader}>
+                    <div style={styles.cardMeta}>
+                      <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.25rem', textTransform: 'none' }}>{item.category}</span>
+                    </div>
+                    <div style={styles.cardActions}>
+                      <button style={styles.actionBtn} onClick={() => startEditBudget(item)}>
+                        <Edit2 size={12} />
+                      </button>
+                      <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setItemToDelete(item)} disabled={isSyncing}>
                         <Trash2 size={12} />
                       </button>
-                    )}
+                    </div>
+                  </div>
+
+                  {isOver && (
+                    <div style={styles.overBadgeCard}>
+                      <AlertTriangle size={11} style={{ marginRight: '0.25rem' }} /> OVER ESTIMATE (+{formatCurrency(displayActual - item.estimatedCost, currency)})
+                    </div>
+                  )}
+                  <h3 style={{ ...styles.cardTitle, fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--color-muted)' }}>{item.vendorName}</h3>
+
+                  <div style={styles.cardBody}>
+                    <div style={styles.cardRow}>
+                      <span style={styles.cardLabel}>ESTIMATED</span>
+                      <span style={styles.cardValue}>{formatCurrency(item.estimatedCost, currency)}</span>
+                    </div>
+                    <div style={styles.cardRow}>
+                      <span style={styles.cardLabel}>
+                        ACTUAL
+                        {expStats.count > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', marginLeft: '4px' }}>({expStats.count} exp)</span>}
+                      </span>
+                      <span style={styles.cardValue}>{formatCurrency(displayActual, currency)}</span>
+                    </div>
+                    <div style={styles.cardRow}>
+                      <span style={styles.cardLabel}>PAID</span>
+                      <span style={styles.cardValue}>{formatCurrency(displayPaid, currency)}</span>
+                    </div>
+                    <div style={{ ...styles.cardRow, fontWeight: 600 }}>
+                      <span style={styles.cardLabel}>BALANCE DUE</span>
+                      <span style={{ ...styles.cardValue, color: owing > 0 ? 'var(--color-primary)' : 'var(--color-text)' }}>{formatCurrency(owing, currency)}</span>
+                    </div>
+                  </div>
+
+                  <div style={styles.cardFooter}>
+                    <span style={styles.monoText}>{formatDateConsistent(item.dueDate)}</span>
+                    <span className={
+                      item.paymentStatus === 'Paid' ? 'badge-green' :
+                        item.paymentStatus === 'Overdue' ? 'badge-red' :
+                          'badge-gold'
+                    } style={styles.statusTag}>
+                      {item.paymentStatus.toUpperCase()}
+                    </span>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.1rem' }}>
-                  <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
-                    {exp.description}
-                  </h4>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0 }}>
-                    {formatCurrency(amt, currency)}
-                  </span>
-                </div>
-
-                {(exp.purchaseDate || exp.notes) && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', paddingTop: '0.35rem', borderTop: '1px dotted var(--color-border)' }}>
-                    <span>{formatDateConsistent(exp.purchaseDate)}</span>
-                    {exp.notes && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>📝 {exp.notes}</span>}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        {/* SECTION 2: 💳 EXPENSES TABLE & CARDS */}
+        <div className="section-header-banner">
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
+              💳 EXPENSES
+            </h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--color-muted)', margin: '0.15rem 0 0' }}>
+              Individual logged purchases & outlays by category
+            </p>
+          </div>
+          {onUpdateExpenses && (
+            <button
+              className="budget-add-btn"
+              style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
+              onClick={() => startAddExpense(effectiveSelectedCategoryId)}
+              disabled={isSyncing}
+            >
+              <Plus size={15} style={{ marginRight: '0.25rem' }} /> NEW EXPENSE
+            </button>
+          )}
         </div>
-      )}
+
+        {/* Expenses Filter and Search Bar */}
+        <div style={styles.filterBar}>
+          <input
+            type="text"
+            placeholder="SEARCH EXPENSE DESCRIPTION OR NOTES..."
+            value={expenseSearchTerm}
+            onChange={(e) => setExpenseSearchTerm(e.target.value)}
+            style={styles.searchInput}
+          />
+
+          <div style={styles.filtersGroup}>
+            <select
+              value={expenseCategoryFilter}
+              onChange={(e) => setExpenseCategoryFilter(e.target.value)}
+              style={styles.filterSelect}
+            >
+              <option value="All">ALL CATEGORIES ({expenses.length})</option>
+              {allCategories.map(cat => (
+                <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Expenses Table View */}
+        {filteredExpenses.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '2.5rem 1.5rem',
+            backgroundColor: 'var(--color-surface)',
+            border: '1px dashed var(--color-border)',
+            borderRadius: 'var(--border-radius-md)',
+            color: 'var(--color-muted)',
+          }}>
+            <ShoppingBag size={28} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
+            <p style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>No expenses logged yet</p>
+            <p style={{ fontSize: '0.78rem', margin: '0.25rem 0 1rem' }}>Click "+ NEW EXPENSE" to record purchases for your wedding categories.</p>
+            {onUpdateExpenses && (
+              <button
+                onClick={() => startAddExpense(effectiveSelectedCategoryId)}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-on-primary)',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-sm)',
+                  cursor: 'pointer',
+                }}
+              >
+                + NEW EXPENSE
+              </button>
+            )}
+          </div>
+        ) : viewMode === 'table' ? (
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>DESCRIPTION</th>
+                  <th style={styles.th}>CATEGORY</th>
+                  <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
+                  <th style={styles.th}>PURCHASE DATE</th>
+                  <th style={styles.th}>NOTES</th>
+                  <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredExpenses.map((exp) => {
+                  const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
+                  return (
+                    <tr key={exp.itemId} style={styles.tr}>
+                      <td style={styles.td}>
+                        <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.categoryCell}>{exp.category}</span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right' }}>
+                        <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700 }}>{formatCurrency(amt, currency)}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.monoText}>{formatDateConsistent(exp.purchaseDate)}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <div style={styles.actionsCell}>
+                          <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
+                            <Edit2 size={12} />
+                          </button>
+                          {onUpdateExpenses && (
+                            <button
+                              style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
+                              onClick={() => setExpenseToDelete(exp)}
+                              disabled={isSyncing}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {/* Expense Table Footer Totals */}
+                <tr style={styles.footerTr}>
+                  <td colSpan={2} style={{ ...styles.td, fontWeight: 700 }}>TOTAL LOGGED EXPENSES</td>
+                  <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
+                    <span style={styles.monoText}>{formatCurrency(filteredExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency)}</span>
+                  </td>
+                  <td colSpan={3} style={styles.td}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Condensed Expenses Card View Layout */
+          <div style={styles.cardGrid}>
+            {filteredExpenses.map((exp) => {
+              const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
+              return (
+                <div
+                  key={exp.itemId}
+                  style={{ ...styles.card, padding: '0.85rem 1rem', gap: '0.4rem' }}
+                >
+                  <div style={styles.cardHeader}>
+                    <span style={{ ...styles.categoryCell, fontFamily: 'var(--font-serif)', fontSize: '1.05rem', textTransform: 'none' }}>
+                      {exp.category}
+                    </span>
+                    <div style={styles.cardActions}>
+                      <button style={styles.actionBtn} onClick={() => startEditExpense(exp)}>
+                        <Edit2 size={12} />
+                      </button>
+                      {onUpdateExpenses && (
+                        <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setExpenseToDelete(exp)} disabled={isSyncing}>
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.1rem' }}>
+                    <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
+                      {exp.description}
+                    </h4>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0 }}>
+                      {formatCurrency(amt, currency)}
+                    </span>
+                  </div>
+
+                  {(exp.purchaseDate || exp.notes) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', paddingTop: '0.35rem', borderTop: '1px dotted var(--color-border)' }}>
+                      <span>{formatDateConsistent(exp.purchaseDate)}</span>
+                      {exp.notes && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>📝 {exp.notes}</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ============================================================ */}
       {/* BUDGET ITEM ADD/EDIT MODAL                                    */}
@@ -2073,5 +2749,33 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '4px',
     display: 'inline-flex',
     alignItems: 'center',
-  }
+  },
+  snapshotTile: {
+    backgroundColor: 'var(--color-bg-subtle)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.75rem 1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+  },
+  snapshotTileLabel: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.625rem',
+    fontWeight: 800,
+    color: 'var(--color-muted)',
+    letterSpacing: '0.06em',
+  },
+  snapshotTileValue: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '1.25rem',
+    fontWeight: 800,
+    color: 'var(--color-text)',
+    fontVariantNumeric: 'tabular-nums',
+  },
+  snapshotTileSub: {
+    fontSize: '0.7rem',
+    color: 'var(--color-muted)',
+    fontFamily: 'var(--font-mono)',
+  },
 };

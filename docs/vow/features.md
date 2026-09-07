@@ -265,8 +265,12 @@
   - Treats all default tasks without a category (blank, null, or whitespace) as **`General`**, matching the card badges.
   - Includes an `"ALL CATEGORIES"` option to view all tasks, plus an explicit `RESET` button that appears when an active category filter is applied for instantaneous 1-click clearing.
   - Dynamically updates Kanban columns, mobile stage tab counters, empty column messages, and top progress metrics / progress bar cards to reflect the filtered category subset.
-  - Pre-populates the filtered category when creating a new task from the board, streamlining batch task creation.
-  - Fully responsive on desktop and mobile viewports with dedicated column/flex wrapping rules.
+- [x] **[FINANCIALS-MASTER-DETAIL-VIEW] Desktop Master-Detail Split-View for Wedding Financials (`BudgetLedgerManager.tsx`):**
+  - **Responsive Layout**: On screens `< lg` (<1024px), strictly maintains the stacked view (Budget Tracker cards/table above Expenses table/cards). On desktop (`lg:` breakpoint and up), switches to a 12-column grid (`lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start`).
+  - **Master Rail (Left Column - `lg:col-span-5`)**: Scrollable viewport-bounded list (`lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2`) of category budget cards prioritized by active activity (caps, logged expenses, or over-budget alerts) with live search filtering (`FILTER CATEGORIES...`). Features distinct active card selection styling (`2px solid var(--color-primary)`, subtle background highlight, ring shadow, and `ACTIVE` tag). Displays serif category headings, mini utilization progress tracks, CAP / OUTLAY / CUSHION tabular numbers, and item counters. Clicking any card updates `selectedCategoryId`.
+  - **Detail Ledger (Right Column - `lg:col-span-7`)**: Dynamic Category Snapshot header for the selected category showing Target Allocation Cap, Total Expenses Logged, and Remaining Cushion (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to `selectedCategoryId` (with dedicated category search, tabular amounts, dates, and dynamic total footer). Zero-expense categories render clean empty-state guidance with an immediate "+ LOG FIRST EXPENSE" action.
+  - **Dynamic Recalculation**: Adding, editing, or deleting expenses immediately updates the category card's outlay and cushion on the left rail, the detail snapshot header, and the global top-level budget progress bar.
+  - **Desktop Compact Active/Alert Filter Pills**: Replaced the large 20+ item chip cloud on desktop with a single-row horizontal pill list of active or alert categories with over-budget alerts and percentage pills, while preserving the full filter chip grid on mobile.
 
 ---
 ---

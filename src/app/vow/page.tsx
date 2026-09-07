@@ -99,14 +99,14 @@ export default function Sheet2VowDashboard() {
               }
               setIsMockMode(false);
               setIsOnboarded(true);
-              addToast(`Welcome back ${user.email}! Reconnected active workspace.`, 'success');
+              addToast(`Welcome back ${user.email}!`, 'success');
               // Fetch latest metadata (wedding date, location, budget) directly from Google Sheet SETTINGS
               fetchWeddingData(accessToken, provision.spreadsheetId);
             } else {
               setSpreadsheetId('');
               setIsMockMode(false);
               setIsOnboarded(false);
-              addToast(`Authenticated as ${user.email}. Redirecting to Setup Wizard...`, 'info');
+              addToast(`Authenticated as ${user.email}.`, 'info');
               if (typeof window !== 'undefined') {
                 window.location.href = `/activate?email=${encodeURIComponent(user.email)}`;
               }
@@ -114,7 +114,7 @@ export default function Sheet2VowDashboard() {
           } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
             window.removeEventListener('message', handleAuthMessage);
             setIsAuthenticating(false);
-            addToast(event.data.error || 'Google authentication failed', 'warning');
+            addToast(event.data.error || 'Google Authentication Failed', 'warning');
           }
         };
 
@@ -135,12 +135,12 @@ export default function Sheet2VowDashboard() {
         }, 1000);
       } else {
         setIsAuthenticating(false);
-        addToast(data.error || 'Failed to initialize Google authentication.', 'warning');
+        addToast(data.error || 'Failed to Initialize Google Authentication.', 'warning');
       }
     } catch (err: any) {
       console.error('Direct Google Auth Error:', err);
       setIsAuthenticating(false);
-      addToast(err.message || 'Failed to connect with Google.', 'warning');
+      addToast(err.message || 'Failed to Connect with Google.', 'warning');
     }
   };
 
@@ -174,14 +174,14 @@ export default function Sheet2VowDashboard() {
             if (user?.picture) setGoogleUserAvatar(user.picture);
 
             setShowSessionExpiredModal(false);
-            addToast('Session refreshed — reconnecting to your workspace...', 'success');
+            addToast('Session Reconnected!', 'success');
             // Re-fetch data with the fresh token directly
             fetchWeddingData(accessToken);
 
           } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
             window.removeEventListener('message', handleReauthMessage);
             setIsReauthenticating(false);
-            addToast(event.data.error || 'Google re-authentication failed', 'warning');
+            addToast(event.data.error || 'Google Re-Authentication Failed', 'warning');
           }
         };
 
@@ -201,12 +201,12 @@ export default function Sheet2VowDashboard() {
         }, 1000);
       } else {
         setIsReauthenticating(false);
-        addToast(data.error || 'Failed to initialize Google authentication.', 'warning');
+        addToast(data.error || 'Failed to Initialize Google Authentication.', 'warning');
       }
     } catch (err: any) {
       console.error('Reauth Error:', err);
       setIsReauthenticating(false);
-      addToast(err.message || 'Failed to reconnect with Google.', 'warning');
+      addToast(err.message || 'Failed to Reconnect with Google.', 'warning');
     }
   };
 
@@ -859,7 +859,7 @@ export default function Sheet2VowDashboard() {
       if (res.data) {
         setWeddingData(res.data);
       }
-      addToast(`Saved! ${sheetType.toUpperCase()} updated.`, 'success');
+      addToast(`Saved! ${sheetType.toUpperCase()} Updated.`, 'success');
     } catch (err: any) {
       console.error(err);
       setSyncError(`Sync error: ${err.message || 'Could not push updates.'}`);
