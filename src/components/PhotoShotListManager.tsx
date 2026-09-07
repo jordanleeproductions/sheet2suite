@@ -1349,6 +1349,7 @@ export default function PhotoShotListManager({
         <GoogleDrivePickerModal
           isOpen={isDrivePickerOpen}
           accessToken={googleToken}
+          spreadsheetId={spreadsheetId}
           initialPath={selectedFolder.path}
           onClose={() => setIsDrivePickerOpen(false)}
           onSelectFolder={handleFolderSelect}

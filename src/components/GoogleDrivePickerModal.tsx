@@ -42,6 +42,7 @@ interface GoogleDrivePickerModalProps {
   onClose: () => void;
   onSelectFolder: (folder: SelectedFolder) => void;
   accessToken?: string;
+  spreadsheetId?: string;
   initialPath?: string;
 }
 
@@ -69,6 +70,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
   onClose,
   onSelectFolder,
   accessToken,
+  spreadsheetId,
   initialPath = 'My Drive / Sheet2Suite / Sheet2Vow',
 }) => {
   const [driveScope, setDriveScope] = useState<DriveScope>('my-drive');
@@ -85,6 +87,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
 
   // New inline folder creation state
   const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
+  const [isCreatingLoading, setIsCreatingLoading] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
 
   const getCurrentBreadcrumbPath = useCallback(() => {
@@ -107,12 +110,34 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
     };
   }, [pathHistory, selectedFolder, currentFolderId]);
 
-  // Fetch folders from Google Drive API v3 or fallback mock database
+  // Fetch folders from Google Drive API v3 or backend proxy or fallback mock database
   const fetchDriveFolders = useCallback(async (folderId: string) => {
     setIsLoading(true);
     try {
+      const currentPathStr = pathHistory.map(p => p.name).join(' / ');
+      const sheetIdParam = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+
+      // 1. Try fetching via backend Google Drive proxy (which handles silent OAuth refresh tokens)
+      try {
+        const res = await fetch(`/api/drive/folders?folderId=${encodeURIComponent(folderId)}&parentPath=${encodeURIComponent(currentPathStr)}&spreadsheetId=${encodeURIComponent(sheetIdParam)}`, {
+          headers: {
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.files) && data.files.length > 0) {
+            setFolders(data.files);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (backendErr) {
+        console.warn('Backend drive folders proxy failed, trying direct Google API:', backendErr);
+      }
+
+      // 2. Direct client fetch via Google Drive API v3 if accessToken is available
       if (accessToken) {
-        // Fetch real Google Drive folders via Drive API v3
         const q = `'${folderId === 'root' ? 'root' : folderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
         const res = await fetch(
           `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,parents,modifiedTime,folderColorRgb,shared)&pageSize=100`,
@@ -123,7 +148,6 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
 
         if (res.ok) {
           const data = await res.json();
-          const currentPathStr = pathHistory.map(p => p.name).join(' / ');
           const apiFolders: DriveFolderItem[] = (data.files || []).map((f: any) => ({
             id: f.id,
             name: f.name,
@@ -139,7 +163,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
         }
       }
 
-      // Fallback to interactive mock directory hierarchy
+      // 3. Fallback to interactive mock directory hierarchy
       const mockItems = MOCK_DRIVE_HIERARCHY[folderId] || [];
       setFolders(mockItems);
     } catch (err) {
@@ -148,7 +172,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, pathHistory]);
+  }, [accessToken, spreadsheetId, pathHistory]);
 
   useEffect(() => {
     if (isOpen) {
@@ -181,25 +205,108 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
     }
   };
 
-  // Create New Subfolder
-  const handleCreateNewFolder = (e: React.FormEvent) => {
+  // Create New Subfolder in Google Drive
+  const handleCreateNewFolder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFolderName.trim()) return;
+    if (!newFolderName.trim() || isCreatingLoading) return;
 
+    setIsCreatingLoading(true);
     const currentPathStr = pathHistory.map(p => p.name).join(' / ');
-    const newFolder: DriveFolderItem = {
-      id: `custom_${Date.now()}`,
-      name: newFolderName.trim(),
-      parentId: currentFolderId,
-      path: `${currentPathStr} / ${newFolderName.trim()}`,
-      itemCount: 0,
-      updatedAt: 'Just now'
-    };
+    const effectiveSheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
 
-    setFolders(prev => [newFolder, ...prev]);
-    setSelectedFolder(newFolder);
-    setNewFolderName('');
-    setIsCreatingFolder(false);
+    try {
+      // 1. Call backend API to create folder directly in Google Drive
+      const res = await fetch('/api/drive/create-folder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({
+          folderName: newFolderName.trim(),
+          parentId: currentFolderId === 'root' || currentFolderId.startsWith('f_') || currentFolderId.startsWith('custom_') ? undefined : currentFolderId,
+          parentPath: currentPathStr,
+          spreadsheetId: effectiveSheetId,
+          accessToken,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.folder) {
+        const newFolder: DriveFolderItem = {
+          id: data.folder.id,
+          name: data.folder.name,
+          parentId: currentFolderId,
+          path: data.folder.path || `${currentPathStr} / ${data.folder.name}`,
+          itemCount: 0,
+          updatedAt: 'Just now',
+        };
+
+        setFolders(prev => [newFolder, ...prev]);
+        setSelectedFolder(newFolder);
+        setNewFolderName('');
+        setIsCreatingFolder(false);
+        return;
+      } else {
+        throw new Error(data.error || 'Failed to create folder in Google Drive');
+      }
+    } catch (err: any) {
+      console.warn('Backend Drive folder creation failed, checking client fallback:', err);
+
+      // 2. Direct client fetch fallback if accessToken is available
+      if (accessToken) {
+        try {
+          const directRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: newFolderName.trim(),
+              mimeType: 'application/vnd.google-apps.folder',
+              parents: currentFolderId !== 'root' && !currentFolderId.startsWith('f_') && !currentFolderId.startsWith('custom_') ? [currentFolderId] : undefined,
+            }),
+          });
+
+          if (directRes.ok) {
+            const directData = await directRes.json();
+            const newFolder: DriveFolderItem = {
+              id: directData.id,
+              name: directData.name,
+              parentId: currentFolderId,
+              path: `${currentPathStr} / ${directData.name}`,
+              itemCount: 0,
+              updatedAt: 'Just now',
+            };
+            setFolders(prev => [newFolder, ...prev]);
+            setSelectedFolder(newFolder);
+            setNewFolderName('');
+            setIsCreatingFolder(false);
+            return;
+          }
+        } catch (directErr) {
+          console.error('Direct Google Drive API creation error:', directErr);
+        }
+      }
+
+      // 3. Fallback for mock/demo workspaces
+      const newFolder: DriveFolderItem = {
+        id: `custom_${Date.now()}`,
+        name: newFolderName.trim(),
+        parentId: currentFolderId,
+        path: `${currentPathStr} / ${newFolderName.trim()}`,
+        itemCount: 0,
+        updatedAt: 'Just now',
+      };
+
+      setFolders(prev => [newFolder, ...prev]);
+      setSelectedFolder(newFolder);
+      setNewFolderName('');
+      setIsCreatingFolder(false);
+    } finally {
+      setIsCreatingLoading(false);
+    }
   };
 
   const filteredFolders = folders.filter(f =>
@@ -544,21 +651,33 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                   />
                   <button
                     type="submit"
+                    disabled={isCreatingLoading || !newFolderName.trim()}
                     style={{
-                      backgroundColor: '#0B57D0',
+                      backgroundColor: isCreatingLoading ? '#747775' : '#0B57D0',
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: '14px',
                       padding: '0.35rem 0.75rem',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      cursor: 'pointer',
+                      cursor: isCreatingLoading ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                   >
-                    Create
+                    {isCreatingLoading ? (
+                      <>
+                        <RefreshCw size={12} className="spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      <span>Create</span>
+                    )}
                   </button>
                   <button
                     type="button"
+                    disabled={isCreatingLoading}
                     onClick={() => setIsCreatingFolder(false)}
                     style={{
                       backgroundColor: 'transparent',
