@@ -17,6 +17,7 @@ export default function GuestUploadPage() {
 
   // Metadata State
   const [weddingName, setWeddingName] = useState<string>('Our Wedding');
+  const [targetFolder, setTargetFolder] = useState<string>('');
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
   const [isLoadingMeta, setIsLoadingMeta] = useState<boolean>(true);
 
@@ -43,6 +44,9 @@ export default function GuestUploadPage() {
         }
         const data = await res.json();
         setWeddingName(data.weddingName || 'Our Wedding');
+        if (data.folderName || data.folderPath) {
+          setTargetFolder(data.folderName || data.folderPath);
+        }
         setIsValidToken(true);
       } catch (err) {
         console.error('Failed to verify token:', err);
@@ -204,7 +208,9 @@ export default function GuestUploadPage() {
         </div>
         <h1 style={styles.mainHeading}>Share Your Wedding Photos & Videos</h1>
         <p style={styles.subHeading}>
-          Upload photos directly from your phone into the couple’s personal Google Drive folder!
+          {targetFolder 
+            ? `Upload photos & videos directly into "${targetFolder}" in Google Drive!` 
+            : `Upload photos directly from your phone into the couple’s personal Google Drive folder!`}
         </p>
       </header>
 
@@ -217,7 +223,7 @@ export default function GuestUploadPage() {
             </div>
             <h2 style={styles.successTitle}>Thank You for Sharing!</h2>
             <p style={styles.successMessage}>
-              Your photos & videos have been safely saved to <strong>{weddingName}’s</strong> Google Drive folder.
+              Your photos & videos have been safely saved to <strong>{weddingName}’s</strong> Google Drive{targetFolder ? ` ("${targetFolder}")` : ' folder'}.
             </p>
 
             <button type="button" onClick={resetUploadForm} style={styles.uploadMoreBtn}>

@@ -20,6 +20,9 @@ export async function GET(
       success: true,
       weddingName: payload.weddingName || 'Our Wedding',
       spreadsheetId: payload.spreadsheetId,
+      folderId: payload.folderId,
+      folderName: payload.folderName,
+      folderPath: payload.folderPath || 'My Drive/Wedding Planning/Guest Uploads',
       exp: payload.exp,
     });
   } catch (error) {
@@ -82,7 +85,9 @@ export async function POST(
       message: `Successfully uploaded ${files.length} file(s)!`,
       uploadedCount: files.length,
       uploaderName,
-      folderPath: 'My Drive/Wedding Planning/Guest Uploads',
+      folderId: payload.folderId,
+      folderName: payload.folderName,
+      folderPath: payload.folderPath || 'My Drive/Wedding Planning/Guest Uploads',
     });
   } catch (error) {
     console.error('Error in photo upload proxy:', error);

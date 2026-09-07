@@ -185,6 +185,15 @@
 - [x] **[PHOTO-1] Photography Shot List Enhancements:** Unchecked cards have solid black borders, section headers black text, and desktop view single-row layout.
 - [x] **[PHOTO-2] Auto-Populate Photographer Email:** Automatically prepopulates the `TO` email address with the Photographer's email from the Vendor Directory when emailing the Shot List.
 - [x] **[PHOTO-PRIORITY-SETTINGS-SYNC] Bi-Directional Priority Translation (`PhotoShotListManager.tsx`, `mapper.ts`):** Retains photographer-intuitive priority labels (`Must Have`, `Nice To Have`, and `Optional`) in the web app UI while bi-directionally translating to and from Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`Must Have` ↔ `High`, `Nice To Have` ↔ `Medium`, `Optional` ↔ `Low`). Eliminates spreadsheet validation warnings while keeping photography terminology seamless.
+- [x] **[PHOTO-GUEST-UPLOAD-SETUP] Guest Photo Upload Portal Setup & Google Drive Folder Selector (`PhotoShotListManager.tsx`, `GoogleDrivePickerModal.tsx`, `token.ts`, `/upload/[token]`):**
+  - Added prominent `📸 GUEST UPLOADS` action button to the Photography Shot List header.
+  - Dedicated in-app configuration modal allowing couples to:
+    - Select or create any Google Drive destination folder using the integrated `GoogleDrivePickerModal.tsx`.
+    - Configure signed token expiration duration (7d, 14d, 30d, 60d, 90d recommended, 180d, 365d, or permanent/no expiration).
+    - View, copy, and test their live guest upload portal link (`${origin}/upload/${token}`) with instant clipboard feedback.
+    - Generate and download a printable high-resolution QR code (`api.qrserver.com`) for wedding place cards, bar signs, and dinner table displays.
+  - Passes destination `folderId`, `folderName`, and `folderPath` through cryptographically signed HMAC-SHA256 JWT tokens.
+  - Updated `/api/upload/[token]` route and `/upload/[token]` guest landing page to display the couple's designated Google Drive album name and persist uploads directly into the chosen folder.
 
 ---
 

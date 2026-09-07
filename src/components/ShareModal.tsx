@@ -56,9 +56,15 @@ export default function ShareModal({
     expiresInDays,
   });
 
+  const basePath = scope === 'guest_upload'
+    ? '/upload/'
+    : scope === 'guest_song_request'
+    ? '/request-song/'
+    : '/share/';
+
   const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/share/${token}`
-    : `/share/${token}`;
+    ? `${window.location.origin}${basePath}${token}`
+    : `${basePath}${token}`;
 
   const handleConfirm = () => {
     const newRecord: ShareLinkRecord = {

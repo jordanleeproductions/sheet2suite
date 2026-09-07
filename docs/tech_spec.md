@@ -178,14 +178,14 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 ```
 
 ### 3.1 Token Cryptography (`src/lib/share/token.ts`)
-- **Algorithm:** Signed `HMAC-SHA256` token payload containing `{ spreadsheetId, scope, weddingName, shareVersion, exp }`.
+- **Algorithm:** Signed `HMAC-SHA256` token payload containing `{ spreadsheetId, scope, weddingName, folderId?, folderName?, folderPath?, shareVersion, exp }`.
 - **Scopes:**
   - `'music'`: DJ / Band Playlist & Banned tracks.
   - `'photos'`: Photographer Shot List & posing notes.
   - `'timeline'`: Day-Of Schedule & responsibility moments.
   - `'catering'`: Attending headcount, dietary restrictions breakdown, and table seating capacity.
   - `'vendor_hub'`: All-in-one vendor portal hub with tab navigation.
-  - `'guest_upload'`: Guest photo/video upload portal (`/upload/[token]`) routing uploads directly into couple's Drive folder (`My Drive/Wedding Planning/Guest Uploads`).
+  - `'guest_upload'`: Guest photo/video upload portal (`/upload/[token]`) routing uploads directly into couple's designated Drive folder (e.g. `My Drive/Wedding Planning/Guest Uploads`).
   - `'guest_song_request'`: Guest live song request portal (`/request-song/[token]`) appending requested tracks to `Music!A:E` for live DJ view sync.
 
 ### 3.2 Data Sanitization Proxy (`src/app/api/share/[token]/route.ts`)
@@ -202,6 +202,15 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 - **Draft Link Confirmation Workflow:** Generated share links remain in draft mode until the couple explicitly clicks **`CONFIRM SHARE LINK`**. Clicking **`CANCEL`** or closing the modal invalidates and discards the token.
 - **Master & Individual Revocation:** Configuration JSON stored in cell **`Settings!B2`** includes `shareVersion`. Clicking **"Revoke All Shared Links"** in Settings increments `shareVersion` in `Settings!B2`. Old tokens generated with previous versions are instantly rejected by the backend proxy.
 - **Collapsible Revoked & Expired Links Section:** In the dashboard's Access Control card (`VendorShareLinkManager.tsx`), revoked and expired links are tucked away in a collapsible accordion (`SHOW REVOKED & EXPIRED LINKS`), keeping the main active dashboard uncluttered while allowing couples to view preview links or clear revoked history.
+
+### 3.5 Guest Photo & Video Upload Portal & Drive Folder Setup (`/upload/[token]` & `PhotoShotListManager.tsx`)
+- **Direct-to-Drive Guest Upload Portal (`/upload/[token]/page.tsx`):** Standalone mobile-optimized web portal where wedding guests scan reception QR codes or follow a shortlink to upload photos and videos directly from their mobile camera roll or live camera without signing in or installing apps.
+- **Strict File Format Validation:** Server and client enforce photo & video formats (`image/*`, `video/*`, JPG, PNG, HEIC, MP4, MOV, etc.) rejecting unsupported document formats.
+- **In-App Portal Setup (`PhotoShotListManager.tsx`):** Accessible via the `📸 GUEST UPLOADS` header button in the Photography Shot List. Allows couples to:
+  - Select or create any Google Drive folder for upload storage using `GoogleDrivePickerModal.tsx`.
+  - Set access expiration duration (`7d`, `14d`, `30d`, `60d`, `90d` recommended, `180d`, `365d`, or permanent / no expiration).
+  - Copy live link (`${origin}/upload/${token}`) and generate printable high-res QR codes for table place cards.
+  - Automatically persists chosen settings to `localStorage` and the couple's active link registry.
 
 ### 3.6 Guest Song Request Portal & DJ Live Sync (`/request-song/[token]` & `src/app/api/request-song/[token]/route.ts`)
 - **Public Mobile Song Request Portal (`/request-song/[token]/page.tsx`):** Tokenized song request page featuring real-time iTunes Search API auto-complete, 30-second audio previews, manual song entry fallback, requester name input, and special dedications for the DJ.

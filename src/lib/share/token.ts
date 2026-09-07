@@ -7,7 +7,10 @@ export interface ShareTokenPayload {
   scope: ShareScope;
   weddingName: string;
   shareVersion?: number;
-  exp: number; // Expiration timestamp in ms
+  folderId?: string;
+  folderName?: string;
+  folderPath?: string;
+  exp: number; // Expiration timestamp in ms (0 for no expiration)
 }
 
 export interface ShareLinkRecord {
@@ -20,6 +23,9 @@ export interface ShareLinkRecord {
   exp: number;
   shareVersion: number;
   isRevoked?: boolean;
+  folderId?: string;
+  folderName?: string;
+  folderPath?: string;
 }
 
 const JWT_SECRET = process.env.SHARE_JWT_SECRET || 'sheet2vow-secure-vendor-secret-key-2026';
@@ -50,14 +56,17 @@ function base64UrlDecode(str: string): string {
  * Generate a signed HMAC-SHA256 token for vendor share links
  */
 export function generateShareToken(payload: Omit<ShareTokenPayload, 'exp'> & { expiresInDays?: number }): string {
-  const expiresInDays = payload.expiresInDays || 60;
-  const exp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
+  const expiresInDays = payload.expiresInDays !== undefined ? payload.expiresInDays : 60;
+  const exp = expiresInDays > 0 ? Date.now() + expiresInDays * 24 * 60 * 60 * 1000 : 0;
 
   const tokenPayload: ShareTokenPayload = {
     spreadsheetId: payload.spreadsheetId,
     scope: payload.scope,
     weddingName: payload.weddingName,
     shareVersion: payload.shareVersion || 1,
+    folderId: payload.folderId,
+    folderName: payload.folderName,
+    folderPath: payload.folderPath,
     exp,
   };
 
@@ -102,8 +111,8 @@ export function verifyShareToken(token: string): ShareTokenPayload | null {
 
     const payload: ShareTokenPayload = JSON.parse(base64UrlDecode(encodedPayload));
 
-    // Check expiration
-    if (payload.exp && Date.now() > payload.exp) {
+    // Check expiration (exp > 0 means token has an expiration timestamp; 0 means permanent)
+    if (payload.exp && payload.exp > 0 && Date.now() > payload.exp) {
       console.warn('Share token expired');
       return null;
     }

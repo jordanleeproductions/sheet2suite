@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PhotoShot, Vendor } from '@/lib/sheets/types';
 import { 
   Camera, 
@@ -18,18 +18,40 @@ import {
   Sparkles, 
   AlertCircle,
   Tag,
-  Mail
+  Mail,
+  UploadCloud,
+  HardDrive,
+  FolderOpen,
+  Copy,
+  Check,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import GoogleDrivePickerModal, { SelectedFolder } from '@/components/GoogleDrivePickerModal';
+import { generateShareToken, ShareLinkRecord } from '@/lib/share/token';
 
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
   vendors?: Vendor[];
   onUpdatePhotos: (updatedPhotos: PhotoShot[]) => Promise<void>;
   isSyncing?: boolean;
+  spreadsheetId?: string;
+  weddingName?: string;
+  googleToken?: string;
+  driveFolder?: string;
 }
 
-export default function PhotoShotListManager({ photos, vendors = [], onUpdatePhotos, isSyncing }: PhotoShotListManagerProps) {
+export default function PhotoShotListManager({ 
+  photos, 
+  vendors = [], 
+  onUpdatePhotos, 
+  isSyncing,
+  spreadsheetId,
+  weddingName,
+  googleToken,
+  driveFolder
+}: PhotoShotListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -228,6 +250,125 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
     const recipientEmail = photoVendor?.emailAddress || '';
 
     window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+  };
+
+  // Guest Upload Setup State
+  const [isUploadSetupOpen, setIsUploadSetupOpen] = useState<boolean>(false);
+  const [isDrivePickerOpen, setIsDrivePickerOpen] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [expirationDays, setExpirationDays] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const savedExp = localStorage.getItem('s2v_guest_upload_expiration');
+      if (savedExp !== null && !isNaN(Number(savedExp))) return Number(savedExp);
+    }
+    return 90;
+  });
+
+  const [selectedFolder, setSelectedFolder] = useState<SelectedFolder>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('s2v_guest_upload_folder');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    const defaultPath = driveFolder
+      ? `${driveFolder} / Guest Uploads`
+      : 'My Drive / Wedding Planning / Guest Uploads';
+    return {
+      name: 'Guest Uploads',
+      path: defaultPath,
+    };
+  });
+
+  const effectiveSpreadsheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || 'sheet2vow-master-wedding' : 'sheet2vow-master-wedding');
+  const effectiveWeddingName = weddingName || (typeof window !== 'undefined' ? localStorage.getItem('s2v_wedding_name') || 'Our Wedding' : 'Our Wedding');
+
+  const guestUploadToken = useMemo(() => {
+    return generateShareToken({
+      spreadsheetId: effectiveSpreadsheetId,
+      scope: 'guest_upload',
+      weddingName: effectiveWeddingName,
+      expiresInDays: expirationDays,
+      folderId: selectedFolder.id,
+      folderName: selectedFolder.name,
+      folderPath: selectedFolder.path,
+    });
+  }, [effectiveSpreadsheetId, effectiveWeddingName, expirationDays, selectedFolder]);
+
+  const guestUploadUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/upload/${guestUploadToken}`
+    : `/upload/${guestUploadToken}`;
+
+  const handleCopyGuestUploadUrl = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(guestUploadUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = guestUploadUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+
+      // Register link in localStorage registry
+      const newRecord: ShareLinkRecord = {
+        id: `SL_GU_${Date.now().toString().slice(-4)}`,
+        scope: 'guest_upload',
+        label: `Guest Upload Portal (${selectedFolder.name || 'Guest Uploads'})`,
+        token: guestUploadToken,
+        shareUrl: guestUploadUrl,
+        createdAt: new Date().toISOString(),
+        exp: expirationDays > 0 ? Date.now() + expirationDays * 24 * 60 * 60 * 1000 : 0,
+        shareVersion: 1,
+        folderId: selectedFolder.id,
+        folderName: selectedFolder.name,
+        folderPath: selectedFolder.path,
+      };
+      const existing = localStorage.getItem('s2v_generated_share_links');
+      let list: ShareLinkRecord[] = existing ? JSON.parse(existing) : [];
+      list = [newRecord, ...list.filter(l => l.token !== guestUploadToken)];
+      localStorage.setItem('s2v_generated_share_links', JSON.stringify(list));
+    } catch (err) {
+      console.error('Failed to copy guest upload link:', err);
+    }
+  };
+
+  const handleExpirationChange = (days: number) => {
+    setExpirationDays(days);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_guest_upload_expiration', String(days));
+    }
+  };
+
+  const handleFolderSelect = (folder: SelectedFolder) => {
+    const updated: SelectedFolder = {
+      id: folder.id,
+      name: folder.name,
+      path: folder.path,
+    };
+    setSelectedFolder(updated);
+    setIsDrivePickerOpen(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_guest_upload_folder', JSON.stringify(updated));
+    }
+  };
+
+  const getFormattedExpirationText = (days: number): string => {
+    if (days <= 0) return 'Never expires (Permanent access)';
+    const expiryDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    return `Valid for ${days} days (Expires ${expiryDate.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })})`;
   };
 
   return (
@@ -432,6 +573,22 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
             title="Email shot list to Photographer"
           >
             <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
+          </button>
+
+          <button 
+            type="button"
+            style={{
+              ...styles.addButton,
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1.5px solid var(--color-gold, #cda250)',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }} 
+            onClick={() => setIsUploadSetupOpen(true)}
+            title="Configure guest photo upload portal, target Google Drive folder, & link expiration"
+          >
+            <UploadCloud size={16} style={{ marginRight: '6px', color: 'var(--color-gold, #cda250)' }} /> GUEST UPLOADS
           </button>
 
           <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
@@ -818,6 +975,386 @@ export default function PhotoShotListManager({ photos, vendors = [], onUpdatePho
           </div>
         </div>
       )}
+      {/* GUEST PHOTO UPLOAD SETUP MODAL */}
+      {isUploadSetupOpen && (
+        <div 
+          className="photo-modal-overlay" 
+          style={styles.modalOverlay} 
+          onClick={() => setIsUploadSetupOpen(false)}
+        >
+          <div 
+            className="photo-modal-content photo-setup-modal-content" 
+            style={{
+              ...styles.modalContent,
+              maxWidth: '580px',
+              maxHeight: '92vh',
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div 
+              style={{
+                ...styles.modalHeader,
+                backgroundColor: 'var(--color-surface)',
+                borderBottom: '1px solid var(--color-muted)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <div 
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--color-gold, #cda250)',
+                    flexShrink: 0
+                  }}
+                >
+                  <UploadCloud size={20} />
+                </div>
+                <div>
+                  <h3 style={{ ...styles.modalTitle, color: 'var(--color-text)', fontSize: '1rem' }}>
+                    GUEST PHOTO UPLOAD SETUP
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                    Direct-to-Drive Wedding Guest Gallery & QR Portal
+                  </p>
+                </div>
+              </div>
+              <button 
+                style={{ ...styles.closeBtn, color: 'var(--color-muted)' }} 
+                onClick={() => setIsUploadSetupOpen(false)}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div style={styles.modalBodyScroll}>
+              {/* Feature Intro Banner */}
+              <div 
+                style={{
+                  backgroundColor: 'var(--color-bg)',
+                  border: '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem',
+                }}
+              >
+                <Sparkles size={18} style={{ color: 'var(--color-gold, #cda250)', flexShrink: 0, marginTop: '2px' }} />
+                <p style={{ margin: 0, fontSize: '0.78rem', lineHeight: '1.4', color: 'var(--color-text)' }}>
+                  Give guests instant access to upload pictures & videos from their phones directly to your private Google Drive folder — no app install or account required!
+                </p>
+              </div>
+
+              {/* 1. Destination Folder Selector */}
+              <div style={styles.formGroup}>
+                <label style={styles.fieldLabel}>1. GOOGLE DRIVE DESTINATION FOLDER</label>
+                <div 
+                  style={{
+                    backgroundColor: 'var(--color-bg)',
+                    border: '1.5px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem 1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0, flex: '1 1 200px' }}>
+                    <HardDrive size={20} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {selectedFolder.name || 'Guest Uploads'}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {selectedFolder.path}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsDrivePickerOpen(true)}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      backgroundColor: 'var(--color-surface)',
+                      color: 'var(--color-text)',
+                      border: '1px solid var(--color-muted)',
+                      borderRadius: 'var(--border-radius-sm)',
+                      padding: '0.4rem 0.75rem',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                    title="Select a different Google Drive folder or create a new one"
+                  >
+                    <FolderOpen size={14} style={{ color: 'var(--color-primary)' }} /> CHANGE FOLDER
+                  </button>
+                </div>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                  Photos and videos submitted by guests will be saved into this Drive folder.
+                </span>
+              </div>
+
+              {/* 2. Expiration Duration Selector */}
+              <div style={styles.formGroup}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem' }}>
+                  <label style={styles.fieldLabel}>2. LINK EXPIRATION DURATION</label>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-gold, #cda250)', fontWeight: 600 }}>
+                    {getFormattedExpirationText(expirationDays)}
+                  </span>
+                </div>
+
+                <div 
+                  className="photo-duration-grid"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {[
+                    { label: '7 Days', days: 7 },
+                    { label: '14 Days', days: 14 },
+                    { label: '30 Days', days: 30 },
+                    { label: '60 Days', days: 60 },
+                    { label: '90 Days', days: 90, recommended: true },
+                    { label: '180 Days', days: 180 },
+                    { label: '1 Year', days: 365 },
+                    { label: 'Permanent', days: 0 },
+                  ].map(opt => {
+                    const isSelected = expirationDays === opt.days;
+                    return (
+                      <button
+                        key={opt.days}
+                        type="button"
+                        onClick={() => handleExpirationChange(opt.days)}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.72rem',
+                          fontWeight: isSelected ? 700 : 500,
+                          padding: '0.5rem 0.25rem',
+                          textAlign: 'center',
+                          borderRadius: 'var(--border-radius-sm)',
+                          backgroundColor: isSelected ? 'var(--color-btn-selected-bg)' : 'var(--color-bg)',
+                          color: isSelected ? 'var(--color-btn-selected-text)' : 'var(--color-text)',
+                          border: isSelected ? '1.5px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                          cursor: 'pointer',
+                          transition: 'var(--transition-fast)',
+                          position: 'relative',
+                        }}
+                      >
+                        {opt.label}
+                        {opt.recommended && !isSelected && (
+                          <span 
+                            style={{
+                              display: 'block',
+                              fontSize: '0.55rem',
+                              color: 'var(--color-gold, #cda250)',
+                              fontWeight: 700,
+                              marginTop: '2px',
+                            }}
+                          >
+                            RECOMMENDED
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                  Once expired, submissions are automatically closed to prevent unwanted uploads.
+                </span>
+              </div>
+
+              {/* 3. Live Generated Guest Upload Link */}
+              <div style={styles.formGroup}>
+                <label style={styles.fieldLabel}>3. GUEST UPLOAD WEB LINK</label>
+                <div 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: 'var(--color-bg)',
+                    border: '1.5px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.35rem 0.5rem',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <input
+                    type="text"
+                    readOnly
+                    value={guestUploadUrl}
+                    style={{
+                      flex: 1,
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.75rem',
+                      color: 'var(--color-text)',
+                      outline: 'none',
+                      userSelect: 'all',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyGuestUploadUrl}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      backgroundColor: copiedLink ? 'var(--color-green)' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 'var(--border-radius-sm)',
+                      padding: '0.45rem 0.75rem',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      flexShrink: 0,
+                      transition: 'var(--transition-fast)',
+                    }}
+                  >
+                    {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+                    {copiedLink ? 'COPIED!' : 'COPY'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open(guestUploadUrl, '_blank')}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid var(--color-muted)',
+                      borderRadius: 'var(--border-radius-sm)',
+                      padding: '0.4rem 0.55rem',
+                      cursor: 'pointer',
+                      color: 'var(--color-text)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                    title="Open live guest portal in a new tab"
+                  >
+                    <ExternalLink size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Instant QR Code for Table Displays */}
+              <div style={styles.formGroup}>
+                <label style={styles.fieldLabel}>4. INSTANT QR CODE (PRINT ON PLACE CARDS & TABLES)</label>
+                <div 
+                  style={{
+                    backgroundColor: 'var(--color-bg)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.875rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div 
+                    style={{
+                      backgroundColor: '#ffffff',
+                      padding: '6px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&format=png&data=${encodeURIComponent(guestUploadUrl)}`} 
+                      alt="Guest Upload QR Code"
+                      width={120}
+                      height={120}
+                      style={{ display: 'block', borderRadius: '4px' }}
+                    />
+                  </div>
+
+                  <div style={{ flex: '1 1 200px' }}>
+                    <h4 style={{ margin: '0 0 0.35rem 0', fontFamily: 'var(--font-serif)', fontSize: '0.9rem', color: 'var(--color-text)' }}>
+                      Scan to Upload Photos
+                    </h4>
+                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.75rem', color: 'var(--color-muted)', lineHeight: '1.4' }}>
+                      Guests point their phone camera at this QR code to open your upload portal instantly.
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <a
+                        href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&format=png&data=${encodeURIComponent(guestUploadUrl)}`}
+                        download="Wedding_Guest_Photo_Upload_QR.png"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          backgroundColor: 'var(--color-surface)',
+                          color: 'var(--color-text)',
+                          border: '1px solid var(--color-muted)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          padding: '0.35rem 0.65rem',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <QrCode size={13} style={{ color: 'var(--color-primary)' }} /> DOWNLOAD HI-RES QR
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={styles.formActions}>
+              <button 
+                type="button" 
+                style={{
+                  ...styles.saveBtn,
+                  backgroundColor: 'var(--color-btn-selected-bg)',
+                  color: 'var(--color-btn-selected-text)'
+                }} 
+                onClick={() => setIsUploadSetupOpen(false)}
+              >
+                DONE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Google Drive Picker Modal Integration */}
+      {isDrivePickerOpen && (
+        <GoogleDrivePickerModal
+          isOpen={isDrivePickerOpen}
+          accessToken={googleToken}
+          initialPath={selectedFolder.path}
+          onClose={() => setIsDrivePickerOpen(false)}
+          onSelectFolder={handleFolderSelect}
+        />
+      )}
+
       {/* Mobile Floating Action Button (FAB) */}
       <MobileFAB onClick={startAddShot} label="Add Photo Shot" />
     </div>

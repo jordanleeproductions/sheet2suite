@@ -2691,6 +2691,10 @@ export default function Sheet2VowDashboard() {
                   vendors={weddingData.vendors || []}
                   onUpdatePhotos={(data: PhotoShot[]) => syncUpdate('photos', data)}
                   isSyncing={isSyncing}
+                  spreadsheetId={spreadsheetId}
+                  weddingName={weddingName}
+                  googleToken={googleToken}
+                  driveFolder={driveFolder}
                 />
               )}
 
