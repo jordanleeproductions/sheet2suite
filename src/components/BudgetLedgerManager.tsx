@@ -308,13 +308,15 @@ export default function BudgetLedgerManager({
     };
   });
 
-  // Active or Alert Categories (with expenses, budget caps, or over-budget flag)
+  // Active Categories with an allocated budget (> $0) or active expenses (Hides zero-dollar budgets from UI)
   const activeOrAlertStats = categoryStats.filter(
-    stat => stat.actual > 0 || stat.estimated > 0 || stat.isOver || stat.expenseCount > 0 || stat.budgetItemCount > 0
+    stat => stat.estimated > 0 || stat.actual > 0 || stat.expenseCount > 0
   );
 
   // Resolved active category selection for Desktop Master-Detail split-view
-  const effectiveSelectedCategoryId = selectedCategoryId || (activeOrAlertStats[0]?.category) || (allCategories[0] || 'Venue & Catering');
+  const effectiveSelectedCategoryId = selectedCategoryId && activeOrAlertStats.some(s => s.category.toLowerCase() === selectedCategoryId.toLowerCase())
+    ? selectedCategoryId
+    : (activeOrAlertStats[0]?.category || '');
 
   const selectedCatStat = categoryStats.find(c => c.category.toLowerCase() === effectiveSelectedCategoryId.toLowerCase()) || {
     category: effectiveSelectedCategoryId,
@@ -334,17 +336,19 @@ export default function BudgetLedgerManager({
   const selectedCatExpensesTotal = selectedCatExpenses.reduce((sum, e) => sum + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0);
   const remainingCushion = selectedCatStat.estimated - selectedCatExpensesTotal;
 
-  // Master Category List filtered and sorted (active first, then matching search)
+  // Master Category List: Filtered strictly to budgeted or active categories (hides zero dollar budgets from UI)
   const displayedMasterStats = (() => {
-    let list = categoryStats;
+    let list = categoryStats.filter(c => c.estimated > 0 || c.actual > 0 || c.expenseCount > 0);
     if (masterCategorySearch.trim()) {
       list = list.filter(c => c.category.toLowerCase().includes(masterCategorySearch.toLowerCase().trim()));
     }
     return [...list].sort((a, b) => {
-      const aActive = (a.actual > 0 || a.estimated > 0 || a.expenseCount > 0 || a.budgetItemCount > 0);
-      const bActive = (b.actual > 0 || b.estimated > 0 || b.expenseCount > 0 || b.budgetItemCount > 0);
-      if (aActive && !bActive) return -1;
-      if (!aActive && bActive) return 1;
+      if (a.isOver && !b.isOver) return -1;
+      if (!a.isOver && b.isOver) return 1;
+      const aHasOutlay = a.actual > 0;
+      const bHasOutlay = b.actual > 0;
+      if (aHasOutlay && !bHasOutlay) return -1;
+      if (!aHasOutlay && bHasOutlay) return 1;
       return a.category.localeCompare(b.category);
     });
   })();
@@ -359,12 +363,12 @@ export default function BudgetLedgerManager({
     );
   });
 
-  // Mobile (< lg) Category List filtered and sorted
+  // Mobile (< lg) Category List: Filtered strictly to budgeted or active categories (hides zero dollar budgets from UI)
   const displayedMobileStats = (() => {
-    let list = categoryStats;
+    let list = categoryStats.filter(stat => stat.estimated > 0 || stat.actual > 0 || stat.expenseCount > 0);
 
     if (mobileFilterTab === 'active') {
-      list = list.filter(stat => stat.actual > 0 || stat.estimated > 0 || stat.expenseCount > 0);
+      list = list.filter(stat => stat.actual > 0 || stat.expenseCount > 0);
     } else if (mobileFilterTab === 'alerts') {
       list = list.filter(stat => stat.isOver);
     }
@@ -377,10 +381,10 @@ export default function BudgetLedgerManager({
     return [...list].sort((a, b) => {
       if (a.isOver && !b.isOver) return -1;
       if (!a.isOver && b.isOver) return 1;
-      const aActive = (a.actual > 0 || a.estimated > 0 || a.expenseCount > 0);
-      const bActive = (b.actual > 0 || b.estimated > 0 || b.expenseCount > 0);
-      if (aActive && !bActive) return -1;
-      if (!aActive && bActive) return 1;
+      const aHasOutlay = a.actual > 0;
+      const bHasOutlay = b.actual > 0;
+      if (aHasOutlay && !bHasOutlay) return -1;
+      if (!aHasOutlay && bHasOutlay) return 1;
       return a.category.localeCompare(b.category);
     });
   })();
@@ -388,17 +392,17 @@ export default function BudgetLedgerManager({
   // Mobile Bottom Sheet Active Category Data
   const bottomSheetStat = activeBottomSheetCategory
     ? (categoryStats.find(c => c.category.toLowerCase() === activeBottomSheetCategory.toLowerCase()) || {
-        category: activeBottomSheetCategory,
-        estimated: 0,
-        actual: 0,
-        paid: 0,
-        percent: 0,
-        isOver: false,
-        overAmount: 0,
-        expenseCount: 0,
-        budgetItemCount: 0,
-        budgetItems: [],
-      })
+      category: activeBottomSheetCategory,
+      estimated: 0,
+      actual: 0,
+      paid: 0,
+      percent: 0,
+      isOver: false,
+      overAmount: 0,
+      expenseCount: 0,
+      budgetItemCount: 0,
+      budgetItems: [],
+    })
     : null;
 
   const bottomSheetExpenses = activeBottomSheetCategory
@@ -414,15 +418,15 @@ export default function BudgetLedgerManager({
     return (e.description || '').toLowerCase().includes(q) || (e.notes || '').toLowerCase().includes(q);
   });
 
-  // Budget Item Actions
+  // Budget Item Actions (Simple Category Addition)
   const startAddBudget = (presetCategory?: string) => {
     setFormState({
-      category: presetCategory || effectiveSelectedCategoryId || '',
+      category: presetCategory || '',
       vendorName: '',
       estimatedCost: '' as any,
-      actualCost: '' as any,
-      amountPaid: '' as any,
-      dueDate: weddingDate || '',
+      actualCost: 0,
+      amountPaid: 0,
+      dueDate: '',
       paymentStatus: 'Pending',
     });
     setIsAdding(true);
@@ -430,7 +434,10 @@ export default function BudgetLedgerManager({
   };
 
   const startEditBudget = (item: BudgetItem) => {
-    setFormState(item);
+    setFormState({
+      ...item,
+      estimatedCost: item.estimatedCost,
+    });
     setEditingItem(item);
     setIsAdding(false);
   };
@@ -454,39 +461,62 @@ export default function BudgetLedgerManager({
     if (e) e.preventDefault();
     if (isSyncing) return;
 
-    if (!formState.category || !formState.vendorName) {
-      alert('Please provide Category and Line Item / Vendor Name');
+    const categoryName = (formState.category || '').trim();
+    const budgetAmount = Number(formState.estimatedCost);
+
+    if (!categoryName) {
+      alert('Please select or enter a Budget Category');
+      return;
+    }
+
+    if (isNaN(budgetAmount) || budgetAmount <= 0) {
+      alert('Please enter a budget allocation amount greater than $0');
       return;
     }
 
     let updatedBudget: BudgetItem[];
 
     if (editingItem) {
-      updatedBudget = budget.map(i => i.itemId === editingItem.itemId ? { ...i, ...formState } as BudgetItem : i);
+      updatedBudget = budget.map(i => i.itemId === editingItem.itemId ? {
+        ...i,
+        category: categoryName,
+        vendorName: i.vendorName || `${categoryName} Budget`,
+        estimatedCost: budgetAmount,
+      } as BudgetItem : i);
     } else {
-      const newItem: BudgetItem = {
-        itemId: `item-${Date.now()}`,
-        category: formState.category || 'General',
-        vendorName: formState.vendorName || 'New Budget Item',
-        estimatedCost: Number(formState.estimatedCost) || 0,
-        actualCost: Number(formState.actualCost) || 0,
-        amountPaid: Number(formState.amountPaid) || 0,
-        dueDate: formState.dueDate || weddingDate || '',
-        paymentStatus: formState.paymentStatus || 'Pending',
-      };
-      updatedBudget = [newItem, ...budget];
+      // If a budget item for this category already exists, update its budget allocation
+      const existingItem = budget.find(i => (i.category || '').toLowerCase().trim() === categoryName.toLowerCase());
+      if (existingItem) {
+        updatedBudget = budget.map(i => i.itemId === existingItem.itemId ? {
+          ...i,
+          estimatedCost: budgetAmount,
+        } : i);
+      } else {
+        const newItem: BudgetItem = {
+          itemId: `item-${Date.now()}`,
+          category: categoryName,
+          vendorName: `${categoryName} Budget`,
+          estimatedCost: budgetAmount,
+          actualCost: 0,
+          amountPaid: 0,
+          dueDate: '',
+          paymentStatus: 'Pending',
+        };
+        updatedBudget = [newItem, ...budget];
+      }
     }
 
+    setSelectedCategoryId(categoryName);
     await onUpdate(updatedBudget);
 
     if (continueAdding) {
       setFormState({
-        category: formState.category || '',
+        category: '',
         vendorName: '',
         estimatedCost: '' as any,
-        actualCost: '' as any,
-        amountPaid: '' as any,
-        dueDate: weddingDate || '',
+        actualCost: 0,
+        amountPaid: 0,
+        dueDate: '',
         paymentStatus: 'Pending',
       });
       setIsAdding(true);
@@ -507,7 +537,7 @@ export default function BudgetLedgerManager({
   const startAddExpense = (presetCategory?: string) => {
     setExpenseFormState({
       description: '',
-      category: presetCategory || effectiveSelectedCategoryId || allCategories[0] || 'General',
+      category: presetCategory || effectiveSelectedCategoryId || activeOrAlertStats[0]?.category || allCategories[0] || 'General',
       amount: '' as any,
       actualCost: 0,
       amountPaid: 0,
@@ -548,25 +578,6 @@ export default function BudgetLedgerManager({
     if (!expenseFormState.description || !targetCategory) {
       alert('Please provide Description and Category');
       return;
-    }
-
-    // Auto-create category in budget tracker if it doesn't exist yet
-    const categoryExistsInBudget = budget.some(
-      b => (b.category || '').toLowerCase().trim() === targetCategory.toLowerCase()
-    );
-
-    if (!categoryExistsInBudget) {
-      const newBudgetItem: BudgetItem = {
-        itemId: `item-${Date.now()}`,
-        category: targetCategory,
-        vendorName: `${targetCategory} Overview`,
-        estimatedCost: 0,
-        actualCost: numAmount,
-        amountPaid: numAmount,
-        dueDate: '',
-        paymentStatus: 'Pending',
-      };
-      await onUpdate([newBudgetItem, ...budget]);
     }
 
     let updatedExpenses: ExpenseItem[];
@@ -672,23 +683,19 @@ export default function BudgetLedgerManager({
           .budget-header-container {
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 0.75rem !important;
+            gap: 0.5rem !important;
           }
-          .budget-header-actions {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            gap: 0.625rem !important;
-            width: 100% !important;
-          }
-          .budget-view-toggle button {
-            padding: 0.45rem 0.75rem !important;
-            min-width: 42px !important;
-            min-height: 38px !important;
+          .budget-header-actions,
+          .budget-view-toggle {
+            display: none !important;
           }
         }
         @media (max-width: 768px) {
           .budget-add-btn {
+            display: none !important;
+          }
+          .budget-header-actions,
+          .budget-view-toggle {
             display: none !important;
           }
         }
@@ -726,6 +733,10 @@ export default function BudgetLedgerManager({
 
         /* Interactive Drill-Down Mobile View (< lg / 1023px) */
         @media (max-width: 1023px) {
+          .budget-header-actions,
+          .budget-view-toggle {
+            display: none !important;
+          }
           .budget-desktop-split-view {
             display: none !important;
           }
@@ -824,7 +835,7 @@ export default function BudgetLedgerManager({
           <h2 style={styles.title}>Wedding Financials</h2>
           <p style={styles.subtitle}>Track estimated caps, log individual purchases & monitor real-time payments</p>
         </div>
-        <div className="budget-header-actions">
+        <div className="budget-header-actions hidden lg:flex">
           <div className="budget-view-toggle">
             <button
               style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-dark)' : 'var(--color-text)' }}
@@ -971,7 +982,7 @@ export default function BudgetLedgerManager({
         </div>
 
         {/* Category Breakdown: Responsive Desktop Pills vs Mobile Chips */}
-        {categoryStats.length > 0 && (
+        {activeOrAlertStats.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
             {/* Desktop View: Compact Horizontal Pill/Chip List of Active or Alert Categories */}
             <div className="budget-desktop-pills-bar" style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
@@ -1027,11 +1038,10 @@ export default function BudgetLedgerManager({
                           color: isSelected
                             ? 'var(--color-on-primary, #ffffff)'
                             : (stat.isOver ? '#b91c1c' : 'var(--color-text)'),
-                          border: `1px solid ${
-                            isSelected
-                              ? 'var(--color-primary)'
-                              : (stat.isOver ? '#fca5a5' : 'var(--color-border)')
-                          }`,
+                          border: `1px solid ${isSelected
+                            ? 'var(--color-primary)'
+                            : (stat.isOver ? '#fca5a5' : 'var(--color-border)')
+                            }`,
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
                           boxShadow: isSelected ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
@@ -1092,7 +1102,7 @@ export default function BudgetLedgerManager({
               </div>
 
               <div style={styles.categoryChipsGrid}>
-                {categoryStats.map(stat => {
+                {activeOrAlertStats.map(stat => {
                   const isSelected = selectedCategories.some(c => c.toLowerCase() === stat.category.toLowerCase());
                   return (
                     <div
@@ -1144,17 +1154,17 @@ export default function BudgetLedgerManager({
                   📊 CATEGORY BUDGETS
                 </h3>
                 <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {activeOrAlertStats.length} active allocation{activeOrAlertStats.length === 1 ? '' : 's'}
+                  {displayedMasterStats.length} budget categor{displayedMasterStats.length === 1 ? 'y' : 'ies'}
                 </span>
               </div>
               <button
                 type="button"
                 style={{ ...styles.addButton, fontSize: '0.7rem', padding: '0.35rem 0.65rem' }}
-                onClick={() => startAddBudget(effectiveSelectedCategoryId)}
+                onClick={() => startAddBudget()}
                 disabled={isSyncing}
                 title="Add New Target Budget Cap"
               >
-                <Plus size={13} style={{ marginRight: '0.2rem' }} /> NEW BUDGET
+                <Plus size={13} style={{ marginRight: '0.2rem' }} /> + BUDGET CATEGORY
               </button>
             </div>
 
@@ -1181,8 +1191,31 @@ export default function BudgetLedgerManager({
             {/* Master Category List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
               {displayedMasterStats.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--color-muted)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-                  No categories found matching "{masterCategorySearch}"
+                <div style={{
+                  textAlign: 'center',
+                  padding: '2.5rem 1rem',
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  border: '1px dashed var(--color-border)',
+                  borderRadius: 'var(--border-radius-md)',
+                  color: 'var(--color-muted)',
+                  fontSize: '0.8rem',
+                  fontFamily: 'var(--font-mono)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <ShoppingBag size={28} style={{ opacity: 0.4, color: 'var(--color-primary)' }} />
+                  <span>{masterCategorySearch.trim() ? `No categories found matching "${masterCategorySearch}"` : 'No budget categories created yet.'}</span>
+                  {!masterCategorySearch.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => startAddBudget()}
+                      style={{ ...styles.addButton, fontSize: '0.725rem', padding: '0.35rem 0.65rem' }}
+                    >
+                      <Plus size={13} style={{ marginRight: '0.2rem' }} /> CREATE FIRST BUDGET
+                    </button>
+                  )}
                 </div>
               ) : (
                 displayedMasterStats.map(stat => {
@@ -1311,141 +1344,210 @@ export default function BudgetLedgerManager({
 
         {/* Right Column: Detail Ledger */}
         <div className="budget-detail-ledger lg:col-span-7">
-          {/* 1. Dynamic Category Snapshot Header */}
-          <div style={{
-            backgroundColor: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--border-radius-lg, 1rem)',
-            padding: '1.25rem 1.5rem',
-            boxShadow: 'var(--box-shadow-subtle)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.85rem',
-          }}>
-            {/* Snapshot Top Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.08em' }}>
-                    CATEGORY SNAPSHOT
-                  </span>
-                  {selectedCatStat.isOver && (
-                    <span style={styles.overBadgeMini}>
-                      OVER BUDGET (+{formatCurrency(selectedCatStat.overAmount, currency)})
-                    </span>
-                  )}
-                </div>
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', fontWeight: 700, color: 'var(--color-primary)', margin: '0.1rem 0 0' }}>
-                  {effectiveSelectedCategoryId}
-                </h3>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button
-                  type="button"
-                  onClick={() => startAddExpense(effectiveSelectedCategoryId)}
-                  style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
-                  disabled={isSyncing}
-                >
-                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> + ADD EXPENSE
-                </button>
-              </div>
+          {!effectiveSelectedCategoryId ? (
+            <div style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--border-radius-lg, 1rem)',
+              padding: '3rem 2rem',
+              textAlign: 'center',
+              boxShadow: 'var(--box-shadow-subtle)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem',
+              color: 'var(--color-muted)',
+            }}>
+              <DollarSign size={40} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', margin: 0, color: 'var(--color-text)' }}>
+                No Budget Categories Yet
+              </h3>
+              <p style={{ fontSize: '0.85rem', maxWidth: '420px', margin: 0 }}>
+                Create your first budget category (e.g. Venue, Catering, Photography) to establish spending caps. Itemized receipts and expenses will line up under each category.
+              </p>
+              <button
+                type="button"
+                onClick={() => startAddBudget()}
+                style={styles.addButton}
+              >
+                <Plus size={14} style={{ marginRight: '0.25rem' }} /> + NEW BUDGET CATEGORY
+              </button>
             </div>
-
-            {/* Snapshot 3-Metric Tiles */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-              <div style={styles.snapshotTile}>
-                <span style={styles.snapshotTileLabel}>TARGET ALLOCATION CAP</span>
-                <span style={styles.snapshotTileValue}>{formatCurrency(selectedCatStat.estimated, currency)}</span>
-                <span style={styles.snapshotTileSub}>{selectedCatBudgetItems.length} budget line item{selectedCatBudgetItems.length === 1 ? '' : 's'}</span>
-              </div>
-
-              <div style={styles.snapshotTile}>
-                <span style={styles.snapshotTileLabel}>TOTAL EXPENSES LOGGED</span>
-                <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency)}</span>
-                <span style={styles.snapshotTileSub}>{selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'} recorded</span>
-              </div>
-
-              <div style={styles.snapshotTile}>
-                <span style={styles.snapshotTileLabel}>REMAINING CUSHION</span>
-                <span style={{
-                  ...styles.snapshotTileValue,
-                  color: remainingCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
-                }}>
-                  {formatCurrency(remainingCushion, currency)}
-                </span>
-                <span style={{
-                  ...styles.snapshotTileSub,
-                  color: remainingCushion < 0 ? '#b91c1c' : '#15803d',
-                  fontWeight: 700
-                }}>
-                  {remainingCushion < 0 ? `Over Cap by ${formatCurrency(Math.abs(remainingCushion), currency)}` : 'Cushion Available'}
-                </span>
-              </div>
-            </div>
-
-            {/* Target Cap Breakdown Line Items if present */}
-            {selectedCatBudgetItems.length > 0 && (
+          ) : (
+            <>
+              {/* 1. Dynamic Category Snapshot Header */}
               <div style={{
-                borderTop: '1px dashed var(--color-border)',
-                paddingTop: '0.65rem',
+                backgroundColor: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--border-radius-lg, 1rem)',
+                padding: '1.25rem 1.5rem',
+                boxShadow: 'var(--box-shadow-subtle)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.35rem'
+                gap: '0.85rem',
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
-                    TARGET BUDGET LINE ITEMS ({selectedCatBudgetItems.length})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => startAddBudget(effectiveSelectedCategoryId)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--color-primary)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
-                    }}
-                  >
-                    + ADD BUDGET CAP
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {selectedCatBudgetItems.map(item => (
-                    <div
-                      key={item.itemId}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        backgroundColor: 'var(--color-bg-subtle)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.725rem',
-                        fontFamily: 'var(--font-mono)',
-                      }}
+                {/* Snapshot Top Bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.08em' }}>
+                        CATEGORY SNAPSHOT
+                      </span>
+                      {selectedCatStat.isOver && (
+                        <span style={styles.overBadgeMini}>
+                          OVER BUDGET (+{formatCurrency(selectedCatStat.overAmount, currency)})
+                        </span>
+                      )}
+                    </div>
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', fontWeight: 700, color: 'var(--color-primary)', margin: '0.1rem 0 0' }}>
+                      {effectiveSelectedCategoryId}
+                    </h3>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => startAddExpense(effectiveSelectedCategoryId)}
+                      style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
+                      disabled={isSyncing}
                     >
-                      <span style={{ fontWeight: 600 }}>{item.vendorName}:</span>
-                      <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{formatCurrency(item.estimatedCost, currency)}</span>
+                      <Plus size={14} style={{ marginRight: '0.25rem' }} />ADD EXPENSE
+                    </button>
+                  </div>
+                </div>
+
+                {/* Snapshot 3-Metric Tiles */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                  <div style={styles.snapshotTile}>
+                    <span style={styles.snapshotTileLabel}>TARGET ALLOCATION CAP</span>
+                    <span style={styles.snapshotTileValue}>{formatCurrency(selectedCatStat.estimated, currency)}</span>
+                    <span style={styles.snapshotTileSub}>
+                      {selectedCatBudgetItems.length > 0 ? 'Target Spending Cap' : 'No Cap Allocated'}
+                    </span>
+                  </div>
+
+                  <div style={styles.snapshotTile}>
+                    <span style={styles.snapshotTileLabel}>TOTAL EXPENSES LOGGED</span>
+                    <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency)}</span>
+                    <span style={styles.snapshotTileSub}>{selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'} recorded</span>
+                  </div>
+
+                  <div style={styles.snapshotTile}>
+                    <span style={styles.snapshotTileLabel}>REMAINING CUSHION</span>
+                    <span style={{
+                      ...styles.snapshotTileValue,
+                      color: remainingCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
+                    }}>
+                      {formatCurrency(remainingCushion, currency)}
+                    </span>
+                    <span style={{
+                      ...styles.snapshotTileSub,
+                      color: remainingCushion < 0 ? '#b91c1c' : '#15803d',
+                      fontWeight: 700
+                    }}>
+                      {remainingCushion < 0 ? `Over Cap by ${formatCurrency(Math.abs(remainingCushion), currency)}` : 'Cushion Available'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Target Cap Breakdown Line Items if present */}
+                {selectedCatBudgetItems.length > 0 ? (
+                  <div style={{
+                    borderTop: '1px dashed var(--color-border)',
+                    paddingTop: '0.65rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
+                        BUDGET ALLOCATION CAP
+                      </span>
                       <button
                         type="button"
-                        onClick={() => startEditBudget(item)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '0 2px' }}
-                        title="Edit Budget Item"
+                        onClick={() => startEditBudget(selectedCatBudgetItems[0])}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-primary)',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
                       >
-                        <Edit2 size={11} />
+                        EDIT BUDGET CAP
                       </button>
                     </div>
-                  ))}
-                </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      {selectedCatBudgetItems.map(item => (
+                        <div
+                          key={item.itemId}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            backgroundColor: 'var(--color-bg-subtle)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--border-radius-sm)',
+                            padding: '0.3rem 0.6rem',
+                            fontSize: '0.725rem',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          <span style={{ fontWeight: 600 }}>Allocation:</span>
+                          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{formatCurrency(item.estimatedCost, currency)}</span>
+                          <button
+                            type="button"
+                            onClick={() => startEditBudget(item)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '0 2px' }}
+                            title="Edit Budget Cap"
+                          >
+                            <Edit2 size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setItemToDelete(item)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-red, #ef4444)', padding: '0 2px' }}
+                            title="Delete Budget Category"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    borderTop: '1px dashed var(--color-border)',
+                    paddingTop: '0.65rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)' }}>
+                      No budget cap allocated to this category yet.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => startAddBudget(effectiveSelectedCategoryId)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--color-primary)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.675rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      + SET BUDGET CAP
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
           {/* 2. Itemized Expenses Detail Table */}
           <div style={{
@@ -1510,7 +1612,7 @@ export default function BudgetLedgerManager({
                   onClick={() => startAddExpense(effectiveSelectedCategoryId)}
                   style={{ ...styles.addButton, margin: '0 auto', color: 'var(--color-on-dark)' }}
                 >
-                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> + LOG FIRST EXPENSE
+                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> LOG FIRST EXPENSE
                 </button>
               </div>
             ) : (
@@ -1582,6 +1684,8 @@ export default function BudgetLedgerManager({
               </div>
             )}
           </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -1662,7 +1766,7 @@ export default function BudgetLedgerManager({
                   whiteSpace: 'nowrap',
                 }}
               >
-                ALL ({categoryStats.length})
+                ALL ({categoryStats.filter(s => s.estimated > 0 || s.actual > 0 || s.expenseCount > 0).length})
               </button>
               <button
                 type="button"
@@ -1680,7 +1784,7 @@ export default function BudgetLedgerManager({
                   whiteSpace: 'nowrap',
                 }}
               >
-                ACTIVE ({categoryStats.filter(s => s.actual > 0 || s.estimated > 0 || s.expenseCount > 0).length})
+                ACTIVE ({categoryStats.filter(s => s.actual > 0 || s.expenseCount > 0).length})
               </button>
               {categoryStats.some(s => s.isOver) && (
                 <button
@@ -1719,7 +1823,9 @@ export default function BudgetLedgerManager({
               fontSize: '0.8rem',
               fontFamily: 'var(--font-mono)'
             }}>
-              No categories found matching "{mobileCategorySearch}"
+              {mobileCategorySearch.trim()
+                ? `No categories found matching "${mobileCategorySearch}"`
+                : 'No budget categories created yet. Tap "+ CAP" above to create your first budget category.'}
             </div>
           ) : (
             displayedMobileStats.map(stat => {
@@ -2093,8 +2199,8 @@ export default function BudgetLedgerManager({
                         </span>
                         <span className={
                           status === 'Paid' ? 'badge-green' :
-                          status === 'Overdue' ? 'badge-red' :
-                          'badge-gold'
+                            status === 'Overdue' ? 'badge-red' :
+                              'badge-gold'
                         } style={{ ...styles.statusTag, fontSize: '0.625rem', padding: '0.15rem 0.45rem' }}>
                           {status.toUpperCase()}
                         </span>
@@ -2203,7 +2309,7 @@ export default function BudgetLedgerManager({
           <div style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {editingItem ? 'EDIT BUDGET ITEM' : '+ NEW BUDGET'}
+                {editingItem ? 'EDIT BUDGET CATEGORY' : '+ NEW BUDGET CATEGORY'}
               </h3>
               <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
@@ -2213,7 +2319,7 @@ export default function BudgetLedgerManager({
             <form onSubmit={(e) => saveBudget(e, false)} style={styles.form}>
               <div style={styles.formBody}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>CATEGORY</label>
+                  <label style={styles.label}>BUDGET CATEGORY</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                     <select
                       value={allCategories.includes(formState.category || '') ? formState.category : '__custom__'}
@@ -2226,6 +2332,7 @@ export default function BudgetLedgerManager({
                         }
                       }}
                       style={styles.select}
+                      required
                     >
                       <option value="" disabled>-- Select Wedding Category --</option>
                       {allCategories.map(cat => (
@@ -2249,97 +2356,49 @@ export default function BudgetLedgerManager({
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>LINE ITEM / VENDOR NAME</label>
+                  <label style={styles.label}>TARGET BUDGET ALLOCATION ($)</label>
                   <input
-                    type="text"
-                    value={formState.vendorName || ''}
-                    onChange={(e) => handleFormChange('vendorName', e.target.value)}
-                    style={styles.input}
-                    placeholder="e.g. Grand Plaza Hall, DJ Brennan"
+                    type="number"
+                    value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
+                    onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
+                    onFocus={(e) => {
+                      if (e.target.value === '0') handleFormChange('estimatedCost', '');
+                      e.target.select();
+                    }}
+                    style={{ ...styles.input, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-primary)' }}
+                    min="1"
+                    step="any"
+                    placeholder="e.g. 5000"
                     required
+                    autoFocus={!!formState.category}
                   />
-                </div>
-
-                <div style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>ESTIMATED COST ($)</label>
-                    <input
-                      type="number"
-                      value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
-                      onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleFormChange('estimatedCost', '');
-                        e.target.select();
-                      }}
-                      style={styles.input}
-                      min="0"
-                      step="any"
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>ACTUAL COST ($)</label>
-                    <input
-                      type="number"
-                      value={formState.actualCost !== undefined && formState.actualCost !== null ? formState.actualCost : ''}
-                      onChange={(e) => handleFormChange('actualCost', e.target.value)}
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleFormChange('actualCost', '');
-                        e.target.select();
-                      }}
-                      style={styles.input}
-                      min="0"
-                      step="any"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                <div style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>AMOUNT PAID ($)</label>
-                    <input
-                      type="number"
-                      value={formState.amountPaid !== undefined && formState.amountPaid !== null ? formState.amountPaid : ''}
-                      onChange={(e) => handleFormChange('amountPaid', e.target.value)}
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleFormChange('amountPaid', '');
-                        e.target.select();
-                      }}
-                      style={styles.input}
-                      min="0"
-                      step="any"
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>PAYMENT STATUS</label>
-                    <select
-                      value={formState.paymentStatus || 'Pending'}
-                      onChange={(e) => handleFormChange('paymentStatus', e.target.value)}
-                      style={styles.select}
-                    >
-                      <option value="Pending">PENDING</option>
-                      <option value="Paid">PAID</option>
-                      <option value="Overdue">OVERDUE</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>DUE DATE</label>
-                  <input
-                    type="date"
-                    value={formState.dueDate || ''}
-                    onChange={(e) => handleFormChange('dueDate', e.target.value)}
-                    style={styles.input}
-                  />
+                  <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                    Set the target budget cap for this category. Expense receipts will line up under this category.
+                  </span>
                 </div>
               </div>
 
               <div style={styles.formActions}>
+                {editingItem && (
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.cancelBtn,
+                      backgroundColor: '#fee2e2',
+                      color: '#b91c1c',
+                      border: '1px solid #fca5a5',
+                      marginRight: 'auto',
+                    }}
+                    onClick={() => {
+                      const toDelete = editingItem;
+                      closeModal();
+                      setItemToDelete(toDelete);
+                    }}
+                  >
+                    DELETE CATEGORY
+                  </button>
+                )}
+
                 <button type="button" style={styles.cancelBtn} onClick={closeModal}>
                   CANCEL
                 </button>
@@ -2356,7 +2415,7 @@ export default function BudgetLedgerManager({
                 )}
 
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE BUDGET ITEM'}
+                  {isSyncing ? 'SAVING...' : (editingItem ? 'UPDATE BUDGET CAP' : 'SAVE BUDGET CATEGORY')}
                 </button>
               </div>
             </form>
@@ -2400,7 +2459,7 @@ export default function BudgetLedgerManager({
                       value={
                         allCategories.includes(expenseFormState.category || '')
                           ? expenseFormState.category
-                          : (expenseFormState.category ? '__custom__' : (allCategories[0] || 'General'))
+                          : (expenseFormState.category ? '__custom__' : (activeOrAlertStats[0]?.category || allCategories[0] || 'General'))
                       }
                       onChange={(e) => {
                         const val = e.target.value;
@@ -2412,9 +2471,24 @@ export default function BudgetLedgerManager({
                       }}
                       style={styles.select}
                     >
-                      {allCategories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
+                      {activeOrAlertStats.length > 0 && (
+                        <optgroup label="Active Budget Categories">
+                          {activeOrAlertStats.map(s => (
+                            <option key={s.category} value={s.category}>
+                              {s.category} (${s.estimated.toLocaleString('en-US')} budgeted)
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {allCategories.filter(cat => !activeOrAlertStats.some(s => s.category.toLowerCase() === cat.toLowerCase())).length > 0 && (
+                        <optgroup label="Other Categories (No Active Budget)">
+                          {allCategories
+                            .filter(cat => !activeOrAlertStats.some(s => s.category.toLowerCase() === cat.toLowerCase()))
+                            .map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </optgroup>
+                      )}
                       <option value="__custom__">+ Add New / Custom Category...</option>
                     </select>
 
@@ -2424,7 +2498,7 @@ export default function BudgetLedgerManager({
                         value={expenseFormState.category || ''}
                         onChange={(e) => handleExpenseFormChange('category', e.target.value)}
                         style={styles.input}
-                        placeholder="Type new category name (will auto-add to Budget Tracker)..."
+                        placeholder="Type new category name..."
                         required
                         autoFocus
                       />
@@ -2568,7 +2642,7 @@ export default function BudgetLedgerManager({
             color: 'var(--color-primary, #0f172a)',
           },
           {
-            label: '+ New Budget Item',
+            label: '+ New Budget Category',
             onClick: startAddBudget,
             icon: Plus,
             color: 'var(--color-surface, #ffffff)',

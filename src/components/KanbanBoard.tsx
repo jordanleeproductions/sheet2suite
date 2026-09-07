@@ -595,6 +595,8 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         const inProgressCount = filteredTasks.filter(t => t.kanbanStage === 'In Progress').length;
         const doneCount = filteredTasks.filter(t => t.kanbanStage === 'Done').length;
         const percentDone = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+        const percentToDo = total > 0 ? Math.round((toDoCount / total) * 100) : 0;
+        const percentInProgress = total > 0 ? Math.round((inProgressCount / total) * 100) : 0;
 
         return (
           <div style={{
@@ -681,7 +683,8 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   title="Click to view To Do stage"
                 >
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>TO DO</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)' }}>{toDoCount} / {total}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)', lineHeight: 1.1 }}>{toDoCount}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-muted)' }}>{percentToDo}%</span>
                 </div>
 
                 <div 
@@ -702,7 +705,8 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   title="Click to view In Progress stage"
                 >
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>IN PROGRESS</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-gold, #f59e0b)' }}>{inProgressCount}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-gold, #f59e0b)', lineHeight: 1.1 }}>{inProgressCount}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-muted)' }}>{percentInProgress}%</span>
                 </div>
 
                 <div 
@@ -723,7 +727,8 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   title="Click to view Completed stage"
                 >
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>COMPLETED</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-green, #10b981)' }}>{doneCount} ({percentDone}%)</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-green, #10b981)', lineHeight: 1.1 }}>{doneCount}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-muted)' }}>{percentDone}%</span>
                 </div>
               </div>
             ) : (

@@ -120,6 +120,12 @@
 - [x] **[TASK-MOBILE-HEADER] Mobile "Add Task" Button Dedicated Row:** Realigned the mobile "Add Task" button onto its own full-width row under the title and description, preventing text compression.
 - [x] **[TASK-AUTO-SUGGEST] Dynamic Task Category & Assignee Autocomplete Suggestions:** Pre-seeds HTML5 `<datalist>` auto-suggestions for task categories and assignees based on standard defaults and active tasks on the board, while supporting freeform user text entry.
 - [x] **[TASK-QUICK-MOVE-STOP-PROPAGATION] 1-Click Status Progression Isolation:** Added event bubbling cancellation (`e.stopPropagation()`) to quick movement forward/backward arrow buttons (`ArrowRight`, `ArrowLeft`) on task cards, allowing instantaneous single-click stage advancement without opening the task edit modal.
+- [x] **[TASK-PROGRESS-CARDS-PERCENTAGE] Consistent Task Stage Progress Card Metrics (`KanbanBoard.tsx`):**
+  - Standardized UI structure across all three progress cards (`TO DO`, `IN PROGRESS`, `COMPLETED`):
+    - Line 1: Uppercase stage title in small muted monospace text (`0.65rem`).
+    - Line 2: Large, bold stage count integer (`1.25rem`, `fontWeight: 800`).
+    - Line 3: Calculated percentage (`{percentToDo}%`, `{percentInProgress}%`, `{percentDone}%`) placed directly below the count in smaller muted text (`0.75rem`, `fontWeight: 600`, `var(--color-muted)`).
+  - Eliminates visual clutter (removed `/ total` and inline `(X%)` parentheses) for a unified, balanced 3-card metric layout.
 
 ---
 
@@ -273,7 +279,7 @@
 - [x] **[FINANCIALS-MASTER-DETAIL-VIEW] Desktop Master-Detail Split-View for Wedding Financials (`BudgetLedgerManager.tsx`):**
   - **Responsive Layout**: On screens `< lg` (<1024px), strictly maintains the stacked view (Budget Tracker cards/table above Expenses table/cards). On desktop (`lg:` breakpoint and up), switches to a 12-column grid (`lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start`).
   - **Master Rail (Left Column - `lg:col-span-5`)**: Scrollable viewport-bounded list (`lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2`) of category budget cards prioritized by active activity (caps, logged expenses, or over-budget alerts) with live search filtering (`FILTER CATEGORIES...`). Features distinct active card selection styling (`2px solid var(--color-primary)`, subtle background highlight, ring shadow, and `ACTIVE` tag). Displays serif category headings, mini utilization progress tracks, CAP / OUTLAY / CUSHION tabular numbers, and item counters. Clicking any card updates `selectedCategoryId`.
-  - **Detail Ledger (Right Column - `lg:col-span-7`)**: Dynamic Category Snapshot header for the selected category showing Target Allocation Cap, Total Expenses Logged, and Remaining Cushion (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to `selectedCategoryId` (with dedicated category search, tabular amounts, dates, and dynamic total footer). Zero-expense categories render clean empty-state guidance with an immediate "+ LOG FIRST EXPENSE" action.
+  - **Detail Ledger (Right Column - `lg:col-span-7`)**: Dynamic Category Snapshot header for the selected category showing Target Allocation Cap, Total Expenses Logged, and Remaining Cushion (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to `selectedCategoryId` (with dedicated category search, tabular amounts, dates, and dynamic total footer). Zero-expense categories render clean empty-state guidance with an immediate "LOG FIRST EXPENSE" action.
   - **Dynamic Recalculation**: Adding, editing, or deleting expenses immediately updates the category card's outlay and cushion on the left rail, the detail snapshot header, and the global top-level budget progress bar.
   - **Desktop Compact Active/Alert Filter Pills**: Replaced the large 20+ item chip cloud on desktop with a single-row horizontal pill list of active or alert categories with over-budget alerts and percentage pills, while preserving the full filter chip grid on mobile.
 - [x] **[FINANCIALS-MOBILE-BOTTOM-SHEET] Mobile Interactive Category List & Sliding Bottom Sheet Drill-Down (`BudgetLedgerManager.tsx`):**
@@ -285,7 +291,20 @@
 - [x] **[NAV-MOBILE-HEADER-FULLWIDTH] Edge-to-Edge Mobile Brand Header (`src/app/vow/page.tsx`, `globals.css`):**
   - **Full-Width Viewport Spanning**: Breakout negative horizontal margins (`margin-left: -1.5rem; margin-right: -1.5rem; width: calc(100% + 3rem);`) and responsive padding (`padding: 0.75rem 1.25rem`) applied to `<header className="app-brand-header">` on mobile screens (`<= 768px`).
   - **Seamless FAB Backdrop Alignment**: Resolves gutter clipping where the white header bar stopped at the 1.5rem page container padding, exposing dark grey backdrop margins on its left and right flanks when opening the mobile FAB speed-dial. The header now spans 100% edge-to-edge across the screen with its primary color underline connecting seamlessly to both viewport edges.
-
+- [x] **[FINANCIALS-ZERO-BUDGET-FILTER] Zero-Dollar Category Budget Suppression (`BudgetLedgerManager.tsx`):**
+  - Automatically filters out categories with a zero-dollar budget cap and no recorded expenses (`estimatedCost <= 0 && actualCost <= 0 && expenseCount === 0`) across both desktop Master Rail and mobile Category lists, eliminating 15+ empty phantom category cards.
+  - Desktop category rail count, mobile quick-filter pill counts, and active category selection fallbacks only consider active budgeted categories.
+  - Category breakdown chip cloud and summary meter pills strictly render active budgeted categories.
+- [x] **[FINANCIALS-SIMPLIFIED-BUDGET-MODAL] Streamlined Budget Category Addition Modal (`BudgetLedgerManager.tsx`):**
+  - Redesigned the "New Budget" dialog into a focused Budget Category Addition Modal: removed `Line Item / Vendor Name`, `Actual Cost`, `Amount Paid`, `Payment Status`, and `Due Date` fields.
+  - Modal strictly collects **Budget Category** (standard wedding category select + custom typing) and **Target Budget Allocation ($)**.
+  - Expense receipts and itemized purchases directly line up under each category.
+  - Added grouped category selectors in the Add Expense modal (`Active Budget Categories` with allocated cap amounts listed first, followed by unbudgeted options).
+  - Maintained 100% backward compatibility with Google Sheets `BUDGET` tab schema by setting sensible defaults (`${categoryName} Budget`, `Pending`, `0` actual/paid).
+  - Added in-modal category deletion and dynamic budget cap editing directly from category snapshot headers.
+- [x] **[FINANCIALS-MOBILE-VIEW-TOGGLE-REMOVAL] Mobile View Mode Toggle Removal (`BudgetLedgerManager.tsx`):**
+  - Removed the legacy List vs. Card view toggle buttons (`.budget-view-toggle`) from the mobile and tablet header (`< 1024px`) via Tailwind `hidden lg:flex` and CSS `@media (max-width: 1023px) { display: none !important; }`.
+  - Cleans up mobile header space, letting the title and subtitle breathe without dead toggle buttons that conflicted with the mobile category card stack and sliding bottom sheet layout.
 
 ---
 ---
