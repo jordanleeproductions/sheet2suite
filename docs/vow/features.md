@@ -88,6 +88,11 @@
 - [x] **[CATERING-2WAY-SYNC] 2-Way Google Sheets Sync for Catering Menu (`CATERING` Tab):** Full bi-directional synchronization between the app and the `CATERING` spreadsheet tab. Automatically links Course Category to `=SETTINGS!$P$2:$P$50`, populates entree choices into the Guest Registry, and retains cross-device menu changes.
 - [x] **[MENU-DELETE-MODAL] In-App Delete Menu Item Confirmation Modal:** Replaced native browser `window.confirm()` popup with a styled, accessible in-app modal featuring item name highlights, descriptive impact details, and responsive action buttons.
 - [x] **[MENU-SEQUENTIAL-ITEM-IDS] Human-Readable Sequential Catalog Code Generation (`M101`, `M102`, ...):** Replaced random machine timestamp IDs (`menu-1725...`) with clean, sequential catalog codes (`M101`, `M102`, `M108`, etc.) matching the master spreadsheet schema contract. Added smart gap-filling for deleted items and visible monospace SKU badges on menu cards for effortless cross-referencing with the `CATERING` tab.
+- [x] **[SYNC-RESILIENT-OPTIONAL-TABS] Resilient Google Sheets Dynamic Tab Querying & Auto-Provisioning (`/api/sync`):**
+  - Updated `GET /api/sync` to only register cell ranges in Google Sheets API `batchGet` for tabs that actually exist in the connected workbook. Prevents fatal `400 Bad Request: Unable to parse range: 'CATERING'!A1:I1000` errors when opening older spreadsheets created before the `CATERING` or other newer tabs existed.
+  - Dynamically initializes missing optional tabs with empty arrays (`catering: []`, `tables: []`) during read sync.
+  - Updated `POST /api/sync` to automatically create missing sheet tabs on the fly via `addSheet` batch updates and safely clear rows starting at row 2 when users add records to an older sheet.
+
 
 ---
 
@@ -271,6 +276,16 @@
   - **Detail Ledger (Right Column - `lg:col-span-7`)**: Dynamic Category Snapshot header for the selected category showing Target Allocation Cap, Total Expenses Logged, and Remaining Cushion (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to `selectedCategoryId` (with dedicated category search, tabular amounts, dates, and dynamic total footer). Zero-expense categories render clean empty-state guidance with an immediate "+ LOG FIRST EXPENSE" action.
   - **Dynamic Recalculation**: Adding, editing, or deleting expenses immediately updates the category card's outlay and cushion on the left rail, the detail snapshot header, and the global top-level budget progress bar.
   - **Desktop Compact Active/Alert Filter Pills**: Replaced the large 20+ item chip cloud on desktop with a single-row horizontal pill list of active or alert categories with over-budget alerts and percentage pills, while preserving the full filter chip grid on mobile.
+- [x] **[FINANCIALS-MOBILE-BOTTOM-SHEET] Mobile Interactive Category List & Sliding Bottom Sheet Drill-Down (`BudgetLedgerManager.tsx`):**
+  - **Mobile Category Explorer (`< lg`)**: Replaced the long dual-stacked layout with a streamlined, 1-column list of high-density category cards. Each card acts as an ergonomic tap target displaying Category Title, Over-budget / utilization percentage badges, mini progress track, tabular CAP vs OUTLAY vs CUSHION numbers, logged expense count, and a chevron navigation cue.
+  - **Instant Search & Quick Filters**: Mobile search input (`SEARCH CATEGORIES...`) paired with quick-filter pills (`ALL`, `ACTIVE`, `⚠️ OVER BUDGET`) to quickly locate categories on mobile devices.
+  - **Animated Sliding Bottom Sheet**: Pure CSS/Tailwind transition drawer sliding up from the bottom (`translate-y-0`) with blurred/dimmed backdrop (`rgba(0, 0, 0, 0.55)`, `backdrop-blur-sm`), centered grab handle pill, and close (`✕`) button.
+  - **Bottom Sheet Category Snapshot & Itemized Expenses**: Header displays 3-metric tiles (Allowance Cap, Total Spent, Remaining Cushion) and baseline target cap pills. Body renders scrollable mobile expense cards (Line 1: description & bold tabular amount; Line 2: purchase date & payment status badge `Paid`/`Partial`/`Pending`; Line 3: notes & inline Edit/Delete triggers).
+  - **Sticky Bottom Action & FAB Coordination**: Persistent bottom button (`+ Log Expense to [Category Name]`) launches the Add Expense modal with category pre-selected. Sticky mobile budget utilization progress meter (`position: sticky; top: 0.5rem; z-index: 30`) remains visible during scroll, and the base floating FAB smoothly coordinates behind the bottom sheet overlay (`z-index: 120`) to eliminate touch interference.
+- [x] **[NAV-MOBILE-HEADER-FULLWIDTH] Edge-to-Edge Mobile Brand Header (`src/app/vow/page.tsx`, `globals.css`):**
+  - **Full-Width Viewport Spanning**: Breakout negative horizontal margins (`margin-left: -1.5rem; margin-right: -1.5rem; width: calc(100% + 3rem);`) and responsive padding (`padding: 0.75rem 1.25rem`) applied to `<header className="app-brand-header">` on mobile screens (`<= 768px`).
+  - **Seamless FAB Backdrop Alignment**: Resolves gutter clipping where the white header bar stopped at the 1.5rem page container padding, exposing dark grey backdrop margins on its left and right flanks when opening the mobile FAB speed-dial. The header now spans 100% edge-to-edge across the screen with its primary color underline connecting seamlessly to both viewport edges.
+
 
 ---
 ---

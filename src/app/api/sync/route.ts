@@ -75,7 +75,7 @@ export async function GET(req: Request) {
     const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
     const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
 
-    const findTitle = (candidates: string[]) => {
+    const findTitle = (candidates: string[]): string | null => {
       // 1. Exact match
       const exact = candidates.find(c => availableTitles.includes(c));
       if (exact) return exact;
@@ -98,10 +98,10 @@ export async function GET(req: Request) {
         if (matched) return matched;
       }
 
-      return candidates[0];
+      return null;
     };
 
-    const settingsTitle = findTitle(['SETTINGS', 'Settings', 'DASHBOARD', 'Dashboard']);
+    const settingsTitle = findTitle(['SETTINGS', 'Settings', 'DASHBOARD', 'Dashboard']) || 'Settings';
     const guestsTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
     const budgetTitle = findTitle(['BUDGET', 'Budget Ledger', 'Budget', 'Budget_Ledger']);
     const expensesTitle = findTitle(['EXPENSES', 'Expenses', 'Expense List']);
@@ -114,34 +114,54 @@ export async function GET(req: Request) {
     const cateringTitle = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
     const tablesTitle = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
     const dashTitle = availableTitles.some(t => t.toLowerCase() === 'dashboard') ? findTitle(['DASHBOARD', 'Dashboard']) : null;
-    const ranges = [
-      `'${settingsTitle}'!A1:B10`,
-      `'${guestsTitle}'!A1:L1000`,
-      `'${budgetTitle}'!A1:H1000`,
-      `'${expensesTitle}'!A1:G1000`,
-      `'${scheduleTitle}'!A1:F1000`,
-      `'${vendorsTitle}'!A1:L1000`,
-      `'${tasksTitle}'!A1:H1000`,
-      `'${photosTitle}'!A1:H1000`,
-      `'${giftsTitle}'!A1:G1000`,
-      `'${musicTitle}'!A1:I1000`,
-      `'${cateringTitle}'!A1:I1000`,
-      `'${tablesTitle}'!A1:F1000`,
-      `'${settingsTitle}'!Z1:Z3`,
-    ];
+
+    // Dynamically register ranges only for sheets that actually exist in availableTitles
+    const rangeIndexMap: Record<string, number> = {};
+    const ranges: string[] = [];
+
+    const registerRange = (key: string, title: string | null, cellRange: string) => {
+      if (title && availableTitles.includes(title)) {
+        rangeIndexMap[key] = ranges.length;
+        ranges.push(`'${title}'!${cellRange}`);
+      }
+    };
+
+    registerRange('settingsTable', settingsTitle, 'A1:B10');
+    registerRange('guests', guestsTitle, 'A1:L1000');
+    registerRange('budget', budgetTitle, 'A1:H1000');
+    registerRange('expenses', expensesTitle, 'A1:G1000');
+    registerRange('schedule', scheduleTitle, 'A1:F1000');
+    registerRange('vendors', vendorsTitle, 'A1:L1000');
+    registerRange('tasks', tasksTitle, 'A1:H1000');
+    registerRange('photos', photosTitle, 'A1:H1000');
+    registerRange('gifts', giftsTitle, 'A1:G1000');
+    registerRange('music', musicTitle, 'A1:I1000');
+    registerRange('catering', cateringTitle, 'A1:I1000');
+    registerRange('tables', tablesTitle, 'A1:F1000');
+    registerRange('settingsZ', settingsTitle, 'Z1:Z3');
     if (dashTitle) {
-      ranges.push(`'${dashTitle}'!B2`);
+      registerRange('dash', dashTitle, 'B2');
     }
 
-    // Fetch all spreadsheet tabs in a single atomic batch get
-    const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
-      spreadsheetId,
-      ranges,
-    });
+    // Fetch all present spreadsheet tabs in a single atomic batch get
+    let valueRanges: any[] = [];
+    if (ranges.length > 0) {
+      const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
+        spreadsheetId,
+        ranges,
+      });
+      valueRanges = batchGetResponse.data.valueRanges || [];
+    }
 
-    const valueRanges = batchGetResponse.data.valueRanges || [];
-    
-    const settingsTableRows = valueRanges[0]?.values || [];
+    const getRows = (key: string): any[][] => {
+      const idx = rangeIndexMap[key];
+      if (idx !== undefined && valueRanges[idx]?.values) {
+        return valueRanges[idx].values;
+      }
+      return [];
+    };
+
+    const settingsTableRows = getRows('settingsTable');
     let weddingName = 'Our Wedding';
     let totalBudget = 30000;
     let weddingDate = '';
@@ -170,28 +190,26 @@ export async function GET(req: Request) {
     }
 
     // Parse legacy Settings!Z1:Z3 if standard table was blank
-    if (valueRanges[12]?.values) {
-      const zRows = valueRanges[12].values;
-      if (zRows && zRows.length > 0) {
-        const z1Val = zRows[0]?.[0];
-        const z2Val = zRows[1]?.[0];
-        const z3Val = zRows[2]?.[0];
+    const zRows = getRows('settingsZ');
+    if (zRows && zRows.length > 0) {
+      const z1Val = zRows[0]?.[0];
+      const z2Val = zRows[1]?.[0];
+      const z3Val = zRows[2]?.[0];
 
-        if (z2Val && !weddingName) weddingName = z2Val;
-        if (z3Val) totalBudget = Number(z3Val) || 30000;
+      if (z2Val && !weddingName) weddingName = z2Val;
+      if (z3Val) totalBudget = Number(z3Val) || 30000;
 
-        if (!z2Val && !z3Val && z1Val) {
-          try {
-            if (z1Val.startsWith('{')) {
-              const parsed = JSON.parse(z1Val);
-              if (parsed.weddingName) weddingName = parsed.weddingName;
-              if (parsed.budget) totalBudget = Number(parsed.budget) || 30000;
-              if (parsed.weddingDate) weddingDate = parsed.weddingDate;
-              if (parsed.location) location = parsed.location;
-              if (parsed.currency) currency = parsed.currency;
-            }
-          } catch (_) {}
-        }
+      if (!z2Val && !z3Val && z1Val) {
+        try {
+          if (z1Val.startsWith('{')) {
+            const parsed = JSON.parse(z1Val);
+            if (parsed.weddingName) weddingName = parsed.weddingName;
+            if (parsed.budget) totalBudget = Number(parsed.budget) || 30000;
+            if (parsed.weddingDate) weddingDate = parsed.weddingDate;
+            if (parsed.location) location = parsed.location;
+            if (parsed.currency) currency = parsed.currency;
+          }
+        } catch (_) {}
       }
     }
 
@@ -199,52 +217,52 @@ export async function GET(req: Request) {
     const isNonEmptyRow = (row: any[]) => row && Array.isArray(row) && row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== '');
 
     // Parse Guest List
-    const guestRows = valueRanges[1]?.values || [];
+    const guestRows = getRows('guests');
     const guestHeaders = guestRows[0] || HEADERS_MAP.guests;
     const guests = guestRows.slice(1).filter(isNonEmptyRow).map(row => guestMapper.fromRow(guestHeaders, row));
 
     // Parse Budget Ledger
-    const budgetRows = valueRanges[2]?.values || [];
+    const budgetRows = getRows('budget');
     const budgetHeaders = budgetRows[0] || HEADERS_MAP.budget;
     const budget = budgetRows.slice(1).filter(isNonEmptyRow).map(row => budgetMapper.fromRow(budgetHeaders, row));
 
     // Parse Expenses
-    const expenseRows = valueRanges[3]?.values || [];
+    const expenseRows = getRows('expenses');
     const expenseHeaders = expenseRows[0] || HEADERS_MAP.expenses;
     const expenses = expenseRows.slice(1).filter(isNonEmptyRow).map(row => expenseMapper.fromRow(expenseHeaders, row));
 
     // Parse Day-Of-Schedule
-    const scheduleRows = valueRanges[4]?.values || [];
+    const scheduleRows = getRows('schedule');
     const scheduleHeaders = scheduleRows[0] || HEADERS_MAP.schedule;
     const schedule = scheduleRows.slice(1).filter(isNonEmptyRow).map(row => scheduleMapper.fromRow(scheduleHeaders, row));
 
     // Parse Vendors
-    const vendorRows = valueRanges[5]?.values || [];
+    const vendorRows = getRows('vendors');
     const vendorHeaders = vendorRows[0] || HEADERS_MAP.vendors;
     const vendors = vendorRows.slice(1).filter(isNonEmptyRow).map(row => vendorMapper.fromRow(vendorHeaders, row)).filter(v => Boolean(v.vendorName && v.vendorName.trim() !== ''));
 
     // Parse To-Do List
-    const taskRows = valueRanges[6]?.values || [];
+    const taskRows = getRows('tasks');
     const taskHeaders = taskRows[0] || HEADERS_MAP.tasks;
     const tasks = taskRows.slice(1).filter(isNonEmptyRow).map(row => taskMapper.fromRow(taskHeaders, row));
 
     // Parse Photos
-    const photoRows = valueRanges[7]?.values || [];
+    const photoRows = getRows('photos');
     const photoHeaders = photoRows[0] || HEADERS_MAP.photos;
     const photos = photoRows.slice(1).filter(isNonEmptyRow).map(row => photoMapper.fromRow(photoHeaders, row));
 
     // Parse Gifts
-    const giftRows = valueRanges[8]?.values || [];
+    const giftRows = getRows('gifts');
     const giftHeaders = giftRows[0] || HEADERS_MAP.gifts;
     const gifts = giftRows.slice(1).filter(isNonEmptyRow).map(row => giftMapper.fromRow(giftHeaders, row));
 
     // Parse Music Playlists
-    const musicRows = valueRanges[9]?.values || [];
+    const musicRows = getRows('music');
     const musicHeaders = musicRows[0] || HEADERS_MAP.music;
     const music = musicRows.slice(1).filter(isNonEmptyRow).map(row => musicMapper.fromRow(musicHeaders, row));
 
     // Parse Catering Menu
-    const cateringRows = valueRanges[10]?.values || [];
+    const cateringRows = getRows('catering');
     const cateringHeaders = cateringRows[0] || HEADERS_MAP.catering;
     const catering = cateringRows.slice(1).filter(isNonEmptyRow).map((row, idx) => {
       const item = cateringMapper.fromRow(cateringHeaders, row);
@@ -255,7 +273,7 @@ export async function GET(req: Request) {
     });
 
     // Parse Tables (filter out blank/empty rows with no Table ID)
-    const tableRows = valueRanges[11]?.values || [];
+    const tableRows = getRows('tables');
     const tableHeaders = tableRows[0] || HEADERS_MAP.tables;
     const tables = tableRows
       .slice(1)
@@ -483,6 +501,7 @@ export async function POST(req: Request) {
       };
 
       let range = '';
+      let targetTitle = '';
       let values: any[][] = [];
       const headers = HEADERS_MAP[sheetType as keyof typeof HEADERS_MAP];
       
@@ -490,80 +509,108 @@ export async function POST(req: Request) {
       values.push(headers);
 
       if (sheetType === 'guests') {
-        const title = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
-        range = `'${title}'!A1:N1000`;
+        targetTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
+        range = `'${targetTitle}'!A1:N1000`;
         (data as Guest[]).forEach(item => {
           values.push(guestMapper.toRow(headers, item));
         });
       } else if (sheetType === 'budget') {
-        const title = findTitle(['BUDGET', 'Budget Ledger', 'Budget', 'Budget_Ledger']);
-        range = `'${title}'!A1:H1000`;
+        targetTitle = findTitle(['BUDGET', 'Budget Ledger', 'Budget', 'Budget_Ledger']);
+        range = `'${targetTitle}'!A1:H1000`;
         (data as BudgetItem[]).forEach(item => {
           values.push(budgetMapper.toRow(headers, item));
         });
       } else if (sheetType === 'expenses') {
-        const title = findTitle(['EXPENSES', 'Expenses', 'Expense List']);
-        range = `'${title}'!A1:G1000`;
+        targetTitle = findTitle(['EXPENSES', 'Expenses', 'Expense List']);
+        range = `'${targetTitle}'!A1:G1000`;
         (data as ExpenseItem[]).forEach(item => {
           values.push(expenseMapper.toRow(headers, item));
         });
       } else if (sheetType === 'schedule') {
-        const title = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);
-        range = `'${title}'!A1:F1000`;
+        targetTitle = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);
+        range = `'${targetTitle}'!A1:F1000`;
         (data as ScheduleEvent[]).forEach(item => {
           values.push(scheduleMapper.toRow(headers, item));
         });
       } else if (sheetType === 'vendors') {
-        const title = findTitle(['VENDORS', 'Vendors', 'Vendor Directory']);
-        range = `'${title}'!A1:L1000`;
+        targetTitle = findTitle(['VENDORS', 'Vendors', 'Vendor Directory']);
+        range = `'${targetTitle}'!A1:L1000`;
         (data as Vendor[]).filter(item => Boolean(item && item.vendorName && item.vendorName.trim() !== '')).forEach(item => {
           values.push(vendorMapper.toRow(headers, item));
         });
       } else if (sheetType === 'tasks') {
-        const title = findTitle(['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'To Do List', 'TASKS', 'Tasks']);
-        range = `'${title}'!A1:H1000`;
+        targetTitle = findTitle(['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'To Do List', 'TASKS', 'Tasks']);
+        range = `'${targetTitle}'!A1:H1000`;
         (data as Task[]).forEach(item => {
           values.push(taskMapper.toRow(headers, item));
         });
       } else if (sheetType === 'photos') {
-        const title = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
-        range = `'${title}'!A1:H1000`;
+        targetTitle = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
+        range = `'${targetTitle}'!A1:H1000`;
         (data as PhotoShot[]).forEach(item => {
           values.push(photoMapper.toRow(headers, item));
         });
       } else if (sheetType === 'gifts') {
-        const title = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry', 'Gift_Registry']);
-        range = `'${title}'!A1:G1000`;
+        targetTitle = findTitle(['GIFT REGISTRY', 'GIFTS', 'Gifts', 'Gift Registry', 'Gift_Registry']);
+        range = `'${targetTitle}'!A1:G1000`;
         (data as GiftItem[]).forEach(item => {
           values.push(giftMapper.toRow(headers, item));
         });
       } else if (sheetType === 'music') {
-        const title = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
-        range = `'${title}'!A1:I1000`;
+        targetTitle = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
+        range = `'${targetTitle}'!A1:I1000`;
         (data as Song[]).forEach(item => {
           values.push(musicMapper.toRow(headers, item));
         });
       } else if (sheetType === 'catering') {
-        const title = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
-        range = `'${title}'!A1:I1000`;
+        targetTitle = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
+        range = `'${targetTitle}'!A1:I1000`;
         (data as MenuItem[]).forEach(item => {
           values.push(cateringMapper.toRow(headers, item));
         });
       } else if (sheetType === 'tables') {
-        const title = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
-        range = `'${title}'!A1:F1000`;
+        targetTitle = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
+        range = `'${targetTitle}'!A1:F1000`;
         const validTables = (data as TableConfig[]).filter(item => Boolean(item && item.tableId && item.tableId.trim() !== ''));
         validTables.forEach(item => {
           values.push(tableMapper.toRow(headers, item));
         });
       }
 
-      // To prevent stale cells if new data is shorter, we clear first
-      const clearRange = range.replace('1', '2'); // e.g. 'Guest List'!A2:K1000
-      await sheetsClient.spreadsheets.values.clear({
-        spreadsheetId,
-        range: clearRange,
-      });
+      // Auto-create sheet tab if missing from spreadsheet
+      if (targetTitle && !availableTitles.some(t => t.toLowerCase() === targetTitle.toLowerCase())) {
+        try {
+          await sheetsClient.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: {
+              requests: [
+                {
+                  addSheet: {
+                    properties: {
+                      title: targetTitle,
+                    }
+                  }
+                }
+              ]
+            }
+          });
+          availableTitles.push(targetTitle);
+        } catch (addErr) {
+          console.warn(`[Sync] Could not auto-create tab ${targetTitle}:`, addErr);
+        }
+      }
+
+      // To prevent stale cells if new data is shorter, we clear row 2 onwards
+      const cellBounds = range.split('!')[1] || 'A1:Z1000';
+      const clearRange = `'${targetTitle}'!${cellBounds.replace(/^A1:/, 'A2:')}`;
+      try {
+        await sheetsClient.spreadsheets.values.clear({
+          spreadsheetId,
+          range: clearRange,
+        });
+      } catch (clearErr) {
+        console.warn(`[Sync] Non-critical clear error on ${clearRange}:`, clearErr);
+      }
 
       const sanitizedValues = CellGuard.sanitizePayload(values);
 

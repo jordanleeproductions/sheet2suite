@@ -1387,6 +1387,7 @@ export default function Sheet2VowDashboard() {
 
       {/* Brand Header */}
       <header
+        className="app-brand-header"
         style={{
           ...styles.appHeader,
           display: 'flex',
@@ -1399,6 +1400,12 @@ export default function Sheet2VowDashboard() {
           paddingTop: '0.75rem',
           paddingBottom: '0.75rem',
           marginTop: isMobile ? '-0.5rem' : 0,
+          marginLeft: isMobile ? '-1.5rem' : undefined,
+          marginRight: isMobile ? '-1.5rem' : undefined,
+          paddingLeft: isMobile ? '1.25rem' : undefined,
+          paddingRight: isMobile ? '1.25rem' : undefined,
+          width: isMobile ? 'calc(100% + 3rem)' : '100%',
+          boxSizing: 'border-box',
           border: 'none',
           borderLeft: 'none',
           borderRight: 'none',
@@ -3269,6 +3276,14 @@ export default function Sheet2VowDashboard() {
         @media (max-width: 768px) {
           .app-viewport-container {
             padding-bottom: 5.5rem !important;
+          }
+          .app-brand-header {
+            margin-left: -1.5rem !important;
+            margin-right: -1.5rem !important;
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+            width: calc(100% + 3rem) !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>
