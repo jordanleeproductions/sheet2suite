@@ -7,8 +7,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { getApps, initializeApp, cert, AppOptions } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getApps, initializeApp, cert, type AppOptions } from 'firebase-admin/app';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 export interface LicenseDocument {
   id: string; // Document ID (licenseKey / orderId)
@@ -57,6 +57,20 @@ export interface UserDocument {
   displayName?: string;
   activeWorkspaces: string[];
   createdAt: string;
+}
+
+export interface GuestUploadRecord {
+  id: string; // Document ID (upload_{timestamp}_{rand})
+  spreadsheetId: string;
+  userEmail?: string;
+  uploaderName: string;
+  caption: string;
+  fileCount: number;
+  files: { id?: string; name: string; webViewLink?: string }[];
+  folderId?: string;
+  folderName?: string;
+  folderPath?: string;
+  uploadedAt: string;
 }
 
 const FIRESTORE_BASE_DIR = path.join(process.cwd(), 'data', 'firestore');
@@ -319,6 +333,48 @@ export const LocalFirestore = {
     } catch (e) {}
 
     return direct;
+  },
+
+  /**
+   * Reads documents in a collection, optionally filtered by field.
+   * Supports Cloud Firestore queries with local file storage scan fallback.
+   */
+  async getDocsAsync<T = any>(collectionName: string, fieldQuery?: { field: string; value: any }): Promise<T[]> {
+    const results: T[] = [];
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        let q: any = cloudDb.collection(collectionName);
+        if (fieldQuery) {
+          q = q.where(fieldQuery.field, '==', fieldQuery.value);
+        }
+        const snap = await q.get();
+        snap.forEach((doc: any) => {
+          results.push(doc.data() as T);
+        });
+        if (results.length > 0) return results;
+      } catch (err: any) {
+        console.warn(`[Cloud Firestore] Query error for ${collectionName}:`, err?.message);
+      }
+    }
+
+    // Local file storage scan fallback
+    try {
+      const dirPath = ensureCollectionDir(collectionName);
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        if (!file.endsWith('.json')) continue;
+        try {
+          const raw = fs.readFileSync(path.join(dirPath, file), 'utf-8');
+          const doc = JSON.parse(raw);
+          if (!fieldQuery || doc[fieldQuery.field] === fieldQuery.value) {
+            results.push(doc as T);
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+
+    return results;
   },
 
   /**

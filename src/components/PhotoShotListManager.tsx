@@ -25,11 +25,16 @@ import {
   Copy,
   Check,
   ExternalLink,
-  QrCode
+  QrCode,
+  Heart,
+  MessageSquare,
+  Image as ImageIcon,
+  RefreshCw
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import GoogleDrivePickerModal, { SelectedFolder } from '@/components/GoogleDrivePickerModal';
 import { generateShareToken, ShareLinkRecord } from '@/lib/share/token';
+import type { GuestUploadRecord } from '@/lib/db/firestoreDb';
 
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
@@ -56,10 +61,21 @@ export default function PhotoShotListManager({
   driveFolder,
   onOpenGoogleAuth,
 }: PhotoShotListManagerProps) {
+  // View Switcher State: 'shotlist' | 'guestbook'
+  const [activeView, setActiveView] = useState<'shotlist' | 'guestbook'>('shotlist');
+
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
+
+  // Guest Uploads State
+  const [guestUploads, setGuestUploads] = useState<GuestUploadRecord[]>([]);
+  const [isLoadingGuestUploads, setIsLoadingGuestUploads] = useState<boolean>(false);
+  const [guestSearchTerm, setGuestSearchTerm] = useState<string>('');
+  const [onlyWithNotes, setOnlyWithNotes] = useState<boolean>(false);
+  const [uploadToDelete, setUploadToDelete] = useState<GuestUploadRecord | null>(null);
+  const [isDeletingUpload, setIsDeletingUpload] = useState<boolean>(false);
 
   // Modals State
   const [isAddingShot, setIsAddingShot] = useState(false);
@@ -392,6 +408,84 @@ export default function PhotoShotListManager({
     })})`;
   };
 
+  // Fetch Guest Upload Records from /api/drive/guest-uploads
+  const fetchGuestUploads = React.useCallback(async () => {
+    setIsLoadingGuestUploads(true);
+    try {
+      const params = new URLSearchParams();
+      if (effectiveSpreadsheetId) params.set('spreadsheetId', effectiveSpreadsheetId);
+      if (effectiveUserEmail) params.set('userEmail', effectiveUserEmail);
+      const res = await fetch(`/api/drive/guest-uploads?${params.toString()}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.uploads)) {
+        setGuestUploads(data.uploads);
+      }
+    } catch (err) {
+      console.warn('[PhotoShotListManager] Could not fetch guest uploads:', err);
+    } finally {
+      setIsLoadingGuestUploads(false);
+    }
+  }, [effectiveSpreadsheetId, effectiveUserEmail]);
+
+  React.useEffect(() => {
+    fetchGuestUploads();
+  }, [fetchGuestUploads]);
+
+  // Delete Guest Upload Handler
+  const confirmDeleteUpload = async () => {
+    if (!uploadToDelete) return;
+    setIsDeletingUpload(true);
+    try {
+      const res = await fetch(`/api/drive/guest-uploads?id=${encodeURIComponent(uploadToDelete.id)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGuestUploads(prev => prev.filter(u => u.id !== uploadToDelete.id));
+        setUploadToDelete(null);
+      } else {
+        alert(data.error || 'Failed to delete guest entry');
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete guest entry');
+    } finally {
+      setIsDeletingUpload(false);
+    }
+  };
+
+  // Format timestamp helper
+  const formatUploadTime = (isoString?: string): string => {
+    if (!isoString) return '';
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+      return d.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return isoString || '';
+    }
+  };
+
+  // Guestbook KPIs & Filtering
+  const guestTotalFiles = guestUploads.reduce((sum, u) => sum + (u.fileCount || u.files?.length || 0), 0);
+  const guestNotesCount = guestUploads.filter(u => Boolean(u.caption && u.caption.trim())).length;
+
+  const filteredGuestUploads = guestUploads.filter(u => {
+    const term = guestSearchTerm.toLowerCase();
+    const matchesSearch = 
+      (u.uploaderName || '').toLowerCase().includes(term) ||
+      (u.caption || '').toLowerCase().includes(term) ||
+      (u.files || []).some(f => (f.name || '').toLowerCase().includes(term));
+    
+    const matchesNotes = !onlyWithNotes || Boolean(u.caption && u.caption.trim());
+    return matchesSearch && matchesNotes;
+  });
+
   return (
     <div style={styles.container}>
       {/* Scoped Responsive CSS for Mobile Optimization */}
@@ -572,240 +666,768 @@ export default function PhotoShotListManager({
         }
       `}</style>
 
+      {/* View Switcher: Photographer Shot List vs Guestbook & Photo Notes */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.625rem',
+        borderBottom: '1px solid var(--color-muted)',
+        paddingBottom: '0.75rem',
+        overflowX: 'auto',
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveView('shotlist')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.55rem 1.1rem',
+            borderRadius: 'var(--border-radius-sm)',
+            border: activeView === 'shotlist' ? 'none' : '1px solid var(--color-muted)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            backgroundColor: activeView === 'shotlist' ? 'var(--color-primary)' : 'var(--color-surface)',
+            color: activeView === 'shotlist' ? 'var(--color-on-primary)' : 'var(--color-text)',
+            transition: 'var(--transition-smooth)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Camera size={15} />
+          <span>PHOTOGRAPHER SHOT LIST</span>
+          <span style={{
+            backgroundColor: activeView === 'shotlist' ? 'rgba(255,255,255,0.22)' : 'var(--color-bg)',
+            color: activeView === 'shotlist' ? 'inherit' : 'var(--color-muted)',
+            padding: '0.1rem 0.45rem',
+            borderRadius: '10px',
+            fontSize: '0.72rem',
+          }}>{totalShots}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveView('guestbook')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.55rem 1.1rem',
+            borderRadius: 'var(--border-radius-sm)',
+            border: activeView === 'guestbook' ? 'none' : '1px solid var(--color-gold, #cda250)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            backgroundColor: activeView === 'guestbook' ? 'var(--color-primary)' : 'var(--color-surface)',
+            color: activeView === 'guestbook' ? 'var(--color-on-primary)' : 'var(--color-text)',
+            transition: 'var(--transition-smooth)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Heart size={15} style={{ color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)' }} />
+          <span>GUESTBOOK & PHOTO NOTES</span>
+          <span style={{
+            backgroundColor: activeView === 'guestbook' ? 'rgba(255,255,255,0.22)' : 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
+            color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)',
+            padding: '0.1rem 0.45rem',
+            borderRadius: '10px',
+            fontSize: '0.72rem',
+            fontWeight: 800,
+          }}>{guestUploads.length}</span>
+        </button>
+      </div>
+
       {/* Header Title & Actions */}
       <div className="photo-header-container">
         <div>
-          <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>Shot List</h2>
+          <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>
+            {activeView === 'shotlist' ? 'Shot List' : 'Guestbook & Photo Notes'}
+          </h2>
           <p style={styles.subtitle}>
-            Manage required photography moments, VIP group poses, and shot progress for your photographer.
+            {activeView === 'shotlist' 
+              ? 'Manage required photography moments, VIP group poses, and shot progress for your photographer.'
+              : 'Browse live photo and video uploads from wedding guests, read their messages, and access files in real time.'}
           </p>
         </div>
 
         <div className="photo-header-actions">
-          <button 
-            type="button"
-            style={{
-              ...styles.addButton,
-              backgroundColor: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)'
-            }} 
-            onClick={handleSharePhotos}
-            title="Email shot list to Photographer"
-          >
-            <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
-          </button>
+          {activeView === 'shotlist' ? (
+            <>
+              <button 
+                type="button"
+                style={{
+                  ...styles.addButton,
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-muted)'
+                }} 
+                onClick={handleSharePhotos}
+                title="Email shot list to Photographer"
+              >
+                <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
+              </button>
 
-          <button 
-            type="button"
-            style={{
-              ...styles.addButton,
-              backgroundColor: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              border: '1.5px solid var(--color-gold, #cda250)',
-              display: 'inline-flex',
-              alignItems: 'center',
-            }} 
-            onClick={() => setIsUploadSetupOpen(true)}
-            title="Configure guest photo upload portal, target Google Drive folder, & link expiration"
-          >
-            <UploadCloud size={16} style={{ marginRight: '6px', color: 'var(--color-gold, #cda250)' }} /> GUEST UPLOADS
-          </button>
-
-          <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
-            <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Bar */}
-      <div className="photo-kpi-bar">
-        <div className="photo-kpi-item">
-          <span style={styles.kpiLabel}>TOTAL REQUIRED SHOTS</span>
-          <span className="photo-kpi-value">{totalShots}</span>
-        </div>
-        <div className="photo-kpi-item">
-          <span style={styles.kpiLabel}>CAPTURED SHOTS</span>
-          <span className="photo-kpi-value" style={{ color: 'var(--color-green)' }}>{capturedShots}</span>
-        </div>
-        <div className="photo-kpi-item">
-          <span style={styles.kpiLabel}>PENDING SHOTS</span>
-          <span className="photo-kpi-value" style={{ color: 'var(--color-gold)' }}>{pendingShots}</span>
-        </div>
-        <div className="photo-kpi-item">
-          <span style={styles.kpiLabel}>ESSENTIAL SHOTS</span>
-          <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{mustHaveShots}</span>
-        </div>
-      </div>
-
-      {/* Filters Bar */}
-      <div className="photo-filter-bar">
-        <div className="photo-search-wrapper">
-          <Search size={16} style={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder="Search description, location, or people..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
-        </div>
-
-        <div className="photo-filter-group">
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={styles.filterSelect}
-          >
-            <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Captured">Captured</option>
-          </select>
-
-          <select 
-            value={priorityFilter} 
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            style={styles.filterSelect}
-          >
-            <option value="All">All Priorities</option>
-            <option value="Must Have">Must Have</option>
-            <option value="Nice To Have">Nice To Have</option>
-            <option value="Optional">Optional</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Photo Shot List Grid */}
-      <div className="photo-shots-list">
-        {filteredPhotos.map(shot => {
-          const isCaptured = (shot.status || '').toLowerCase() === 'captured' || (shot.status || '').toLowerCase() === 'completed';
-          const isMustHave = shot.priority === 'Must Have' || (shot.priority as any) === 'High';
-          const isOptional = shot.priority === 'Optional' || (shot.priority as any) === 'Low';
-          const displayPriority = isMustHave ? 'Must Have' : isOptional ? 'Optional' : 'Nice To Have';
-
-          return (
-            <div 
-              key={shot.shotId} 
-              className="photo-shot-card"
-              style={{
-                borderColor: isCaptured ? 'var(--color-green)' : 'var(--color-muted)',
-                opacity: isCaptured ? 0.8 : 1
-              }}
-            >
-              {/* Top Row: Badges (ID, Priority, Location) & Actions */}
-              <div className="photo-shot-top-row">
-                <div className="photo-shot-badges">
-                  <span style={{ ...styles.shotIdBadge, color: 'var(--color-text)', borderColor: 'var(--color-muted)' }}>
-                    {shot.shotId}
+              <button 
+                type="button"
+                style={{
+                  ...styles.addButton,
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  border: '1.5px solid var(--color-gold, #cda250)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }} 
+                onClick={() => setIsUploadSetupOpen(true)}
+                title="Configure guest photo upload portal, target Google Drive folder, & link expiration"
+              >
+                <UploadCloud size={16} style={{ color: 'var(--color-gold, #cda250)' }} />
+                <span>GUEST UPLOADS</span>
+                {guestUploads.length > 0 && (
+                  <span style={{
+                    backgroundColor: 'var(--color-gold, #cda250)',
+                    color: '#ffffff',
+                    padding: '0.1rem 0.4rem',
+                    borderRadius: '10px',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                  }}>
+                    {guestUploads.length}
                   </span>
-                  {shot.priority && (
-                    <span style={{
-                      ...styles.priorityBadge,
-                      backgroundColor: isMustHave ? 'var(--color-gold-muted)' : isOptional ? 'var(--color-bg)' : 'var(--color-bg-subtle, rgba(59, 130, 246, 0.1))',
-                      color: isMustHave ? 'var(--color-gold)' : isOptional ? 'var(--color-muted)' : 'var(--color-primary)',
-                      borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-muted)'
-                    }}>
-                      {displayPriority}
-                    </span>
-                  )}
-                  {shot.location && (
-                    <span style={{ ...styles.metaBadge, border: '1px solid var(--color-muted)', padding: '0.15rem 0.4rem' }}>
-                      <MapPin size={11} style={{ marginRight: '3px', flexShrink: 0 }} /> {shot.location}
-                    </span>
-                  )}
-                </div>
+                )}
+              </button>
 
-                <div style={styles.actionGroup}>
-                  <button style={styles.iconBtn} onClick={() => startEditShot(shot)} title="Edit Shot">
-                    <Edit2 size={14} style={{ color: 'var(--color-text)' }} />
-                  </button>
-                  <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
+              <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
+                <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                type="button"
+                style={{
+                  ...styles.addButton,
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-muted)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }} 
+                onClick={fetchGuestUploads}
+                disabled={isLoadingGuestUploads}
+                title="Refresh guestbook submissions"
+              >
+                <RefreshCw size={15} style={{ marginRight: '6px' }} className={isLoadingGuestUploads ? 'animate-spin' : ''} />
+                <span>{isLoadingGuestUploads ? 'REFRESHING...' : 'REFRESH'}</span>
+              </button>
 
-              {/* Main Row: Checkbox + Description */}
-              <div className="photo-shot-main-row">
-                <button 
-                  type="button"
+              <button 
+                type="button"
+                style={{
+                  ...styles.addButton,
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-on-primary)',
+                  border: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }} 
+                onClick={() => setIsUploadSetupOpen(true)}
+                title="Open Guest Upload Link & Table QR Code"
+              >
+                <UploadCloud size={16} style={{ marginRight: '6px' }} />
+                <span>PORTAL & QR CODE</span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* SHOT LIST VIEW */}
+      {activeView === 'shotlist' && (
+        <>
+          {/* KPI Bar */}
+          <div className="photo-kpi-bar">
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>TOTAL REQUIRED SHOTS</span>
+              <span className="photo-kpi-value">{totalShots}</span>
+            </div>
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>CAPTURED SHOTS</span>
+              <span className="photo-kpi-value" style={{ color: 'var(--color-green)' }}>{capturedShots}</span>
+            </div>
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>PENDING SHOTS</span>
+              <span className="photo-kpi-value" style={{ color: 'var(--color-gold)' }}>{pendingShots}</span>
+            </div>
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>ESSENTIAL SHOTS</span>
+              <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{mustHaveShots}</span>
+            </div>
+          </div>
+
+          {/* Filters Bar */}
+          <div className="photo-filter-bar">
+            <div className="photo-search-wrapper">
+              <Search size={16} style={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search description, location, or people..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={styles.searchInput}
+              />
+            </div>
+
+            <div className="photo-filter-group">
+              <select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                style={styles.filterSelect}
+              >
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Captured">Captured</option>
+              </select>
+
+              <select 
+                value={priorityFilter} 
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                style={styles.filterSelect}
+              >
+                <option value="All">All Priorities</option>
+                <option value="Must Have">Must Have</option>
+                <option value="Nice To Have">Nice To Have</option>
+                <option value="Optional">Optional</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Photo Shot List Grid */}
+          <div className="photo-shots-list">
+            {filteredPhotos.map(shot => {
+              const isCaptured = (shot.status || '').toLowerCase() === 'captured' || (shot.status || '').toLowerCase() === 'completed';
+              const isMustHave = shot.priority === 'Must Have' || (shot.priority as any) === 'High';
+              const isOptional = shot.priority === 'Optional' || (shot.priority as any) === 'Low';
+              const displayPriority = isMustHave ? 'Must Have' : isOptional ? 'Optional' : 'Nice To Have';
+
+              return (
+                <div 
+                  key={shot.shotId} 
+                  className="photo-shot-card"
                   style={{
-                    ...styles.statusCheckBtn,
-                    color: isCaptured ? 'var(--color-green)' : 'var(--color-text)',
-                    flexShrink: 0,
-                    marginTop: '2px'
+                    borderColor: isCaptured ? 'var(--color-green)' : 'var(--color-muted)',
+                    opacity: isCaptured ? 0.8 : 1
                   }}
-                  onClick={() => toggleShotStatus(shot.shotId)}
-                  title={isCaptured ? 'Mark as Pending' : 'Mark as Captured'}
                 >
-                  {isCaptured ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                </button>
+                  {/* Top Row: Badges (ID, Priority, Location) & Actions */}
+                  <div className="photo-shot-top-row">
+                    <div className="photo-shot-badges">
+                      <span style={{ ...styles.shotIdBadge, color: 'var(--color-text)', borderColor: 'var(--color-muted)' }}>
+                        {shot.shotId}
+                      </span>
+                      {shot.priority && (
+                        <span style={{
+                          ...styles.priorityBadge,
+                          backgroundColor: isMustHave ? 'var(--color-gold-muted)' : isOptional ? 'var(--color-bg)' : 'var(--color-bg-subtle, rgba(59, 130, 246, 0.1))',
+                          color: isMustHave ? 'var(--color-gold)' : isOptional ? 'var(--color-muted)' : 'var(--color-primary)',
+                          borderColor: isMustHave ? 'var(--color-gold)' : 'var(--color-muted)'
+                        }}>
+                          {displayPriority}
+                        </span>
+                      )}
+                      {shot.location && (
+                        <span style={{ ...styles.metaBadge, border: '1px solid var(--color-muted)', padding: '0.15rem 0.4rem' }}>
+                          <MapPin size={11} style={{ marginRight: '3px', flexShrink: 0 }} /> {shot.location}
+                        </span>
+                      )}
+                    </div>
 
-                <div className="photo-shot-content">
-                  <h3 
-                    className="photo-shot-title"
+                    <div style={styles.actionGroup}>
+                      <button style={styles.iconBtn} onClick={() => startEditShot(shot)} title="Edit Shot">
+                        <Edit2 size={14} style={{ color: 'var(--color-text)' }} />
+                      </button>
+                      <button style={{ ...styles.iconBtn, color: 'var(--color-red)' }} onClick={() => setShotToDelete(shot)} title="Delete Shot">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Main Row: Checkbox + Description */}
+                  <div className="photo-shot-main-row">
+                    <button 
+                      type="button"
+                      style={{
+                        ...styles.statusCheckBtn,
+                        color: isCaptured ? 'var(--color-green)' : 'var(--color-text)',
+                        flexShrink: 0,
+                        marginTop: '2px'
+                      }}
+                      onClick={() => toggleShotStatus(shot.shotId)}
+                      title={isCaptured ? 'Mark as Pending' : 'Mark as Captured'}
+                    >
+                      {isCaptured ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                    </button>
+
+                    <div className="photo-shot-content">
+                      <h3 
+                        className="photo-shot-title"
+                        style={{
+                          textDecoration: isCaptured ? 'line-through' : 'none',
+                          opacity: isCaptured ? 0.7 : 1
+                        }}
+                      >
+                        {shot.description}
+                      </h3>
+
+                      {shot.notes && (
+                        <p style={{ ...styles.notesText, marginTop: '0.35rem', paddingTop: '0.35rem', fontSize: '0.72rem' }}>
+                          💡 {shot.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bottom Meta Row: People & Time (if either exists) */}
+                  {(shot.people || shot.shotTime) && (
+                    <div className="photo-shot-meta-row">
+                      {shot.people ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0, flex: '1 1 auto' }}>
+                          <Users size={13} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {shot.people}
+                          </span>
+                        </div>
+                      ) : <div />}
+
+                      {shot.shotTime && (
+                        <div style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 600,
+                          color: 'var(--color-text)',
+                          backgroundColor: 'var(--color-bg)',
+                          border: '1px solid var(--color-muted)',
+                          padding: '0.15rem 0.45rem',
+                          borderRadius: 'var(--border-radius-sm)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          whiteSpace: 'nowrap',
+                          marginLeft: 'auto',
+                          flexShrink: 0
+                        }}>
+                          <Clock size={11} style={{ marginRight: '4px' }} /> {shot.shotTime}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {filteredPhotos.length === 0 && (
+              <div style={styles.emptyState}>
+                <Camera size={40} style={{ color: 'var(--color-muted)', marginBottom: '0.5rem' }} />
+                <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)' }}>No Photography Shots Found</h4>
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
+                  Add a new shot or adjust your search filters above.
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* GUESTBOOK & PHOTO NOTES VIEW */}
+      {activeView === 'guestbook' && (
+        <>
+          {/* Guestbook KPI Bar */}
+          <div className="photo-kpi-bar">
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>TOTAL GUEST SUBMISSIONS</span>
+              <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{guestUploads.length}</span>
+            </div>
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>PHOTOS & VIDEOS RECEIVED</span>
+              <span className="photo-kpi-value" style={{ color: 'var(--color-gold, #cda250)' }}>{guestTotalFiles}</span>
+            </div>
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>HEARTFELT NOTES & WISHES</span>
+              <span className="photo-kpi-value" style={{ color: 'var(--color-green)' }}>{guestNotesCount}</span>
+            </div>
+            <div className="photo-kpi-item">
+              <span style={styles.kpiLabel}>GOOGLE DRIVE ALBUM</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem', marginTop: '0.15rem' }}>
+                <span className="photo-kpi-value" style={{ fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selectedFolder.name || 'Guest Uploads'}>
+                  {selectedFolder.name || 'Guest Uploads'}
+                </span>
+                {selectedFolder.id && (
+                  <a
+                    href={`https://drive.google.com/drive/folders/${selectedFolder.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
+                    title="Open album in Google Drive"
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Guestbook Search & Filter Toolbar */}
+          <div className="photo-filter-bar">
+            <div className="photo-search-wrapper">
+              <Search size={16} style={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search guest name, heartfelt note, or uploaded file..."
+                value={guestSearchTerm}
+                onChange={(e) => setGuestSearchTerm(e.target.value)}
+                style={styles.searchInput}
+              />
+            </div>
+
+            <div className="photo-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <label style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.78rem',
+                color: 'var(--color-text)',
+                backgroundColor: 'var(--color-surface)',
+                border: onlyWithNotes ? '1.5px solid var(--color-gold, #cda250)' : '1px solid var(--color-muted)',
+                padding: '0.45rem 0.75rem',
+                borderRadius: 'var(--border-radius-sm)',
+                transition: 'var(--transition-smooth)',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={onlyWithNotes}
+                  onChange={(e) => setOnlyWithNotes(e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: 'var(--color-gold, #cda250)' }}
+                />
+                <span>With Written Notes Only</span>
+              </label>
+
+              <div style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                color: 'var(--color-muted)',
+                whiteSpace: 'nowrap',
+              }}>
+                Showing {filteredGuestUploads.length} of {guestUploads.length}
+              </div>
+            </div>
+          </div>
+
+          {/* Guestbook Feed List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {filteredGuestUploads.map((upload) => {
+              const initials = (upload.uploaderName || 'Guest')
+                .trim()
+                .split(/\s+/)
+                .map(n => n[0])
+                .filter(Boolean)
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
+
+              const hasCaption = Boolean(upload.caption && upload.caption.trim());
+
+              return (
+                <div
+                  key={upload.id}
+                  className="photo-shot-card"
+                  style={{
+                    backgroundColor: 'var(--color-surface)',
+                    border: '1.5px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-md)',
+                    padding: '1.15rem 1.25rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.85rem',
+                    boxShadow: 'var(--box-shadow-subtle)',
+                    transition: 'var(--transition-smooth)',
+                  }}
+                >
+                  {/* Top Row: Avatar + Name + Date + Photo Count + Delete */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: hasCaption ? 'linear-gradient(135deg, var(--color-gold, #cda250), #b38636)' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-serif)',
+                        fontSize: '1rem',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+                      }}>
+                        {initials || 'G'}
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <h3 style={{
+                            margin: 0,
+                            fontFamily: 'var(--font-serif)',
+                            fontSize: '1.05rem',
+                            fontWeight: 700,
+                            color: 'var(--color-text)',
+                          }}>
+                            {upload.uploaderName || 'Anonymous Guest'}
+                          </h3>
+
+                          {hasCaption && (
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
+                              color: 'var(--color-gold, #cda250)',
+                              border: '1px solid var(--color-gold, #cda250)',
+                              borderRadius: '10px',
+                              padding: '0.1rem 0.45rem',
+                              fontSize: '0.68rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 700,
+                            }}>
+                              <Heart size={10} fill="currentColor" /> Guest Note
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem', color: 'var(--color-muted)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                          <Clock size={11} />
+                          <span>{formatUploadTime(upload.uploadedAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        backgroundColor: 'var(--color-bg)',
+                        border: '1px solid var(--color-muted)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        padding: '0.25rem 0.55rem',
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                        color: 'var(--color-text)',
+                      }}>
+                        <ImageIcon size={13} style={{ color: 'var(--color-primary)' }} />
+                        <span>{upload.fileCount || upload.files?.length || 1} file(s)</span>
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => setUploadToDelete(upload)}
+                        style={{
+                          ...styles.iconBtn,
+                          color: 'var(--color-muted)',
+                          padding: '0.35rem',
+                        }}
+                        title="Remove guestbook entry"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Message Quote Box */}
+                  {hasCaption ? (
+                    <div style={{
+                      backgroundColor: 'var(--color-bg)',
+                      borderLeft: '3.5px solid var(--color-gold, #cda250)',
+                      borderRadius: '0 var(--border-radius-sm) var(--border-radius-sm) 0',
+                      padding: '0.85rem 1.15rem',
+                      position: 'relative',
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: '6px',
+                        right: '12px',
+                        opacity: 0.15,
+                        color: 'var(--color-gold, #cda250)',
+                      }}>
+                        <MessageSquare size={24} />
+                      </div>
+                      <p style={{
+                        margin: 0,
+                        fontStyle: 'italic',
+                        fontSize: '0.92rem',
+                        lineHeight: 1.55,
+                        color: 'var(--color-text)',
+                        whiteSpace: 'pre-wrap',
+                      }}>
+                        &ldquo;{upload.caption.trim()}&rdquo;
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{
+                      fontSize: '0.78rem',
+                      color: 'var(--color-muted)',
+                      fontStyle: 'italic',
+                      padding: '0.2rem 0',
+                    }}>
+                      (Uploaded without a written note)
+                    </div>
+                  )}
+
+                  {/* Uploaded Files Links & Target Google Drive Folder */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                    paddingTop: '0.5rem',
+                    borderTop: '1px dashed var(--color-muted)',
+                  }}>
+                    {/* File Pills */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', minWidth: 0 }}>
+                      {(upload.files || []).slice(0, 5).map((file, fIdx) => (
+                        <a
+                          key={file.id || fIdx}
+                          href={file.webViewLink || (upload.folderId ? `https://drive.google.com/drive/folders/${upload.folderId}` : '#')}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            padding: '0.2rem 0.5rem',
+                            backgroundColor: 'var(--color-bg)',
+                            border: '1px solid var(--color-muted)',
+                            borderRadius: 'var(--border-radius-sm)',
+                            fontSize: '0.72rem',
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--color-text)',
+                            textDecoration: 'none',
+                            transition: 'var(--transition-smooth)',
+                          }}
+                          title={file.name || 'View photo in Google Drive'}
+                        >
+                          <ImageIcon size={11} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                          <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {file.name || `Photo ${fIdx + 1}`}
+                          </span>
+                          <ExternalLink size={10} style={{ color: 'var(--color-muted)', flexShrink: 0 }} />
+                        </a>
+                      ))}
+                      {(upload.files || []).length > 5 && (
+                        <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+                          +{upload.files.length - 5} more
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Target Folder Tag */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', marginLeft: 'auto' }}>
+                      <FolderOpen size={12} style={{ color: 'var(--color-gold, #cda250)' }} />
+                      <span>Album: <strong>{upload.folderName || selectedFolder.name || 'Guest Uploads'}</strong></span>
+                      {upload.folderId && (
+                        <a
+                          href={`https://drive.google.com/drive/folders/${upload.folderId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center' }}
+                          title="Open album in Google Drive"
+                        >
+                          <ExternalLink size={11} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Empty State */}
+            {filteredGuestUploads.length === 0 && (
+              <div style={{
+                ...styles.emptyState,
+                padding: '3rem 1.5rem',
+                backgroundColor: 'var(--color-surface)',
+                border: '1px dashed var(--color-muted)',
+                borderRadius: 'var(--border-radius-md)',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
+                  color: 'var(--color-gold, #cda250)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem auto',
+                }}>
+                  <Heart size={28} />
+                </div>
+
+                <h4 style={{ margin: '0 0 0.5rem 0', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--color-text)' }}>
+                  {guestUploads.length === 0 ? 'No Guest Photos or Notes Yet' : 'No Submissions Match Search'}
+                </h4>
+
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem', maxWidth: '460px', margin: '0 auto 1.5rem auto', lineHeight: 1.5 }}>
+                  {guestUploads.length === 0 
+                    ? 'Share your wedding upload portal link or print table QR codes so guests can upload pictures and write heartfelt wishes directly into your Google Drive album.'
+                    : `No guest submissions matched "${guestSearchTerm}". Clear your search or filter to see all submissions.`
+                  }
+                </p>
+
+                {guestUploads.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsUploadSetupOpen(true)}
                     style={{
-                      textDecoration: isCaptured ? 'line-through' : 'none',
-                      opacity: isCaptured ? 0.7 : 1
+                      ...styles.addButton,
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-on-primary)',
+                      padding: '0.65rem 1.25rem',
+                      fontSize: '0.8rem',
+                      boxShadow: 'var(--box-shadow-subtle)',
+                      margin: '0 auto',
                     }}
                   >
-                    {shot.description}
-                  </h3>
-
-                  {shot.notes && (
-                    <p style={{ ...styles.notesText, marginTop: '0.35rem', paddingTop: '0.35rem', fontSize: '0.72rem' }}>
-                      💡 {shot.notes}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Bottom Meta Row: People & Time (if either exists) */}
-              {(shot.people || shot.shotTime) && (
-                <div className="photo-shot-meta-row">
-                  {shot.people ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0, flex: '1 1 auto' }}>
-                      <Users size={13} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {shot.people}
-                      </span>
-                    </div>
-                  ) : <div />}
-
-                  {shot.shotTime && (
-                    <div style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 600,
-                      color: 'var(--color-text)',
+                    <UploadCloud size={16} style={{ marginRight: '8px' }} />
+                    SHARE GUEST UPLOAD PORTAL & QR CODE
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setGuestSearchTerm(''); setOnlyWithNotes(false); }}
+                    style={{
+                      ...styles.addButton,
                       backgroundColor: 'var(--color-bg)',
+                      color: 'var(--color-text)',
                       border: '1px solid var(--color-muted)',
-                      padding: '0.15rem 0.45rem',
-                      borderRadius: 'var(--border-radius-sm)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      whiteSpace: 'nowrap',
-                      marginLeft: 'auto',
-                      flexShrink: 0
-                    }}>
-                      <Clock size={11} style={{ marginRight: '4px' }} /> {shot.shotTime}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {filteredPhotos.length === 0 && (
-          <div style={styles.emptyState}>
-            <Camera size={40} style={{ color: 'var(--color-muted)', marginBottom: '0.5rem' }} />
-            <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)' }}>No Photography Shots Found</h4>
-            <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
-              Add a new shot or adjust your search filters above.
-            </p>
+                      padding: '0.5rem 1rem',
+                      margin: '0 auto',
+                    }}
+                  >
+                    RESET FILTERS
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* ADD / EDIT SHOT MODAL */}
       {(isAddingShot || editingShot) && (
@@ -996,6 +1618,55 @@ export default function PhotoShotListManager({
           </div>
         </div>
       )}
+
+      {/* DELETE GUEST ENTRY CONFIRMATION MODAL */}
+      {uploadToDelete && (
+        <div style={styles.modalOverlay} onClick={() => setUploadToDelete(null)}>
+          <div style={{ ...styles.modalContent, maxWidth: '460px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <AlertCircle size={20} />
+                <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">
+                  REMOVE GUESTBOOK ENTRY
+                </h3>
+              </div>
+              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={() => setUploadToDelete(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              <p style={{ fontSize: '0.95rem', margin: '0 0 0.5rem 0', fontWeight: 600, color: 'var(--color-text)' }}>
+                Are you sure you want to remove the guestbook entry from <strong style={{ color: 'var(--color-red)' }}>&ldquo;{uploadToDelete.uploaderName || 'Anonymous Guest'}&rdquo;</strong>?
+              </p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
+                This removes the note and submission record from your in-app activity feed. Any photos or videos already uploaded to Google Drive will remain safe in your album folder.
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  style={styles.cancelBtn}
+                  onClick={() => setUploadToDelete(null)}
+                  disabled={isDeletingUpload}
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  type="button"
+                  style={styles.confirmDeleteBtn}
+                  onClick={confirmDeleteUpload}
+                  disabled={isDeletingUpload}
+                >
+                  {isDeletingUpload ? 'REMOVING...' : 'REMOVE ENTRY'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* GUEST PHOTO UPLOAD SETUP MODAL */}
       {isUploadSetupOpen && (
         <div 
@@ -1462,7 +2133,9 @@ export default function PhotoShotListManager({
       )}
 
       {/* Mobile Floating Action Button (FAB) */}
-      <MobileFAB onClick={startAddShot} label="Add Photo Shot" />
+      {activeView === 'shotlist' && (
+        <MobileFAB onClick={startAddShot} label="Add Photo Shot" />
+      )}
     </div>
   );
 }

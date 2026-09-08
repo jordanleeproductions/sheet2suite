@@ -205,6 +205,13 @@
     - **Automatic Token Registration (`/api/auth/register-token`)**: Automatically links active spreadsheet IDs and Google tokens in Cloud Firestore whenever the couple opens the upload modal.
     - **OAuth State Binding & Awaited Serverless Persistence (`setDocAsync`)**: Embeds `spreadsheetId` into Google OAuth `state` parameter and awaits asynchronous document writes so serverless App Hosting containers never terminate before token persistence completes.
   - **Live Google Drive File Streaming (`/api/upload/[token]`)**: Authenticates via the couple's stored Google Drive credentials, dynamically verifies or creates destination folder hierarchies, and streams incoming guest photos and videos directly into the couple's private Google Drive folder with guest attribution metadata.
+- [x] **[PHOTO-GUESTBOOK-FEED] In-App Guestbook Feed & Real-Time Photo Notes (`PhotoShotListManager.tsx`, `firestoreDb.ts`, `/api/upload/[token]`, `/api/drive/guest-uploads`):**
+  - **Sub-Tab Navigation View Switcher**: Clean segmented toggle at the top of the Photography page switching between `📷 PHOTOGRAPHER SHOT LIST` and `💌 GUESTBOOK & PHOTO NOTES` (with dynamic counters for required shots and received guest uploads).
+  - **In-App Guestbook Feed**: Renders wedding guest photo submissions in a card-based feed complete with initials avatar, guest name, timestamp, total files badge, heartfelt message quote bubbles (`💬 "..."`), uploaded file pills with 1-click Google Drive viewer links (`webViewLink`), and target Drive album tag.
+  - **Guestbook KPIs & Toolbar**: Real-time metrics tracking Total Guest Submissions, Photos & Videos Received, Heartfelt Notes & Wishes Count, and Target Google Drive Album. Features guest search (by name, note content, or filename), "With Written Notes Only" filter toggle, and live Refresh trigger.
+  - **Google Drive `Guest_Messages_&_Notes.txt` Real-Time Log**: Automatically creates and continuously appends every guest wish, comment, uploader name, file count, and timestamp directly to a consolidated text log file inside the couple's Google Drive folder.
+  - **Full Firestore & Offline Parity (`LocalFirestore.getDocsAsync`, `deleteDoc`)**: Persists guest uploads under the `guest_uploads` collection in Cloud Firestore (production) and local storage (dev), with query and deletion endpoints (`GET /api/drive/guest-uploads`, `DELETE /api/drive/guest-uploads`).
+  - **Dismiss / Delete Modal**: Allows the couple to clean up test or spam guestbook entries with safety confirmation ensuring uploaded Google Drive media files are preserved.
 
 ---
 

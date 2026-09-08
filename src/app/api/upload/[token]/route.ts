@@ -194,6 +194,7 @@ export async function POST(
       }
 
       // 3. Upload each file directly to Google Drive
+      const uploadedFiles: { id?: string; name: string; webViewLink?: string }[] = [];
       for (const file of files) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const stream = new Readable();
@@ -206,7 +207,7 @@ export async function POST(
         const guestSlug = uploaderName.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
         const fileName = `${guestSlug ? `${guestSlug}_` : ''}${baseName || 'photo'}_${Date.now()}${ext}`;
 
-        await drive.files.create({
+        const uploadRes = await drive.files.create({
           requestBody: {
             name: fileName,
             parents: targetFolderId ? [targetFolderId] : undefined,
@@ -219,6 +220,96 @@ export async function POST(
           fields: 'id, name, webViewLink',
           supportsAllDrives: true,
         });
+
+        uploadedFiles.push({
+          id: uploadRes.data.id,
+          name: fileName,
+          webViewLink: uploadRes.data.webViewLink,
+        });
+      }
+
+      // 4. Record guest submission in Cloud Firestore guest_uploads collection
+      const uploadRecord = {
+        id: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        spreadsheetId: payload.spreadsheetId,
+        userEmail: payload.userEmail || '',
+        uploaderName: uploaderName.trim() || 'Anonymous Guest',
+        caption: caption.trim(),
+        fileCount: files.length,
+        files: uploadedFiles,
+        folderId: targetFolderId || payload.folderId || '',
+        folderName: payload.folderName || 'Guest Uploads',
+        folderPath: payload.folderPath || 'My Drive / Wedding Planning / Guest Uploads',
+        uploadedAt: new Date().toISOString(),
+      };
+
+      try {
+        const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+        await LocalFirestore.setDocAsync('guest_uploads', uploadRecord.id, uploadRecord);
+      } catch (saveErr) {
+        console.warn('[Upload Route] Could not save guest upload record:', saveErr);
+      }
+
+      // 5. Append to Guest_Messages_&_Notes.txt in the Google Drive folder
+      if (targetFolderId && (caption.trim() || uploaderName.trim())) {
+        try {
+          const timeFormatted = new Date().toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          });
+          const noteEntry = [
+            '------------------------------------------------------------',
+            `FROM: ${uploaderName.trim() || 'Anonymous Guest'}`,
+            `DATE: ${timeFormatted}`,
+            `UPLOADED: ${files.length} photo/video file(s)`,
+            caption.trim() ? `MESSAGE: "${caption.trim()}"` : 'MESSAGE: (No written comment)',
+            '------------------------------------------------------------\n',
+          ].join('\n');
+
+          const txtSearch = await drive.files.list({
+            q: `name = 'Guest_Messages_&_Notes.txt' and '${targetFolderId}' in parents and trashed = false`,
+            fields: 'files(id, name)',
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true,
+          });
+
+          if (txtSearch.data.files && txtSearch.data.files.length > 0) {
+            const fileId = txtSearch.data.files[0].id;
+            let existingText = '';
+            try {
+              const getRes = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'text' });
+              existingText = getRes.data || '';
+            } catch (e) {}
+
+            const newText = existingText ? `${existingText}\n${noteEntry}` : noteEntry;
+            const textStream = new Readable();
+            textStream.push(Buffer.from(newText, 'utf-8'));
+            textStream.push(null);
+
+            await drive.files.update({
+              fileId,
+              media: { mimeType: 'text/plain', body: textStream },
+              supportsAllDrives: true,
+            });
+          } else {
+            const headerText = `============================================================\n${payload.weddingName || 'OUR WEDDING'} - GUEST PHOTO NOTES & WISHES\nAlbum Folder: ${payload.folderName || 'Guest Uploads'}\n============================================================\n\n${noteEntry}`;
+            const textStream = new Readable();
+            textStream.push(Buffer.from(headerText, 'utf-8'));
+            textStream.push(null);
+
+            await drive.files.create({
+              requestBody: {
+                name: 'Guest_Messages_&_Notes.txt',
+                parents: [targetFolderId],
+                description: 'Consolidated guest wishes, comments, and photo upload log from Sheet2Vow.',
+              },
+              media: { mimeType: 'text/plain', body: textStream },
+              supportsAllDrives: true,
+            });
+          }
+        } catch (driveTxtErr) {
+          console.warn('[Upload Route] Note file sync warning:', driveTxtErr);
+        }
       }
     }
 
