@@ -458,24 +458,6 @@ export const LocalFirestore = {
   },
 
   /**
-   * Async document collection retrieval for Cloud Firestore
-   */
-  async getDocsAsync<T = any>(collectionName: string): Promise<T[]> {
-    const cloudDb = getCloudFirestore();
-    if (cloudDb) {
-      try {
-        const snapshot = await cloudDb.collection(collectionName).get();
-        if (!snapshot.empty) {
-          return snapshot.docs.map((docSnap: FirebaseFirestore.DocumentSnapshot) => docSnap.data() as T);
-        }
-      } catch (err: any) {
-        console.warn(`[Cloud Firestore] Error fetching collection ${collectionName}:`, err?.message);
-      }
-    }
-    return this.getDocs<T>(collectionName);
-  },
-
-  /**
    * Simple query helper to filter collection documents by field equality
    */
   query<T = any>(collectionName: string, field: keyof T, value: any): T[] {

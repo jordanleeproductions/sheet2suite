@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     const userInfo = await oauth2.userinfo.get();
     const userEmail = userInfo.data.email || 'user@sheet2suite.com';
     const userName = userInfo.data.name || 'Sheet2Suite User';
+    const userPicture = userInfo.data.picture || undefined;
 
     // Step 3: Automatically Provision Google Drive Folder & Master Sheet
     let provisionData: any = null;
