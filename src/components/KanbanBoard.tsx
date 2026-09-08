@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, KanbanStage } from '@/lib/sheets/types';
 import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2, ChevronDown, Check } from 'lucide-react';
 import { formatDateConsistent, formatDateToMMDDYYYY } from '@/lib/currency';
@@ -288,7 +288,14 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   const [formState, setFormState] = useState<Partial<Task>>({});
 
   // View mode for Progress Metrics ('cards' | 'bar')
+  // Defaults to 'bar' on mobile viewports (< 768px), 'cards' on desktop
   const [progressViewMode, setProgressViewMode] = useState<'cards' | 'bar'>('cards');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setProgressViewMode('bar');
+    }
+  }, []);
 
   // Sorting state
   const [sortField, setSortField] = useState<'default' | 'priority' | 'dueDate'>('default');
@@ -609,27 +616,18 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
             flexDirection: 'column',
             gap: '0.875rem',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
+            <div className="task-progress-card-header">
+              <div className="task-progress-card-title">
                 TASK PROGRESS & COMPLETION METRICS {selectedCategory !== 'ALL' ? `• ${selectedCategory.toUpperCase()}` : ''}
-              </span>
-              <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--color-bg, #f3f4f6)', padding: '2px', borderRadius: 'var(--border-radius-sm)' }}>
+              </div>
+              <div className="task-progress-toggle-group">
                 <button
                   type="button"
                   onClick={() => setProgressViewMode('cards')}
+                  className="task-progress-toggle-btn"
                   style={{
                     backgroundColor: progressViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
                     color: progressViewMode === 'cards' ? '#ffffff' : 'var(--color-muted)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.25rem 0.5rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    fontSize: '0.7rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 600,
                   }}
                   title="Switch to Progress Cards view"
                 >
@@ -638,19 +636,10 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                 <button
                   type="button"
                   onClick={() => setProgressViewMode('bar')}
+                  className="task-progress-toggle-btn"
                   style={{
                     backgroundColor: progressViewMode === 'bar' ? 'var(--color-primary)' : 'transparent',
                     color: progressViewMode === 'bar' ? '#ffffff' : 'var(--color-muted)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.25rem 0.5rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    fontSize: '0.7rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 600,
                   }}
                   title="Switch to Progress Bar view"
                 >
@@ -733,7 +722,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
                   <span style={{ color: 'var(--color-text)', fontWeight: 700 }}>Planning Progress</span>
                   <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 800 }}>{percentDone}% ({doneCount} / {total} Tasks Completed)</span>
                 </div>
@@ -741,7 +730,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   <div style={{ width: `${percentDone}%`, backgroundColor: 'var(--color-green, #10b981)', height: '100%', transition: 'width 0.4s ease' }} />
                   <div style={{ width: `${total > 0 ? (inProgressCount / total) * 100 : 0}%`, backgroundColor: 'var(--color-gold, #f59e0b)', height: '100%', transition: 'width 0.4s ease' }} />
                 </div>
-                <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.25rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
                   <span>🟢 Completed: <strong>{doneCount}</strong></span>
                   <span>🟡 In Progress: <strong>{inProgressCount}</strong></span>
                   <span>⚪ To Do: <strong>{toDoCount}</strong></span>
@@ -1249,6 +1238,52 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
             width: 100% !important;
             justify-content: center !important;
           }
+          .task-progress-toggle-group {
+            width: 100% !important;
+            align-self: stretch !important;
+          }
+          .task-progress-toggle-btn {
+            flex: 1 !important;
+            justify-content: center !important;
+            padding: 0.35rem 0.5rem !important;
+          }
+        }
+
+        .task-progress-card-header {
+          display: flex;
+          flex-direction: column;
+          gap: 0.625rem;
+          width: 100%;
+        }
+        .task-progress-card-title {
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--color-muted);
+          letter-spacing: 0.05em;
+          width: 100%;
+          line-height: 1.3;
+        }
+        .task-progress-toggle-group {
+          display: inline-flex;
+          gap: 0.25rem;
+          background-color: var(--color-bg, #f3f4f6);
+          padding: 2px;
+          border-radius: var(--border-radius-sm);
+          align-self: flex-start;
+        }
+        .task-progress-toggle-btn {
+          border: none;
+          border-radius: 4px;
+          padding: 0.25rem 0.5rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          font-size: 0.7rem;
+          font-family: var(--font-mono);
+          font-weight: 600;
+          transition: all 0.15s ease;
         }
 
         @media (min-width: 768px) {

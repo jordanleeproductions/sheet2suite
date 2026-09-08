@@ -17,11 +17,17 @@ export async function getGoogleAuthAsync(accessToken?: string, spreadsheetIdOrEm
   if (spreadsheetIdOrEmail) {
     try {
       const { LocalFirestore } = await import('@/lib/db/firestoreDb');
-      const tokenDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', spreadsheetIdOrEmail);
+      const tokenDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetIdOrEmail);
       if (tokenDoc?.refreshToken) {
         oauth2Client.setCredentials({
           access_token: accessToken || tokenDoc.accessToken,
           refresh_token: tokenDoc.refreshToken,
+        });
+        return oauth2Client;
+      }
+      if (tokenDoc?.accessToken) {
+        oauth2Client.setCredentials({
+          access_token: tokenDoc.accessToken,
         });
         return oauth2Client;
       }

@@ -39,7 +39,9 @@ interface PhotoShotListManagerProps {
   spreadsheetId?: string;
   weddingName?: string;
   googleToken?: string;
+  googleUserEmail?: string;
   driveFolder?: string;
+  onOpenGoogleAuth?: () => void;
 }
 
 export default function PhotoShotListManager({ 
@@ -50,7 +52,9 @@ export default function PhotoShotListManager({
   spreadsheetId,
   weddingName,
   googleToken,
-  driveFolder
+  googleUserEmail,
+  driveFolder,
+  onOpenGoogleAuth,
 }: PhotoShotListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -286,18 +290,35 @@ export default function PhotoShotListManager({
 
   const effectiveSpreadsheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || 'sheet2vow-master-wedding' : 'sheet2vow-master-wedding');
   const effectiveWeddingName = weddingName || (typeof window !== 'undefined' ? localStorage.getItem('s2v_wedding_name') || 'Our Wedding' : 'Our Wedding');
+  const effectiveUserEmail = googleUserEmail || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_email') || '' : '');
+
+  // Automatically register active tokens in Cloud Firestore whenever upload setup is open
+  React.useEffect(() => {
+    if (isUploadSetupOpen && (effectiveSpreadsheetId || googleToken)) {
+      fetch('/api/auth/register-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId: effectiveSpreadsheetId,
+          userEmail: effectiveUserEmail,
+          accessToken: googleToken,
+        }),
+      }).catch(err => console.warn('[PhotoShotListManager] Could not register token:', err));
+    }
+  }, [isUploadSetupOpen, effectiveSpreadsheetId, googleToken, effectiveUserEmail]);
 
   const guestUploadToken = useMemo(() => {
     return generateShareToken({
       spreadsheetId: effectiveSpreadsheetId,
       scope: 'guest_upload',
       weddingName: effectiveWeddingName,
+      userEmail: effectiveUserEmail,
       expiresInDays: expirationDays,
       folderId: selectedFolder.id,
       folderName: selectedFolder.name,
       folderPath: selectedFolder.path,
     });
-  }, [effectiveSpreadsheetId, effectiveWeddingName, expirationDays, selectedFolder]);
+  }, [effectiveSpreadsheetId, effectiveWeddingName, effectiveUserEmail, expirationDays, selectedFolder]);
 
   const guestUploadUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/upload/${guestUploadToken}`
@@ -1052,6 +1073,90 @@ export default function PhotoShotListManager({
                   Give guests instant access to upload pictures & videos from their phones directly to your private Google Drive folder — no app install or account required!
                 </p>
               </div>
+
+              {/* Google Drive Account Connection Banner */}
+              {effectiveUserEmail || googleToken ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.55rem 0.85rem',
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-text)',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 800 }}>✓</span>
+                    <span>Google Drive Connected {effectiveUserEmail ? `(${effectiveUserEmail})` : ''}</span>
+                  </div>
+                  {onOpenGoogleAuth && (
+                    <button
+                      type="button"
+                      onClick={onOpenGoogleAuth}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--color-primary)',
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        fontSize: '0.7rem',
+                        padding: 0,
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    >
+                      Reconnect account
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '0.65rem 0.85rem',
+                  fontSize: '0.75rem',
+                  color: 'var(--color-text)',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertCircle size={16} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.75rem', lineHeight: '1.3' }}>
+                      Connect Google Drive to save guest uploads directly to your Drive.
+                    </span>
+                  </div>
+                  {onOpenGoogleAuth && (
+                    <button
+                      type="button"
+                      onClick={onOpenGoogleAuth}
+                      style={{
+                        backgroundColor: '#0B57D0',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '0.35rem 0.65rem',
+                        fontSize: '0.7rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      CONNECT GOOGLE DRIVE
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* 1. Destination Folder Selector */}
               <div style={styles.formGroup}>

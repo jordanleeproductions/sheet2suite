@@ -110,7 +110,7 @@ function getCloudFirestore(): Firestore | null {
         privateKey = privateKey.replace(/\\n/g, '\n');
 
         appOptions.credential = cert({
-          projectId: process.env.FIREBASE_PROJECT_ID || 'sheet2suite-prod',
+          projectId: process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || 'sheet2suite-prod',
           clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
           privateKey,
         });
@@ -255,6 +255,70 @@ export const LocalFirestore = {
     }
 
     return this.setDoc<T>(collectionName, docId, data);
+  },
+
+  /**
+   * Finds an auth token document by either docId, spreadsheetId, or userEmail.
+   * Checks Cloud Firestore queries as well as local file storage fallback.
+   */
+  async findAuthTokenDocAsync(lookupKey: string): Promise<AuthTokenDocument | null> {
+    if (!lookupKey) return null;
+    const cleanKey = lookupKey.trim();
+
+    // 1. Direct document lookup by docId (case-insensitive)
+    const direct = await this.getDocAsync<AuthTokenDocument>('auth_tokens', cleanKey);
+    if (direct?.refreshToken) return direct;
+
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        // 2. Query Cloud Firestore by spreadsheetId
+        const bySheet = await cloudDb
+          .collection('auth_tokens')
+          .where('spreadsheetId', '==', cleanKey)
+          .limit(1)
+          .get();
+        if (!bySheet.empty) {
+          const doc = bySheet.docs[0].data() as AuthTokenDocument;
+          if (doc?.refreshToken || doc?.accessToken) return doc;
+        }
+
+        // 3. Query Cloud Firestore by userEmail
+        const byEmail = await cloudDb
+          .collection('auth_tokens')
+          .where('userEmail', '==', cleanKey.toLowerCase())
+          .limit(1)
+          .get();
+        if (!byEmail.empty) {
+          const doc = byEmail.docs[0].data() as AuthTokenDocument;
+          if (doc?.refreshToken || doc?.accessToken) return doc;
+        }
+      } catch (err: any) {
+        console.warn('[Firestore] Error querying auth_tokens by field:', err?.message);
+      }
+    }
+
+    // 4. Local file fallback search
+    try {
+      const dirPath = ensureCollectionDir('auth_tokens');
+      const files = fs.readdirSync(dirPath);
+      for (const file of files) {
+        if (!file.endsWith('.json')) continue;
+        try {
+          const raw = fs.readFileSync(path.join(dirPath, file), 'utf-8');
+          const doc = JSON.parse(raw) as AuthTokenDocument;
+          if (
+            doc.spreadsheetId === cleanKey ||
+            doc.userEmail?.toLowerCase() === cleanKey.toLowerCase() ||
+            doc.id?.toLowerCase() === cleanKey.toLowerCase()
+          ) {
+            if (doc.refreshToken || doc.accessToken) return doc;
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+
+    return direct;
   },
 
   /**

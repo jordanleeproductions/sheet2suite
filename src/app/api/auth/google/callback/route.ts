@@ -109,25 +109,40 @@ export async function GET(req: NextRequest) {
       console.error('Provisioning step error:', pErr);
     }
 
-    const userPicture = userInfo.data.picture || undefined;
+    const stateParam = url.searchParams.get('state');
+    let stateSpreadsheetId: string | undefined;
+    if (stateParam) {
+      try {
+        const parsed = JSON.parse(stateParam);
+        stateSpreadsheetId = parsed.spreadsheetId;
+      } catch (e) {}
+    }
+
+    const effectiveSheetId = stateSpreadsheetId || provisionData?.spreadsheetId;
 
     // Persist refresh token and token metadata in Firestore / Local storage for long-lived silent re-auth
     try {
       if (userEmail) {
-        LocalFirestore.setDoc('auth_tokens', userEmail, {
+        const existingUserDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', userEmail);
+        const refreshTokenToSave = tokens.refresh_token || existingUserDoc?.refreshToken;
+
+        await LocalFirestore.setDocAsync('auth_tokens', userEmail, {
           userEmail,
-          spreadsheetId: provisionData?.spreadsheetId,
-          refreshToken: tokens.refresh_token,
+          spreadsheetId: effectiveSheetId || existingUserDoc?.spreadsheetId,
+          refreshToken: refreshTokenToSave,
           accessToken: tokens.access_token,
           expiryDate: tokens.expiry_date,
           updatedAt: new Date().toISOString(),
         });
       }
-      if (provisionData?.spreadsheetId) {
-        LocalFirestore.setDoc('auth_tokens', provisionData.spreadsheetId, {
+      if (effectiveSheetId) {
+        const existingSheetDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', effectiveSheetId);
+        const refreshTokenToSave = tokens.refresh_token || existingSheetDoc?.refreshToken;
+
+        await LocalFirestore.setDocAsync('auth_tokens', effectiveSheetId, {
           userEmail,
-          spreadsheetId: provisionData.spreadsheetId,
-          refreshToken: tokens.refresh_token,
+          spreadsheetId: effectiveSheetId,
+          refreshToken: refreshTokenToSave,
           accessToken: tokens.access_token,
           expiryDate: tokens.expiry_date,
           updatedAt: new Date().toISOString(),
@@ -141,7 +156,10 @@ export async function GET(req: NextRequest) {
       type: 'GOOGLE_AUTH_SUCCESS',
       user: { email: userEmail, name: userName, picture: userPicture },
       accessToken: tokens.access_token,
-      provision: provisionData,
+      provision: {
+        ...provisionData,
+        spreadsheetId: effectiveSheetId || provisionData?.spreadsheetId,
+      },
     });
 
     const htmlResponse = `

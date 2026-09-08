@@ -69,6 +69,7 @@ export async function GET(
       folderId: payload.folderId,
       folderName: payload.folderName,
       folderPath: payload.folderPath || 'My Drive/Wedding Planning/Guest Uploads',
+      userEmail: payload.userEmail,
       exp: payload.exp,
     });
   } catch (error) {
@@ -123,7 +124,25 @@ export async function POST(
     // Resolve Google Drive Client for the couple's workspace
     let drive: any = null;
     try {
-      const auth = await getGoogleAuthAsync(undefined, payload.spreadsheetId);
+      let auth: any = null;
+      if (payload.spreadsheetId) {
+        try {
+          auth = await getGoogleAuthAsync(undefined, payload.spreadsheetId);
+        } catch (err) {
+          console.warn(`[Upload Route] Could not get Google Auth client with spreadsheetId "${payload.spreadsheetId}":`, err);
+        }
+      }
+      if (!auth && payload.userEmail) {
+        try {
+          auth = await getGoogleAuthAsync(undefined, payload.userEmail);
+        } catch (err) {
+          console.warn(`[Upload Route] Could not get Google Auth client with userEmail "${payload.userEmail}":`, err);
+        }
+      }
+      if (!auth) {
+        // Fallback to environment tokens or service account if available
+        auth = await getGoogleAuthAsync(undefined);
+      }
       drive = google.drive({ version: 'v3', auth });
     } catch (authErr) {
       console.warn('[Upload Route] Could not get Google Auth client:', authErr);

@@ -7,6 +7,7 @@ export interface ShareTokenPayload {
   scope: ShareScope;
   weddingName: string;
   shareVersion?: number;
+  userEmail?: string;
   folderId?: string;
   folderName?: string;
   folderPath?: string;
@@ -23,6 +24,7 @@ export interface ShareLinkRecord {
   exp: number;
   shareVersion: number;
   isRevoked?: boolean;
+  userEmail?: string;
   folderId?: string;
   folderName?: string;
   folderPath?: string;
@@ -64,6 +66,7 @@ export function generateShareToken(payload: Omit<ShareTokenPayload, 'exp'> & { e
     scope: payload.scope,
     weddingName: payload.weddingName,
     shareVersion: payload.shareVersion || 1,
+    userEmail: payload.userEmail,
     folderId: payload.folderId,
     folderName: payload.folderName,
     folderPath: payload.folderPath,

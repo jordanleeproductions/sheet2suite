@@ -5,6 +5,8 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/drive',
 ];
 
 function getOAuth2Client(redirectUri?: string) {
@@ -29,6 +31,7 @@ export async function GET(req: NextRequest) {
 
     const url = req.nextUrl;
     const promptParam = url.searchParams.get('prompt') || 'consent';
+    const spreadsheetIdParam = url.searchParams.get('spreadsheetId') || undefined;
 
     const oauth2Client = getOAuth2Client(redirectUri);
 
@@ -36,6 +39,7 @@ export async function GET(req: NextRequest) {
       access_type: 'offline',
       scope: SCOPES,
       prompt: promptParam,
+      state: spreadsheetIdParam ? JSON.stringify({ spreadsheetId: spreadsheetIdParam }) : undefined,
     });
 
     return NextResponse.json({
@@ -58,7 +62,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { code, accessToken, redirectUri } = body;
+    const { code, accessToken, redirectUri, spreadsheetId } = body;
 
     const oauth2Client = getOAuth2Client(redirectUri);
 
@@ -85,16 +89,27 @@ export async function POST(req: NextRequest) {
     const userEmail = userInfo.data.email;
 
     // Persist refresh token to Firestore / Local storage
-    if (userEmail && tokenData.refresh_token) {
+    if (userEmail) {
       try {
         const { LocalFirestore } = await import('@/lib/db/firestoreDb');
-        LocalFirestore.setDoc('auth_tokens', userEmail, {
+        const existingDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', userEmail);
+        const refreshTokenToSave = tokenData.refresh_token || existingDoc?.refreshToken;
+
+        const recordData: any = {
           userEmail,
-          refreshToken: tokenData.refresh_token,
+          spreadsheetId,
           accessToken: tokenData.access_token,
           expiryDate: tokenData.expiry_date,
           updatedAt: new Date().toISOString(),
-        });
+        };
+        if (refreshTokenToSave) {
+          recordData.refreshToken = refreshTokenToSave;
+        }
+
+        await LocalFirestore.setDocAsync('auth_tokens', userEmail, recordData);
+        if (spreadsheetId) {
+          await LocalFirestore.setDocAsync('auth_tokens', spreadsheetId, recordData);
+        }
       } catch (err) {
         console.warn('[OAuth] Could not save token document:', err);
       }

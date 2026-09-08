@@ -114,7 +114,11 @@
 
 ## 📋 8. Task Checklist & Kanban (`KanbanBoard.tsx`)
 - [x] **[TASK-1] Clickable Kanban Task Edit Modal:** Clicking any task card on the Kanban board opens its edit modal window.
-- [x] **[TASK-2] Switchable Progress Cards / Progress Bar Header:** Added switchable progress view mode toggle (Progress Cards vs Multi-color Progress Bar) above the Kanban board.
+- [x] **[TASK-2] Switchable Progress Cards / Progress Bar Header (`KanbanBoard.tsx`):**
+  - Added switchable progress view mode toggle (Progress Cards vs Multi-color Progress Bar) above the Kanban board.
+  - **Dedicated Header Title Row**: Separated the card title (`TASK PROGRESS & COMPLETION METRICS`) onto its own full-width row instead of sharing horizontal space with the view toggle, eliminating awkward text wrapping when category filters are applied.
+  - **Mobile Default Progress Bar View**: Defaults to the multi-segment Progress Bar view on mobile viewports (< 768px) while defaulting to Cards view on desktop.
+  - **Mobile Full-Width Segmented Toggle**: Upgraded toggle button group on mobile to span the full card width with 50/50 flex distribution for comfortable thumb access.
 - [x] **[TASK-3] Header Methodology Description:** Added a descriptive subtitle under the header explaining Kanban task management workflow.
 - [x] **[TASK-DELETE-MODAL] Delete Task Modal Redesign:** Upgraded task deletion confirmation popup with high-contrast alert styling, permanent removal notice, comfortable desktop/mobile padding, and full-width mobile action buttons.
 - [x] **[TASK-MOBILE-HEADER] Mobile "Add Task" Button Dedicated Row:** Realigned the mobile "Add Task" button onto its own full-width row under the title and description, preventing text compression.
@@ -185,16 +189,21 @@
 - [x] **[PHOTO-1] Photography Shot List Enhancements:** Unchecked cards have solid black borders, section headers black text, and desktop view single-row layout.
 - [x] **[PHOTO-2] Auto-Populate Photographer Email:** Automatically prepopulates the `TO` email address with the Photographer's email from the Vendor Directory when emailing the Shot List.
 - [x] **[PHOTO-PRIORITY-SETTINGS-SYNC] Bi-Directional Priority Translation (`PhotoShotListManager.tsx`, `mapper.ts`):** Retains photographer-intuitive priority labels (`Must Have`, `Nice To Have`, and `Optional`) in the web app UI while bi-directionally translating to and from Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`Must Have` ↔ `High`, `Nice To Have` ↔ `Medium`, `Optional` ↔ `Low`). Eliminates spreadsheet validation warnings while keeping photography terminology seamless.
-- [x] **[PHOTO-GUEST-UPLOAD-SETUP] Guest Photo Upload Portal Setup & Live Google Drive Folder Integration (`PhotoShotListManager.tsx`, `GoogleDrivePickerModal.tsx`, `token.ts`, `/upload/[token]`, `drive/create-folder`, `drive/folders`):**
+- [x] **[PHOTO-GUEST-UPLOAD-SETUP] Guest Photo Upload Portal Setup & Live Google Drive Folder Integration (`PhotoShotListManager.tsx`, `GoogleDrivePickerModal.tsx`, `token.ts`, `/upload/[token]`, `drive/create-folder`, `drive/folders`, `auth/register-token`):**
   - Added prominent `📸 GUEST UPLOADS` action button to the Photography Shot List header.
   - Dedicated in-app configuration modal allowing couples to:
     - Select or create any Google Drive destination folder using the integrated `GoogleDrivePickerModal.tsx`.
-    - **Live Google Drive Folder Creation (`/api/drive/create-folder`)**: Creating a new folder inside the modal now communicates directly with Google Drive API via authenticated server proxy (`getGoogleAuthAsync`), creating a genuine Google Drive directory and returning its permanent Google Drive Folder ID.
+    - **Live Google Drive Folder Creation (`/api/drive/create-folder`)**: Creating a new folder inside the modal communicates directly with Google Drive API via authenticated server proxy (`getGoogleAuthAsync`), creating a genuine Google Drive directory and returning its permanent Google Drive Folder ID.
     - **Live Google Drive Folder Browser (`/api/drive/folders`)**: Traverses subfolders dynamically with server-side token refresh support, eliminating client-side expired OAuth errors.
     - Configure signed token expiration duration (7d, 14d, 30d, 60d, 90d recommended, 180d, 365d, or permanent/no expiration).
     - View, copy, and test their live guest upload portal link (`${origin}/upload/${token}`) with instant clipboard feedback.
     - Generate and download a printable high-resolution QR code (`api.qrserver.com`) for wedding place cards, bar signs, and dinner table displays.
-  - Passes destination `folderId`, `folderName`, and `folderPath` through cryptographically signed HMAC-SHA256 JWT tokens.
+    - **Live Google Drive Connection Indicator & Reconnect Action**: In-modal connection status showing connected Google account email, with 1-click `CONNECT GOOGLE DRIVE` / `Reconnect account` trigger to seamlessly authorize or refresh Google Drive permissions without leaving the Photography page.
+  - **Production Auth Resolution & Silent Token Refresh**:
+    - **Token User Email Binding**: Cryptographically signs both `spreadsheetId` and couple `userEmail` into the HMAC-SHA256 upload token so the guest endpoint can locate credentials by either identifier.
+    - **Bidirectional Token Resolution (`findAuthTokenDocAsync`)**: Queries Cloud Firestore by `spreadsheetId` or `userEmail`, auto-refreshing OAuth access tokens via Google Cloud credentials when expired.
+    - **Automatic Token Registration (`/api/auth/register-token`)**: Automatically links active spreadsheet IDs and Google tokens in Cloud Firestore whenever the couple opens the upload modal.
+    - **OAuth State Binding & Awaited Serverless Persistence (`setDocAsync`)**: Embeds `spreadsheetId` into Google OAuth `state` parameter and awaits asynchronous document writes so serverless App Hosting containers never terminate before token persistence completes.
   - **Live Google Drive File Streaming (`/api/upload/[token]`)**: Authenticates via the couple's stored Google Drive credentials, dynamically verifies or creates destination folder hierarchies, and streams incoming guest photos and videos directly into the couple's private Google Drive folder with guest attribution metadata.
 
 ---

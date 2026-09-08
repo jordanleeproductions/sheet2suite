@@ -50,7 +50,8 @@ export default function Sheet2VowDashboard() {
   const handleDirectGoogleAuth = async () => {
     setIsAuthenticating(true);
     try {
-      const res = await fetch('/api/auth/google');
+      const sheetParam = spreadsheetId ? `?spreadsheetId=${encodeURIComponent(spreadsheetId)}` : '';
+      const res = await fetch(`/api/auth/google${sheetParam}`);
       const data = await res.json();
 
       if (data.authUrl && typeof window !== 'undefined') {
@@ -2694,7 +2695,9 @@ export default function Sheet2VowDashboard() {
                   spreadsheetId={spreadsheetId}
                   weddingName={weddingName}
                   googleToken={googleToken}
+                  googleUserEmail={googleUserEmail}
                   driveFolder={driveFolder}
+                  onOpenGoogleAuth={handleDirectGoogleAuth}
                 />
               )}
 
