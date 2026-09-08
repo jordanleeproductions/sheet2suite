@@ -334,6 +334,25 @@
   - Cleans up mobile header space, letting the title and subtitle breathe without dead toggle buttons that conflicted with the mobile category card stack and sliding bottom sheet layout.
 
 ---
+
+## ⏱️ 14. Day-of Timeline & Schedule (`TimelineManager.tsx`, `TimeDialPicker.tsx`)
+- [x] **[SCHED-1] Robust Chronological Event Sorting & Meridiem Normalization (`TimelineManager.tsx`, `PrintTemplatesModal.tsx`):**
+  - Resolved time string parsing bugs where seconds (e.g. `01:00:00 PM` or `2:00:00 PM`) or non-standard casing from Google Sheets prevented meridiem recognition in `parseTimeToMinutes`, causing afternoon PM events to mistakenly evaluate as morning minutes and sort before AM events.
+  - Implemented robust regex matching for hours, minutes, optional seconds, and varied meridiem indicators (`AM`, `PM`, `am`, `pm`, `a.m.`, `p.m.`) as well as 24-hour military times.
+  - Updated `formatTimeDisplay` to strip redundant `:00` seconds in 12-hour mode, rendering clean, consistent wedding schedule badges (`02:00 PM`).
+  - Updated `compareScheduleEvents` and `isOvernightEvent` to ensure morning events (AM), afternoon/evening events (PM), and overnight moments (`+1 DAY` / 12:00 AM – 4:59 AM) sort in strict chronological sequence.
+  - Synchronized `filteredTimelineEvents` in Print Studio (`PrintTemplatesModal.tsx`) to apply the same chronological sorting for printable Day-Of Timeline rosters.
+- [x] **[SCHED-2] UP NEXT MOMENT Banner Chronological Synchronization (`TimelineManager.tsx`):**
+  - Linked the featured UP NEXT banner navigation (PREV / NEXT) to advance sequentially through the sorted timeline array instead of the raw unsorted spreadsheet list.
+  - The banner displays the true first chronological milestone of the wedding day by default and advances in order.
+- [x] **[SCHED-3] Mobile Time Dial & Quick Duration Picker (`TimeDialPicker.tsx`, `TimelineManager.tsx`):**
+  - Replaced raw text inputs for Start Time and End Time with an ergonomic `TimeDialPicker` component.
+  - **Native Mobile Time Dial Trigger**: Features an integrated `DIAL` button backed by `<input type="time">` and `showPicker()`, triggering the native OS spinning time wheel on iOS Safari and the circular clock dial on Android Chrome.
+  - **1-Tap AM / PM Switch**: Instant toggle button to switch between morning and afternoon/evening without opening the keyboard.
+  - **15-Minute Rounding Chips**: Quick-tap chips (`:00`, `:15`, `:30`, `:45`) for effortless minute selection.
+  - **Dynamic End Time Duration Presets**: When configuring End Time, dynamically computes duration offset pills (`+30m`, `+45m`, `+1h`, `+1.5h`, `+2h`) relative to the event's Start Time, enabling couples and coordinators to set end times in a single tap.
+
+---
 ---
 
 # SECTION 2: 📋 PENDING FEATURE BACKLOGS

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Guest, ScheduleEvent, Vendor, TableConfig } from '@/lib/sheets/types';
 import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, MapPin, Sparkles, Scissors, Music } from 'lucide-react';
-import { formatTimeDisplay } from '@/components/TimelineManager';
+import { formatTimeDisplay, compareScheduleEvents } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
 
 export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle' | 'guest_contact_roster' | 'reception_seating_chart' | 'canva_exporter';
@@ -93,10 +93,12 @@ export default function PrintTemplatesModal({
     return isGuestAtTable(g, selectedTableFilter);
   });
 
-  const filteredTimelineEvents = schedule.filter(e => {
-    if (selectedRoleFilter === 'ALL') return true;
-    return (e.responsibility || '').toLowerCase().includes(selectedRoleFilter.toLowerCase());
-  });
+  const filteredTimelineEvents = schedule
+    .filter(e => {
+      if (selectedRoleFilter === 'ALL') return true;
+      return (e.responsibility || '').toLowerCase().includes(selectedRoleFilter.toLowerCase());
+    })
+    .sort(compareScheduleEvents);
 
   const filteredVendors = vendors.filter(v => {
     if (selectedVendorCatFilter === 'ALL') return true;

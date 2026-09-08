@@ -1,26 +1,96 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ScheduleEvent } from '@/lib/sheets/types';
 import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import TimeDialPicker from '@/components/TimeDialPicker';
 
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
   if (!timeStr) return '';
-  if (format !== '24h') return timeStr;
   const str = timeStr.trim();
-  const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  const match = str.match(/(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/i);
   if (!match) return timeStr;
+
   let hours = parseInt(match[1], 10);
-  const minutes = match[2];
-  const modifier = match[3]?.toUpperCase();
+  const minutes = match[2] ? match[2].padStart(2, '0') : '00';
+  const meridiem = match[3] ? match[3].replace(/\./g, '').toUpperCase() : undefined;
 
-  if (modifier === 'PM' && hours < 12) hours += 12;
-  if (modifier === 'AM' && hours === 12) hours = 0;
+  if (format === '24h') {
+    if (meridiem === 'PM' && hours < 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+    const paddedHours = hours.toString().padStart(2, '0');
+    return `${paddedHours}:${minutes}`;
+  }
 
+  // 12h formatting - clean up unnecessary seconds
+  let displayMeridiem = meridiem;
+  if (!displayMeridiem) {
+    displayMeridiem = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+  }
   const paddedHours = hours.toString().padStart(2, '0');
-  const rest = str.replace(/^(\d{1,2}):(\d{2})\s*(AM|PM)?/i, '').trim();
-  return `${paddedHours}:${minutes}${rest ? ` ${rest}` : ''}`;
+  return `${paddedHours}:${minutes} ${displayMeridiem}`;
+}
+
+export function isLateNightTime(timeStr: string | undefined | null): boolean {
+  if (!timeStr) return false;
+  const str = timeStr.trim().toLowerCase();
+  
+  // Explicitly reject PM times from being flagged as overnight
+  if (str.includes('pm') || str.includes('p.m.')) return false;
+
+  if (str.includes('am') || str.includes('a.m.')) {
+    const match = str.match(/(\d{1,2})/);
+    if (match) {
+      const hour = parseInt(match[1], 10);
+      if (hour === 12 || (hour >= 1 && hour <= 4)) {
+        return true;
+      }
+    }
+  }
+
+  const match24 = str.match(/^0([0-4]):/);
+  if (match24) return true;
+  return false;
+}
+
+export function isOvernightEvent(event: Partial<ScheduleEvent>): boolean {
+  if (event.isAfterMidnight === true) return true;
+  if (event.isAfterMidnight === false) return false;
+  return isLateNightTime(event.startTime);
+}
+
+export function parseTimeToMinutes(timeStr: string | undefined | null): number {
+  if (!timeStr) return 0;
+  const str = timeStr.trim().toLowerCase();
+  
+  // Robust match handles optional seconds (:ss) and varied meridiems
+  const match = str.match(/(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/i);
+  if (!match) return 0;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2] ? parseInt(match[2], 10) : 0;
+  const meridiem = match[3] ? match[3].replace(/\./g, '').toLowerCase() : undefined;
+
+  if (meridiem === 'pm' && hours < 12) {
+    hours += 12;
+  } else if (meridiem === 'am' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+}
+
+export function compareScheduleEvents(a: ScheduleEvent, b: ScheduleEvent): number {
+  const isNightA = isOvernightEvent(a) ? 1 : 0;
+  const isNightB = isOvernightEvent(b) ? 1 : 0;
+  
+  if (isNightA !== isNightB) {
+    return isNightA - isNightB;
+  }
+
+  return parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime);
 }
 
 interface TimelineManagerProps {
@@ -42,81 +112,32 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
   // Search, Role Filter, and UP NEXT Active State
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('ALL');
-  const [activeEventIndex, setActiveEventIndex] = useState<number>(0);
+  const [activeTimelineIndex, setActiveTimelineIndex] = useState<number>(0);
 
   const roles = Array.from(new Set(
     schedule.flatMap(e => (e.responsibility || '').split(/[,/]/).map(r => r.trim()).filter(Boolean))
   ));
 
-  function isLateNightTime(timeStr: string): boolean {
-    if (!timeStr) return false;
-    const str = timeStr.trim().toLowerCase();
-    
-    // Explicitly reject PM times from being flagged as overnight
-    if (str.includes('pm')) return false;
+  const filteredEventsWithIndex = useMemo(() => {
+    return schedule
+      .map((event, originalIndex) => ({ event, originalIndex }))
+      .filter(({ event }) => {
+        const matchesSearch = 
+          (event.eventMoment || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (event.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (event.responsibility || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (event.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (str.includes('am')) {
-      const hourMatch = str.match(/^(\d{1,2})/);
-      if (hourMatch) {
-        const hour = parseInt(hourMatch[1], 10);
-        if (hour === 12 || (hour >= 1 && hour <= 4)) {
-          return true;
-        }
-      }
-    }
+        const matchesRole = selectedRole === 'ALL' || 
+          (event.responsibility || '').toLowerCase().includes(selectedRole.toLowerCase());
 
-    const match24 = str.match(/^0([0-4]):/);
-    if (match24 && !str.includes('pm')) return true;
-    return false;
-  }
+        return matchesSearch && matchesRole;
+      })
+      .sort((a, b) => compareScheduleEvents(a.event, b.event));
+  }, [schedule, searchTerm, selectedRole]);
 
-  function parseTimeToMinutes(timeStr: string): number {
-    if (!timeStr) return 0;
-    const str = timeStr.trim().toLowerCase();
-    
-    let hours = 0;
-    let minutes = 0;
-
-    const match = str.match(/^(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
-    if (match) {
-      hours = parseInt(match[1], 10);
-      minutes = match[2] ? parseInt(match[2], 10) : 0;
-      const meridiem = match[3];
-
-      if (meridiem === 'pm' && hours < 12) {
-        hours += 12;
-      } else if (meridiem === 'am' && hours === 12) {
-        hours = 0;
-      }
-    }
-
-    return hours * 60 + minutes;
-  }
-
-  const filteredEventsWithIndex = schedule
-    .map((event, originalIndex) => ({ event, originalIndex }))
-    .filter(({ event }) => {
-      const matchesSearch = 
-        (event.eventMoment || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.responsibility || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesRole = selectedRole === 'ALL' || 
-        (event.responsibility || '').toLowerCase().includes(selectedRole.toLowerCase());
-
-      return matchesSearch && matchesRole;
-    })
-    .sort((a, b) => {
-      const isNightA = a.event.isAfterMidnight || isLateNightTime(a.event.startTime) ? 1 : 0;
-      const isNightB = b.event.isAfterMidnight || isLateNightTime(b.event.startTime) ? 1 : 0;
-      
-      if (isNightA !== isNightB) {
-        return isNightA - isNightB;
-      }
-
-      return parseTimeToMinutes(a.event.startTime) - parseTimeToMinutes(b.event.startTime);
-    });
+  const safeActiveIndex = Math.min(Math.max(0, activeTimelineIndex), Math.max(0, filteredEventsWithIndex.length - 1));
+  const activeItem = filteredEventsWithIndex[safeActiveIndex];
 
   const toggleExpand = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -292,7 +313,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
       </div>
 
       {/* UP NEXT Featured Event Banner */}
-      {schedule.length > 0 && (
+      {filteredEventsWithIndex.length > 0 && (
         <div style={styles.upNextCard}>
           <div style={styles.upNextHeader}>
             <div style={styles.upNextBadgeRow}>
@@ -300,7 +321,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                 <Sparkles size={12} style={{ marginRight: '0.25rem' }} /> UP NEXT MOMENT
               </span>
               <span style={styles.upNextIndexText}>
-                Moment {activeEventIndex + 1} of {schedule.length}
+                Moment {safeActiveIndex + 1} of {filteredEventsWithIndex.length}
               </span>
             </div>
 
@@ -308,11 +329,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
               <button
                 style={{
                   ...styles.navBtn,
-                  opacity: activeEventIndex === 0 ? 0.4 : 1,
-                  cursor: activeEventIndex === 0 ? 'not-allowed' : 'pointer'
+                  opacity: safeActiveIndex === 0 ? 0.4 : 1,
+                  cursor: safeActiveIndex === 0 ? 'not-allowed' : 'pointer'
                 }}
-                onClick={() => setActiveEventIndex(prev => Math.max(0, prev - 1))}
-                disabled={activeEventIndex === 0}
+                onClick={() => setActiveTimelineIndex(prev => Math.max(0, prev - 1))}
+                disabled={safeActiveIndex === 0}
                 title="Previous Moment"
               >
                 <ChevronLeft size={16} /> PREV
@@ -320,11 +341,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
               <button
                 style={{
                   ...styles.navBtn,
-                  opacity: activeEventIndex >= schedule.length - 1 ? 0.4 : 1,
-                  cursor: activeEventIndex >= schedule.length - 1 ? 'not-allowed' : 'pointer'
+                  opacity: safeActiveIndex >= filteredEventsWithIndex.length - 1 ? 0.4 : 1,
+                  cursor: safeActiveIndex >= filteredEventsWithIndex.length - 1 ? 'not-allowed' : 'pointer'
                 }}
-                onClick={() => setActiveEventIndex(prev => Math.min(schedule.length - 1, prev + 1))}
-                disabled={activeEventIndex >= schedule.length - 1}
+                onClick={() => setActiveTimelineIndex(prev => Math.min(filteredEventsWithIndex.length - 1, prev + 1))}
+                disabled={safeActiveIndex >= filteredEventsWithIndex.length - 1}
                 title="Next Moment"
               >
                 NEXT <ChevronRight size={16} />
@@ -332,33 +353,36 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
             </div>
           </div>
 
-          {schedule[activeEventIndex] && (
+          {activeItem && (
             <div style={styles.upNextBody}>
               <div style={styles.upNextTimeRow}>
-                <span style={styles.upNextTime}>{formatTimeDisplay(schedule[activeEventIndex].startTime, timeFormat)}</span>
-                {schedule[activeEventIndex].endTime && (
-                  <span style={styles.upNextEndTime}>to {formatTimeDisplay(schedule[activeEventIndex].endTime, timeFormat)}</span>
+                <span style={styles.upNextTime}>{formatTimeDisplay(activeItem.event.startTime, timeFormat)}</span>
+                {activeItem.event.endTime && (
+                  <span style={styles.upNextEndTime}>to {formatTimeDisplay(activeItem.event.endTime, timeFormat)}</span>
+                )}
+                {isOvernightEvent(activeItem.event) && (
+                  <span style={styles.midnightBadge}>🌙 +1 DAY</span>
                 )}
               </div>
-              <h3 style={styles.upNextMomentTitle}>{schedule[activeEventIndex].eventMoment}</h3>
+              <h3 style={styles.upNextMomentTitle}>{activeItem.event.eventMoment}</h3>
 
               <div style={styles.upNextMetaRow}>
-                {schedule[activeEventIndex].location && (
+                {activeItem.event.location && (
                   <div style={styles.upNextMetaItem}>
                     <MapPin size={13} style={{ color: 'var(--color-primary)' }} />
-                    <span>{schedule[activeEventIndex].location}</span>
+                    <span>{activeItem.event.location}</span>
                   </div>
                 )}
-                {schedule[activeEventIndex].responsibility && (
+                {activeItem.event.responsibility && (
                   <div style={styles.upNextMetaItem}>
                     <User size={13} style={{ color: 'var(--color-primary)' }} />
-                    <span>{schedule[activeEventIndex].responsibility}</span>
+                    <span>{activeItem.event.responsibility}</span>
                   </div>
                 )}
               </div>
 
-              {schedule[activeEventIndex].notes && (
-                <p style={styles.upNextNotes}>"{schedule[activeEventIndex].notes}"</p>
+              {activeItem.event.notes && (
+                <p style={styles.upNextNotes}>"{activeItem.event.notes}"</p>
               )}
             </div>
           )}
@@ -442,25 +466,22 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
             <form onSubmit={saveEvent} style={styles.form}>
               <div className="timeline-form-grid" style={styles.formGrid}>
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>START TIME *</label>
-                  <input
-                    type="text"
+                  <TimeDialPicker
+                    label="START TIME"
                     required
                     placeholder="e.g. 04:00 PM"
                     value={formState.startTime || ''}
-                    onChange={(e) => handleInputChange('startTime', e.target.value)}
-                    style={styles.input}
+                    onChange={(val) => handleInputChange('startTime', val)}
                   />
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>END TIME</label>
-                  <input
-                    type="text"
+                  <TimeDialPicker
+                    label="END TIME"
                     placeholder="e.g. 04:30 PM"
                     value={formState.endTime || ''}
-                    onChange={(e) => handleInputChange('endTime', e.target.value)}
-                    style={styles.input}
+                    onChange={(val) => handleInputChange('endTime', val)}
+                    referenceStartTime={formState.startTime}
                   />
                 </div>
 
@@ -509,7 +530,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                   />
                 </div>
 
-                {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '')) && (
+                {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '') || formState.isAfterMidnight) && (
                   <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                     <div style={styles.midnightAlertBox}>
                       <div style={styles.midnightAlertHeader}>
@@ -664,7 +685,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
         ) : (
           filteredEventsWithIndex.map(({ event, originalIndex }, index) => {
             const isExpanded = expandedIndex === originalIndex;
-            const isActiveNext = activeEventIndex === originalIndex;
+            const isActiveNext = safeActiveIndex === index;
             
             return (
               <div key={originalIndex} style={styles.timelineItem}>
@@ -676,7 +697,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                     fontWeight: isActiveNext ? 700 : 600
                   }}>{formatTimeDisplay(event.startTime, timeFormat)}</span>
                   {event.endTime && <span style={styles.endTimeText}>to {formatTimeDisplay(event.endTime, timeFormat)}</span>}
-                  {(event.isAfterMidnight || isLateNightTime(event.startTime)) && (
+                  {isOvernightEvent(event) && (
                     <span style={styles.midnightBadge}>🌙 +1 DAY</span>
                   )}
                 </div>
@@ -700,7 +721,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                     borderWidth: isActiveNext ? '2px' : '1px',
                     boxShadow: isActiveNext ? '0 4px 12px rgba(205, 162, 80, 0.15)' : 'none'
                   }}
-                  onClick={() => setActiveEventIndex(originalIndex)}
+                  onClick={() => setActiveTimelineIndex(index)}
                 >
                   {/* Card click header */}
                   <div className="timeline-card-header" style={styles.cardHeader} onClick={() => toggleExpand(originalIndex)}>
