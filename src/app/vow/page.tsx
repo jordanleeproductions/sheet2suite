@@ -398,10 +398,10 @@ export default function Sheet2VowDashboard() {
         location: location !== undefined ? location : locationDetails,
         currency: currency,
       };
-      setWeddingData({
-        ...weddingData,
+      setWeddingData(prev => prev ? ({
+        ...prev,
         dashboard: updatedDash,
-      });
+      }) : prev);
       await syncUpdate('dashboard', updatedDash);
     }
   };
@@ -820,12 +820,13 @@ export default function Sheet2VowDashboard() {
     setSyncError(null);
 
     // Optimistically update UI local state first
-    if (weddingData) {
-      setWeddingData({
-        ...weddingData,
+    setWeddingData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
         [sheetType]: updatedData
-      });
-    }
+      };
+    });
 
     try {
       const headers: Record<string, string> = {
@@ -2623,7 +2624,7 @@ export default function Sheet2VowDashboard() {
                     setBudgetThreshold(newTarget);
                     if (weddingData) {
                       const updatedDash = { ...weddingData.dashboard, totalBudget: newTarget };
-                      setWeddingData({ ...weddingData, dashboard: updatedDash });
+                      setWeddingData(prev => prev ? ({ ...prev, dashboard: updatedDash }) : prev);
                       await syncUpdate('dashboard', updatedDash);
                     }
                   }}

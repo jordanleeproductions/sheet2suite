@@ -109,6 +109,7 @@
 - [x] **[VND-3] Category Breakdown Stat Badges (Streamlined):** Removed the crowded category quick-filter pill buttons from the top layout to eliminate visual clutter, retaining category filtering in the unified search & filter bar.
 - [x] **[VND-4] Vendor Portal Share Link Generator:** Embedded VendorShareLinkManager section allowing instant generation and access control for mobile vendor portals (*Music, Photos, Catering, Timeline*).
 - [x] **[VND-5] Vendor Subtitle Description:** Added a clean descriptive subtitle beneath the Vendor Management header detailing contract, payment, and meal tracking.
+- [x] **[VND-7] Instant Vendor Card Refresh & Optimistic State Sync:** Fixed race condition where saving a vendor's contact details would not immediately update the vendor card in the UI without a browser refresh. Converted `syncUpdate` state setters in `src/app/vow/page.tsx` to functional updates (`prev => ({ ...prev, [sheetType]: updatedData })`), tracked exact vendor indices via `editingIndex` in `VendorManager.tsx`, made vendor record matching resilient against missing IDs or name updates, and eliminated redundant secondary sync calls to `budget` when non-financial contact information is saved.
 
 ---
 

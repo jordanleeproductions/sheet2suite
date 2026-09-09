@@ -24,6 +24,7 @@ interface VendorManagerProps {
 export default function VendorManager({ vendors, budget = [], onUpdate, onUpdateBudget, isSyncing, currency = 'USD', onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<Vendor>>({});
@@ -115,11 +116,14 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
     setUploadError(null);
     setIsAdding(true);
     setEditingItem(null);
+    setEditingIndex(null);
   };
 
-  const startEdit = (item: Vendor) => {
+  const startEdit = (item: Vendor, index?: number) => {
     setFormState(item);
     setEditingItem(item);
+    const resolvedIndex = typeof index === 'number' && index >= 0 ? index : vendors.indexOf(item);
+    setEditingIndex(resolvedIndex >= 0 ? resolvedIndex : null);
     setUploadError(null);
     setIsAdding(false);
   };
@@ -127,6 +131,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
   const closeModal = () => {
     setIsAdding(false);
     setEditingItem(null);
+    setEditingIndex(null);
     setUploadError(null);
     setFormState({});
   };
@@ -211,9 +216,28 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
         ...(editingItem || {}),
         ...formState,
       } as Vendor;
-      updatedVendors = vendors.map(item => 
-        item.vendorId === editingItem?.vendorId ? savedVendor : item
-      );
+
+      // Ensure vendorId is preserved or generated if blank
+      if (!savedVendor.vendorId && savedVendor.vendorName) {
+        savedVendor.vendorId = `V_${savedVendor.vendorName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+      }
+
+      // Match by editingIndex first, or by vendorId, or by exact item reference, or by vendorName
+      const targetIndex = (editingIndex !== null && editingIndex >= 0 && editingIndex < vendors.length)
+        ? editingIndex
+        : vendors.findIndex(item => 
+            (editingItem?.vendorId && item.vendorId === editingItem.vendorId) ||
+            item === editingItem ||
+            (editingItem?.vendorName && item.vendorName?.trim().toLowerCase() === editingItem.vendorName.trim().toLowerCase())
+          );
+
+      if (targetIndex >= 0) {
+        updatedVendors = vendors.map((item, idx) => idx === targetIndex ? savedVendor : item);
+      } else {
+        updatedVendors = vendors.map(item => 
+          (editingItem?.vendorId && item.vendorId === editingItem.vendorId) ? savedVendor : item
+        );
+      }
     }
 
     await onUpdate(updatedVendors);
@@ -232,20 +256,37 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
       const dueDate = savedVendor.paymentDueDate || '';
       const paymentStatus = (estimatedCost > 0 && amountPaid >= estimatedCost) ? 'Paid' : (amountPaid > 0 ? 'Partial' : 'Pending');
 
-      let updatedBudgetList: BudgetItem[];
+      let updatedBudgetList: BudgetItem[] | null = null;
       if (existingBudgetIdx >= 0) {
         const existing = budget[existingBudgetIdx];
-        const updatedBudgetItem: BudgetItem = {
-          ...existing,
-          category: savedVendor.category || existing.category || 'General',
-          vendorName: savedVendor.vendorName,
-          estimatedCost: estimatedCost > 0 ? estimatedCost : existing.estimatedCost,
-          actualCost: actualCost > 0 ? actualCost : existing.actualCost,
-          amountPaid: amountPaid,
-          dueDate: dueDate || existing.dueDate,
-          paymentStatus: paymentStatus,
-        };
-        updatedBudgetList = budget.map((b, i) => i === existingBudgetIdx ? updatedBudgetItem : b);
+        const newCategory = savedVendor.category || existing.category || 'General';
+        const newEst = estimatedCost > 0 ? estimatedCost : existing.estimatedCost;
+        const newAct = actualCost > 0 ? actualCost : existing.actualCost;
+        const newDue = dueDate || existing.dueDate;
+
+        // Check if anything relevant to budget actually changed before triggering sync
+        const hasBudgetChanges = 
+          existing.category !== newCategory ||
+          existing.vendorName !== savedVendor.vendorName ||
+          existing.estimatedCost !== newEst ||
+          existing.actualCost !== newAct ||
+          existing.amountPaid !== amountPaid ||
+          existing.dueDate !== newDue ||
+          existing.paymentStatus !== paymentStatus;
+
+        if (hasBudgetChanges) {
+          const updatedBudgetItem: BudgetItem = {
+            ...existing,
+            category: newCategory,
+            vendorName: savedVendor.vendorName,
+            estimatedCost: newEst,
+            actualCost: newAct,
+            amountPaid: amountPaid,
+            dueDate: newDue,
+            paymentStatus: paymentStatus,
+          };
+          updatedBudgetList = budget.map((b, i) => i === existingBudgetIdx ? updatedBudgetItem : b);
+        }
       } else if (estimatedCost > 0 || amountPaid > 0) {
         // Create new budget item for this vendor
         const newBudgetItem: BudgetItem = {
@@ -259,11 +300,9 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
           paymentStatus,
         };
         updatedBudgetList = [newBudgetItem, ...budget];
-      } else {
-        updatedBudgetList = budget;
       }
 
-      if (updatedBudgetList !== budget) {
+      if (updatedBudgetList) {
         await onUpdateBudget(updatedBudgetList);
       }
     }
@@ -284,6 +323,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
       });
       setIsAdding(true);
       setEditingItem(null);
+      setEditingIndex(null);
     } else {
       closeModal();
     }
@@ -291,7 +331,16 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
 
   const confirmDeleteVendor = async () => {
     if (!vendorToDelete || isSyncing) return;
-    const updated = vendors.filter(item => item.vendorId !== vendorToDelete.vendorId);
+    const targetIdx = vendors.indexOf(vendorToDelete);
+    const updated = vendors.filter((item, idx) => {
+      if (vendorToDelete.vendorId && item.vendorId) {
+        return item.vendorId !== vendorToDelete.vendorId;
+      }
+      if (targetIdx >= 0) {
+        return idx !== targetIdx;
+      }
+      return item !== vendorToDelete;
+    });
     await onUpdate(updated);
 
     if (onUpdateBudget && vendorToDelete.vendorName) {
@@ -579,7 +628,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                       {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meals</span>}
                     </td>
                     <td style={{ ...styles.td, textAlign: 'center' }}>
-                      <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Vendor">
+                      <button style={styles.actionBtn} onClick={() => startEdit(item, vendors.indexOf(item))} title="Edit Vendor">
                         <Edit2 size={16} />
                       </button>
                       <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)} title="Delete">
@@ -611,7 +660,7 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                   <span style={styles.cardCategory}>{item.category}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button style={styles.actionBtn} onClick={() => startEdit(item)}>
+                  <button style={styles.actionBtn} onClick={() => startEdit(item, vendors.indexOf(item))}>
                     <Edit2 size={14} />
                   </button>
                   <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)}>
