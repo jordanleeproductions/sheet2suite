@@ -351,6 +351,15 @@
   - **1-Tap AM / PM Switch**: Instant toggle button to switch between morning and afternoon/evening without opening the keyboard.
   - **15-Minute Rounding Chips**: Quick-tap chips (`:00`, `:15`, `:30`, `:45`) for effortless minute selection.
   - **Dynamic End Time Duration Presets**: When configuring End Time, dynamically computes duration offset pills (`+30m`, `+45m`, `+1h`, `+1.5h`, `+2h`) relative to the event's Start Time, enabling couples and coordinators to set end times in a single tap.
+- [x] **[SCHED-4] Leading Zero Removal for 12-Hour Times (`TimelineManager.tsx`, `TimeDialPicker.tsx`):**
+  - Formatted all 12-hour timestamps without leading zeros on the hour component (`4:00 PM` instead of `04:00 PM`, `8:00 AM` instead of `08:00 AM`).
+- [x] **[SCHED-5] Interactive Combobox for Responsibility / Vendors (`TimelineManager.tsx`):**
+  - Replaced static input with an interactive combobox featuring a dropdown toggle (`ChevronDown`).
+  - Pre-populates a filterable list of all unique previously entered roles/vendors from the workbook and standard defaults (`Officiant`, `Photographer`, `DJ / MC`, `Coordinator`, `Glam Team`, etc.).
+  - Preserves 100% free-text editing and typing so users can override or enter custom vendor assignments at any time.
+- [x] **[SCHED-6] Responsive Past-Midnight Warning Card Layout (`TimelineManager.tsx`):**
+  - Added responsive boundary guardrails (`box-sizing: border-box`, `width: 100%`, `overflow: hidden`) preventing horizontal overflow on mobile screens.
+  - Shortened alert copy and action button labels (`🌙 YES — OVERNIGHT (+1 DAY)`, `☀️ NO — EARLY MORNING`) and added a responsive CSS grid (`grid-template-columns: 1fr 1fr` on desktop, `1fr` on screens $\le 520\text{px}$) to cleanly fit mobile viewports.
 
 ---
 ---

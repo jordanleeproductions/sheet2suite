@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ScheduleEvent } from '@/lib/sheets/types';
-import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle } from 'lucide-react';
+import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle, Check } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import TimeDialPicker from '@/components/TimeDialPicker';
 
@@ -23,14 +23,16 @@ export function formatTimeDisplay(timeStr: string | undefined | null, format?: '
     return `${paddedHours}:${minutes}`;
   }
 
-  // 12h formatting - clean up unnecessary seconds
+  // 12h formatting - clean up unnecessary seconds and remove leading zero on hours
   let displayMeridiem = meridiem;
   if (!displayMeridiem) {
     displayMeridiem = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12;
+  } else {
+    if (hours === 0) hours = 12;
+    else if (hours > 12) hours = hours % 12;
   }
-  const paddedHours = hours.toString().padStart(2, '0');
-  return `${paddedHours}:${minutes} ${displayMeridiem}`;
+  return `${hours}:${minutes} ${displayMeridiem}`;
 }
 
 export function isLateNightTime(timeStr: string | undefined | null): boolean {
@@ -114,9 +116,67 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
   const [selectedRole, setSelectedRole] = useState('ALL');
   const [activeTimelineIndex, setActiveTimelineIndex] = useState<number>(0);
 
+  // Combobox dropdown state for Responsibility / Vendors
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+
   const roles = Array.from(new Set(
     schedule.flatMap(e => (e.responsibility || '').split(/[,/]/).map(r => r.trim()).filter(Boolean))
   ));
+
+  // Unique list of previous responsibility entries + standard options
+  const previousResponsibilities = useMemo(() => {
+    const list: string[] = [];
+    const seen = new Set<string>();
+
+    const addRole = (role: string) => {
+      const trimmed = role.trim();
+      if (!trimmed || seen.has(trimmed.toLowerCase())) return;
+      seen.add(trimmed.toLowerCase());
+      list.push(trimmed);
+    };
+
+    schedule.forEach(e => {
+      if (e.responsibility) addRole(e.responsibility);
+    });
+
+    schedule.forEach(e => {
+      if (e.responsibility) {
+        e.responsibility.split(/[,/]/).forEach(r => addRole(r));
+      }
+    });
+
+    [
+      'Planner / Coordinator',
+      'Photographer',
+      'Videographer',
+      'DJ / MC',
+      'Caterer / Staff',
+      'Officiant',
+      'Florist',
+      'Glam Team (Hair & Makeup)',
+      'Bridal Party',
+      'Groomsmen',
+      'Musicians / Band',
+      'Transportation / Driver'
+    ].forEach(r => addRole(r));
+
+    return list;
+  }, [schedule]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target as Node)) {
+        setIsRoleDropdownOpen(false);
+      }
+    };
+    if (isRoleDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isRoleDropdownOpen]);
 
   const filteredEventsWithIndex = useMemo(() => {
     return schedule
@@ -452,6 +512,29 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                 grid-column: span 1 !important;
               }
             }
+            .midnight-alert-box {
+              width: 100% !important;
+              box-sizing: border-box !important;
+            }
+            .midnight-toggle-group {
+              display: grid !important;
+              grid-template-columns: 1fr 1fr !important;
+              gap: 0.5rem !important;
+              width: 100% !important;
+              box-sizing: border-box !important;
+            }
+            .midnight-toggle-btn {
+              width: 100% !important;
+              box-sizing: border-box !important;
+              text-align: center !important;
+              white-space: normal !important;
+              word-break: break-word !important;
+            }
+            @media (max-width: 520px) {
+              .midnight-toggle-group {
+                grid-template-columns: 1fr !important;
+              }
+            }
           `}</style>
           <div className="timeline-modal-content" style={styles.modalContent}>
             <div style={styles.modalHeader} className="modalHeader">
@@ -510,13 +593,108 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
 
                 <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
                   <label style={styles.label}>RESPONSIBILITY / VENDORS</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Officiant, Harpist, Coordinator"
-                    value={formState.responsibility || ''}
-                    onChange={(e) => handleInputChange('responsibility', e.target.value)}
-                    style={styles.input}
-                  />
+                  <div ref={roleDropdownRef} style={{ position: 'relative', width: '100%' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        placeholder="Select from previous or type custom vendor / role..."
+                        value={formState.responsibility || ''}
+                        onChange={(e) => {
+                          handleInputChange('responsibility', e.target.value);
+                          setIsRoleDropdownOpen(true);
+                        }}
+                        onFocus={() => setIsRoleDropdownOpen(true)}
+                        style={{
+                          ...styles.input,
+                          paddingRight: '2.5rem',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsRoleDropdownOpen(prev => !prev)}
+                        title="Toggle previous vendors & roles list"
+                        style={{
+                          position: 'absolute',
+                          right: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--color-muted)',
+                          padding: '0.35rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                    </div>
+
+                    {isRoleDropdownOpen && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 'calc(100% + 4px)',
+                          left: 0,
+                          right: 0,
+                          maxHeight: '180px',
+                          overflowY: 'auto',
+                          backgroundColor: 'var(--color-surface, #ffffff)',
+                          border: '1px solid var(--color-muted, #d1d5db)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+                          zIndex: 50,
+                        }}
+                      >
+                        {previousResponsibilities
+                          .filter(role => 
+                            !formState.responsibility || 
+                            role.toLowerCase().includes(formState.responsibility.toLowerCase()) ||
+                            formState.responsibility.trim() === ''
+                          )
+                          .map((role) => {
+                            const isSelected = (formState.responsibility || '').trim().toLowerCase() === role.toLowerCase();
+                            return (
+                              <button
+                                key={role}
+                                type="button"
+                                onClick={() => {
+                                  handleInputChange('responsibility', role);
+                                  setIsRoleDropdownOpen(false);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  width: '100%',
+                                  padding: '0.55rem 0.75rem',
+                                  textAlign: 'left',
+                                  fontSize: '0.8rem',
+                                  fontFamily: 'var(--font-sans)',
+                                  backgroundColor: isSelected ? 'var(--color-background, #f3f4f6)' : 'transparent',
+                                  color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+                                  fontWeight: isSelected ? 700 : 500,
+                                  border: 'none',
+                                  borderBottom: '1px solid var(--color-border, #f3f4f6)',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <span>{role}</span>
+                                {isSelected && <Check size={14} style={{ color: 'var(--color-primary)' }} />}
+                              </button>
+                            );
+                          })}
+                        {previousResponsibilities.filter(role => 
+                          !formState.responsibility || 
+                          role.toLowerCase().includes(formState.responsibility.toLowerCase())
+                        ).length === 0 && (
+                          <div style={{ padding: '0.6rem 0.75rem', fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                            Custom role: "{formState.responsibility}"
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
@@ -531,18 +709,19 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                 </div>
 
                 {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '') || formState.isAfterMidnight) && (
-                  <div style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                    <div style={styles.midnightAlertBox}>
+                  <div style={{ ...styles.fieldGroup, gridColumn: 'span 2', width: '100%' }}>
+                    <div className="midnight-alert-box" style={styles.midnightAlertBox}>
                       <div style={styles.midnightAlertHeader}>
-                        <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem' }} />
-                        <span style={styles.midnightAlertTitle}>THIS EVENT RUNS PAST MIDNIGHT</span>
+                        <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem', flexShrink: 0 }} />
+                        <span style={styles.midnightAlertTitle}>EVENT RUNS PAST MIDNIGHT?</span>
                       </div>
                       <p style={styles.midnightAlertDesc}>
-                        You entered a time between 12:00 AM and 4:00 AM. Is this moment at the end of the wedding night (e.g. 1:00 AM shuttle bus after midnight)?
+                        Selected time is between 12:00 AM – 4:00 AM. Is this moment at the end of the wedding night (e.g. after-party) or early morning prep?
                       </p>
-                      <div style={styles.midnightToggleGroup}>
+                      <div className="midnight-toggle-group" style={styles.midnightToggleGroup}>
                         <button
                           type="button"
+                          className="midnight-toggle-btn"
                           style={{
                             ...styles.midnightToggleBtn,
                             backgroundColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#ffffff',
@@ -552,10 +731,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                           }}
                           onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: true, eventDate: 'Next Day (+1)' }))}
                         >
-                          🌙 YES — END OF NIGHT (+1 DAY)
+                          🌙 YES — OVERNIGHT (+1 DAY)
                         </button>
                         <button
                           type="button"
+                          className="midnight-toggle-btn"
                           style={{
                             ...styles.midnightToggleBtn,
                             backgroundColor: formState.isAfterMidnight === false ? '#0d9488' : '#ffffff',
@@ -796,19 +976,23 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#f5f3ff',
     border: '1px solid #c4b5fd',
     borderRadius: 'var(--border-radius-md)',
-    padding: '0.875rem',
-    marginTop: '0.5rem',
+    padding: '0.75rem',
+    marginTop: '0.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.4rem',
+    width: '100%',
+    boxSizing: 'border-box',
+    overflow: 'hidden',
   },
   midnightAlertHeader: {
     display: 'flex',
     alignItems: 'center',
+    gap: '0.25rem',
   },
   midnightAlertTitle: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
+    fontSize: '0.7rem',
     fontWeight: 700,
     color: '#6d28d9',
     letterSpacing: '0.05em',
@@ -816,23 +1000,32 @@ const styles: Record<string, React.CSSProperties> = {
   midnightAlertDesc: {
     fontSize: '0.75rem',
     color: '#4c1d95',
-    lineHeight: '1.4',
+    lineHeight: '1.35',
+    margin: 0,
+    wordBreak: 'break-word',
   },
   midnightToggleGroup: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
     gap: '0.5rem',
     marginTop: '0.25rem',
-    flexWrap: 'wrap',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   midnightToggleBtn: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.65rem',
     fontWeight: 700,
-    padding: '0.35rem 0.6rem',
+    padding: '0.5rem 0.4rem',
     borderRadius: 'var(--border-radius-sm)',
     border: '1px solid var(--color-muted)',
     cursor: 'pointer',
     transition: 'var(--transition-smooth)',
+    width: '100%',
+    boxSizing: 'border-box',
+    textAlign: 'center',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
   },
   midnightBadge: {
     fontFamily: 'var(--font-mono)',

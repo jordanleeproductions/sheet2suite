@@ -31,7 +31,7 @@ export function time12To24(timeStr: string | undefined | null): string {
   return `${paddedH}:${minutes}`;
 }
 
-// Convert 24h "HH:mm" to standard 12h "hh:mm A" (e.g. "16:30" -> "04:30 PM")
+// Convert 24h "HH:mm" to standard 12h "h:mm A" (e.g. "16:30" -> "4:30 PM", "08:00" -> "8:00 AM")
 export function time24To12(time24: string | undefined | null): string {
   if (!time24) return '';
   const match = time24.trim().match(/^(\d{1,2}):(\d{2})/);
@@ -40,8 +40,7 @@ export function time24To12(time24: string | undefined | null): string {
   const minutes = match[2];
   const meridiem = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12 || 12;
-  const paddedH = hours < 10 ? `0${hours}` : `${hours}`;
-  return `${paddedH}:${minutes} ${meridiem}`;
+  return `${hours}:${minutes} ${meridiem}`;
 }
 
 // Helper to add minutes to a 12h time string
@@ -63,7 +62,7 @@ export default function TimeDialPicker({
   value,
   onChange,
   required = false,
-  placeholder = 'e.g. 04:00 PM',
+  placeholder = 'e.g. 4:00 PM',
   referenceStartTime,
 }: TimeDialPickerProps) {
   const nativeInputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +96,7 @@ export default function TimeDialPicker({
   // Toggle AM / PM
   const handleToggleMeridiem = (target: 'AM' | 'PM') => {
     if (!value) {
-      onChange(target === 'AM' ? '09:00 AM' : '02:00 PM');
+      onChange(target === 'AM' ? '9:00 AM' : '2:00 PM');
       return;
     }
     const currentT24 = time12To24(value);
