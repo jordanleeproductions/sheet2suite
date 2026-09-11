@@ -198,11 +198,13 @@
   - Standardized all Due Date and Purchase Date renderings across tables and card views into a unified format (`YYYY-MM-DD`).
   - Refactored expense matching logic so itemized purchases only update specific budget line items when the Expense Description matches the Budget Line Item / Vendor name (or if a single overview line item exists for that category), preventing separate vendor actual costs (e.g. florist contracts) from being overwritten by unrelated purchases (e.g. terracotta pots).
   - Added pre-populated category suggestions and zero-clearing on focus to the New Expense modal.
-- [x] **[BUDGET-PERSISTENCE-CURRENCY-COERCION-FIX] Robust Target Budget Persistence & Currency Parsing Sanitization (`mapper.ts`, `BudgetLedgerManager.tsx`, `vow/page.tsx`, `/api/sync/route.ts`):**
-  - **Sanitized Currency String Coercion (`parseCleanNumber`)**: Cleaned raw string values in Google Sheets containing currency formats (`$15,000.00`, `£3,500.50`, commas, whitespace) before numeric coercion, preventing `NaN || 0` collapse of budget allocations and logged expenses.
-  - **Synchronized `useEffect` on Budget Target Prop**: Dynamically synchronizes `customTargetInput` and `isUnsetMode` state whenever parent `budgetTarget` updates, eliminating stuck unset modes when navigating between tabs.
-  - **Guaranteed Fallback & LocalStorage Caching**: In `vow/page.tsx`, ensured `budgetTarget` prop falls back to client `budgetThreshold` and `localStorage.setItem('s2v_budget_threshold')` when spreadsheet dashboard values are 0 or unpopulated.
-  - **Auto-Provision Settings Tab & UNFORMATTED_VALUE Render**: Added `valueRenderOption: 'UNFORMATTED_VALUE'` to batchGet in `/api/sync` and auto-creates the `SETTINGS` sheet tab if missing before batchUpdate execution, ensuring target budget changes persist across devices and tabs without HTTP 400 errors.
+- [x] **[BUDGET-HYBRID-DYNAMIC-MODEL] Hybrid Budget Architecture (Dynamic Auto-Sum + Optional Master Target Cap) (`BudgetLedgerManager.tsx`, `DashboardMetrics.tsx`, `vow/page.tsx`):**
+  - **Dynamic Category Auto-Sum by Default**: Total wedding budget automatically defaults to the live sum of all category targets (`totalEstimate`). Adding or editing categories or vendor contracts instantly updates the budget without manual recalculation.
+  - **Optional Master Target Cap Ceiling**: Couples can set an explicit Master Cap (e.g., `$35,000`), locking the ceiling and unlocking the **Allocation Cushion** indicator.
+  - **Allocation Cushion & Health Warnings**: Dynamically computes `effectiveTarget - totalEstimate`. Highlights `+${cushion} Unallocated Cushion` in emerald when headroom remains, or flags `⚠️ Over-Allocated by ${amount}` in amber/red when category targets exceed the master cap ceiling.
+  - **1-Click Sync to Categories**: Dedicated `SYNC TO CATEGORIES` button snaps the master cap back to the current category sum and restores dynamic auto-sum mode with zero friction.
+  - **Retained Unset Mode**: Preserves "No Hard Limit" mode for couples purely tracking expenses without arbitrary caps.
+  - **Summary Dashboard Integration**: Updated `DashboardMetrics.tsx` financial KPI cards and progress bars to display `effectiveTotalBudget` with badges distinguishing Master Target Cap from Dynamic Sum of Categories.
 
 ---
 

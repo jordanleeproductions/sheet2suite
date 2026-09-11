@@ -251,9 +251,13 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 - **Native Google Sheets In-Cell Dropdown Engine:** Automatically inspects table headers across all 10 tabs and applies `setDataValidation` requests with `type: 'ONE_OF_RANGE'`, `showCustomUi: true`, and userEnteredValues linking directly to the corresponding lookup range on the `'Settings'` tab (`=Settings!$A$2:$A$50`, `=Settings!$D$2:$D$50`, etc.).
 - **Settings Tab Lookup Integrity:** Protects columns A–M of the `'Settings'` tab (Age Categories, Table Shapes, RSVP Statuses, Task Statuses, etc.) from configuration overwrites by relocating metadata JSON to cell `Settings!Z1`.
 
-### 3.7.3 Budget Persistence & Currency Parsing Sanitization (`mapper.ts`, `BudgetLedgerManager.tsx`, `/api/sync`)
+### 3.7.3 Hybrid Budget Architecture & Currency Parsing Sanitization (`mapper.ts`, `BudgetLedgerManager.tsx`, `/api/sync`)
 - **Sanitized Float Parsing (`parseCleanNumber`):** Strips currency symbols (`$`, `£`, `€`), thousand-separator commas, and spaces before `parseFloat()`, ensuring cells formatted with Google Sheets Currency format or strings like `"$15,000.00"` never collapse to `NaN || 0`.
 - **Atomic Value Rendering (`UNFORMATTED_VALUE`):** Fetches sheets values with `valueRenderOption: 'UNFORMATTED_VALUE'` in `/api/sync` so numeric values are natively parsed while text columns remain untouched.
+- **Hybrid Budget Architecture (Dynamic Auto-Sum + Master Cap):**
+  - **Dynamic Mode (Default)**: Total budget target automatically resolves to the live sum of all category targets (`totalEstimate`). Line item changes and new vendor contracts adjust the budget automatically.
+  - **Master Cap Mode**: When an explicit limit is entered (e.g., `$35,000`), it acts as a firm ceiling. The UI computes `effectiveTarget - totalEstimate` to display either an emerald **Unallocated Cushion** badge or an amber/red **Over-Allocated** warning.
+  - **1-Click Sync**: `SYNC TO CATEGORIES` allows couples to snap the master cap back to the category sum and resume dynamic tracking at any point.
 - **Auto-Provisioned Settings & Dashboard Sync:** Automatically creates the `SETTINGS` sheet tab if missing before saving budget updates, and synchronizes the target budget to `localStorage` (`s2v_budget_threshold`) as a local fail-safe against network rollbacks.
 - **Dynamic Prop Synchronization:** `BudgetLedgerManager` reacts dynamically to `budgetTarget` prop updates via `useEffect`, preventing unset mode locks when switching between tabs.
 

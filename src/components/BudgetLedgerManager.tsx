@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
-import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search } from 'lucide-react';
+import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, formatDateConsistent, getCurrencySymbol } from '@/lib/currency';
 
@@ -73,18 +73,49 @@ export default function BudgetLedgerManager({
     }
   };
 
+  // Hybrid Target Mode: 'dynamic' (auto-sum of categories) | 'fixed_cap' (explicit master cap ceiling) | 'unset' (no hard limit)
+  type BudgetTargetMode = 'dynamic' | 'fixed_cap' | 'unset';
+
+  const [targetMode, setTargetMode] = useState<BudgetTargetMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('s2v_budget_target_mode') as BudgetTargetMode;
+      if (saved === 'dynamic' || saved === 'fixed_cap' || saved === 'unset') {
+        return saved;
+      }
+    }
+    return budgetTarget > 0 ? 'fixed_cap' : 'dynamic';
+  });
+
   // Inline Editable Budget Target State
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [customTargetInput, setCustomTargetInput] = useState<string>(budgetTarget > 0 ? budgetTarget.toString() : '');
-  const [isUnsetMode, setIsUnsetMode] = useState<boolean>(budgetTarget === 0);
+
+  const handleSetTargetMode = (mode: BudgetTargetMode) => {
+    setTargetMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_budget_target_mode', mode);
+    }
+  };
 
   useEffect(() => {
     if (budgetTarget > 0) {
       setCustomTargetInput(budgetTarget.toString());
-      setIsUnsetMode(false);
+      const savedMode = typeof window !== 'undefined' ? (localStorage.getItem('s2v_budget_target_mode') as BudgetTargetMode) : null;
+      if (savedMode === 'dynamic') {
+        setTargetMode('dynamic');
+      } else if (savedMode === 'unset') {
+        setTargetMode('unset');
+      } else {
+        setTargetMode('fixed_cap');
+      }
     } else {
       setCustomTargetInput('');
-      setIsUnsetMode(true);
+      const savedMode = typeof window !== 'undefined' ? (localStorage.getItem('s2v_budget_target_mode') as BudgetTargetMode) : null;
+      if (savedMode === 'unset') {
+        setTargetMode('unset');
+      } else {
+        setTargetMode('dynamic');
+      }
     }
   }, [budgetTarget]);
 
@@ -296,8 +327,47 @@ export default function BudgetLedgerManager({
 
   const totalBalance = totalActual - totalPaid;
 
-  // Effective Budget Target Baseline
-  const effectiveTarget = isUnsetMode ? 0 : (Number(customTargetInput) > 0 ? Number(customTargetInput) : totalEstimate);
+  // Effective Budget Target Baseline (Hybrid Model: Dynamic Category Sum + Optional Master Cap)
+  const isUnsetMode = targetMode === 'unset';
+  const isDynamicMode = targetMode === 'dynamic';
+  const isFixedCapMode = targetMode === 'fixed_cap';
+
+  const effectiveTarget = isUnsetMode
+    ? 0
+    : isDynamicMode
+      ? totalEstimate
+      : (Number(customTargetInput) > 0 ? Number(customTargetInput) : totalEstimate);
+
+  // Allocation Cushion (Master Cap vs Sum of Categories)
+  const allocationDifference = effectiveTarget - totalEstimate;
+  const isOverAllocated = isFixedCapMode && allocationDifference < 0;
+  const unallocatedCushion = isFixedCapMode && allocationDifference > 0 ? allocationDifference : 0;
+
+  // Actions for Target Mode Transitions
+  const handleSaveCustomTarget = async (val: number) => {
+    setIsEditingTarget(false);
+    if (!isNaN(val) && val > 0) {
+      setCustomTargetInput(val.toString());
+      handleSetTargetMode('fixed_cap');
+      if (onUpdateBudgetTarget) {
+        await onUpdateBudgetTarget(val);
+      }
+    } else if (val === 0) {
+      handleSetTargetMode('unset');
+      if (onUpdateBudgetTarget) {
+        await onUpdateBudgetTarget(0);
+      }
+    }
+  };
+
+  const handleSyncToCategories = async () => {
+    setIsEditingTarget(false);
+    handleSetTargetMode('dynamic');
+    setCustomTargetInput(totalEstimate.toString());
+    if (onUpdateBudgetTarget) {
+      await onUpdateBudgetTarget(totalEstimate);
+    }
+  };
 
   // Utilization & Health Meters
   const percentUtilized = effectiveTarget > 0 ? Math.round((totalActual / effectiveTarget) * 100) : 0;
@@ -882,42 +952,192 @@ export default function BudgetLedgerManager({
       </div>
 
       {/* Budget Progress & Health Banner */}
-      <div className={`budget-meter-card ${isOverallOverBudget ? 'is-over-budget' : ''}`} style={styles.meterCard}>
+      <div className={`budget-meter-card ${isOverallOverBudget || isOverAllocated ? 'is-over-budget' : ''}`} style={styles.meterCard}>
         <div style={styles.meterHeader}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
               <span style={styles.meterSubtext}>BUDGET UTILIZED</span>
 
-              {/* Unset Budget Mode Toggle */}
-              <button
-                type="button"
-                onClick={() => {
-                  const nextUnset = !isUnsetMode;
-                  setIsUnsetMode(nextUnset);
-                  if (nextUnset) {
-                    if (onUpdateBudgetTarget) {
-                      onUpdateBudgetTarget(0);
-                    }
-                  } else {
-                    setIsEditingTarget(true);
-                  }
-                }}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  color: isUnsetMode ? 'var(--color-primary)' : 'var(--color-muted)',
-                  backgroundColor: isUnsetMode ? 'rgba(26, 127, 75, 0.12)' : 'transparent',
-                  border: `1px solid ${isUnsetMode ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: '12px',
-                  padding: '0.15rem 0.5rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-                title={isUnsetMode ? "Click to set a target budget amount" : "Switch to Unset Budget Mode (log expenses without hard target limit)"}
-              >
-                {isUnsetMode ? "UNSET TARGET MODE ACTIVE" : "SET TARGET BUDGET"}
-              </button>
+              {/* Mode Badge & Switching Controls */}
+              {isDynamicMode && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    color: 'var(--color-primary)',
+                    backgroundColor: 'rgba(26, 127, 75, 0.1)',
+                    border: '1px solid var(--color-primary)',
+                    borderRadius: '12px',
+                    padding: '0.15rem 0.55rem',
+                    letterSpacing: '0.04em'
+                  }}>
+                    DYNAMIC SUM (FROM CATEGORIES)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingTarget(true);
+                      if (!customTargetInput) setCustomTargetInput(totalEstimate.toString());
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-muted)',
+                      backgroundColor: 'transparent',
+                      border: '1px dashed var(--color-border)',
+                      borderRadius: '12px',
+                      padding: '0.15rem 0.5rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Define a fixed Master Target Cap ceiling"
+                  >
+                    + SET MASTER CAP
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSetTargetMode('unset');
+                      if (onUpdateBudgetTarget) onUpdateBudgetTarget(0);
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-muted)',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                    title="Track expenses without any target limit"
+                  >
+                    Unset Limit
+                  </button>
+                </div>
+              )}
+
+              {isFixedCapMode && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    color: '#7c3aed',
+                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                    border: '1px solid rgba(124, 58, 237, 0.3)',
+                    borderRadius: '12px',
+                    padding: '0.15rem 0.55rem',
+                    letterSpacing: '0.04em'
+                  }}>
+                    MASTER CAP ACTIVE
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSyncToCategories}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-primary)',
+                      backgroundColor: 'rgba(26, 127, 75, 0.08)',
+                      border: '1px solid var(--color-primary)',
+                      borderRadius: '12px',
+                      padding: '0.15rem 0.5rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title={`Snap Master Cap to current category sum (${formatCurrency(totalEstimate, currency)}) and switch to Dynamic Auto-Sum`}
+                  >
+                    <RefreshCw size={10} />
+                    <span>SYNC TO CATEGORIES ({formatCurrency(totalEstimate, currency)})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSetTargetMode('unset');
+                      if (onUpdateBudgetTarget) onUpdateBudgetTarget(0);
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-muted)',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                    title="Track expenses without any target limit"
+                  >
+                    Unset Limit
+                  </button>
+                </div>
+              )}
+
+              {isUnsetMode && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    color: 'var(--color-muted)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '12px',
+                    padding: '0.15rem 0.55rem',
+                  }}>
+                    NO HARD LIMIT (UNSET MODE)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSetTargetMode('dynamic');
+                      if (onUpdateBudgetTarget) onUpdateBudgetTarget(totalEstimate);
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-primary)',
+                      backgroundColor: 'transparent',
+                      border: '1px solid var(--color-primary)',
+                      borderRadius: '12px',
+                      padding: '0.15rem 0.5rem',
+                      cursor: 'pointer',
+                    }}
+                    title="Auto-calculate budget dynamically from category targets"
+                  >
+                    USE DYNAMIC SUM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingTarget(true);
+                      if (!customTargetInput) setCustomTargetInput(totalEstimate > 0 ? totalEstimate.toString() : '35000');
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-muted)',
+                      backgroundColor: 'transparent',
+                      border: '1px dashed var(--color-border)',
+                      borderRadius: '12px',
+                      padding: '0.15rem 0.5rem',
+                      cursor: 'pointer',
+                    }}
+                    title="Enter an explicit master ceiling cap"
+                  >
+                    SET MASTER CAP
+                  </button>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -961,19 +1181,19 @@ export default function BudgetLedgerManager({
                           </div>
                           <button
                             type="button"
-                            onClick={async () => {
-                              setIsEditingTarget(false);
-                              const val = Number(customTargetInput);
-                              if (!isNaN(val)) {
-                                setIsUnsetMode(val === 0);
-                                if (onUpdateBudgetTarget) {
-                                  await onUpdateBudgetTarget(val);
-                                }
-                              }
-                            }}
+                            onClick={() => handleSaveCustomTarget(Number(customTargetInput))}
                             style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.4rem', cursor: 'pointer' }}
+                            title="Save Master Cap"
                           >
                             <Check size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingTarget(false)}
+                            style={{ background: 'transparent', color: 'var(--color-muted)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '0.2rem 0.4rem', cursor: 'pointer' }}
+                            title="Cancel"
+                          >
+                            <X size={12} />
                           </button>
                         </span>
                       ) : (
@@ -981,19 +1201,50 @@ export default function BudgetLedgerManager({
                           onClick={() => setIsEditingTarget(true)}
                           style={{
                             fontWeight: 700,
-                            color: 'var(--color-primary)',
+                            color: isFixedCapMode ? '#7c3aed' : 'var(--color-primary)',
                             cursor: 'pointer',
-                            borderBottom: '1px dashed var(--color-primary)'
+                            borderBottom: '1px dashed currentColor'
                           }}
-                          title="Click to edit target budget limit"
+                          title={isFixedCapMode ? "Click to edit Master Target Cap" : "Click to set a fixed Master Target Cap"}
                         >
-                          {formatCurrency(effectiveTarget, currency)} Target <Edit2 size={12} style={{ display: 'inline', marginLeft: '2px' }} />
+                          {formatCurrency(effectiveTarget, currency)} {isFixedCapMode ? 'Master Cap' : 'Dynamic Target'} <Edit2 size={12} style={{ display: 'inline', marginLeft: '2px' }} />
                         </span>
                       )}
                     </>
                   )}
                 </span>
               </h3>
+
+              {/* Allocation Cushion Pill (Shown in Fixed Cap Mode) */}
+              {isFixedCapMode && !isEditingTarget && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.725rem',
+                  fontWeight: 700,
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '16px',
+                  backgroundColor: isOverAllocated ? 'rgba(220, 38, 38, 0.1)' : unallocatedCushion > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(0, 0, 0, 0.05)',
+                  color: isOverAllocated ? 'var(--color-red, #dc2626)' : unallocatedCushion > 0 ? 'var(--color-green, #10b981)' : 'var(--color-muted)',
+                  border: `1px solid ${isOverAllocated ? 'rgba(220, 38, 38, 0.3)' : unallocatedCushion > 0 ? 'rgba(16, 185, 129, 0.3)' : 'var(--color-border)'}`,
+                }}>
+                  {isOverAllocated ? (
+                    <>
+                      <AlertTriangle size={12} />
+                      <span>Over-Allocated by {formatCurrency(Math.abs(allocationDifference), currency)}</span>
+                    </>
+                  ) : unallocatedCushion > 0 ? (
+                    <>
+                      <span style={{ fontSize: '0.8rem' }}>✨</span>
+                      <span>+{formatCurrency(unallocatedCushion, currency)} Unallocated Cushion</span>
+                    </>
+                  ) : (
+                    <span>✓ 100% of Cap Allocated</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1149,7 +1400,9 @@ export default function BudgetLedgerManager({
                 <span style={styles.snapshotTileValue}>
                   {isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}
                 </span>
-                <span style={styles.snapshotTileSub}>Overall wedding target</span>
+                <span style={styles.snapshotTileSub}>
+                  {isUnsetMode ? 'No Hard Limit' : isFixedCapMode ? 'Fixed Master Cap' : 'Dynamic Category Sum'}
+                </span>
               </div>
               <div style={styles.snapshotTile}>
                 <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
@@ -1204,7 +1457,14 @@ export default function BudgetLedgerManager({
             {isUnsetMode ? (
               <span><strong>{formatCurrency(totalActual, currency)}</strong> total spent across all categories (Unset Target Mode)</span>
             ) : (
-              <span><strong>{formatCurrency(totalActual, currency)}</strong> spent of <strong>{formatCurrency(effectiveTarget, currency)}</strong> target budget</span>
+              <span>
+                <strong>{formatCurrency(totalActual, currency)}</strong> spent of <strong>{formatCurrency(effectiveTarget, currency)}</strong> {isFixedCapMode ? 'master cap' : 'target budget'}
+                {isFixedCapMode && (
+                  <span style={{ color: isOverAllocated ? 'var(--color-red)' : 'var(--color-muted)', marginLeft: '0.4rem' }}>
+                    ({formatCurrency(totalEstimate, currency)} planned across categories)
+                  </span>
+                )}
+              </span>
             )}
           </span>
 

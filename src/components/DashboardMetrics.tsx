@@ -311,10 +311,11 @@ export default function DashboardMetrics({
     tables: true,
   };
 
-  // Financial Calculations
-  const remainingBudget = totalBudget - actualCost;
-  const actualPercent = Math.min(Math.round((actualCost / totalBudget) * 100), 100) || 0;
-  const estimatedPercent = Math.min(Math.round((estimatedCost / totalBudget) * 100), 100) || 0;
+  // Financial Calculations (Hybrid Model: Master Cap or Dynamic Category Sum)
+  const effectiveTotalBudget = totalBudget > 0 ? totalBudget : (estimatedCost > 0 ? estimatedCost : 0);
+  const remainingBudget = effectiveTotalBudget - actualCost;
+  const actualPercent = effectiveTotalBudget > 0 ? Math.min(Math.round((actualCost / effectiveTotalBudget) * 100), 100) : 0;
+  const estimatedPercent = effectiveTotalBudget > 0 ? Math.min(Math.round((estimatedCost / effectiveTotalBudget) * 100), 100) : 0;
 
   // Guest RSVP Calculations
   const allGuests = guests || [];
@@ -383,9 +384,11 @@ export default function DashboardMetrics({
             >
               <div style={styles.kpiLabel}>TOTAL BUDGET</div>
               <div style={styles.kpiValue}>
-                {formatCurrency(totalBudget, currency)}
+                {formatCurrency(effectiveTotalBudget, currency)}
               </div>
-              <div style={styles.kpiSub}>Cell B2 Config Value</div>
+              <div style={styles.kpiSub}>
+                {totalBudget > 0 ? 'Master Target Cap' : 'Dynamic Sum of Categories'}
+              </div>
             </div>
 
             <div
@@ -398,7 +401,7 @@ export default function DashboardMetrics({
               <div style={styles.kpiValue}>
                 {formatCurrency(estimatedCost, currency)}
               </div>
-              <div style={styles.kpiSub}>SUM('Budget Ledger'!D:D)</div>
+              <div style={styles.kpiSub}>Total Category Targets</div>
             </div>
 
             <div
@@ -411,7 +414,7 @@ export default function DashboardMetrics({
               <div style={styles.kpiValue}>
                 {formatCurrency(actualCost, currency)}
               </div>
-              <div style={styles.kpiSub}>SUM('Budget Ledger'!E:E)</div>
+              <div style={styles.kpiSub}>Logged Purchases</div>
             </div>
 
             <div
