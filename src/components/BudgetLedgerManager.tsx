@@ -775,8 +775,31 @@ export default function BudgetLedgerManager({
           .budget-master-rail {
             grid-column: span 5 / span 5 !important;
             max-height: calc(100vh - 220px) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            padding-right: 0 !important;
+          }
+          .budget-master-rail-fixed-header {
+            flex-shrink: 0 !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 10 !important;
+            background-color: var(--color-bg) !important;
+            padding-bottom: 0.75rem !important;
+            padding-right: 0.5rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.75rem !important;
+          }
+          .budget-master-rail-list {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
             overflow-y: auto !important;
             padding-right: 0.5rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.625rem !important;
           }
           .budget-detail-ledger {
             grid-column: span 7 / span 7 !important;
@@ -1588,8 +1611,9 @@ export default function BudgetLedgerManager({
       {/* ============================================================ */}
       <div className="budget-desktop-split-view lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start">
         {/* Left Column: Master Rail */}
-        <div className="budget-master-rail lg:col-span-5 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="budget-master-rail lg:col-span-5">
+          {/* Fixed Rail Header & Filter Search Container */}
+          <div className="budget-master-rail-fixed-header">
             {/* Rail Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px solid var(--color-border)' }}>
               <div>
@@ -1630,9 +1654,10 @@ export default function BudgetLedgerManager({
                 }}
               />
             </div>
+          </div>
 
-            {/* Master Category List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+          {/* Scrollable Master Category List */}
+          <div className="budget-master-rail-list">
               {displayedMasterStats.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
@@ -1832,7 +1857,6 @@ export default function BudgetLedgerManager({
               )}
             </div>
           </div>
-        </div>
 
         {/* Right Column: Detail Ledger */}
         <div className="budget-detail-ledger lg:col-span-7">
