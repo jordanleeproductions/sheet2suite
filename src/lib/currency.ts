@@ -8,6 +8,11 @@ export const CURRENCY_OPTIONS: { code: CurrencyCode; label: string; symbol: stri
   { code: 'EUR', label: 'EUR — Euro (€)', symbol: '€', example: '€35,000' },
 ];
 
+export function getCurrencySymbol(currency: string = 'USD'): string {
+  const found = CURRENCY_OPTIONS.find(opt => opt.code === currency);
+  return found?.symbol || '$';
+}
+
 export function formatCurrency(amount: number | undefined | null, currency: string = 'USD', forceDecimals?: boolean): string {
   const num = Number(amount) || 0;
   // If amount has cents (e.g. 100.5 or 100.50) or forceDecimals is requested, show 2 decimal places

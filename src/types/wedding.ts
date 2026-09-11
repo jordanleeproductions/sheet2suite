@@ -20,6 +20,7 @@ export interface DashboardSummary {
   actualCost: number;
   remainingTasks: number;
   weddingDate?: string;
+  weddingName?: string;
   location?: string;
   currency?: string;
 }

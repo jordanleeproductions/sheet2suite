@@ -2618,12 +2618,22 @@ export default function Sheet2VowDashboard() {
                 <BudgetLedgerManager
                   budget={weddingData.budget}
                   expenses={weddingData.expenses || []}
-                  budgetTarget={weddingData.dashboard?.totalBudget ?? budgetThreshold ?? 0}
+                  budgetTarget={(weddingData.dashboard?.totalBudget && weddingData.dashboard.totalBudget > 0) ? weddingData.dashboard.totalBudget : (budgetThreshold > 0 ? budgetThreshold : 0)}
                   weddingDate={weddingDate || weddingData.dashboard?.weddingDate || ''}
                   onUpdateBudgetTarget={async (newTarget) => {
                     setBudgetThreshold(newTarget);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('s2v_budget_threshold', newTarget.toString());
+                    }
                     if (weddingData) {
-                      const updatedDash = { ...weddingData.dashboard, totalBudget: newTarget };
+                      const updatedDash = {
+                        weddingName: weddingName || weddingData.dashboard?.weddingName || '',
+                        weddingDate: weddingDate || weddingData.dashboard?.weddingDate || '',
+                        location: locationDetails || weddingData.dashboard?.location || '',
+                        currency: currency || weddingData.dashboard?.currency || 'USD',
+                        ...weddingData.dashboard,
+                        totalBudget: newTarget
+                      };
                       setWeddingData(prev => prev ? ({ ...prev, dashboard: updatedDash }) : prev);
                       await syncUpdate('dashboard', updatedDash);
                     }

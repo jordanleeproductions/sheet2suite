@@ -149,6 +149,7 @@ export async function GET(req: Request) {
       const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
         spreadsheetId,
         ranges,
+        valueRenderOption: 'UNFORMATTED_VALUE',
       });
       valueRanges = batchGetResponse.data.valueRanges || [];
     }
@@ -290,7 +291,7 @@ export async function GET(req: Request) {
 
     const data: WeddingData = {
       dashboard: {
-        totalBudget,
+        totalBudget: totalBudget > 0 ? totalBudget : (estimatedCost > 0 ? estimatedCost : 0),
         estimatedCost,
         actualCost,
         remainingTasks,
@@ -427,7 +428,27 @@ export async function POST(req: Request) {
         return null;
       };
 
-      const settingsTitle = findTitle(['SETTINGS', 'Settings']) || 'SETTINGS';
+      let settingsTitle = findTitle(['SETTINGS', 'Settings']);
+      if (!settingsTitle) {
+        try {
+          await sheetsClient.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: {
+              requests: [{
+                addSheet: {
+                  properties: {
+                    title: 'SETTINGS'
+                  }
+                }
+              }]
+            }
+          });
+          settingsTitle = 'SETTINGS';
+        } catch (sheetErr) {
+          console.warn('Could not auto-create SETTINGS tab, proceeding:', sheetErr);
+          settingsTitle = 'SETTINGS';
+        }
+      }
       const dashTitle = findTitle(['DASHBOARD', 'Dashboard']);
       
       const settingsValues: any[][] = [

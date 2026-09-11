@@ -22,7 +22,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 
 interface ThankYouManagerProps {
   gifts: GiftItem[];
@@ -48,6 +48,8 @@ export default function ThankYouManager({
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
+
+  const currencySymbol = getCurrencySymbol(currency);
   const [thankedFilter, setThankedFilter] = useState<'All' | 'Thanked' | 'Pending'>('All');
 
   // Modals State for Gifts
@@ -615,15 +617,29 @@ export default function ThankYouManager({
 
                 <div className="gift-form-row" style={styles.formRow}>
                   <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>ESTIMATED VALUE / CASH AMOUNT ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 150"
-                      value={formData.amount || 0}
-                      onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                      style={styles.inputField}
-                    />
+                    <label style={styles.fieldLabel}>ESTIMATED VALUE / CASH AMOUNT</label>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: '0.75rem',
+                        color: 'var(--color-muted)',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      }}>
+                        {currencySymbol}
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={formData.amount !== undefined && formData.amount !== null ? formData.amount : ''}
+                        onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                        style={{ ...styles.inputField, paddingLeft: '1.75rem' }}
+                      />
+                    </div>
                   </div>
 
                   <div style={styles.formGroup}>

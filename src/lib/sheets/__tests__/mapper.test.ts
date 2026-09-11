@@ -74,6 +74,15 @@ export function runTests() {
   if (!String(modernOutputRow[3]).includes('SUMIF(EXPENSES!C:C, B2')) throw new Error('Modern back-to-row failed to generate Total Spent formula');
   if (!String(modernOutputRow[4]).includes('C2 - D2')) throw new Error('Modern back-to-row failed to generate Remaining formula');
 
+  // 2c. Test Currency Formatted Strings & Case-Insensitive Header Mapping
+  const formattedBudgetHeaders = [' category id ', 'CATEGORY', 'Target Budget', 'Total Spent', 'Remaining', 'Notes'];
+  const formattedBudgetRow = ['B2', 'Photography', '$15,000.00', '£3,500.50', '$ 11,499.50', 'Main photographer package'];
+  const formattedParsed = budgetMapper.fromRow(formattedBudgetHeaders, formattedBudgetRow);
+  if (formattedParsed.itemId !== 'B2') throw new Error('Formatted Budget Category ID mapping failed');
+  if (formattedParsed.estimatedCost !== 15000) throw new Error('Formatted $15,000.00 string parsing failed');
+  if (formattedParsed.actualCost !== 3500.5) throw new Error('Formatted £3,500.50 string parsing failed');
+  if (formattedParsed.amountPaid !== 11499.5) throw new Error('Formatted $ 11,499.50 string parsing failed');
+
   console.log('✓ All Sheet2Vow Mapper Unit Tests Passed Successfully.');
 }
 

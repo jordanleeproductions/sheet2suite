@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
-import { formatCurrency, formatDateConsistent } from '@/lib/currency';
+import { formatCurrency, formatDateConsistent, getCurrencySymbol } from '@/lib/currency';
 
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
@@ -52,6 +52,8 @@ export default function BudgetLedgerManager({
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
+  const currencySymbol = getCurrencySymbol(currency);
+
   // Budget Utilization Visualization Mode: 'bar' | 'donut'
   const [meterMode, setMeterMode] = useState<'bar' | 'donut'>('bar');
 
@@ -75,6 +77,16 @@ export default function BudgetLedgerManager({
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [customTargetInput, setCustomTargetInput] = useState<string>(budgetTarget > 0 ? budgetTarget.toString() : '');
   const [isUnsetMode, setIsUnsetMode] = useState<boolean>(budgetTarget === 0);
+
+  useEffect(() => {
+    if (budgetTarget > 0) {
+      setCustomTargetInput(budgetTarget.toString());
+      setIsUnsetMode(false);
+    } else {
+      setCustomTargetInput('');
+      setIsUnsetMode(true);
+    }
+  }, [budgetTarget]);
 
   // Budget Item Modal state
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
@@ -882,8 +894,12 @@ export default function BudgetLedgerManager({
                 onClick={() => {
                   const nextUnset = !isUnsetMode;
                   setIsUnsetMode(nextUnset);
-                  if (nextUnset && onUpdateBudgetTarget) {
-                    onUpdateBudgetTarget(0);
+                  if (nextUnset) {
+                    if (onUpdateBudgetTarget) {
+                      onUpdateBudgetTarget(0);
+                    }
+                  } else {
+                    setIsEditingTarget(true);
                   }
                 }}
                 style={{
@@ -915,28 +931,44 @@ export default function BudgetLedgerManager({
                     <>
                       {isEditingTarget ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <input
-                            type="number"
-                            value={customTargetInput}
-                            onChange={(e) => setCustomTargetInput(e.target.value)}
-                            style={{
-                              width: '100px',
-                              padding: '0.2rem 0.4rem',
+                          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                            <span style={{
+                              position: 'absolute',
+                              left: '0.45rem',
+                              color: 'var(--color-primary)',
                               fontSize: '0.85rem',
-                              fontFamily: 'var(--font-mono)',
-                              border: '1px solid var(--color-primary)',
-                              borderRadius: '4px',
-                            }}
-                            placeholder="Amount"
-                            autoFocus
-                          />
+                              fontWeight: 700,
+                              pointerEvents: 'none',
+                              userSelect: 'none',
+                            }}>
+                              {currencySymbol}
+                            </span>
+                            <input
+                              type="number"
+                              value={customTargetInput}
+                              onChange={(e) => setCustomTargetInput(e.target.value)}
+                              style={{
+                                width: '115px',
+                                padding: '0.2rem 0.4rem 0.2rem 1.4rem',
+                                fontSize: '0.85rem',
+                                fontFamily: 'var(--font-mono)',
+                                border: '1px solid var(--color-primary)',
+                                borderRadius: '4px',
+                              }}
+                              placeholder="Amount"
+                              autoFocus
+                            />
+                          </div>
                           <button
                             type="button"
                             onClick={async () => {
                               setIsEditingTarget(false);
                               const val = Number(customTargetInput);
-                              if (!isNaN(val) && onUpdateBudgetTarget) {
-                                await onUpdateBudgetTarget(val);
+                              if (!isNaN(val)) {
+                                setIsUnsetMode(val === 0);
+                                if (onUpdateBudgetTarget) {
+                                  await onUpdateBudgetTarget(val);
+                                }
                               }
                             }}
                             style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.4rem', cursor: 'pointer' }}
@@ -2751,22 +2783,35 @@ export default function BudgetLedgerManager({
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>TARGET BUDGET ALLOCATION ($)</label>
-                  <input
-                    type="number"
-                    value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
-                    onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
-                    onFocus={(e) => {
-                      if (e.target.value === '0') handleFormChange('estimatedCost', '');
-                      e.target.select();
-                    }}
-                    style={{ ...styles.input, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-primary)' }}
-                    min="1"
-                    step="any"
-                    placeholder="e.g. 5000"
-                    required
-                    autoFocus={!!formState.category}
-                  />
+                  <label style={styles.label}>TARGET BUDGET ALLOCATION</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{
+                      position: 'absolute',
+                      left: '0.85rem',
+                      color: 'var(--color-primary)',
+                      fontSize: '1.15rem',
+                      fontWeight: 700,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}>
+                      {currencySymbol}
+                    </span>
+                    <input
+                      type="number"
+                      value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
+                      onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
+                      onFocus={(e) => {
+                        if (e.target.value === '0') handleFormChange('estimatedCost', '');
+                        e.target.select();
+                      }}
+                      style={{ ...styles.input, paddingLeft: '2.2rem', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-primary)' }}
+                      min="1"
+                      step="any"
+                      placeholder="5000"
+                      required
+                      autoFocus={!!formState.category}
+                    />
+                  </div>
                   <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
                     Set the target budget for this category. Expense receipts will line up under this category.
                   </span>
@@ -2902,21 +2947,34 @@ export default function BudgetLedgerManager({
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>AMOUNT ($)</label>
-                  <input
-                    type="number"
-                    value={expenseFormState.amount !== undefined && expenseFormState.amount !== null ? expenseFormState.amount : ''}
-                    onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
-                    onFocus={(e) => {
-                      if (e.target.value === '0') handleExpenseFormChange('amount', '');
-                      e.target.select();
-                    }}
-                    style={styles.input}
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    required
-                  />
+                  <label style={styles.label}>AMOUNT</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{
+                      position: 'absolute',
+                      left: '0.75rem',
+                      color: 'var(--color-muted)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}>
+                      {currencySymbol}
+                    </span>
+                    <input
+                      type="number"
+                      value={expenseFormState.amount !== undefined && expenseFormState.amount !== null ? expenseFormState.amount : ''}
+                      onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
+                      onFocus={(e) => {
+                        if (e.target.value === '0') handleExpenseFormChange('amount', '');
+                        e.target.select();
+                      }}
+                      style={{ ...styles.input, paddingLeft: '1.75rem' }}
+                      min="0"
+                      step="any"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div style={styles.formGroup}>

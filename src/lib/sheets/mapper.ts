@@ -120,11 +120,29 @@ export const TASK_HEADERS: Record<string, keyof Task> = {
 };
 
 // Generic mapping utilities
+export function parseCleanNumber(val: any): number {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  const str = String(val).trim();
+  if (!str) return 0;
+  // Remove currency symbols, commas, and formatting spaces, keeping digits, periods, and minus
+  const cleaned = str.replace(/[^0-9.-]+/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+}
+
 export function mapRowToObject<T>(headers: string[], row: any[], mappingDict: Record<string, keyof T>): T {
   const result = {} as any;
   
+  const normalizedDict: Record<string, keyof T> = {};
+  for (const [k, v] of Object.entries(mappingDict)) {
+    normalizedDict[k.trim().toLowerCase()] = v;
+  }
+
   headers.forEach((header, index) => {
-    const propKey = mappingDict[header];
+    if (!header) return;
+    const cleanHeader = String(header).trim().toLowerCase();
+    const propKey = mappingDict[header] || normalizedDict[cleanHeader];
     if (propKey) {
       const rawValue = row[index] !== undefined ? row[index] : '';
       result[propKey] = rawValue;
@@ -200,9 +218,9 @@ export const budgetMapper = {
       itemId: String(obj.itemId || ''),
       category: String(obj.category || ''),
       vendorName: String(obj.vendorName || ''),
-      estimatedCost: Number(obj.estimatedCost) || 0,
-      actualCost: Number(obj.actualCost) || 0,
-      amountPaid: Number(obj.amountPaid) || 0,
+      estimatedCost: parseCleanNumber(obj.estimatedCost),
+      actualCost: parseCleanNumber(obj.actualCost),
+      amountPaid: parseCleanNumber(obj.amountPaid),
       dueDate: String(obj.dueDate || ''),
       paymentStatus: String(obj.paymentStatus || ''),
       notes: String(obj.notes || ''),
@@ -249,7 +267,7 @@ export const budgetMapper = {
 export const expenseMapper = {
   fromRow(headers: string[], row: any[]): ExpenseItem {
     const obj = mapRowToObject<ExpenseItem>(headers, row, EXPENSE_HEADERS);
-    const parsedAmount = Number(obj.amount) || Number(obj.actualCost) || Number(obj.amountPaid) || 0;
+    const parsedAmount = parseCleanNumber(obj.amount) || parseCleanNumber(obj.actualCost) || parseCleanNumber(obj.amountPaid) || 0;
     return {
       itemId: String(obj.itemId || ''),
       description: String(obj.description || ''),
@@ -305,9 +323,9 @@ export const vendorMapper = {
       contactName: String(obj.contactName || ''),
       emailAddress: String(obj.emailAddress || ''),
       phoneNumber: String(obj.phoneNumber || ''),
-      totalContractValue: Number(obj.totalContractValue) || 0,
-      depositPaid: Number(obj.depositPaid) || 0,
-      balanceOwing: Number(obj.balanceOwing) || 0,
+      totalContractValue: parseCleanNumber(obj.totalContractValue),
+      depositPaid: parseCleanNumber(obj.depositPaid),
+      balanceOwing: parseCleanNumber(obj.balanceOwing),
       paymentDueDate: String(obj.paymentDueDate || ''),
       contractLink: String(obj.contractLink || ''),
       staffMealsRequired: String(obj.staffMealsRequired || 'No'),
@@ -432,7 +450,7 @@ export const giftMapper = {
       description: String(obj.description || ''),
       giverName: String(obj.giverName || ''),
       category: String(obj.category || ''),
-      amount: Number(obj.amount) || 0,
+      amount: parseCleanNumber(obj.amount),
       thankYouSent: rawThanked === 'true' || rawThanked === 'yes' || rawThanked === '1',
       notes: String(obj.notes || ''),
     };

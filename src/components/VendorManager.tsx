@@ -5,7 +5,7 @@ import { Vendor, BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText, ChevronDown, Check } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import MobileFAB from '@/components/MobileFAB';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 
 // Standard Wedding Budget & Vendor Categories aligned with Master Schema / SETTINGS
 export const STANDARD_VENDOR_CATEGORIES = [
@@ -244,6 +244,8 @@ export default function VendorManager({
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [paymentFilter, setPaymentFilter] = useState<'All' | 'Paid' | 'Balance Due'>('All');
+
+  const currencySymbol = getCurrencySymbol(currency);
 
   const categories = Array.from(new Set(vendors.map(v => v.category).filter(Boolean)));
 
@@ -1069,47 +1071,95 @@ export default function VendorManager({
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Contract Value ($)</label>
-                  <input
-                    style={styles.input}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formState.totalContractValue !== undefined ? formState.totalContractValue : ''}
-                    onChange={(e) => handleFormChange('totalContractValue', e.target.value)}
-                  />
+                  <label style={styles.label}>Contract Value</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{
+                      position: 'absolute',
+                      left: '0.75rem',
+                      color: 'var(--color-muted)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}>
+                      {currencySymbol}
+                    </span>
+                    <input
+                      style={{
+                        ...styles.input,
+                        paddingLeft: '1.75rem',
+                      }}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formState.totalContractValue !== undefined ? formState.totalContractValue : ''}
+                      onChange={(e) => handleFormChange('totalContractValue', e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Deposit Paid ($)</label>
-                  <input
-                    style={styles.input}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formState.depositPaid !== undefined ? formState.depositPaid : ''}
-                    onChange={(e) => handleFormChange('depositPaid', e.target.value)}
-                  />
+                  <label style={styles.label}>Deposit Paid</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{
+                      position: 'absolute',
+                      left: '0.75rem',
+                      color: 'var(--color-muted)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}>
+                      {currencySymbol}
+                    </span>
+                    <input
+                      style={{
+                        ...styles.input,
+                        paddingLeft: '1.75rem',
+                      }}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formState.depositPaid !== undefined ? formState.depositPaid : ''}
+                      onChange={(e) => handleFormChange('depositPaid', e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div style={styles.formGroup}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                    <label style={{ ...styles.label, margin: 0 }}>Balance Owing ($)</label>
+                    <label style={{ ...styles.label, margin: 0 }}>Balance Owing</label>
                     <span style={{ fontSize: '0.68rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
                       Auto-calculated
                     </span>
                   </div>
-                  <input
-                    style={{
-                      ...styles.input,
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      cursor: 'not-allowed',
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{
+                      position: 'absolute',
+                      left: '0.75rem',
                       color: (formState.balanceOwing || 0) > 0 ? 'var(--color-primary, #e29578)' : 'var(--color-muted)',
+                      fontSize: '0.85rem',
                       fontWeight: 600,
-                    }}
-                    type="number"
-                    value={formState.balanceOwing !== undefined ? formState.balanceOwing : 0}
-                    readOnly
-                    tabIndex={-1}
-                  />
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}>
+                      {currencySymbol}
+                    </span>
+                    <input
+                      style={{
+                        ...styles.input,
+                        paddingLeft: '1.75rem',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        cursor: 'not-allowed',
+                        color: (formState.balanceOwing || 0) > 0 ? 'var(--color-primary, #e29578)' : 'var(--color-muted)',
+                        fontWeight: 600,
+                      }}
+                      type="text"
+                      value={(Number(formState.balanceOwing) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      readOnly
+                      tabIndex={-1}
+                    />
+                  </div>
                 </div>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Payment Due Date</label>
