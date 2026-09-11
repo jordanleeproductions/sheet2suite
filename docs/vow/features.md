@@ -172,6 +172,10 @@
   - Preserved dark mode aesthetics with dark background surfaces and high-contrast text.
 - [x] **[NAV-SWIPE] Mobile Gestures & Swipe Sheet:** Swipe-up from mobile bottom nav reveals categorized module drawer; swipe-down on drag handle dismisses drawer.
 - [x] **[NAV-HAPTIC] Mobile Web Micro-Haptic Feedback:** Added safe `triggerHaptic()` feedback on mobile bottom nav tab clicks, drawer module selection, and theme toggles via `navigator.vibrate`.
+- [x] **[NAV-APP-VERSION-BADGE] Incremental App Version & Deployment Date-Time Indicator (`AppVersionBadge.tsx`, `next.config.ts`, `vow/page.tsx`, `buildInfo.ts`):**
+  - **Desktop Left-Hand Nav Sidebar**: Embedded at the very bottom of the desktop navigation sidebar. Displays semantic version (`v1.2.1`) with live status dot and deployment date-time (`Deployed Sep 11, 2026 • 3:32 PM`). When sidebar is collapsed, displays an ultra-compact version pill with hover tooltip.
+  - **Mobile Slide-Up Navigation Drawer**: Embedded at the very bottom of the mobile slide-up module drawer, cleanly displaying the app version and last deployment timestamp to verify production updates instantly on mobile devices.
+  - **Automated Build-Time Injection**: Injected via `next.config.ts` during Next.js builds, ensuring the build timestamp automatically updates with every Firebase App Hosting production deploy.
 
 ---
 

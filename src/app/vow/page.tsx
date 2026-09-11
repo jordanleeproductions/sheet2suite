@@ -19,6 +19,7 @@ import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
+import AppVersionBadge from '@/components/AppVersionBadge';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
 import Link from 'next/link';
@@ -1384,6 +1385,9 @@ export default function Sheet2VowDashboard() {
               {!isSidebarCollapsed && <span>SETTINGS</span>}
             </button>
           </div>
+
+          {/* App Version & Deployment Timestamp */}
+          <AppVersionBadge collapsed={isSidebarCollapsed} variant="sidebar" />
         </aside>
       )}
 
@@ -3259,6 +3263,9 @@ export default function Sheet2VowDashboard() {
                   </button>
                 </div>
               </div>
+
+              {/* Mobile Slide-Up Nav Version & Deployment Info */}
+              <AppVersionBadge variant="mobile-drawer" />
             </div>
           </div>
         </div>
