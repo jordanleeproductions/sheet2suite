@@ -2707,6 +2707,7 @@ export default function Sheet2VowDashboard() {
                   gifts={weddingData.gifts || []}
                   guests={weddingData.guests || []}
                   currency={currency}
+                  weddingName={weddingName}
                   onUpdateGifts={(data: GiftItem[]) => syncUpdate('gifts', data)}
                   onUpdateGuests={(data: Guest[]) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}

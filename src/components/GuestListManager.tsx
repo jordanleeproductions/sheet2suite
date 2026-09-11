@@ -1595,6 +1595,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
     width: '100%',
   },
   filtersGroup: {
@@ -1606,6 +1608,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
     padding: '0.5rem',
+    border: '1px solid var(--color-muted)',
+    borderRadius: 'var(--border-radius-sm)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
+    cursor: 'pointer',
   },
   statsBar: {
     fontFamily: 'var(--font-mono)',
@@ -1853,6 +1860,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
     width: '100%',
     boxSizing: 'border-box',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   select: {
     padding: '0.5rem',
@@ -1861,6 +1870,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
     width: '100%',
     boxSizing: 'border-box',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   textarea: {
     padding: '0.5rem',

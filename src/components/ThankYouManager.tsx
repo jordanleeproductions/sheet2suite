@@ -28,6 +28,7 @@ interface ThankYouManagerProps {
   gifts: GiftItem[];
   guests: Guest[];
   currency?: string;
+  weddingName?: string;
   onUpdateGifts: (updatedGifts: GiftItem[]) => Promise<void>;
   onUpdateGuests: (updatedGuests: Guest[]) => Promise<void>;
   isSyncing?: boolean;
@@ -37,6 +38,7 @@ export default function ThankYouManager({
   gifts,
   guests,
   currency = 'USD',
+  weddingName,
   onUpdateGifts,
   onUpdateGuests,
   isSyncing
@@ -84,6 +86,60 @@ export default function ThankYouManager({
     partyMap.get(key)!.push(guest);
   });
 
+  const effectiveWeddingName = weddingName || (typeof window !== 'undefined' ? localStorage.getItem('s2v_wedding_name') || '' : '');
+
+  // Helper to detect if a party represents the Bride & Groom / Couple (who do not receive attendance thank-you cards)
+  const isCoupleOrBrideGroomParty = (groupKey: string, members: Guest[]): boolean => {
+    const cleanKey = groupKey.trim().toLowerCase();
+    
+    // 1. Direct regex match on partyGroup / groupKey
+    if (/^(bride\s*(&|and|\+|\/)\s*groom|groom\s*(&|and|\+|\/)\s*bride|the\s+couple|wedding\s+couple|couple|bride|groom|bride\s*(&|and|\+|\/)\s*bride|groom\s*(&|and|\+|\/)\s*groom|newlyweds)$/i.test(cleanKey)) {
+      return true;
+    }
+
+    // 2. Individual guest inspection within the party
+    const hasBrideOrGroomIndividual = members.some(m => {
+      const pg = (m.partyGroup || '').trim().toLowerCase();
+      if (/^(bride\s*(&|and|\+|\/)\s*groom|groom\s*(&|and|\+|\/)\s*bride|the\s+couple|wedding\s+couple|couple|bride|groom|newlyweds)$/i.test(pg)) {
+        return true;
+      }
+      const roleNotes = (m.notes || '').toLowerCase();
+      if (/\b(bride|groom|the couple)\b/i.test(roleNotes)) {
+        return true;
+      }
+      return false;
+    });
+
+    if (hasBrideOrGroomIndividual && members.length <= 2) {
+      return true;
+    }
+
+    // 3. Sweetheart Table Assignment
+    const allSeatedAtSweetheart = members.length > 0 && members.every(m => {
+      const table = (m.tableAssignment || '').toLowerCase();
+      return table.includes('sweetheart') || /bride\s*(&|and)\s*groom/i.test(table);
+    });
+    if (allSeatedAtSweetheart) {
+      return true;
+    }
+
+    // 4. Match against Wedding Name if available (e.g. "Alex & Sam's Wedding" or "Alex & Sam")
+    if (effectiveWeddingName) {
+      const cleanWeddingName = effectiveWeddingName.replace(/['’]s\s+wedding/i, '').replace(/wedding/i, '').trim();
+      const coupleParts = cleanWeddingName.split(/\s*(?:&|and|\+)\s*/i).map(s => s.trim().toLowerCase()).filter(Boolean);
+      if (coupleParts.length >= 2) {
+        const memberFirstNames = members.map(m => (m.firstName || '').trim().toLowerCase());
+        const matchesP1 = memberFirstNames.some(fn => coupleParts[0].includes(fn) || fn.includes(coupleParts[0]));
+        const matchesP2 = memberFirstNames.some(fn => coupleParts[1].includes(fn) || fn.includes(coupleParts[1]));
+        if (matchesP1 && (matchesP2 || members.length === 1)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
   interface AttendingPartyGroup {
     groupKey: string;
     members: Guest[];
@@ -92,19 +148,21 @@ export default function ThankYouManager({
     isThanked: boolean;
   }
 
-  const attendingParties: AttendingPartyGroup[] = Array.from(partyMap.entries()).map(([groupKey, members]) => {
-    const mailingAddress = members.find(m => m.mailingAddress)?.mailingAddress || '';
-    const emailAddress = members.find(m => m.emailAddress)?.emailAddress || '';
-    const isThanked = members.length > 0 && members.every(m => Boolean(m.thankedSent));
+  const attendingParties: AttendingPartyGroup[] = Array.from(partyMap.entries())
+    .filter(([groupKey, members]) => !isCoupleOrBrideGroomParty(groupKey, members))
+    .map(([groupKey, members]) => {
+      const mailingAddress = members.find(m => m.mailingAddress)?.mailingAddress || '';
+      const emailAddress = members.find(m => m.emailAddress)?.emailAddress || '';
+      const isThanked = members.length > 0 && members.every(m => Boolean(m.thankedSent));
 
-    return {
-      groupKey,
-      members,
-      mailingAddress,
-      emailAddress,
-      isThanked
-    };
-  });
+      return {
+        groupKey,
+        members,
+        mailingAddress,
+        emailAddress,
+        isThanked
+      };
+    });
 
   const attendanceThankedCount = attendingParties.filter(p => p.isThanked).length;
   const attendanceThankedPercent = attendingParties.length > 0 ? Math.round((attendanceThankedCount / attendingParties.length) * 100) : 0;
@@ -779,7 +837,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.8rem',
     padding: '0.5rem 0.75rem 0.5rem 2.25rem',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
@@ -793,7 +851,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
     padding: '0.5rem 0.75rem',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
@@ -1029,7 +1087,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.8rem',
     padding: '0.625rem',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
@@ -1038,7 +1096,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.8rem',
     padding: '0.625rem',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',

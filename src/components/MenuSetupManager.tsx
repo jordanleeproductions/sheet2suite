@@ -852,7 +852,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.55rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   select: {
@@ -861,7 +861,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.55rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   textarea: {
@@ -870,7 +870,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.55rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
     resize: 'vertical',
   },

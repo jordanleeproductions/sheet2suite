@@ -1610,7 +1610,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.75rem',
     fontFamily: 'var(--font-mono)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   checkLabel: {

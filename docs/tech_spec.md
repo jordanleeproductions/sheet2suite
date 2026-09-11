@@ -78,10 +78,18 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 ### 2.5 Budget Ledger (`BudgetLedgerManager.tsx`)
 - Itemized financial ledger (Estimated vs Actual Cost vs Amount Paid vs Balance Owing).
 - Payment status tags (`Paid`, `Pending`, `Overdue`) and category over-budget alerts.
+- **Modernized Financial Terminology (`[FINANCIALS-TERMINOLOGY-MODERNIZATION]`):** Replaced legacy terms `CAP`, `OUTLAY`, and `CUSHION` with universally recognized consumer finance standards: **`BUDGET`** (target allocation), **`SPENT`** (actual outlay/paid), and **`REMAINING`** (available balance).
+- **Interactive In-App Category Budget Management (`[FINANCIALS-EDIT-DELETE-CATEGORY-BUDGET]`):**
+  - **Desktop Master Rail**: Quick inline actions (`Edit2` and `Trash2`) on category cards to adjust target budget amounts or delete category budgets, with a `+ Set Budget` trigger for unbudgeted categories.
+  - **Mobile Bottom Sheet**: Interactive `CATEGORY BUDGET ALLOCATION` card with touch-friendly `Edit` and `Delete` buttons, plus `+ SET BUDGET` prompt for unallocated categories.
+- **Dual-Mode Budget Progress Visualizer (`[FINANCIALS-UTILIZATION-DONUT-TOGGLE]`):**
+  - Segmented toggle supporting **`BAR`** (linear multi-state progress bar) and **`DONUT`** (interactive SVG circular gauge with center utilization percentage and colored status arc).
+  - Remembers user preference in `localStorage` (`'s2v_budget_meter_mode'`).
+  - Clear descriptive balance summary positioned directly under the visualizer (`$X spent of $Y target budget · $Z remaining available` or over-budget warning).
 - **Desktop Master-Detail Split-View (`[FINANCIALS-MASTER-DETAIL-VIEW]`):**
   - **Responsive Shell**: On screens `< lg` (<1024px), maintains existing stacked view (budget cards/table above expenses ledger). On screens `>= lg`, transitions to a two-column grid (`lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start`).
-  - **Master Rail (Left Column - ~5 cols / `lg:col-span-5`)**: Scrollable category budget list bounded to viewport (`lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2`) prioritized by active/alert allocations. Features prominent active selection highlighting (`selectedCategoryId`), serif category titles, mini utilization progress tracks, and CAP / OUTLAY / CUSHION tabular metrics. Clicking any card updates selection.
-  - **Detail Ledger (Right Column - ~7 cols / `lg:col-span-7`)**: Dynamic Category Snapshot header displaying Target Allocation Cap, Total Expenses Logged, and Remaining Cushion (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to the selected category, with empty-state guidance for categories without logged items. Full dynamic recalculation updates category cards and the global progress meter immediately upon adding, editing, or deleting expenses.
+  - **Master Rail (Left Column - ~5 cols / `lg:col-span-5`)**: Scrollable category budget list bounded to viewport (`lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2`) prioritized by active/alert allocations. Features prominent active selection highlighting (`selectedCategoryId`), serif category titles, mini utilization progress tracks, and BUDGET / SPENT / REMAINING tabular metrics. Clicking any card updates selection.
+  - **Detail Ledger (Right Column - ~7 cols / `lg:col-span-7`)**: Dynamic Category Snapshot header displaying Target Allocation Budget, Total Expenses Logged, and Remaining Balance (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to the selected category, with empty-state guidance for categories without logged items. Full dynamic recalculation updates category cards and the global progress meter immediately upon adding, editing, or deleting expenses.
   - **Desktop Compact Active/Alert Filter Pills**: Replaces the large 20+ item chip cloud on desktop with a compact horizontal pill list showing only categories with activity or over-budget alerts.
 
 ### 2.6 Day-Of Timeline (`TimelineManager.tsx`)
@@ -98,6 +106,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Overdue Task Due Date Highlighting (`[TASK-OVERDUE-RED-HIGHLIGHT]`):** Tasks in `To Do` or `In Progress` whose due dates are in the past render their due date font and calendar icon in a distinct red (`var(--color-red, #ef4444)`) with font weight `600`, providing instant visual prioritization of overdue items. Add/Edit modal similarly displays a `PAST DUE` red badge and border.
 - **Unified MM/DD/YYYY Due Date Presentation (`[TASK-DUE-DATE-FORMAT-MMDDYYYY]`):** Standardizes all task card due date displays to `MM/DD/YYYY` format regardless of underlying Google Sheet format (ISO or US), avoiding mixed visual representations.
 - **Category Dropdown Filter with 'General' Fallback (`[TASK-CATEGORY-FILTER-DROPDOWN]`):** Header controls feature an interactive Category `<select>` dropdown displaying all active categories with live task counts. Default tasks lacking an explicit category are categorized under **`General`**. Supports clearing back to `"ALL CATEGORIES"` and provides an instantaneous 1-click `RESET` button when filtered. Columns, mobile stage tabs, empty state notices, and progress metrics update dynamically based on the selected category, and newly added tasks inherit the active category filter automatically.
+- **Dedicated Controls Toolbar & Header Separation (`[TASK-DESKTOP-HEADER-TOOLBAR-SEPARATION]`):** Separates the page title and description into an uncrowded full-width header block, with Category dropdown, Sort controls, and Add Task button housed on a dedicated full-width toolbar row below it, eliminating cramped multi-line stacking when browser windows or desktop screens are shrunk.
 
 ### 2.9 Wedding Playlist & Music (`MusicManager.tsx`)
 - Categorized music tracks (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned / Do Not Play*).
@@ -112,6 +121,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Required photography moments (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
 - Priority levels support photographer-friendly enums (`Must Have`, `Nice To Have`, `Optional`) in the UI, bi-directionally translated to Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`High`, `Medium`, `Low`).
 - Interactive `Captured` vs `Pending` checkoff toggles and **`EMAIL LIST`** photographer email generator (`mailto:`).
+- **Responsive Mobile Segmented View Switcher (`[PHOTO-MOBILE-BALANCED-TABS]`):** 2-column balanced grid (`50% / 50%`) on mobile screens (`< 640px`) featuring shortened labels (`SHOT LIST` and `GUESTBOOK`) with dynamic count badges, completely eliminating horizontal scrolling and layout overflow.
 
 ### 2.12 Print & Export Studio (`PrintTemplatesModal.tsx`)
 - 🖨️ **Print Studio Launcher:** Header action button (`Printer` icon) and contextual module triggers opening the Print Studio portal.
@@ -127,6 +137,10 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **3-Tier Intelligent Seat Assignment Priority (`SeatingChartManager.tsx`):** Ranks guest selection list when populating table seats: (1) Unassigned guests matching seated `partyGroup` names (`🎉 SAME PARTY GROUP`), (2) All unassigned guests (`UNASSIGNED`), and (3) Already assigned guests for re-assignment.
 - **Ceremony Row & Aisle Seating Engine (`[SEAT-4]`):** Dual-side aisle seating planner calculating required seats for `Attending + Pending` guests (excluding `Declined`), customizable row count & chairs per row, central aisle runner visual, interactive seat placement, and responsive mobile dual-card layout splitting left/right sides onto dedicated cards.
 - **Visual Table Diagrams & Numbered Coordinator Seat Maps (`[SEAT-5]`):** Dynamic SVG/CSS table shape rendering on printable Table Tent Cards (`PrintTemplatesModal.tsx`), projecting numbered seat nodes (`#1`, `#2`, `#3`...) matching assigned guest roster items for day-of venue setup.
+
+### 2.14 Thank You Tracker & Gift Log (`ThankYouManager.tsx`)
+- Received gifts and thank you card status tracking (`Gift ID`, `Sender/Guest Name`, `Gift Description`, `Value`, `Thank You Note Sent Status`).
+- **Couple / Bride & Groom Attendance Exclusion (`[THANKS-COUPLE-ATTENDANCE-EXCLUSION]`):** Attendance cards and pending/sent thank-you metrics strictly filter out the Bride & Groom / Couple party records (identifying party names, Sweetheart/Head table assignments, or couple first names from `weddingName`), keeping the thank-you checklist 100% focused on guests.
 
 ---
 

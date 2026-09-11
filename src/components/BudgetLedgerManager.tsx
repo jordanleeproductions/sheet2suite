@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
@@ -25,22 +25,17 @@ const STANDARD_BUDGET_CATEGORIES = [
   'Catering',
   'Photography',
   'Videography',
-  'Attire',
-  'Florals',
-  'Music/DJ',
-  'DJ',
-  'Hair & Makeup',
-  'Decor & Rentals',
+  'Florals & Decor',
+  'Attire & Beauty',
+  'Music & Entertainment',
   'Stationery & Invitations',
   'Cake & Desserts',
   'Transportation',
   'Favors & Gifts',
-  'Officiant',
-  'Planner & Coordinator',
-  'Jewelry & Rings',
-  'Rehearsal Dinner',
-  'Honeymoon',
-  'General',
+  'Planner & Coordination',
+  'Rings & Jewelry',
+  'Rehearsal & Events',
+  'Miscellaneous & Contingency',
 ];
 
 export default function BudgetLedgerManager({
@@ -56,6 +51,25 @@ export default function BudgetLedgerManager({
 }: BudgetLedgerManagerProps) {
   // View mode state
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
+
+  // Budget Utilization Visualization Mode: 'bar' | 'donut'
+  const [meterMode, setMeterMode] = useState<'bar' | 'donut'>('bar');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('s2v_budget_meter_mode');
+      if (savedMode === 'bar' || savedMode === 'donut') {
+        setMeterMode(savedMode);
+      }
+    }
+  }, []);
+
+  const handleMeterModeChange = (mode: 'bar' | 'donut') => {
+    setMeterMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_budget_meter_mode', mode);
+    }
+  };
 
   // Inline Editable Budget Target State
   const [isEditingTarget, setIsEditingTarget] = useState(false);
@@ -833,7 +847,7 @@ export default function BudgetLedgerManager({
       <div className="budget-header-container">
         <div>
           <h2 style={styles.title}>Wedding Financials</h2>
-          <p style={styles.subtitle}>Track estimated caps, log individual purchases & monitor real-time payments</p>
+          <p style={styles.subtitle}>Track category budgets, log individual purchases & monitor real-time payments</p>
         </div>
         <div className="budget-header-actions hidden lg:flex">
           <div className="budget-view-toggle">
@@ -948,37 +962,231 @@ export default function BudgetLedgerManager({
                   )}
                 </span>
               </h3>
-
-              {!isUnsetMode && (
-                isOverallOverBudget ? (
-                  <span style={styles.overBadgeMain}>
-                    <AlertTriangle size={12} style={{ marginRight: '0.25rem' }} /> OVER BUDGET (+{formatCurrency(totalActual - effectiveTarget, currency)})
-                  </span>
-                ) : (
-                  <span style={styles.headroomBadge}>
-                    {formatCurrency(overallHeadroom, currency)} REMAINING
-                  </span>
-                )
-              )}
             </div>
           </div>
 
-          <div style={styles.percentDisplay}>
-            {isUnsetMode ? (
-              <span style={{ ...styles.percentValue, color: 'var(--color-primary)', fontSize: '1rem' }}>No Budget Set</span>
-            ) : (
-              <span style={{ ...styles.percentValue, color: meterBarColor }}>{percentUtilized}%</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* View Mode Switcher: Bar vs Donut */}
+            <div style={{
+              display: 'inline-flex',
+              backgroundColor: 'var(--color-bg-subtle, rgba(0,0,0,0.04))',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--border-radius-sm, 6px)',
+              padding: '2px',
+              gap: '2px',
+            }}>
+              <button
+                type="button"
+                onClick={() => handleMeterModeChange('bar')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.675rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: meterMode === 'bar' ? 'var(--color-primary)' : 'transparent',
+                  color: meterMode === 'bar' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                title="Linear Bar Progress View"
+              >
+                <TrendingUp size={12} />
+                <span>BAR</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMeterModeChange('donut')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.675rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: meterMode === 'donut' ? 'var(--color-primary)' : 'transparent',
+                  color: meterMode === 'donut' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                title="Donut Chart Utilization View"
+              >
+                <PieChart size={12} />
+                <span>DONUT</span>
+              </button>
+            </div>
+
+            {meterMode === 'bar' && (
+              <div style={styles.percentDisplay}>
+                {isUnsetMode ? (
+                  <span style={{ ...styles.percentValue, color: 'var(--color-primary)', fontSize: '0.9rem' }}>Unset</span>
+                ) : (
+                  <span style={{ ...styles.percentValue, color: meterBarColor }}>{percentUtilized}%</span>
+                )}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Progress Track */}
-        <div style={styles.progressTrack}>
+        {/* Progress Track / Donut Chart View */}
+        {meterMode === 'donut' ? (
           <div style={{
-            ...styles.progressFill,
-            width: `${Math.min(percentUtilized, 100)}%`,
-            backgroundColor: meterBarColor
-          }} />
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            flexWrap: 'wrap',
+            gap: '1.25rem',
+            padding: '0.75rem 0.5rem',
+          }}>
+            {/* SVG Donut Chart */}
+            <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
+              <svg width="130" height="130" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                {/* Background Ring Track */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="transparent"
+                  stroke="var(--color-bg-subtle, #e2e8f0)"
+                  strokeWidth="10"
+                />
+                {/* Progress Ring Arc */}
+                {!isUnsetMode && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="transparent"
+                    stroke={meterBarColor}
+                    strokeWidth="10"
+                    strokeDasharray={2 * Math.PI * 40}
+                    strokeDashoffset={(2 * Math.PI * 40) * (1 - Math.min(percentUtilized, 100) / 100)}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                  />
+                )}
+              </svg>
+              {/* Donut Center Label */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                pointerEvents: 'none',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: isUnsetMode ? '0.85rem' : '1.3rem',
+                  fontWeight: 800,
+                  color: meterBarColor,
+                  lineHeight: 1.1,
+                }}>
+                  {isUnsetMode ? 'N/A' : `${percentUtilized}%`}
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.625rem',
+                  color: 'var(--color-muted)',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                }}>
+                  {isOverallOverBudget ? 'OVER BUDGET' : (isUnsetMode ? 'UNSET' : 'UTILIZED')}
+                </span>
+              </div>
+            </div>
+
+            {/* Donut Side Stats Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '0.75rem',
+              flex: '1 1 300px',
+            }}>
+              <div style={styles.snapshotTile}>
+                <span style={styles.snapshotTileLabel}>TOTAL BUDGET</span>
+                <span style={styles.snapshotTileValue}>
+                  {isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}
+                </span>
+                <span style={styles.snapshotTileSub}>Overall wedding target</span>
+              </div>
+              <div style={styles.snapshotTile}>
+                <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
+                <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>
+                  {formatCurrency(totalActual, currency)}
+                </span>
+                <span style={styles.snapshotTileSub}>{expenses.length} purchase{expenses.length === 1 ? '' : 's'}</span>
+              </div>
+              <div style={styles.snapshotTile}>
+                <span style={styles.snapshotTileLabel}>REMAINING</span>
+                <span style={{
+                  ...styles.snapshotTileValue,
+                  color: isOverallOverBudget ? 'var(--color-red)' : 'var(--color-green, #10b981)'
+                }}>
+                  {isUnsetMode ? 'Open' : formatCurrency(Math.abs(overallHeadroom), currency)}
+                </span>
+                <span style={{
+                  ...styles.snapshotTileSub,
+                  color: isOverallOverBudget ? '#b91c1c' : '#15803d',
+                  fontWeight: 700
+                }}>
+                  {isUnsetMode ? 'Tracking expenses' : isOverallOverBudget ? 'Over Budget' : 'Remaining Available'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Linear Progress Track */
+          <div style={styles.progressTrack}>
+            <div style={{
+              ...styles.progressFill,
+              width: `${Math.min(percentUtilized, 100)}%`,
+              backgroundColor: meterBarColor
+            }} />
+          </div>
+        )}
+
+        {/* Descriptive Text Status Row Directly Under the Progress Bar */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          marginTop: meterMode === 'donut' ? '0.35rem' : '0.5rem',
+          paddingTop: '0.35rem',
+          borderTop: '1px dotted var(--color-border)',
+          fontSize: '0.75rem',
+          fontFamily: 'var(--font-mono)',
+        }}>
+          <span style={{ color: 'var(--color-muted)' }}>
+            {isUnsetMode ? (
+              <span><strong>{formatCurrency(totalActual, currency)}</strong> total spent across all categories (Unset Target Mode)</span>
+            ) : (
+              <span><strong>{formatCurrency(totalActual, currency)}</strong> spent of <strong>{formatCurrency(effectiveTarget, currency)}</strong> target budget</span>
+            )}
+          </span>
+
+          {!isUnsetMode && (
+            isOverallOverBudget ? (
+              <span style={{ color: 'var(--color-red, #dc2626)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <AlertTriangle size={13} /> {formatCurrency(totalActual - effectiveTarget, currency)} OVER BUDGET
+              </span>
+            ) : (
+              <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 800 }}>
+                {formatCurrency(overallHeadroom, currency)} REMAINING AVAILABLE
+              </span>
+            )
+          )}
         </div>
 
         {/* Category Breakdown: Responsive Desktop Pills vs Mobile Chips */}
@@ -1013,7 +1221,7 @@ export default function BudgetLedgerManager({
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center' }}>
                 {activeOrAlertStats.length === 0 ? (
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic', fontFamily: 'var(--font-mono)' }}>
-                    No active category caps or expenses recorded yet. Select any category below to begin logging.
+                    No active category budgets or expenses recorded yet. Select any category below to begin logging.
                   </span>
                 ) : (
                   activeOrAlertStats.map(stat => {
@@ -1162,9 +1370,9 @@ export default function BudgetLedgerManager({
                 style={{ ...styles.addButton, fontSize: '0.7rem', padding: '0.35rem 0.65rem' }}
                 onClick={() => startAddBudget()}
                 disabled={isSyncing}
-                title="Add New Target Budget Cap"
+                title="Add New Budget Category"
               >
-                <Plus size={13} style={{ marginRight: '0.2rem' }} /> + BUDGET CATEGORY
+                <Plus size={13} style={{ marginRight: '0.2rem' }} /> NEW CATEGORY
               </button>
             </div>
 
@@ -1258,6 +1466,69 @@ export default function BudgetLedgerManager({
                               <AlertTriangle size={11} style={{ marginRight: '2px' }} /> +{formatCurrency(stat.overAmount, currency)}
                             </span>
                           )}
+                          {/* Inline Edit and Delete Budget Category Controls */}
+                          {stat.budgetItems.length > 0 ? (
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }} onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => startEditBudget(stat.budgetItems[0])}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--color-muted)',
+                                  cursor: 'pointer',
+                                  padding: '2px 4px',
+                                  borderRadius: '3px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                }}
+                                title={`Edit ${stat.category} Budget`}
+                                aria-label={`Edit ${stat.category} Budget`}
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setItemToDelete(stat.budgetItems[0])}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--color-red, #ef4444)',
+                                  cursor: 'pointer',
+                                  padding: '2px 4px',
+                                  borderRadius: '3px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                }}
+                                title={`Delete ${stat.category} Budget`}
+                                aria-label={`Delete ${stat.category} Budget`}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startAddBudget(stat.category);
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--color-primary)',
+                                cursor: 'pointer',
+                                fontSize: '0.625rem',
+                                fontFamily: 'var(--font-mono)',
+                                fontWeight: 700,
+                                textDecoration: 'underline',
+                                padding: '2px 4px',
+                              }}
+                              title={`Set Budget for ${stat.category}`}
+                            >
+                              + Set Budget
+                            </button>
+                          )}
                           {isSelected && (
                             <span style={{
                               fontFamily: 'var(--font-mono)',
@@ -1300,15 +1571,15 @@ export default function BudgetLedgerManager({
                         fontFamily: 'var(--font-mono)',
                       }}>
                         <div>
-                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>CAP</span>
+                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>BUDGET</span>
                           <span style={{ fontWeight: 700, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stat.estimated, currency)}</span>
                         </div>
                         <div>
-                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>OUTLAY</span>
+                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>SPENT</span>
                           <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stat.actual, currency)}</span>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>CUSHION</span>
+                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>REMAINING</span>
                           <span style={{
                             fontWeight: 700,
                             color: cushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)',
@@ -1363,14 +1634,14 @@ export default function BudgetLedgerManager({
                 No Budget Categories Yet
               </h3>
               <p style={{ fontSize: '0.85rem', maxWidth: '420px', margin: 0 }}>
-                Create your first budget category (e.g. Venue, Catering, Photography) to establish spending caps. Itemized receipts and expenses will line up under each category.
+                Create your first budget category (e.g. Venue, Catering, Photography) to establish target allocations. Itemized receipts and expenses will line up under each category.
               </p>
               <button
                 type="button"
                 onClick={() => startAddBudget()}
                 style={styles.addButton}
               >
-                <Plus size={14} style={{ marginRight: '0.25rem' }} /> + NEW BUDGET CATEGORY
+                <Plus size={14} style={{ marginRight: '0.25rem' }} /> NEW BUDGET CATEGORY
               </button>
             </div>
           ) : (
@@ -1419,21 +1690,21 @@ export default function BudgetLedgerManager({
                 {/* Snapshot 3-Metric Tiles */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                   <div style={styles.snapshotTile}>
-                    <span style={styles.snapshotTileLabel}>TARGET ALLOCATION CAP</span>
+                    <span style={styles.snapshotTileLabel}>CATEGORY BUDGET</span>
                     <span style={styles.snapshotTileValue}>{formatCurrency(selectedCatStat.estimated, currency)}</span>
                     <span style={styles.snapshotTileSub}>
-                      {selectedCatBudgetItems.length > 0 ? 'Target Spending Cap' : 'No Cap Allocated'}
+                      {selectedCatBudgetItems.length > 0 ? 'Allocated Target' : 'No Budget Set'}
                     </span>
                   </div>
 
                   <div style={styles.snapshotTile}>
-                    <span style={styles.snapshotTileLabel}>TOTAL EXPENSES LOGGED</span>
+                    <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
                     <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency)}</span>
                     <span style={styles.snapshotTileSub}>{selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'} recorded</span>
                   </div>
 
                   <div style={styles.snapshotTile}>
-                    <span style={styles.snapshotTileLabel}>REMAINING CUSHION</span>
+                    <span style={styles.snapshotTileLabel}>REMAINING</span>
                     <span style={{
                       ...styles.snapshotTileValue,
                       color: remainingCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
@@ -1445,12 +1716,12 @@ export default function BudgetLedgerManager({
                       color: remainingCushion < 0 ? '#b91c1c' : '#15803d',
                       fontWeight: 700
                     }}>
-                      {remainingCushion < 0 ? `Over Cap by ${formatCurrency(Math.abs(remainingCushion), currency)}` : 'Cushion Available'}
+                      {remainingCushion < 0 ? `Over Budget by ${formatCurrency(Math.abs(remainingCushion), currency)}` : 'Remaining Available'}
                     </span>
                   </div>
                 </div>
 
-                {/* Target Cap Breakdown Line Items if present */}
+                {/* Target Budget Breakdown Line Items if present */}
                 {selectedCatBudgetItems.length > 0 ? (
                   <div style={{
                     borderTop: '1px dashed var(--color-border)',
@@ -1461,7 +1732,7 @@ export default function BudgetLedgerManager({
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
-                        BUDGET ALLOCATION CAP
+                        CATEGORY BUDGET ALLOCATION
                       </span>
                       <button
                         type="button"
@@ -1477,7 +1748,7 @@ export default function BudgetLedgerManager({
                           textDecoration: 'underline'
                         }}
                       >
-                        EDIT BUDGET CAP
+                        EDIT BUDGET
                       </button>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
@@ -1491,28 +1762,52 @@ export default function BudgetLedgerManager({
                             backgroundColor: 'var(--color-bg-subtle)',
                             border: '1px solid var(--color-border)',
                             borderRadius: 'var(--border-radius-sm)',
-                            padding: '0.3rem 0.6rem',
+                            padding: '0.35rem 0.65rem',
                             fontSize: '0.725rem',
                             fontFamily: 'var(--font-mono)',
                           }}
                         >
-                          <span style={{ fontWeight: 600 }}>Allocation:</span>
+                          <span style={{ fontWeight: 600 }}>Budget:</span>
                           <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{formatCurrency(item.estimatedCost, currency)}</span>
                           <button
                             type="button"
                             onClick={() => startEditBudget(item)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '0 2px' }}
-                            title="Edit Budget Cap"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.2rem',
+                              background: 'var(--color-surface)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                              color: 'var(--color-primary)',
+                              padding: '2px 5px',
+                              fontSize: '0.675rem',
+                              fontWeight: 700,
+                            }}
+                            title="Edit Category Budget"
                           >
-                            <Edit2 size={11} />
+                            <Edit2 size={11} /> Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => setItemToDelete(item)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-red, #ef4444)', padding: '0 2px' }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.2rem',
+                              background: 'rgba(239, 68, 68, 0.08)',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                              color: 'var(--color-red, #ef4444)',
+                              padding: '2px 5px',
+                              fontSize: '0.675rem',
+                              fontWeight: 700,
+                            }}
                             title="Delete Budget Category"
                           >
-                            <Trash2 size={11} />
+                            <Trash2 size={11} /> Delete
                           </button>
                         </div>
                       ))}
@@ -1527,12 +1822,15 @@ export default function BudgetLedgerManager({
                     alignItems: 'center'
                   }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)' }}>
-                      No budget cap allocated to this category yet.
+                      No budget allocated to this category yet.
                     </span>
                     <button
                       type="button"
                       onClick={() => startAddBudget(effectiveSelectedCategoryId)}
                       style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
                         background: 'none',
                         border: 'none',
                         color: 'var(--color-primary)',
@@ -1543,7 +1841,7 @@ export default function BudgetLedgerManager({
                         textDecoration: 'underline'
                       }}
                     >
-                      + SET BUDGET CAP
+                      <Plus size={12} /> SET BUDGET
                     </button>
                   </div>
                 )}
@@ -1605,7 +1903,7 @@ export default function BudgetLedgerManager({
                   No itemized expenses logged for {effectiveSelectedCategoryId}
                 </h4>
                 <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: '0 0 1.25rem', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
-                  Record receipts, deposits, vendor retainers, and day-of purchases to monitor your actual costs against this category cap.
+                  Record receipts, deposits, vendor retainers, and day-of purchases to monitor your actual costs against this category budget.
                 </p>
                 <button
                   type="button"
@@ -1701,10 +1999,9 @@ export default function BudgetLedgerManager({
                 📂 CATEGORY EXPENSES
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0.1rem 0 0' }}>
-                Tap any category to view receipts, caps & log expenses
+                Tap any category to view receipts, budgets & log expenses
               </p>
-            </div>
-            <button
+            </div>            <button
               type="button"
               onClick={() => startAddBudget(effectiveSelectedCategoryId)}
               style={{
@@ -1721,9 +2018,9 @@ export default function BudgetLedgerManager({
                 gap: '0.25rem',
                 cursor: 'pointer'
               }}
-              title="Add New Target Budget Cap"
+              title="Add New Budget Category"
             >
-              <Plus size={12} /> + CAP
+              <Plus size={12} /> ADD BUDGET
             </button>
           </div>
 
@@ -1825,7 +2122,7 @@ export default function BudgetLedgerManager({
             }}>
               {mobileCategorySearch.trim()
                 ? `No categories found matching "${mobileCategorySearch}"`
-                : 'No budget categories created yet. Tap "+ CAP" above to create your first budget category.'}
+                : 'No budget categories created yet. Tap "ADD BUDGET" above to create your first budget category.'}
             </div>
           ) : (
             displayedMobileStats.map(stat => {
@@ -1883,7 +2180,7 @@ export default function BudgetLedgerManager({
                           fontSize: '0.65rem',
                           color: 'var(--color-muted)',
                         }}>
-                          No cap
+                          No budget
                         </span>
                       )}
                     </div>
@@ -1914,19 +2211,19 @@ export default function BudgetLedgerManager({
                     fontFamily: 'var(--font-mono)',
                   }}>
                     <div>
-                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>CAP</span>
+                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>BUDGET</span>
                       <span style={{ fontWeight: 700, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>
                         {formatCurrency(stat.estimated, currency)}
                       </span>
                     </div>
                     <div>
-                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>OUTLAY</span>
+                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>SPENT</span>
                       <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>
                         {formatCurrency(stat.actual, currency)}
                       </span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>CUSHION</span>
+                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>REMAINING</span>
                       <span style={{
                         fontWeight: 700,
                         color: cushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)',
@@ -1978,66 +2275,47 @@ export default function BudgetLedgerManager({
             }}
           />
 
-          {/* Bottom Sheet Container */}
+          {/* Drawer Sheet Content */}
           <div
             className="mobile-bottom-sheet-container"
             style={{
               transform: isSheetAnimating ? 'translateY(0)' : 'translateY(100%)',
             }}
           >
-            {/* Drag Handle */}
+            {/* Grab Handle */}
             <div className="mobile-bottom-sheet-handle" onClick={closeBottomSheet} />
 
-            {/* Sheet Header */}
+            {/* Sheet Category Header */}
             <div style={{
-              padding: '0.75rem 1.25rem 0.85rem',
+              padding: '0.85rem 1.25rem 0.75rem',
               borderBottom: '1px solid var(--color-border)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.65rem',
+              gap: '0.75rem',
               backgroundColor: 'var(--color-surface)',
-              flexShrink: 0,
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.15rem' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.06em' }}>
-                      CATEGORY DETAIL
-                    </span>
-                    {bottomSheetStat.isOver ? (
-                      <span style={styles.overBadgeMini}>
-                        OVER BUDGET (+{formatCurrency(bottomSheetStat.overAmount, currency)})
-                      </span>
-                    ) : (
-                      <span style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.625rem',
-                        fontWeight: 700,
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        color: 'var(--color-green, #10b981)',
-                        padding: '0.15rem 0.45rem',
-                        borderRadius: '4px',
-                      }}>
-                        ✓ CUSHION AVAILABLE
-                      </span>
-                    )}
-                  </div>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', fontWeight: 700, color: 'var(--color-primary)', margin: 0 }}>
+              {/* Top Bar: Category Name, Badges & Close Button */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', fontWeight: 700, margin: 0, color: 'var(--color-primary)' }}>
                     {bottomSheetStat.category}
                   </h3>
+                  {bottomSheetStat.isOver && (
+                    <span style={styles.overBadgeMini}>
+                      OVER BUDGET (+{formatCurrency(bottomSheetStat.overAmount, currency)})
+                    </span>
+                  )}
                 </div>
 
                 <button
                   type="button"
                   onClick={closeBottomSheet}
-                  aria-label="Close bottom sheet"
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--color-bg-subtle)',
+                    background: 'var(--color-bg-subtle)',
                     border: '1px solid var(--color-border)',
-                    color: 'var(--color-text)',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -2052,9 +2330,9 @@ export default function BudgetLedgerManager({
               {/* 3-Metric Tiles Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                 <div style={styles.snapshotTile}>
-                  <span style={styles.snapshotTileLabel}>CAP</span>
+                  <span style={styles.snapshotTileLabel}>BUDGET</span>
                   <span style={styles.snapshotTileValue}>{formatCurrency(bottomSheetStat.estimated, currency)}</span>
-                  <span style={styles.snapshotTileSub}>{bottomSheetStat.budgetItemCount} budget cap{bottomSheetStat.budgetItemCount === 1 ? '' : 's'}</span>
+                  <span style={styles.snapshotTileSub}>{bottomSheetStat.budgetItemCount} allocation{bottomSheetStat.budgetItemCount === 1 ? '' : 's'}</span>
                 </div>
 
                 <div style={styles.snapshotTile}>
@@ -2066,7 +2344,7 @@ export default function BudgetLedgerManager({
                 </div>
 
                 <div style={styles.snapshotTile}>
-                  <span style={styles.snapshotTileLabel}>CUSHION</span>
+                  <span style={styles.snapshotTileLabel}>REMAINING</span>
                   <span style={{
                     ...styles.snapshotTileValue,
                     color: bottomSheetCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
@@ -2078,32 +2356,149 @@ export default function BudgetLedgerManager({
                     color: bottomSheetCushion < 0 ? '#b91c1c' : '#15803d',
                     fontWeight: 700
                   }}>
-                    {bottomSheetCushion < 0 ? 'Over Limit' : 'Available'}
+                    {bottomSheetCushion < 0 ? 'Over Budget' : 'Remaining Available'}
                   </span>
                 </div>
               </div>
 
-              {/* Target Cap Lines Preview (if any) */}
-              {bottomSheetStat.budgetItems.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', paddingTop: '0.15rem' }}>
-                  {bottomSheetStat.budgetItems.map(item => (
-                    <span
-                      key={item.itemId}
+              {/* Category Budget Allocation (with mobile Edit and Delete actions) */}
+              <div style={{
+                borderTop: '1px dashed var(--color-border)',
+                paddingTop: '0.65rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.4rem',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
+                    CATEGORY BUDGET ALLOCATION
+                  </span>
+                  {bottomSheetStat.budgetItems.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => startEditBudget(bottomSheetStat.budgetItems[0])}
                       style={{
-                        fontSize: '0.675rem',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--color-primary)',
                         fontFamily: 'var(--font-mono)',
-                        backgroundColor: 'var(--color-bg-subtle)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: '4px',
-                        padding: '0.15rem 0.45rem',
-                        color: 'var(--color-text)',
+                        fontSize: '0.675rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        padding: '2px 4px',
                       }}
                     >
-                      {item.vendorName}: <strong>{formatCurrency(item.estimatedCost, currency)}</strong>
-                    </span>
-                  ))}
+                      EDIT BUDGET
+                    </button>
+                  )}
                 </div>
-              )}
+
+                {bottomSheetStat.budgetItems.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    {bottomSheetStat.budgetItems.map(item => (
+                      <div
+                        key={item.itemId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: 'var(--color-bg-subtle)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--border-radius-sm)',
+                          padding: '0.4rem 0.65rem',
+                          fontSize: '0.75rem',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ color: 'var(--color-muted)' }}>Target:</span>
+                          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>
+                            {formatCurrency(item.estimatedCost, currency)}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => startEditBudget(item)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              background: 'var(--color-surface)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: '4px',
+                              padding: '0.25rem 0.5rem',
+                              fontSize: '0.675rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              color: 'var(--color-text)',
+                            }}
+                            title="Edit Target Budget"
+                          >
+                            <Edit2 size={12} /> Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setItemToDelete(item)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              background: 'rgba(239, 68, 68, 0.08)',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              borderRadius: '4px',
+                              padding: '0.25rem 0.5rem',
+                              fontSize: '0.675rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              color: 'var(--color-red, #ef4444)',
+                            }}
+                            title="Delete Budget Category"
+                          >
+                            <Trash2 size={12} /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: 'var(--color-bg-subtle)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.5rem 0.65rem',
+                  }}>
+                    <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                      No budget allocated to {bottomSheetStat.category} yet.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => startAddBudget(bottomSheetStat.category)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-on-primary, #ffffff)',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '0.3rem 0.6rem',
+                        fontSize: '0.675rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Plus size={12} /> SET BUDGET
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Scrollable Itemized Expense List */}
@@ -2158,7 +2553,7 @@ export default function BudgetLedgerManager({
                     No expenses logged for {bottomSheetStat.category}
                   </h4>
                   <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: 0, maxWidth: '280px' }}>
-                    Record vendor deposits, retainers, and receipts to monitor actual costs against this cap.
+                    Record vendor deposits, retainers, and receipts to monitor actual costs against this budget.
                   </p>
                 </div>
               ) : (
@@ -2373,7 +2768,7 @@ export default function BudgetLedgerManager({
                     autoFocus={!!formState.category}
                   />
                   <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
-                    Set the target budget cap for this category. Expense receipts will line up under this category.
+                    Set the target budget for this category. Expense receipts will line up under this category.
                   </span>
                 </div>
               </div>
@@ -2415,7 +2810,7 @@ export default function BudgetLedgerManager({
                 )}
 
                 <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (editingItem ? 'UPDATE BUDGET CAP' : 'SAVE BUDGET CATEGORY')}
+                  {isSyncing ? 'SAVING...' : (editingItem ? 'UPDATE BUDGET' : 'SAVE BUDGET CATEGORY')}
                 </button>
               </div>
             </form>
@@ -2826,9 +3221,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.5rem 0.75rem',
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    border: '1px solid var(--color-border)',
+    border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   filtersGroup: {
@@ -2841,9 +3236,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
     fontWeight: 700,
-    border: '1px solid var(--color-border)',
+    border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   tableWrapper: {
@@ -3005,18 +3400,18 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.5rem 0.65rem',
     fontFamily: 'var(--font-sans)',
     fontSize: '0.85rem',
-    border: '1px solid var(--color-border)',
+    border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   select: {
     padding: '0.5rem 0.65rem',
     fontFamily: 'var(--font-sans)',
     fontSize: '0.85rem',
-    border: '1px solid var(--color-border)',
+    border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   formActions: {

@@ -1297,7 +1297,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.5rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   filtersGroup: {
@@ -1311,7 +1311,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.5rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
     cursor: 'pointer',
   },
@@ -1332,7 +1332,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
     width: '100%',
     boxSizing: 'border-box',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   select: {
@@ -1342,7 +1342,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
     width: '100%',
     boxSizing: 'border-box',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   modalFooter: {

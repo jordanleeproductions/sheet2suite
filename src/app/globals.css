@@ -395,14 +395,14 @@ button[type="submit"] {
   }
 }
 
-/* Input Fields and Buttons in variables theme */
+/* Input Fields, Search Bars, and Dropdowns Theme Rules */
 input, select, textarea {
   font-family: var(--font-mono);
   font-size: 0.875rem;
   padding: 0.75rem;
   border: 1px solid var(--color-muted);
   border-radius: var(--border-radius-sm);
-  background-color: var(--color-bg);
+  background-color: var(--color-input-bg, #ffffff);
   color: var(--color-text);
   transition: var(--transition-smooth);
 }
@@ -410,6 +410,87 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+/* =========================================================
+   Light Mode: White Search Bars & Dropdowns Distinction Rules
+   ========================================================= */
+:root:not([data-theme='dark']) input,
+:root:not([data-theme='dark']) select,
+:root:not([data-theme='dark']) textarea,
+:root:not([data-theme='dark']) [class*="searchInput"],
+:root:not([data-theme='dark']) [class*="filterSelect"],
+:root:not([data-theme='dark']) [class*="searchWrapper"] input,
+:root:not([data-theme='dark']) [class*="filterSection"] input,
+:root:not([data-theme='dark']) [class*="filterBar"] input,
+:root:not([data-theme='dark']) [class*="filterBar"] select,
+:root:not([data-theme='dark']) [class*="filtersGroup"] select,
+:root:not([data-theme='dark']) .kanban-category-select,
+[data-theme='light'] input,
+[data-theme='light'] select,
+[data-theme='light'] textarea,
+[data-theme='light'] [class*="searchInput"],
+[data-theme='light'] [class*="filterSelect"],
+[data-theme='light'] [class*="searchWrapper"] input,
+[data-theme='light'] [class*="filterSection"] input,
+[data-theme='light'] [class*="filterBar"] input,
+[data-theme='light'] [class*="filterBar"] select,
+[data-theme='light'] [class*="filtersGroup"] select,
+[data-theme='light'] .kanban-category-select {
+  background-color: #ffffff !important;
+  color: var(--color-text, #121824) !important;
+  border-color: var(--color-muted, #708090);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root:not([data-theme='dark']) input:hover,
+:root:not([data-theme='dark']) select:hover,
+:root:not([data-theme='dark']) [class*="searchInput"]:hover,
+:root:not([data-theme='dark']) [class*="filterSelect"]:hover,
+[data-theme='light'] input:hover,
+[data-theme='light'] select:hover,
+[data-theme='light'] [class*="searchInput"]:hover,
+[data-theme='light'] [class*="filterSelect"]:hover {
+  border-color: var(--color-primary);
+  background-color: #ffffff !important;
+}
+
+:root:not([data-theme='dark']) input:focus,
+:root:not([data-theme='dark']) select:focus,
+:root:not([data-theme='dark']) [class*="searchInput"]:focus,
+:root:not([data-theme='dark']) [class*="filterSelect"]:focus,
+[data-theme='light'] input:focus,
+[data-theme='light'] select:focus,
+[data-theme='light'] [class*="searchInput"]:focus,
+[data-theme='light'] [class*="filterSelect"]:focus {
+  border-color: var(--color-primary) !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(13, 27, 42, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
+/* Options inside select dropdowns in Light Mode */
+:root:not([data-theme='dark']) select option,
+[data-theme='light'] select option {
+  background-color: #ffffff !important;
+  color: #121824 !important;
+}
+
+/* Dark Mode Preservation for Inputs, Search Bars & Dropdowns */
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea,
+[data-theme='dark'] [class*="searchInput"],
+[data-theme='dark'] [class*="filterSelect"] {
+  background-color: var(--color-input-bg, var(--color-surface, #1e1e1e)) !important;
+  color: var(--color-text, #e2e8f0) !important;
+  border-color: var(--color-muted, #94a3b8);
+  box-shadow: none;
+}
+
+[data-theme='dark'] select option {
+  background-color: var(--color-surface, #1e1e1e) !important;
+  color: var(--color-text, #e2e8f0) !important;
 }
 
 /* Print Media Styles for PDF & Paper Exports */

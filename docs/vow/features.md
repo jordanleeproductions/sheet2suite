@@ -131,6 +131,11 @@
     - Line 2: Large, bold stage count integer (`1.25rem`, `fontWeight: 800`).
     - Line 3: Calculated percentage (`{percentToDo}%`, `{percentInProgress}%`, `{percentDone}%`) placed directly below the count in smaller muted text (`0.75rem`, `fontWeight: 600`, `var(--color-muted)`).
   - Eliminates visual clutter (removed `/ total` and inline `(X%)` parentheses) for a unified, balanced 3-card metric layout.
+- [x] **[TASK-DESKTOP-HEADER-TOOLBAR-SEPARATION] Dedicated Controls Toolbar & Uncrowded Header Row (`KanbanBoard.tsx`):**
+  - Separated the page header (Title `Kanban Checklist` & description) from the interactive controls into distinct full-width stacked rows (`flex-direction: column; align-items: stretch`).
+  - The Title and description span the entire top row, allowing the text to breathe naturally without horizontal crowding.
+  - The Category dropdown filter, Sort bar, and desktop `+ ADD TASK` button reside on their own dedicated full-width toolbar row below the description (`display: flex; justify-content: space-between; align-items: center; width: 100%`).
+  - Completely eliminates cramped multi-line stacking of Category, Sort, and Add Task beside the description text when desktop screens or browser windows are shrunk.
 
 ---
 
@@ -155,6 +160,10 @@
 - [x] **[UX-11] Touch Target Color Preset Swatches:** Expanded quick settings primary color swatches from 20px to 28px for better mobile touch usability.
 - [x] **[UX-12] Design Style Subtitle Descriptions:** Added descriptive hover tooltips and labels to Quick Settings design system selector buttons.
 - [x] **[UX-15] Elevated Dark Mode Toast Notifications:** Updated `ToastNotification.tsx` background token to `var(--color-bg-hover)` to ensure clear visual elevation above page canvas in dark mode.
+- [x] **[UX-16] Crisp White Search Bars & Dropdown Menus in Light Mode:**
+  - Added `--color-input-bg` token to `theme.css` across all 4 design styles (`editorial`, `neo-brutalism`, `botanical-romance`, `midnight-tuxedo`), defaulting to solid white (`#ffffff`) in light mode and surface tokens (`var(--color-surface)`) in dark mode.
+  - Enforced crisp white backgrounds (`#ffffff`), dark legible text (`#121824`), subtle elevation shadows (`0 1px 3px rgba(0,0,0,0.05)`), and high-contrast hover/focus rings for all search bars, filter dropdowns, `<select>` inputs, and modal form fields in `globals.css` and individual component styles (`VendorManager`, `TimelineManager`, `GuestListManager`, `MusicManager`, `PhotoShotListManager`, `ThankYouManager`, `BudgetLedgerManager`, `KanbanBoard`, `MenuSetupManager`, `SeatingChartManager`, `PrintTemplatesModal`, `AdvancedSettingsModal`).
+  - Preserved dark mode aesthetics with dark background surfaces and high-contrast text.
 - [x] **[NAV-SWIPE] Mobile Gestures & Swipe Sheet:** Swipe-up from mobile bottom nav reveals categorized module drawer; swipe-down on drag handle dismisses drawer.
 - [x] **[NAV-HAPTIC] Mobile Web Micro-Haptic Feedback:** Added safe `triggerHaptic()` feedback on mobile bottom nav tab clicks, drawer module selection, and theme toggles via `navigator.vibrate`.
 
@@ -213,8 +222,15 @@
   - **Google Drive `Guest_Messages_&_Notes.txt` Real-Time Log**: Automatically creates and continuously appends every guest wish, comment, uploader name, file count, and timestamp directly to a consolidated text log file inside the couple's Google Drive folder.
   - **Full Firestore & Offline Parity (`LocalFirestore.getDocsAsync`, `deleteDoc`)**: Persists guest uploads under the `guest_uploads` collection in Cloud Firestore (production) and local storage (dev), with query and deletion endpoints (`GET /api/drive/guest-uploads`, `DELETE /api/drive/guest-uploads`).
   - **Dismiss / Delete Modal**: Allows the couple to clean up test or spam guestbook entries with safety confirmation ensuring uploaded Google Drive media files are preserved.
+- [x] **[PHOTO-MOBILE-BALANCED-TABS] Responsive Mobile Two-Column Segmented Tab Switcher (`PhotoShotListManager.tsx`):**
+  - Upgraded the top view switcher (`.photo-view-switcher`) on mobile screens (`< 640px`) to use a responsive 2-column balanced grid (`grid-template-columns: 1fr 1fr; width: 100%`) instead of an overflowing single-row flex layout.
+  - Shortened mobile button labels:
+    - Desktop: `PHOTOGRAPHER SHOT LIST` $\rightarrow$ Mobile: `SHOT LIST`
+    - Desktop: `GUESTBOOK & PHOTO NOTES` $\rightarrow$ Mobile: `GUESTBOOK`
+  - Eliminated horizontal scrolling, text wrapping, and truncated badge counters on mobile devices while maintaining dynamic counters (`{shots.length}`, `{guestUploads.length}`) and desktop label fidelity.
 
 ---
+
 
 ## ⚙️ 13. Platform Infrastructure & Standards
 - [x] **[SYS-1] Purchase Activation Flow (`/activate`):** Etsy order verification API with Quick Setup and 4-screen Guided Setup Wizard.
@@ -333,6 +349,24 @@
 - [x] **[FINANCIALS-MOBILE-VIEW-TOGGLE-REMOVAL] Mobile View Mode Toggle Removal (`BudgetLedgerManager.tsx`):**
   - Removed the legacy List vs. Card view toggle buttons (`.budget-view-toggle`) from the mobile and tablet header (`< 1024px`) via Tailwind `hidden lg:flex` and CSS `@media (max-width: 1023px) { display: none !important; }`.
   - Cleans up mobile header space, letting the title and subtitle breathe without dead toggle buttons that conflicted with the mobile category card stack and sliding bottom sheet layout.
+- [x] **[FINANCIALS-TERMINOLOGY-MODERNIZATION] Financial Terminology Modernization (`BudgetLedgerManager.tsx`):**
+  - Modernized planning and consumer finance terminology across the entire Financials module, replacing awkward legacy terms:
+    - `CAP` / `Total Cap` $\rightarrow$ **`BUDGET`** / **`Target Budget Allocation`**
+    - `OUTLAY` / `Total Outlay` $\rightarrow$ **`SPENT`** / **`Total Spent / Paid`**
+    - `CUSHION` / `Remaining Cushion` $\rightarrow$ **`REMAINING`** / **`Remaining Available`**
+  - Applied uniformly across Desktop Master Rail cards, Category Detail Snapshot cards, Mobile Category Cards, and the Mobile Sliding Bottom Sheet.
+- [x] **[FINANCIALS-DOUBLE-PLUS-FIX] Double Plus Button Icon Cleanup (`BudgetLedgerManager.tsx`):**
+  - Fixed duplicate plus symbols where Lucide `<Plus />` icons were immediately followed by literal string `+` characters in button text.
+  - Standardized button labels: `<Plus size={12} /> ADD BUDGET` (category header), `<Plus size={13} /> NEW CATEGORY` (mobile bottom sheet unbudgeted row), and `<Plus size={14} /> NEW BUDGET CATEGORY` (rail header).
+- [x] **[FINANCIALS-EDIT-DELETE-CATEGORY-BUDGET] In-App Category Budget Editing & Deletion on Desktop & Mobile (`BudgetLedgerManager.tsx`):**
+  - **Desktop Master Rail Actions**: Hovering over category budget cards reveals dedicated inline **Edit** (`<Edit2 size={12} />`) and **Delete** (`<Trash2 size={12} />`) buttons. Clicking Edit pre-populates the target category budget modal; clicking Delete prompts for confirmation and cleans up the budget allocation. If a category has logged expenses but no budget target, a prominent `+ Set Budget` shortcut button is rendered.
+  - **Mobile Bottom Sheet Allocation Card**: Upgraded static category metrics in the bottom sheet with an interactive **CATEGORY BUDGET ALLOCATION** card. Displays target allocation, live spent amount, remaining balance, and full-touch **Edit** and **Delete** buttons, as well as an unallocated `+ SET BUDGET` prompt for instant mobile budget configuration.
+- [x] **[FINANCIALS-UTILIZATION-DONUT-TOGGLE] Switchable Bar & Donut Budget Utilization Visualizer (`BudgetLedgerManager.tsx`):**
+  - Added an interactive visual mode toggle (`BAR` vs `DONUT`) to the overall Budget Progress header with `localStorage` persistence (`'s2v_budget_meter_mode'`).
+  - **Linear Progress Bar View**: Retains sleek horizontal multi-state progress bar with milestone indicators.
+  - **Interactive Donut Chart View**: High-fidelity SVG circular donut meter displaying central utilization percentage, dynamic colored stroke arc (`emerald` within budget, `rose/red` over budget), and clean side-by-side metric labels for Total Budget, Total Spent, and Remaining Balance.
+  - **Sub-Track Descriptive Remaining Balance**: Removed awkward floating pill badge from the header; repositioned clean, readable status text directly below the progress track or donut chart (e.g., `$18,500.00 spent of $25,000.00 target budget · $6,500.00 remaining available` or high-contrast over-budget alert).
+
 
 ---
 
@@ -360,10 +394,18 @@
   - Preserves 100% free-text editing and typing so users can override or enter custom vendor assignments at any time.
 - [x] **[SCHED-6] Responsive Past-Midnight Warning Card Layout (`TimelineManager.tsx`):**
   - Added responsive boundary guardrails (`box-sizing: border-box`, `width: 100%`, `overflow: hidden`) preventing horizontal overflow on mobile screens.
-  - Shortened alert copy and action button labels (`🌙 YES — OVERNIGHT (+1 DAY)`, `☀️ NO — EARLY MORNING`) and added a responsive CSS grid (`grid-template-columns: 1fr 1fr` on desktop, `1fr` on screens $\le 520\text{px}$) to cleanly fit mobile viewports.
+
+---
+
+## 💌 15. Thank You Tracker & Gift Log (`ThankYouManager.tsx`)
+- [x] **[THANKS-COUPLE-ATTENDANCE-EXCLUSION] Exclude Bride & Groom / Couple from Attendance Cards (`ThankYouManager.tsx`, `src/app/vow/page.tsx`):**
+  - Updated Guest Attendance Cards and tracking metrics to strictly exclude the Bride & Groom / Couple parties from the thank-you tracking card roster.
+  - Implemented `isCoupleOrBrideGroomParty()` checking party group names (`Bride & Groom`, `Couple`, `Newlyweds`, `Wedding Couple`), table assignments (Sweetheart table, Head table), and dynamic matching against the couple's first names parsed from `weddingName` prop (e.g. "Alex & Sam").
+  - Preserves 100% accurate count and card presentation focused strictly on wedding guests requiring thank you notes.
 
 ---
 ---
+
 
 # SECTION 2: 📋 PENDING FEATURE BACKLOGS
 

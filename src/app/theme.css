@@ -13,6 +13,7 @@
   /* Canvas & Base Tokens */
   --color-bg: #f7f7f7;
   --color-surface: #ffffff;
+  --color-input-bg: #ffffff;
   --color-primary: #0d1b2a;
   --color-on-primary: #ffffff;
   --color-text: #2f3e46;
@@ -69,6 +70,7 @@
 [data-style='editorial'][data-theme='dark'] {
   --color-bg: #121212;
   --color-surface: #1e1e1e;
+  --color-input-bg: #1e1e1e;
   --color-primary: #f8fafc;
   --color-on-primary: #0f172a;
   --color-text: #e2e8f0;
@@ -116,6 +118,7 @@
 
   --color-bg: #F4F4F0;
   --color-surface: #ffffff;
+  --color-input-bg: #ffffff;
   --color-primary: #121824;
   --color-on-primary: #00ED64;
   --color-text: #121824;
@@ -170,6 +173,7 @@
 [data-style='neo-brutalism'][data-theme='dark'] {
   --color-bg: #0B0F19;
   --color-surface: #121824;
+  --color-input-bg: #121824;
   --color-primary: #00ED64;
   --color-on-primary: #000000;
   --color-text: #F4F4F0;
@@ -215,6 +219,7 @@
 
   --color-bg: #f9f6f0;
   --color-surface: #ffffff;
+  --color-input-bg: #ffffff;
   --color-primary: #5c715e; /* Deep sage */
   --color-on-primary: #ffffff;
   --color-text: #4a4a4a;
@@ -269,6 +274,7 @@
 [data-style='botanical-romance'][data-theme='dark'] {
   --color-bg: #2a2e2a;
   --color-surface: #333833;
+  --color-input-bg: #333833;
   --color-primary: #849b87;
   --color-on-primary: #1a1e1a;
   --color-text: #e8e3d3;
@@ -316,6 +322,7 @@
 
   --color-bg: #f8f9fa;
   --color-surface: #ffffff;
+  --color-input-bg: #ffffff;
   --color-primary: #111111;
   --color-on-primary: #ffffff;
   --color-text: #1a202c;
@@ -369,6 +376,7 @@
 [data-style='midnight-tuxedo'][data-theme='dark'] {
   --color-bg: #09090b;
   --color-surface: #121214;
+  --color-input-bg: #121214;
   --color-primary: #ffffff;
   --color-on-primary: #000000;
   --color-text: #f1f5f9;

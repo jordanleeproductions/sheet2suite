@@ -2140,7 +2140,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.85rem',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
     outline: 'none',
   },
@@ -2185,7 +2185,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.85rem',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   shapeToggleGrid: {

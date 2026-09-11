@@ -1155,7 +1155,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.5rem 0.75rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
     width: '100%',
   },
@@ -1464,6 +1464,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.85rem',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   textarea: {
     padding: '0.5rem',
@@ -1471,6 +1473,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.85rem',
     fontFamily: 'var(--font-sans)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   formActions: {
     display: 'flex',

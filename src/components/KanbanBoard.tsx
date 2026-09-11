@@ -487,13 +487,11 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header} className="kanban-header">
-        <div className="kanban-header-top">
-          <div className="kanban-header-text">
-            <h2 style={styles.title}>Kanban Checklist</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-              Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
-            </p>
-          </div>
+        <div className="kanban-header-text">
+          <h2 style={styles.title}>Kanban Checklist</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+            Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
+          </p>
         </div>
 
         <div style={styles.headerActions} className="kanban-header-actions">
@@ -510,7 +508,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                     fontSize: '0.675rem',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 600,
-                    backgroundColor: selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'transparent',
+                    backgroundColor: selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-input-bg, #ffffff)',
                     color: selectedCategory !== 'ALL' ? 'var(--color-on-primary)' : 'var(--color-text)',
                     border: `1px solid ${selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-muted)'}`,
                     borderRadius: 'var(--border-radius-sm)',
@@ -1173,11 +1171,11 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
             align-items: stretch !important;
             gap: 0.75rem !important;
           }
-          .kanban-header-top {
+          .kanban-header-text {
             display: flex !important;
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 0.75rem !important;
+            gap: 0.25rem !important;
             width: 100% !important;
           }
           .kanban-add-btn-mobile {
@@ -1285,12 +1283,6 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           font-weight: 600;
           transition: all 0.15s ease;
         }
-
-        @media (min-width: 768px) {
-          .kanban-header-top {
-            display: contents !important;
-          }
-        }
       `}</style>
 
       {/* Mobile Floating Action Button (FAB) */}
@@ -1307,10 +1299,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   header: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '0.85rem',
     borderBottom: '1px solid var(--color-muted)',
-    paddingBottom: '0.75rem',
+    paddingBottom: '0.85rem',
   },
   title: {
     fontFamily: 'var(--font-serif)',
@@ -1319,9 +1312,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   headerActions: {
     display: 'flex',
-    gap: '0.5rem',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '0.75rem',
     flexWrap: 'wrap',
+    width: '100%',
   },
   sortGroup: {
     display: 'flex',
@@ -1599,12 +1594,16 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.85rem',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   select: {
     padding: '0.5rem',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     fontSize: '0.85rem',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   textarea: {
     padding: '0.5rem',

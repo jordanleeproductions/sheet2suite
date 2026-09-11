@@ -663,11 +663,25 @@ export default function PhotoShotListManager({
             font-size: 0.72rem !important;
             gap: 0.35rem !important;
           }
+          .photo-view-switcher {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            width: 100% !important;
+            gap: 0.5rem !important;
+            overflow-x: visible !important;
+          }
+          .photo-view-tab {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 0.5rem 0.35rem !important;
+            font-size: 0.72rem !important;
+            gap: 0.35rem !important;
+          }
         }
       `}</style>
 
       {/* View Switcher: Photographer Shot List vs Guestbook & Photo Notes */}
-      <div style={{
+      <div className="photo-view-switcher" style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.625rem',
@@ -677,6 +691,7 @@ export default function PhotoShotListManager({
       }}>
         <button
           type="button"
+          className="photo-view-tab"
           onClick={() => setActiveView('shotlist')}
           style={{
             display: 'inline-flex',
@@ -696,7 +711,8 @@ export default function PhotoShotListManager({
           }}
         >
           <Camera size={15} />
-          <span>PHOTOGRAPHER SHOT LIST</span>
+          <span className="hidden sm:inline">PHOTOGRAPHER SHOT LIST</span>
+          <span className="sm:hidden">SHOT LIST</span>
           <span style={{
             backgroundColor: activeView === 'shotlist' ? 'rgba(255,255,255,0.22)' : 'var(--color-bg)',
             color: activeView === 'shotlist' ? 'inherit' : 'var(--color-muted)',
@@ -708,6 +724,7 @@ export default function PhotoShotListManager({
 
         <button
           type="button"
+          className="photo-view-tab"
           onClick={() => setActiveView('guestbook')}
           style={{
             display: 'inline-flex',
@@ -727,7 +744,8 @@ export default function PhotoShotListManager({
           }}
         >
           <Heart size={15} style={{ color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)' }} />
-          <span>GUESTBOOK & PHOTO NOTES</span>
+          <span className="hidden sm:inline">GUESTBOOK & PHOTO NOTES</span>
+          <span className="sm:hidden">GUESTBOOK</span>
           <span style={{
             backgroundColor: activeView === 'guestbook' ? 'rgba(255,255,255,0.22)' : 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
             color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)',
@@ -2226,7 +2244,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.8rem',
     padding: '0.5rem 0.75rem 0.5rem 2.25rem',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
@@ -2240,7 +2258,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
     padding: '0.5rem 0.75rem',
-    backgroundColor: 'var(--color-surface)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
@@ -2431,7 +2449,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.8rem',
     padding: '0.625rem',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
@@ -2440,7 +2458,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.8rem',
     padding: '0.625rem',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
