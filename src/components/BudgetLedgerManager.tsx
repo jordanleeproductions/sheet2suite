@@ -1764,20 +1764,6 @@ export default function BudgetLedgerManager({
                               + Set Budget
                             </button>
                           )}
-                          {isSelected && (
-                            <span style={{
-                              fontFamily: 'var(--font-mono)',
-                              fontSize: '0.6rem',
-                              fontWeight: 800,
-                              backgroundColor: 'var(--color-primary)',
-                              color: 'var(--color-on-primary, #ffffff)',
-                              padding: '0.15rem 0.4rem',
-                              borderRadius: '4px',
-                              letterSpacing: '0.04em',
-                            }}>
-                              ACTIVE
-                            </span>
-                          )}
                         </div>
                       </div>
 
