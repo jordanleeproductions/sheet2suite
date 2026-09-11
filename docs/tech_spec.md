@@ -399,6 +399,16 @@ src/
   - `MenuSetupManager.tsx` (Catering Dishes & Entrees)
   - `SeatingChartManager.tsx` (Seating Table Configurations)
 
+#### 3.8.5 Preemptive Modal Session Validation (`[AUTH-MODAL-SESSION-CHECK]`)
+- **Zero-Loss Workflow Protection:** Before displaying modal forms for adding, editing, or deleting items (e.g. Budget Categories, Expenses, Guests, Vendors), the app executes `verifyActiveSession()` (`sessionCheck.ts`).
+- **Lightweight Verification Endpoint (`GET /api/auth/session`):** Probes Google Sheets API connectivity using `getGoogleAuthAsync()`. Caches positive verification responses for 45 seconds to maintain lightning-fast UI responsiveness while preventing redundant network roundtrips.
+- **Graceful Re-Authentication:** If the token is expired (401 or invalid credentials), the API returns `{ valid: false, isAuthError: true }` and dispatches `'s2v:session-expired'`, automatically triggering the reauth modal before user input is started, completely preventing unsaved form loss.
+
+#### 3.8.6 Expense Date Serial Normalization & Precision Formatting (`[EXPENSES-DATE-SERIAL-FIX]`, `[EXPENSES-CURRENCY-DECIMALS]`)
+- **Excel/Sheets Date Serial Day Normalization (`parseDateOrSerial`):** Corrects numeric serial integer days returned by Google Sheets `UNFORMATTED_VALUE` (e.g. `46276` $\rightarrow$ `2026-09-11`) back into ISO `YYYY-MM-DD` strings during mapping (`mapper.ts`) and bidirectional sync (`sync/route.ts`).
+- **Sheet Column Date Number Formatting:** Automatically applies `repeatCell` format updates setting `numberFormat: { type: 'DATE', pattern: 'yyyy-mm-dd' }` on the `Expenses` tab's `Purchase Date` column, ensuring native Google Sheets UI renders dates without data-validation error triangles.
+- **Consistent 2-Decimal Currency Precision:** Passes `forceDecimals: true` to `formatCurrency` across all itemized expense rows, mobile cards, category snapshot headers, and bottom-sheet totals to ensure uniform financial accounting presentation (`$140.00`).
+
 ---
 
 ## 4. Data Storage & Schema Mapping

@@ -1,5 +1,5 @@
-import { guestMapper, budgetMapper, GUEST_HEADERS, BUDGET_HEADERS } from '../mapper';
-import { Guest, BudgetItem } from '../types';
+import { guestMapper, budgetMapper, expenseMapper, GUEST_HEADERS, BUDGET_HEADERS } from '../mapper';
+import { Guest, BudgetItem, ExpenseItem } from '../types';
 
 export function runTests() {
   console.log('Running Sheet2Vow Mapper Unit Tests...');
@@ -82,6 +82,28 @@ export function runTests() {
   if (formattedParsed.estimatedCost !== 15000) throw new Error('Formatted $15,000.00 string parsing failed');
   if (formattedParsed.actualCost !== 3500.5) throw new Error('Formatted £3,500.50 string parsing failed');
   if (formattedParsed.amountPaid !== 11499.5) throw new Error('Formatted $ 11,499.50 string parsing failed');
+
+  // 3. Test Expense Mapping & Date Serial Parsing (Google Sheets numeric serials)
+  const mockExpenseHeaders = [
+    'Expense ID', 'Description', 'Category', 'Amount', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'
+  ];
+  const mockExpenseRowWithNumericSerial = [
+    'EXP-001', 'Florist deposit', 'Florals & Decor', '140', '140', '140', 46276, 'Deposit payment'
+  ];
+  const expenseItem = expenseMapper.fromRow(mockExpenseHeaders, mockExpenseRowWithNumericSerial);
+  if (expenseItem.itemId !== 'EXP-001') throw new Error('Expense ID mapping failed');
+  if (expenseItem.purchaseDate !== '2026-09-11') throw new Error(`Expense purchase date serial conversion failed: expected 2026-09-11, got ${expenseItem.purchaseDate}`);
+
+  // Test String Serial conversion
+  const mockExpenseRowWithStringSerial = [
+    'EXP-002', 'Cake tasting', 'Cake & Desserts', '75', '75', '75', '46274', 'Tasting fee'
+  ];
+  const expenseItem2 = expenseMapper.fromRow(mockExpenseHeaders, mockExpenseRowWithStringSerial);
+  if (expenseItem2.purchaseDate !== '2026-09-09') throw new Error(`Expense purchase date string serial conversion failed: expected 2026-09-09, got ${expenseItem2.purchaseDate}`);
+
+  // Test toRow outputs formatted YYYY-MM-DD
+  const outputExpenseRow = expenseMapper.toRow(mockExpenseHeaders, expenseItem);
+  if (outputExpenseRow[6] !== '2026-09-11') throw new Error(`Expense back-to-row date failed: expected 2026-09-11, got ${outputExpenseRow[6]}`);
 
   console.log('✓ All Sheet2Vow Mapper Unit Tests Passed Successfully.');
 }

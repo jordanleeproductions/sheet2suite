@@ -18,6 +18,7 @@ import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Tas
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 import { CellGuard } from '@/lib/core/CellGuard';
 import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
+import { parseDateOrSerial } from '@/lib/currency';
 
 // Map sheet columns to standard header lists so that we can write files correctly
 const HEADERS_MAP = {
@@ -181,7 +182,7 @@ export async function GET(req: Request) {
           const num = Number(val.replace(/[^0-9.-]+/g, ''));
           if (!isNaN(num) && num > 0) totalBudget = num;
         } else if (key.includes('date')) {
-          if (val) weddingDate = val;
+          if (val) weddingDate = parseDateOrSerial(val);
         } else if (key.includes('location') || key.includes('venue')) {
           if (val) location = val;
         } else if (key.includes('currency')) {
@@ -644,6 +645,44 @@ export async function POST(req: Request) {
           values: sanitizedValues
         }
       });
+
+      // Ensure date column formatting in Google Sheets if applicable
+      const dateColIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+      const targetSheetMeta = metaRes.data.sheets?.find(s => s.properties?.title === targetTitle);
+      const targetSheetId = targetSheetMeta?.properties?.sheetId;
+      if (dateColIdx !== -1 && targetSheetId !== undefined) {
+        try {
+          await sheetsClient.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: {
+              requests: [
+                {
+                  repeatCell: {
+                    range: {
+                      sheetId: targetSheetId,
+                      startRowIndex: 1,
+                      endRowIndex: 1000,
+                      startColumnIndex: dateColIdx,
+                      endColumnIndex: dateColIdx + 1,
+                    },
+                    cell: {
+                      userEnteredFormat: {
+                        numberFormat: {
+                          type: 'DATE',
+                          pattern: 'yyyy-mm-dd',
+                        }
+                      }
+                    },
+                    fields: 'userEnteredFormat.numberFormat',
+                  }
+                }
+              ]
+            }
+          });
+        } catch (formatErr) {
+          console.warn(`[Sync] Non-critical date formatting warning for ${targetTitle}:`, formatErr);
+        }
+      }
     }
 
     return NextResponse.json({

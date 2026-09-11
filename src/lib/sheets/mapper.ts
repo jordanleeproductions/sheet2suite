@@ -1,4 +1,5 @@
 import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { parseDateOrSerial } from '@/lib/currency';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -62,6 +63,7 @@ export const BUDGET_HEADERS: Record<string, keyof BudgetItem> = {
 
 export const EXPENSE_HEADERS: Record<string, keyof ExpenseItem> = {
   'Item ID': 'itemId',
+  'Expense ID': 'itemId',
   'Description': 'description',
   'Item Name': 'description',
   'Item Description': 'description',
@@ -221,7 +223,7 @@ export const budgetMapper = {
       estimatedCost: parseCleanNumber(obj.estimatedCost),
       actualCost: parseCleanNumber(obj.actualCost),
       amountPaid: parseCleanNumber(obj.amountPaid),
-      dueDate: String(obj.dueDate || ''),
+      dueDate: parseDateOrSerial(obj.dueDate),
       paymentStatus: String(obj.paymentStatus || ''),
       notes: String(obj.notes || ''),
     };
@@ -275,7 +277,7 @@ export const expenseMapper = {
       amount: parsedAmount,
       actualCost: parsedAmount,
       amountPaid: parsedAmount,
-      purchaseDate: String(obj.purchaseDate || ''),
+      purchaseDate: parseDateOrSerial(obj.purchaseDate),
       notes: String(obj.notes || ''),
     };
   },
@@ -286,6 +288,7 @@ export const expenseMapper = {
       amount: amt,
       actualCost: amt,
       amountPaid: amt,
+      purchaseDate: parseDateOrSerial(item.purchaseDate),
     };
     return mapObjectToRow(headers, normalizedItem, EXPENSE_HEADERS);
   }
@@ -326,13 +329,17 @@ export const vendorMapper = {
       totalContractValue: parseCleanNumber(obj.totalContractValue),
       depositPaid: parseCleanNumber(obj.depositPaid),
       balanceOwing: parseCleanNumber(obj.balanceOwing),
-      paymentDueDate: String(obj.paymentDueDate || ''),
+      paymentDueDate: parseDateOrSerial(obj.paymentDueDate),
       contractLink: String(obj.contractLink || ''),
       staffMealsRequired: String(obj.staffMealsRequired || 'No'),
     };
   },
   toRow(headers: string[], vendor: Vendor): any[] {
-    return mapObjectToRow(headers, vendor, VENDOR_HEADERS);
+    const normalizedVendor: Vendor = {
+      ...vendor,
+      paymentDueDate: parseDateOrSerial(vendor.paymentDueDate),
+    };
+    return mapObjectToRow(headers, normalizedVendor, VENDOR_HEADERS);
   }
 };
 
@@ -347,11 +354,15 @@ export const taskMapper = {
       category: String(obj.category || ''),
       priority: String(obj.priority || 'Medium'),
       assignedTo: String(obj.assignedTo || ''),
-      dueDate: String(obj.dueDate || ''),
+      dueDate: parseDateOrSerial(obj.dueDate),
       notes: String(obj.notes || ''),
     };
   },
   toRow(headers: string[], task: Task): any[] {
+    const normalizedTask: Task = {
+      ...task,
+      dueDate: parseDateOrSerial(task.dueDate),
+    };
     return mapObjectToRow(headers, task, TASK_HEADERS);
   }
 };

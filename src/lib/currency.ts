@@ -36,19 +36,36 @@ export function formatCurrency(amount: number | undefined | null, currency: stri
 }
 
 /**
- * Formats date string into consistent YYYY-MM-DD format
+ * Parses any date value (including Excel/Google Sheets serial date numbers like 46276)
+ * into a canonical YYYY-MM-DD string.
  */
-export function formatDateConsistent(dateStr: string | undefined | null): string {
-  if (!dateStr || dateStr.trim() === '' || dateStr.trim() === '-') return '-';
-  const clean = dateStr.trim();
-  
-  // If already YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
-    return clean;
+export function parseDateOrSerial(dateVal: any): string {
+  if (dateVal === null || dateVal === undefined) return '';
+  const str = String(dateVal).trim();
+  if (!str || str === '-' || str.toLowerCase() === 'invalid date') return '';
+
+  // 1. Check if it's an Excel / Google Sheets numeric serial date
+  // Typical dates between 1980 and 2100 fall in the serial range 29221 to 73415
+  const num = Number(str);
+  if (!isNaN(num) && num >= 1000 && num <= 100000) {
+    // 25569 days between Excel epoch (1899-12-30) and Unix epoch (1970-01-01)
+    const ms = Math.round((num - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    if (!isNaN(d.getTime())) {
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
   }
 
-  // If M/D/YYYY or MM/DD/YYYY or M-D-YYYY
-  const slashParts = clean.split(/[\/\-]/);
+  // 2. Check if already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // 3. Handle M/D/YYYY, MM/DD/YYYY, or YYYY/MM/DD
+  const slashParts = str.split(/[\/\-]/);
   if (slashParts.length === 3) {
     if (slashParts[0].length === 4) {
       // YYYY/MM/DD
@@ -57,7 +74,7 @@ export function formatDateConsistent(dateStr: string | undefined | null): string
       const day = slashParts[2].padStart(2, '0');
       return `${year}-${month}-${day}`;
     } else if (slashParts[2].length === 4) {
-      // M/D/YYYY or D/M/YYYY (standard US spreadsheet format M/D/YYYY)
+      // MM/DD/YYYY or M/D/YYYY
       const month = slashParts[0].padStart(2, '0');
       const day = slashParts[1].padStart(2, '0');
       const year = slashParts[2];
@@ -65,8 +82,8 @@ export function formatDateConsistent(dateStr: string | undefined | null): string
     }
   }
 
-  // If valid parseable date
-  const parsed = new Date(clean);
+  // 4. Fallback for ISO / parsable date strings
+  const parsed = new Date(str);
   if (!isNaN(parsed.getTime())) {
     const year = parsed.getUTCFullYear();
     const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
@@ -74,7 +91,16 @@ export function formatDateConsistent(dateStr: string | undefined | null): string
     return `${year}-${month}-${day}`;
   }
 
-  return clean;
+  return str;
+}
+
+/**
+ * Formats date string into consistent YYYY-MM-DD format
+ */
+export function formatDateConsistent(dateStr: string | undefined | null): string {
+  if (!dateStr || dateStr.trim() === '' || dateStr.trim() === '-') return '-';
+  const clean = parseDateOrSerial(dateStr);
+  return clean || '-';
 }
 
 /**
@@ -82,45 +108,10 @@ export function formatDateConsistent(dateStr: string | undefined | null): string
  */
 export function formatDateToMMDDYYYY(dateStr: string | undefined | null): string {
   if (!dateStr || dateStr.trim() === '' || dateStr.trim() === '-') return '';
-  const clean = dateStr.trim();
-
-  // If already MM/DD/YYYY with two-digit month and day
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(clean)) {
-    return clean;
-  }
-
-  // If YYYY-MM-DD or YYYY/MM/DD
-  const isoMatch = clean.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if (isoMatch) {
-    const year = isoMatch[1];
-    const month = isoMatch[2].padStart(2, '0');
-    const day = isoMatch[3].padStart(2, '0');
+  const iso = parseDateOrSerial(dateStr);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [year, month, day] = iso.split('-');
     return `${month}/${day}/${year}`;
   }
-
-  // If M/D/YYYY or MM/DD/YYYY
-  const usMatch = clean.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-  if (usMatch) {
-    const month = usMatch[1].padStart(2, '0');
-    const day = usMatch[2].padStart(2, '0');
-    const year = usMatch[3];
-    return `${month}/${day}/${year}`;
-  }
-
-  // If valid parseable date
-  const parsed = new Date(clean);
-  if (!isNaN(parsed.getTime())) {
-    if (clean.includes('T')) {
-      const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(parsed.getUTCDate()).padStart(2, '0');
-      const year = parsed.getUTCFullYear();
-      return `${month}/${day}/${year}`;
-    }
-    const month = String(parsed.getMonth() + 1).padStart(2, '0');
-    const day = String(parsed.getDate()).padStart(2, '0');
-    const year = parsed.getFullYear();
-    return `${month}/${day}/${year}`;
-  }
-
-  return clean;
+  return dateStr.trim();
 }

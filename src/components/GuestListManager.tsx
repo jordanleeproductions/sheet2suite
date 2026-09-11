@@ -5,6 +5,7 @@ import { Guest, AgeCategory, RSVPStatus, MenuItem, TableConfig } from '@/lib/she
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 interface GuestListManagerProps {
   guests: Guest[];
@@ -150,14 +151,16 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
   const partyKeys = Object.keys(partyGroupsMap).sort();
 
   // Handle Edit Click
-  const startEdit = (guest: Guest) => {
+  const startEdit = async (guest: Guest) => {
+    if (!(await verifyActiveSession())) return;
     setEditingGuest(guest);
     setFormState(guest);
     setIsAdding(false);
   };
 
   // Handle Add Click
-  const startAdd = () => {
+  const startAdd = async () => {
+    if (!(await verifyActiveSession())) return;
     const nextId = `G${guests.length + 1}`;
     setFormState({
       guestId: nextId,

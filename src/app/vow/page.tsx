@@ -280,6 +280,17 @@ export default function Sheet2VowDashboard() {
   const [showSessionExpiredModal, setShowSessionExpiredModal] = useState<boolean>(false);
   const [isReauthenticating, setIsReauthenticating] = useState<boolean>(false);
 
+  // Global listener for session expired events dispatched before modal actions
+  useEffect(() => {
+    const handleSessionExpiredEvent = () => {
+      setShowSessionExpiredModal(true);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('s2v:session-expired', handleSessionExpiredEvent);
+      return () => window.removeEventListener('s2v:session-expired', handleSessionExpiredEvent);
+    }
+  }, []);
+
   // Onboarding Demo Mode & Preset States [ONBOARD-1, ONBOARD-3, ONBOARD-4, ONBOARD-6]
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
   const [showDemoBanner, setShowDemoBanner] = useState<boolean>(true);

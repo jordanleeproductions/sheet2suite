@@ -392,6 +392,17 @@
   - Keeps Column B (`Category`) as open text to give couples 100% freedom to create custom categories without Google Sheets data validation warning triangles.
   - Multi-alias header parser in `mapper.ts` seamlessly reads both modern (`Category ID`, `Target Budget`, `Total Spent`, `Remaining`) and legacy 8-column sheets.
   - Generates live spreadsheet `=SUMIF(EXPENSES!C:C, B{row}, EXPENSES!D:D)` and `=C{row} - D{row}` formulas during sync and XLSX template creation, with `CellGuard` allowing safe mathematical formulas.
+- [x] **[EXPENSES-DATE-SERIAL-FIX] Google Sheets Purchase Date Serial Normalization & Automatic Column Formatting (`currency.ts`, `mapper.ts`, `sync/route.ts`):**
+  - **Serial Day Conversion Engine**: Implemented `parseDateOrSerial` in `currency.ts` to detect and convert Excel/Google Sheets numeric or string date serial day integers (e.g. `46276` $\rightarrow$ `2026-09-11`, `46274` $\rightarrow$ `2026-09-09`, `46265` $\rightarrow$ `2026-08-31`) as well as standard date formats into clean ISO `YYYY-MM-DD` strings.
+  - **Schema & Sync Normalization**: Integrated `parseDateOrSerial` into `expenseMapper`, `vendorMapper`, `taskMapper`, `budgetMapper`, and `weddingDate` sync endpoints (`sync/route.ts`), preventing raw integers from polluting React state or re-entering Google Sheets.
+  - **Explicit Column Date Formatting**: Added Google Sheets API `repeatCell` batch update on the `Expenses` sheet's `Purchase Date` column, ensuring the column has explicit `DATE` number format (`pattern: 'yyyy-mm-dd'`) and eliminating Google Sheets data-validation red error triangles.
+- [x] **[EXPENSES-CURRENCY-DECIMALS] Strict 2-Decimal Precision Currency Display for Expenses (`BudgetLedgerManager.tsx`, `currency.ts`):**
+  - Enforced `forceDecimals: true` in `formatCurrency` across all itemized expense amounts, table rows, mobile expense cards, category snapshot headers, and bottom-sheet expense totals.
+  - Whole-number amounts like `$140` display consistently as `$140.00`, providing uniform financial table alignment alongside fractional expenses like `$310.75`.
+- [x] **[AUTH-MODAL-SESSION-CHECK] Preemptive Session Validation on Modal Triggers (`sessionCheck.ts`, `GET /api/auth/session`, `vow/page.tsx`):**
+  - Added preemptive background session check `verifyActiveSession()` triggered immediately before displaying Add New, Edit, or Delete modals across Financials (`BudgetLedgerManager`), Guest List (`GuestListManager`), and Vendors (`VendorManager`).
+  - Implemented lightweight `GET /api/auth/session` endpoint verifying Google OAuth credentials and token viability with 45-second local cache TTL.
+  - Automatically dispatches `'s2v:session-expired'` event to trigger the re-authentication modal before the user types in form fields, preventing work loss due to expired sessions.
 
 ---
 
@@ -447,6 +458,8 @@ Pending roadmap features and backlog items have been reorganized into specialize
 |---|---|---|---|---|---|
 | **[BUG-1]** | Print Studio (`PrintTemplatesModal.tsx`) | Content bleeds over page borders during printing/PDF generation when table rosters or timeline lists span multiple pages. Needs smart CSS `@page` page breaks (`page-break-inside: avoid; break-inside: avoid;`) and multi-page pagination splitting. | Medium | Resolved | 2026-08-02 |
 | **[BUG-2]** | Music Manager (`MusicManager.tsx`) | Audio preview playback triggers console/runtime error when playing mock song items. Resolved with fallback error banner and YouTube Music link. | Medium | Resolved | 2026-08-03 |
+| **[BUG-3]** | Budget / Expenses (`BudgetLedgerManager.tsx`, `mapper.ts`, `sync/route.ts`) | Google Sheets UNFORMATTED_VALUE query returns date serial integers (e.g. `46276`) for Purchase Date, triggering red data-validation flags when re-saved as integers. Resolved with `parseDateOrSerial` day-zero calculation and explicit Google Sheets `DATE` column formatting. | High | Resolved | 2026-09-11 |
+| **[BUG-4]** | Global Modals (`sessionCheck.ts`, `route.ts`) | Expired Google OAuth tokens caused users to lose form data upon submitting Add/Edit/Delete dialogs. Resolved by preemptively checking `/api/auth/session` prior to rendering creation/edit modals and triggering reauth flow cleanly. | High | Resolved | 2026-09-11 |
 
 ---
 

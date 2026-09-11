@@ -5,6 +5,7 @@ import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, Check, X, Trash2, HelpCircle, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, formatDateConsistent, getCurrencySymbol } from '@/lib/currency';
+import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 interface BudgetLedgerManagerProps {
   budget: BudgetItem[];
@@ -512,7 +513,8 @@ export default function BudgetLedgerManager({
   });
 
   // Budget Item Actions (Simple Category Addition)
-  const startAddBudget = (presetCategory?: string) => {
+  const startAddBudget = async (presetCategory?: string) => {
+    if (!(await verifyActiveSession())) return;
     setFormState({
       category: presetCategory || '',
       vendorName: '',
@@ -526,13 +528,20 @@ export default function BudgetLedgerManager({
     setEditingItem(null);
   };
 
-  const startEditBudget = (item: BudgetItem) => {
+  const startEditBudget = async (item: BudgetItem) => {
+    if (!(await verifyActiveSession())) return;
     setFormState({
       ...item,
       estimatedCost: item.estimatedCost,
     });
     setEditingItem(item);
     setIsAdding(false);
+  };
+
+  const promptDeleteItem = async (item: BudgetItem | null) => {
+    if (!item) return;
+    if (!(await verifyActiveSession())) return;
+    setItemToDelete(item);
   };
 
   const closeModal = () => {
@@ -627,7 +636,8 @@ export default function BudgetLedgerManager({
   };
 
   // Expense Item Actions
-  const startAddExpense = (presetCategory?: string) => {
+  const startAddExpense = async (presetCategory?: string) => {
+    if (!(await verifyActiveSession())) return;
     setExpenseFormState({
       description: '',
       category: presetCategory || effectiveSelectedCategoryId || activeOrAlertStats[0]?.category || allCategories[0] || 'General',
@@ -641,11 +651,18 @@ export default function BudgetLedgerManager({
     setEditingExpense(null);
   };
 
-  const startEditExpense = (item: ExpenseItem) => {
+  const startEditExpense = async (item: ExpenseItem) => {
+    if (!(await verifyActiveSession())) return;
     const amt = item.amount ?? item.actualCost ?? item.amountPaid ?? 0;
     setExpenseFormState({ ...item, amount: amt });
     setEditingExpense(item);
     setIsAddingExpense(false);
+  };
+
+  const promptDeleteExpense = async (item: ExpenseItem | null) => {
+    if (!item) return;
+    if (!(await verifyActiveSession())) return;
+    setExpenseToDelete(item);
   };
 
   const closeExpenseModal = () => {
@@ -1749,7 +1766,7 @@ export default function BudgetLedgerManager({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setItemToDelete(stat.budgetItems[0])}
+                                onClick={() => promptDeleteItem(stat.budgetItems[0])}
                                 style={{
                                   background: 'none',
                                   border: 'none',
@@ -1944,7 +1961,7 @@ export default function BudgetLedgerManager({
 
                   <div style={styles.snapshotTile}>
                     <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
-                    <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency)}</span>
+                    <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency, true)}</span>
                     <span style={styles.snapshotTileSub}>{selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'} recorded</span>
                   </div>
 
@@ -2036,7 +2053,7 @@ export default function BudgetLedgerManager({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setItemToDelete(item)}
+                            onClick={() => promptDeleteItem(item)}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -2180,7 +2197,7 @@ export default function BudgetLedgerManager({
                           </td>
                           <td style={{ ...styles.td, textAlign: 'right' }}>
                             <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                              {formatCurrency(amt, currency)}
+                              {formatCurrency(amt, currency, true)}
                             </span>
                           </td>
                           <td style={styles.td}>
@@ -2197,7 +2214,7 @@ export default function BudgetLedgerManager({
                               {onUpdateExpenses && (
                                 <button
                                   style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
-                                  onClick={() => setExpenseToDelete(exp)}
+                                  onClick={() => promptDeleteExpense(exp)}
                                   disabled={isSyncing}
                                   title="Delete Expense"
                                 >
@@ -2217,7 +2234,7 @@ export default function BudgetLedgerManager({
                       </td>
                       <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
                         <span style={{ ...styles.monoText, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
-                          {formatCurrency(displayedDetailExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency)}
+                          {formatCurrency(displayedDetailExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency, true)}
                         </span>
                       </td>
                       <td colSpan={3} style={styles.td}></td>
@@ -2583,7 +2600,7 @@ export default function BudgetLedgerManager({
                 <div style={styles.snapshotTile}>
                   <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
                   <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>
-                    {formatCurrency(bottomSheetExpensesTotal, currency)}
+                    {formatCurrency(bottomSheetExpensesTotal, currency, true)}
                   </span>
                   <span style={styles.snapshotTileSub}>{bottomSheetExpenses.length} purchase{bottomSheetExpenses.length === 1 ? '' : 's'}</span>
                 </div>
@@ -2686,7 +2703,7 @@ export default function BudgetLedgerManager({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setItemToDelete(item)}
+                            onClick={() => promptDeleteItem(item)}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -2828,7 +2845,7 @@ export default function BudgetLedgerManager({
                           {exp.description}
                         </span>
                         <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-                          {formatCurrency(amt, currency)}
+                          {formatCurrency(amt, currency, true)}
                         </span>
                       </div>
 
@@ -2880,7 +2897,7 @@ export default function BudgetLedgerManager({
                           {onUpdateExpenses && (
                             <button
                               type="button"
-                              onClick={() => setExpenseToDelete(exp)}
+                              onClick={() => promptDeleteExpense(exp)}
                               disabled={isSyncing}
                               style={{
                                 background: 'none',
@@ -3045,7 +3062,7 @@ export default function BudgetLedgerManager({
                     onClick={() => {
                       const toDelete = editingItem;
                       closeModal();
-                      setItemToDelete(toDelete);
+                      promptDeleteItem(toDelete);
                     }}
                   >
                     DELETE CATEGORY

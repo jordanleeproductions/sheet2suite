@@ -6,6 +6,7 @@ import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Pr
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
+import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 // Standard Wedding Budget & Vendor Categories aligned with Master Schema / SETTINGS
 export const STANDARD_VENDOR_CATEGORIES = [
@@ -319,7 +320,8 @@ export default function VendorManager({
     return matchesSearch && matchesCategory && matchesPayment;
   });
 
-  const startAdd = () => {
+  const startAdd = async () => {
+    if (!(await verifyActiveSession())) return;
     setFormState({
       category: '',
       vendorName: '',
@@ -339,7 +341,8 @@ export default function VendorManager({
     setEditingIndex(null);
   };
 
-  const startEdit = (item: Vendor, index?: number) => {
+  const startEdit = async (item: Vendor, index?: number) => {
+    if (!(await verifyActiveSession())) return;
     const total = Number(item.totalContractValue) || 0;
     const deposit = Number(item.depositPaid) || 0;
     const calculatedBalance = Math.max(0, Math.round((total - deposit) * 100) / 100);
@@ -352,6 +355,12 @@ export default function VendorManager({
     setEditingIndex(resolvedIndex >= 0 ? resolvedIndex : null);
     setUploadError(null);
     setIsAdding(false);
+  };
+
+  const promptDeleteVendor = async (item: Vendor | null) => {
+    if (!item) return;
+    if (!(await verifyActiveSession())) return;
+    setVendorToDelete(item);
   };
 
   const closeModal = () => {
@@ -876,7 +885,7 @@ export default function VendorManager({
                       <button style={styles.actionBtn} onClick={() => startEdit(item, vendors.indexOf(item))} title="Edit Vendor">
                         <Edit2 size={16} />
                       </button>
-                      <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)} title="Delete">
+                      <button style={styles.actionBtn} onClick={() => promptDeleteVendor(item)} title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>
@@ -908,7 +917,7 @@ export default function VendorManager({
                   <button style={styles.actionBtn} onClick={() => startEdit(item, vendors.indexOf(item))}>
                     <Edit2 size={14} />
                   </button>
-                  <button style={styles.actionBtn} onClick={() => setVendorToDelete(item)}>
+                  <button style={styles.actionBtn} onClick={() => promptDeleteVendor(item)}>
                     <Trash2 size={14} />
                   </button>
                 </div>
