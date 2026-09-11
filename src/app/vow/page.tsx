@@ -1038,7 +1038,7 @@ export default function Sheet2VowDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
                   {[
                     { id: 'home', label: 'Wedding Plan Summary', icon: LayoutDashboard },
-                    { id: 'budget', label: 'Budget Ledger', icon: DollarSign },
+                    { id: 'budget', label: 'Financials', icon: DollarSign },
                     { id: 'schedule', label: 'Day-Of Timeline', icon: Calendar },
                     { id: 'vendors', label: 'Vendor Directory', icon: Briefcase },
                   ]
@@ -1265,7 +1265,7 @@ export default function Sheet2VowDashboard() {
                 { id: 'guests', label: 'Guest List', icon: Users },
                 { id: 'menu', label: 'Catering', icon: Utensils },
                 { id: 'tables', label: 'Seating', icon: Armchair },
-                { id: 'budget', label: 'Ledger', icon: DollarSign },
+                { id: 'budget', label: 'Financials', icon: DollarSign },
                 { id: 'schedule', label: 'Timeline', icon: Calendar },
                 { id: 'vendors', label: 'Vendors', icon: Briefcase },
                 { id: 'tasks', label: 'Tasks', icon: ListTodo },

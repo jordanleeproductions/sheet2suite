@@ -79,6 +79,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 ### 2.5 Budget Ledger (`BudgetLedgerManager.tsx`)
 - Itemized financial ledger (Estimated vs Actual Cost vs Amount Paid vs Balance Owing).
 - Payment status tags (`Paid`, `Pending`, `Overdue`) and category over-budget alerts.
+- **Streamlined Header & Navigation Parity (`[FINANCIALS-VIEW-TOGGLE-REMOVAL]`, `[FINANCIALS-NAV-LABEL-SYNC]`):** Desktop sidebar navigation label updated to **`FINANCIALS`** (previously `LEDGER`), unifying navigation naming with the mobile drawer and page headers. Removed legacy Table vs Card view toggle buttons and associated state, reflecting the unified Master-Detail split-view architecture.
 - **Modernized Financial Terminology (`[FINANCIALS-TERMINOLOGY-MODERNIZATION]`):** Replaced legacy terms `CAP`, `OUTLAY`, and `CUSHION` with universally recognized consumer finance standards: **`BUDGET`** (target allocation), **`SPENT`** (actual outlay/paid), and **`REMAINING`** (available balance).
 - **Interactive In-App Category Budget Management (`[FINANCIALS-EDIT-DELETE-CATEGORY-BUDGET]`):**
   - **Desktop Master Rail**: Quick inline actions (`Edit2` and `Trash2`) on category cards to adjust target budget amounts or delete category budgets, with a `+ Set Budget` trigger for unbudgeted categories.

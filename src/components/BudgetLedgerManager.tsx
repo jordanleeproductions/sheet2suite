@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
-import { Plus, Edit2, Check, X, Trash2, HelpCircle, Grid, List, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Check, X, Trash2, HelpCircle, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, formatDateConsistent, getCurrencySymbol } from '@/lib/currency';
 
@@ -49,9 +49,6 @@ export default function BudgetLedgerManager({
   isSyncing,
   currency = 'USD'
 }: BudgetLedgerManagerProps) {
-  // View mode state
-  const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
-
   const currencySymbol = getCurrencySymbol(currency);
 
   // Budget Utilization Visualization Mode: 'bar' | 'donut'
@@ -740,30 +737,6 @@ export default function BudgetLedgerManager({
           gap: 1rem;
           flex-wrap: wrap;
         }
-        .budget-header-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-        .budget-view-toggle {
-          display: flex;
-          border: 1px solid var(--color-muted);
-          border-radius: var(--border-radius-sm);
-          overflow: hidden;
-          background-color: var(--color-surface);
-          flex-shrink: 0;
-        }
-        .budget-view-toggle button {
-          border: none;
-          padding: 0.375rem 0.625rem;
-          cursor: pointer;
-          transition: var(--transition-smooth);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 36px;
-          min-height: 34px;
-        }
         .section-header-banner {
           display: flex;
           justify-content: space-between;
@@ -781,17 +754,9 @@ export default function BudgetLedgerManager({
             align-items: stretch !important;
             gap: 0.5rem !important;
           }
-          .budget-header-actions,
-          .budget-view-toggle {
-            display: none !important;
-          }
         }
         @media (max-width: 768px) {
           .budget-add-btn {
-            display: none !important;
-          }
-          .budget-header-actions,
-          .budget-view-toggle {
             display: none !important;
           }
         }
@@ -829,10 +794,6 @@ export default function BudgetLedgerManager({
 
         /* Interactive Drill-Down Mobile View (< lg / 1023px) */
         @media (max-width: 1023px) {
-          .budget-header-actions,
-          .budget-view-toggle {
-            display: none !important;
-          }
           .budget-desktop-split-view {
             display: none !important;
           }
@@ -930,24 +891,6 @@ export default function BudgetLedgerManager({
         <div>
           <h2 style={styles.title}>Wedding Financials</h2>
           <p style={styles.subtitle}>Track category budgets, log individual purchases & monitor real-time payments</p>
-        </div>
-        <div className="budget-header-actions hidden lg:flex">
-          <div className="budget-view-toggle">
-            <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-dark)' : 'var(--color-text)' }}
-              onClick={() => setViewMode('table')}
-              title="Table View"
-            >
-              <List size={16} />
-            </button>
-            <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? 'var(--color-on-dark)' : 'var(--color-text)' }}
-              onClick={() => setViewMode('card')}
-              title="Card View"
-            >
-              <Grid size={16} />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -3383,11 +3326,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.8rem',
     color: 'var(--color-muted)',
     margin: '0.2rem 0 0 0',
-  },
-  toggleBtn: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 600,
   },
   addButton: {
     fontFamily: 'var(--font-mono)',

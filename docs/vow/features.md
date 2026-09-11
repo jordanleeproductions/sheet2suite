@@ -363,9 +363,12 @@
   - Added grouped category selectors in the Add Expense modal (`Active Budget Categories` with allocated cap amounts listed first, followed by unbudgeted options).
   - Maintained 100% backward compatibility with Google Sheets `BUDGET` tab schema by setting sensible defaults (`${categoryName} Budget`, `Pending`, `0` actual/paid).
   - Added in-modal category deletion and dynamic budget cap editing directly from category snapshot headers.
-- [x] **[FINANCIALS-MOBILE-VIEW-TOGGLE-REMOVAL] Mobile View Mode Toggle Removal (`BudgetLedgerManager.tsx`):**
-  - Removed the legacy List vs. Card view toggle buttons (`.budget-view-toggle`) from the mobile and tablet header (`< 1024px`) via Tailwind `hidden lg:flex` and CSS `@media (max-width: 1023px) { display: none !important; }`.
-  - Cleans up mobile header space, letting the title and subtitle breathe without dead toggle buttons that conflicted with the mobile category card stack and sliding bottom sheet layout.
+- [x] **[FINANCIALS-VIEW-TOGGLE-REMOVAL] Table vs Card View Toggle Removal (`BudgetLedgerManager.tsx`):**
+  - Removed the legacy List/Table vs. Card view toggle buttons (`.budget-view-toggle`) from all viewports (desktop, tablet, mobile), along with obsolete `viewMode` state and styling.
+  - The modernized Master-Detail split-view (desktop) and interactive sliding bottom sheet (mobile) make the legacy table vs card toggle completely obsolete.
+- [x] **[FINANCIALS-NAV-LABEL-SYNC] Left Nav & Drawer Label Updated to FINANCIALS (`src/app/vow/page.tsx`):**
+  - Changed the desktop left sidebar navigation label from `LEDGER` to `FINANCIALS` (`{ id: 'budget', label: 'Financials', icon: DollarSign }`).
+  - Aligns the desktop navigation label with the mobile slide-up drawer and module header naming (`Wedding Financials`).
 - [x] **[FINANCIALS-TERMINOLOGY-MODERNIZATION] Financial Terminology Modernization (`BudgetLedgerManager.tsx`):**
   - Modernized planning and consumer finance terminology across the entire Financials module, replacing awkward legacy terms:
     - `CAP` / `Total Cap` $\rightarrow$ **`BUDGET`** / **`Target Budget Allocation`**
