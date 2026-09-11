@@ -23,7 +23,7 @@ import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
 const HEADERS_MAP = {
   guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
   tables: ['Table ID', 'Table Name', 'Table Shape', 'Max Seats', 'Include End Seats', 'Single Side Seating'],
-  budget: ['Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status'],
+  budget: ['Category ID', 'Category', 'Target Budget', 'Total Spent', 'Remaining', 'Notes'],
   expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'],
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],
   vendors: ['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required'],
@@ -516,9 +516,9 @@ export async function POST(req: Request) {
         });
       } else if (sheetType === 'budget') {
         targetTitle = findTitle(['BUDGET', 'Budget Ledger', 'Budget', 'Budget_Ledger']);
-        range = `'${targetTitle}'!A1:H1000`;
-        (data as BudgetItem[]).forEach(item => {
-          values.push(budgetMapper.toRow(headers, item));
+        range = `'${targetTitle}'!A1:F1000`;
+        (data as BudgetItem[]).forEach((item, index) => {
+          values.push(budgetMapper.toRow(headers, item, index + 2));
         });
       } else if (sheetType === 'expenses') {
         targetTitle = findTitle(['EXPENSES', 'Expenses', 'Expense List']);

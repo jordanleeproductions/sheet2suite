@@ -91,6 +91,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
   - **Master Rail (Left Column - ~5 cols / `lg:col-span-5`)**: Scrollable category budget list bounded to viewport (`lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-2`) prioritized by active/alert allocations. Features prominent active selection highlighting (`selectedCategoryId`), serif category titles, mini utilization progress tracks, and BUDGET / SPENT / REMAINING tabular metrics. Clicking any card updates selection.
   - **Detail Ledger (Right Column - ~7 cols / `lg:col-span-7`)**: Dynamic Category Snapshot header displaying Target Allocation Budget, Total Expenses Logged, and Remaining Balance (`Target - Sum(Expenses)`), paired with an inline `+ ADD EXPENSE` action button pre-populating `category = selectedCategoryId`. Renders the itemized expenses table filtered strictly to the selected category, with empty-state guidance for categories without logged items. Full dynamic recalculation updates category cards and the global progress meter immediately upon adding, editing, or deleting expenses.
   - **Desktop Compact Active/Alert Filter Pills**: Replaces the large 20+ item chip cloud on desktop with a compact horizontal pill list showing only categories with activity or over-budget alerts.
+- **6-Column Category Budget Schema & Formula Linkage (`[BUDGET-SCHEMA-MODERNIZATION-6COL]`):** Streamlines the Google Sheet `BUDGET` tab into a 6-column allocation table (`Category ID`, `Category`, `Target Budget`, `Total Spent`, `Remaining`, `Notes`), eliminating redundant vendor/due date columns and supporting live `=SUMIF` expense calculations and open-text custom categories.
 
 ### 2.6 Day-Of Timeline (`TimelineManager.tsx`)
 - Day-Of itinerary timeline with "UP NEXT" active moment banner ticker.
@@ -98,6 +99,10 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 
 ### 2.7 Vendor Directory (`VendorManager.tsx`)
 - Vendor contact directory, categories, contract values, deposit paid, and staff meal requirements.
+- **Relational Category Combobox (`[VND-8]`):** Vendor Category input integrates an interactive combobox populated from standard budget presets (`STANDARD_VENDOR_CATEGORIES`) and existing categories across `budget`, `vendors`, and `expenses`, while allowing instant freeform typing of custom categories.
+- **Auto-Calculated Real-Time Balance Owing:** Real-time formula `Math.max(0, Contract Value - Deposit Paid)` updates dynamically upon contract or deposit changes; rendered as a read-only auto-calculated input in the modal.
+- **Cross-Tab Budget Category Target Sync:** Checks for an existing category entry in `budget`. If absent, initializes a category budget target allocation with the vendor's Contract Value (`estimatedCost`). If present with a `$0` target, updates it to the Contract Value.
+- **Deposit Paid Logged as Expense:** Automatically logs/updates a linked `ExpenseItem` (`EXP-V-${vendorId}`) in the `expenses` tab when `depositPaid > 0`, categorized under the vendor's category with purchase date, amount, and notes. Cleans up linked deposit expense upon deposit reduction to 0 or vendor deletion.
 - **Vendor Contract Document Storage (`[VND-6]` - Backlog):** Integrated PDF/image contract uploader in Add/Edit Vendor modal. Automatically uploads attachments to a dedicated `Contracts` subfolder inside the couple's selected Google Drive workspace folder and links the Drive URL to the vendor entry.
 
 ### 2.8 Kanban Checklist (`KanbanBoard.tsx`)
@@ -390,13 +395,14 @@ src/
 1. **`Settings`**: System configuration JSON stored in cell **`B2`** (`budget`, `weddingName`, `weddingDate`, `shareVersion`), keeping system metadata separated from human-readable tabs.
 2. **`DASHBOARD`**: Visual KPI summary cards and charts for human spreadsheet viewers.
 3. **`Guest List`**: Columns A–L (`Guest ID`, `First Name`, `Last Name`, `Party Group`, `Age Category`, `RSVP Status`, `Dietary Restrictions`, `Table Assignment`, `Email Address`, `Phone Number`, `Mailing Address`, `Thanked`).
-4. **`Budget Ledger`**: Columns A–H (`Item ID`, `Category`, `Vendor Name`, `Estimated Cost`, `Actual Cost`, `Amount Paid`, `Due Date`, `Payment Status`).
-5. **`Day-Of-Schedule`**: Columns A–F (`Start Time`, `End Time`, `Event Moment`, `Location`, `Responsibility / Vendors`, `Notes / Details`).
-6. **`Vendors`**: Columns A–L (`Vendor ID`, `Vendor Name`, `Category`, `Contact Name`, `Email Address`, `Phone Number`, `Total Contract Value`, `Deposit Paid`, `Balance Owing`, `Payment Due Date`, `Contract Link`, `Staff Meals Required`).
-7. **`To-Do List`**: Columns A–H (`Task ID`, `Task Name`, `Kanban Stage`, `Category`, `Priority`, `Assigned To`, `Due Date`, `Notes / Links`).
-8. **`Music Playlist`**: Columns A–F (`Song ID`, `Title`, `Artist`, `List Type`, `Link`, `Notes`).
-9. **`PHOTOS`**: Columns A–H (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
-10. **`GIFT REGISTRY`**: Columns A–G (`Item ID`, `Gift Description / Name`, `Giver / From`, `Category / Store`, `Estimated Value / Cash Amount`, `Thank You Sent`, `Notes`).
+4. **`Budget Ledger`**: Columns A–F (`Item ID`, `Category`, `Target Budget`, `Total Actual`, `Total Paid`, `Notes`). Streamlined category allocation ledger.
+5. **`Expenses`**: Columns A–H (`Item ID`, `Description / Receipt`, `Category`, `Estimated Amount`, `Actual Cost`, `Amount Paid`, `Purchase Date`, `Notes`). Granular receipt tracker with automatic vendor deposit sync.
+6. **`Day-Of-Schedule`**: Columns A–F (`Start Time`, `End Time`, `Event Moment`, `Location`, `Responsibility / Vendors`, `Notes / Details`).
+7. **`Vendors`**: Columns A–L (`Vendor ID`, `Vendor Name`, `Category`, `Contact Name`, `Email Address`, `Phone Number`, `Total Contract Value`, `Deposit Paid`, `Balance Owing`, `Payment Due Date`, `Contract Link`, `Staff Meals Required`).
+8. **`To-Do List`**: Columns A–H (`Task ID`, `Task Name`, `Kanban Stage`, `Category`, `Priority`, `Assigned To`, `Due Date`, `Notes / Links`).
+9. **`Music Playlist`**: Columns A–F (`Song ID`, `Title`, `Artist`, `List Type`, `Link`, `Notes`).
+10. **`PHOTOS`**: Columns A–H (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
+11. **`GIFT REGISTRY`**: Columns A–G (`Item ID`, `Gift Description / Name`, `Giver / From`, `Category / Store`, `Estimated Value / Cash Amount`, `Thank You Sent`, `Notes`).
 
 ---
 

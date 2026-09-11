@@ -110,6 +110,11 @@
 - [x] **[VND-4] Vendor Portal Share Link Generator:** Embedded VendorShareLinkManager section allowing instant generation and access control for mobile vendor portals (*Music, Photos, Catering, Timeline*).
 - [x] **[VND-5] Vendor Subtitle Description:** Added a clean descriptive subtitle beneath the Vendor Management header detailing contract, payment, and meal tracking.
 - [x] **[VND-7] Instant Vendor Card Refresh & Optimistic State Sync:** Fixed race condition where saving a vendor's contact details would not immediately update the vendor card in the UI without a browser refresh. Converted `syncUpdate` state setters in `src/app/vow/page.tsx` to functional updates (`prev => ({ ...prev, [sheetType]: updatedData })`), tracked exact vendor indices via `editingIndex` in `VendorManager.tsx`, made vendor record matching resilient against missing IDs or name updates, and eliminated redundant secondary sync calls to `budget` when non-financial contact information is saved.
+- [x] **[VND-8] Relational Category Combobox, Budget Allocation & Expense Auto-Sync (`VendorManager.tsx`):**
+  - **Budget-Aligned Category Combobox:** Aligns the Vendor Category selector with budget categories (`STANDARD_VENDOR_CATEGORIES` + existing categories across `budget`, `vendors`, and `expenses`). Features an interactive dropdown combobox with search filtering, custom entry creation (`+ Use custom: "..."`), and full typing override.
+  - **Auto-Calculated Balance Owing:** Real-time formula `Math.max(0, Contract Value - Deposit Paid)` updates dynamically as contract or deposit values are modified. Rendered in modal as a read-only auto-calculated input with an informational indicator.
+  - **Cross-Tab Budget Category Target Sync:** When adding/editing a vendor, checks if a budget entry exists for that category. If absent, automatically adds a new category budget allocation with the vendor's Contract Value initialized as `estimatedCost`. If the category exists with a `$0` allocation, updates it to the Contract Value while preserving existing allocations.
+  - **Deposit Paid Logged as Expense:** Automatically logs/updates a linked `ExpenseItem` (`EXP-V-${vendorId}`) in the `expenses` tab when `depositPaid > 0`, categorizing it under the vendor's category with amount, purchase date, and vendor details. When deposit is reduced to 0 or the vendor is deleted, cleans up the linked deposit expense item automatically.
 
 ---
 
@@ -366,7 +371,12 @@
   - **Linear Progress Bar View**: Retains sleek horizontal multi-state progress bar with milestone indicators.
   - **Interactive Donut Chart View**: High-fidelity SVG circular donut meter displaying central utilization percentage, dynamic colored stroke arc (`emerald` within budget, `rose/red` over budget), and clean side-by-side metric labels for Total Budget, Total Spent, and Remaining Balance.
   - **Sub-Track Descriptive Remaining Balance**: Removed awkward floating pill badge from the header; repositioned clean, readable status text directly below the progress track or donut chart (e.g., `$18,500.00 spent of $25,000.00 target budget · $6,500.00 remaining available` or high-contrast over-budget alert).
-
+- [x] **[BUDGET-SCHEMA-MODERNIZATION-6COL] Modernized 6-Column Category Budget Schema (`mapper.ts`, `route.ts`, `xlsxGenerator.ts`, `CellGuard.ts`):**
+  - Streamlined the `BUDGET` Google Sheet tab into a focused 6-column Category Budget Allocation table: `Category ID`, `Category`, `Target Budget`, `Total Spent`, `Remaining`, and `Notes`.
+  - Pruned obsolete columns (`Vendor Name`, `Due Date`, `Payment Status`) that conflicted with receipt tracking in the `EXPENSES` tab.
+  - Keeps Column B (`Category`) as open text to give couples 100% freedom to create custom categories without Google Sheets data validation warning triangles.
+  - Multi-alias header parser in `mapper.ts` seamlessly reads both modern (`Category ID`, `Target Budget`, `Total Spent`, `Remaining`) and legacy 8-column sheets.
+  - Generates live spreadsheet `=SUMIF(EXPENSES!C:C, B{row}, EXPENSES!D:D)` and `=C{row} - D{row}` formulas during sync and XLSX template creation, with `CellGuard` allowing safe mathematical formulas.
 
 ---
 

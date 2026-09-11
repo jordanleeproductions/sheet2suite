@@ -2652,8 +2652,10 @@ export default function Sheet2VowDashboard() {
                 <VendorManager
                   vendors={weddingData.vendors}
                   budget={weddingData.budget}
+                  expenses={weddingData.expenses || []}
                   onUpdate={(data) => syncUpdate('vendors', data)}
                   onUpdateBudget={(data) => syncUpdate('budget', data)}
+                  onUpdateExpenses={(data) => syncUpdate('expenses', data)}
                   isSyncing={isSyncing}
                   currency={currency}
                   spreadsheetId={spreadsheetId}

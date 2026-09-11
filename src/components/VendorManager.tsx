@@ -1,17 +1,212 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Vendor, BudgetItem } from '@/lib/sheets/types';
-import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Vendor, BudgetItem, ExpenseItem } from '@/lib/sheets/types';
+import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText, ChevronDown, Check } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency } from '@/lib/currency';
 
+// Standard Wedding Budget & Vendor Categories aligned with Master Schema / SETTINGS
+export const STANDARD_VENDOR_CATEGORIES = [
+  'Venue & Catering',
+  'Venue',
+  'Catering',
+  'Photography',
+  'Videography',
+  'Florals & Decor',
+  'Attire & Beauty',
+  'Music & Entertainment',
+  'Stationery & Invitations',
+  'Cake & Desserts',
+  'Transportation',
+  'Favors & Gifts',
+  'Planner & Coordination',
+  'Rings & Jewelry',
+  'Rehearsal & Events',
+  'Miscellaneous & Contingency',
+];
+
+interface VendorCategoryComboboxProps {
+  value: string;
+  onChange: (val: string) => void;
+  categories: string[];
+  inputStyle?: React.CSSProperties;
+}
+
+function VendorCategoryCombobox({
+  value,
+  onChange,
+  categories,
+  inputStyle,
+}: VendorCategoryComboboxProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(value || '');
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSearchTerm(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    const handlePointerDownOutside = (e: MouseEvent | TouchEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDownOutside);
+    document.addEventListener('touchstart', handlePointerDownOutside);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside);
+      document.removeEventListener('touchstart', handlePointerDownOutside);
+    };
+  }, []);
+
+  const filteredCategories = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return categories;
+    return categories.filter(c => c.toLowerCase().includes(term));
+  }, [categories, searchTerm]);
+
+  const hasExactMatch = categories.some(
+    c => c.toLowerCase() === searchTerm.trim().toLowerCase()
+  );
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'relative', width: '100%' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          style={{
+            ...inputStyle,
+            paddingRight: '2.2rem',
+            width: '100%',
+          }}
+          value={searchTerm}
+          onChange={(e) => {
+            const nextVal = e.target.value;
+            setSearchTerm(nextVal);
+            onChange(nextVal);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder="Select category or type custom..."
+          required
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setIsOpen(prev => !prev)}
+          title="Toggle categories"
+          style={{
+            position: 'absolute',
+            right: '0.6rem',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-muted)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+          }}
+        >
+          <ChevronDown size={16} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            maxHeight: '220px',
+            overflowY: 'auto',
+            backgroundColor: 'var(--color-surface, #1e1e24)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '8px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+            padding: '4px',
+          }}
+        >
+          {filteredCategories.map((cat) => {
+            const isSelected = cat.toLowerCase() === (value || '').toLowerCase();
+            return (
+              <div
+                key={cat}
+                onClick={() => {
+                  onChange(cat);
+                  setSearchTerm(cat);
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: '0.45rem 0.65rem',
+                  fontSize: '0.82rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                  color: isSelected ? 'var(--color-primary, #e29578)' : 'var(--color-text)',
+                  fontWeight: isSelected ? 600 : 400,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent';
+                }}
+              >
+                <span>{cat}</span>
+                {isSelected && <Check size={14} />}
+              </div>
+            );
+          })}
+
+          {searchTerm.trim() && !hasExactMatch && (
+            <div
+              onClick={() => {
+                onChange(searchTerm.trim());
+                setIsOpen(false);
+              }}
+              style={{
+                padding: '0.45rem 0.65rem',
+                fontSize: '0.8rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                borderTop: filteredCategories.length > 0 ? '1px solid var(--color-border)' : 'none',
+                marginTop: filteredCategories.length > 0 ? '4px' : 0,
+                color: 'var(--color-primary, #e29578)',
+                fontStyle: 'italic',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              + Use custom: &quot;{searchTerm.trim()}&quot;
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface VendorManagerProps {
   vendors: Vendor[];
   budget?: BudgetItem[];
+  expenses?: ExpenseItem[];
   onUpdate: (updatedVendors: Vendor[]) => Promise<void>;
   onUpdateBudget?: (updatedBudget: BudgetItem[]) => Promise<void>;
+  onUpdateExpenses?: (updatedExpenses: ExpenseItem[]) => Promise<void>;
   isSyncing: boolean;
   currency?: string;
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
@@ -21,7 +216,21 @@ interface VendorManagerProps {
   onOpenShareModal?: () => void;
 }
 
-export default function VendorManager({ vendors, budget = [], onUpdate, onUpdateBudget, isSyncing, currency = 'USD', onOpenPrintStudio, spreadsheetId, weddingName, driveFolder, onOpenShareModal }: VendorManagerProps) {
+export default function VendorManager({
+  vendors,
+  budget = [],
+  expenses = [],
+  onUpdate,
+  onUpdateBudget,
+  onUpdateExpenses,
+  isSyncing,
+  currency = 'USD',
+  onOpenPrintStudio,
+  spreadsheetId,
+  weddingName,
+  driveFolder,
+  onOpenShareModal
+}: VendorManagerProps) {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [editingItem, setEditingItem] = useState<Vendor | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -37,6 +246,15 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
   const [paymentFilter, setPaymentFilter] = useState<'All' | 'Paid' | 'Balance Due'>('All');
 
   const categories = Array.from(new Set(vendors.map(v => v.category).filter(Boolean)));
+
+  // Category options aligned across budget categories, vendors, and expenses
+  const categoryOptions = useMemo(() => {
+    const fromBudget = budget.map(b => b.category).filter(Boolean);
+    const fromVendors = vendors.map(v => v.category).filter(Boolean);
+    const fromExpenses = (expenses || []).map(e => e.category).filter(Boolean);
+    const set = new Set([...STANDARD_VENDOR_CATEGORIES, ...fromBudget, ...fromVendors, ...fromExpenses]);
+    return Array.from(set).sort();
+  }, [budget, vendors, expenses]);
 
   // Financial summary KPI metrics
   const financialSummary = React.useMemo(() => {
@@ -120,7 +338,13 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
   };
 
   const startEdit = (item: Vendor, index?: number) => {
-    setFormState(item);
+    const total = Number(item.totalContractValue) || 0;
+    const deposit = Number(item.depositPaid) || 0;
+    const calculatedBalance = Math.max(0, Math.round((total - deposit) * 100) / 100);
+    setFormState({
+      ...item,
+      balanceOwing: calculatedBalance,
+    });
     setEditingItem(item);
     const resolvedIndex = typeof index === 'number' && index >= 0 ? index : vendors.indexOf(item);
     setEditingIndex(resolvedIndex >= 0 ? resolvedIndex : null);
@@ -176,11 +400,11 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
     setFormState(prev => {
       const newState = { ...prev, [field]: value };
       
-      // Auto-calculate balance owing if contract value or deposit changes
+      // Auto-calculate balance owing in real-time when contract value or deposit changes
       if (field === 'totalContractValue' || field === 'depositPaid') {
         const total = field === 'totalContractValue' ? (Number(value) || 0) : (Number(prev.totalContractValue) || 0);
         const deposit = field === 'depositPaid' ? (Number(value) || 0) : (Number(prev.depositPaid) || 0);
-        newState.balanceOwing = total - deposit;
+        newState.balanceOwing = Math.max(0, Math.round((total - deposit) * 100) / 100);
       }
       
       return newState;
@@ -194,6 +418,10 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
     let updatedVendors: Vendor[];
     let savedVendor: Vendor;
 
+    const contractVal = Number(formState.totalContractValue) || 0;
+    const depositVal = Number(formState.depositPaid) || 0;
+    const calculatedBalance = Math.max(0, Math.round((contractVal - depositVal) * 100) / 100);
+
     if (isAdding) {
       const newItem: Vendor = {
         vendorId: `V${vendors.length + 1}`,
@@ -202,9 +430,9 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
         contactName: formState.contactName || '',
         emailAddress: formState.emailAddress || '',
         phoneNumber: formState.phoneNumber || '',
-        totalContractValue: formState.totalContractValue || 0,
-        depositPaid: formState.depositPaid || 0,
-        balanceOwing: formState.balanceOwing || 0,
+        totalContractValue: contractVal,
+        depositPaid: depositVal,
+        balanceOwing: calculatedBalance,
         paymentDueDate: formState.paymentDueDate || '',
         contractLink: formState.contractLink || '',
         staffMealsRequired: formState.staffMealsRequired || 'No',
@@ -215,6 +443,9 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
       savedVendor = {
         ...(editingItem || {}),
         ...formState,
+        totalContractValue: contractVal,
+        depositPaid: depositVal,
+        balanceOwing: calculatedBalance,
       } as Vendor;
 
       // Ensure vendorId is preserved or generated if blank
@@ -242,75 +473,74 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
 
     await onUpdate(updatedVendors);
 
-    // Auto-sync financials with Budget Tracker tab [VND-BUDGET-SYNC]
-    if (onUpdateBudget && savedVendor.vendorName) {
-      const vendorNameClean = savedVendor.vendorName.trim().toLowerCase();
-      const existingBudgetIdx = budget.findIndex(b => 
-        (b.vendorName && b.vendorName.trim().toLowerCase() === vendorNameClean) ||
-        (editingItem && b.vendorName && b.vendorName.trim().toLowerCase() === editingItem.vendorName.trim().toLowerCase())
+    // Cross-tab Relational Sync: Category Budget Target Allocation [VND-BUDGET-SYNC]
+    if (onUpdateBudget && savedVendor.category) {
+      const targetCategoryClean = savedVendor.category.trim().toLowerCase();
+      const existingCatIdx = budget.findIndex(b => (b.category || '').trim().toLowerCase() === targetCategoryClean);
+
+      if (existingCatIdx === -1) {
+        // Category does not exist in budget -> add category entry with Contract Value as estimatedCost
+        const newBudgetItem: BudgetItem = {
+          itemId: `item-v-b-${savedVendor.vendorId || Date.now()}`,
+          category: savedVendor.category.trim(),
+          estimatedCost: contractVal,
+          actualCost: 0,
+          amountPaid: 0,
+          notes: `Target budget initialized from vendor ${savedVendor.vendorName || ''}`.trim(),
+        };
+        await onUpdateBudget([newBudgetItem, ...budget]);
+      } else if (contractVal > 0 && (!budget[existingCatIdx].estimatedCost || budget[existingCatIdx].estimatedCost === 0)) {
+        // Category exists with $0 budget allocation -> initialize with Contract Value
+        const updatedBudgetItem: BudgetItem = {
+          ...budget[existingCatIdx],
+          estimatedCost: contractVal,
+        };
+        const updatedBudgetList = budget.map((b, idx) => idx === existingCatIdx ? updatedBudgetItem : b);
+        await onUpdateBudget(updatedBudgetList);
+      }
+    }
+
+    // Cross-tab Relational Sync: Deposit Paid as an Expense Item [VND-EXPENSE-SYNC]
+    if (onUpdateExpenses && savedVendor.vendorId) {
+      const depositExpenseItemId = `EXP-V-${savedVendor.vendorId}`;
+      const existingExpenseIdx = expenses.findIndex(e =>
+        e.itemId === depositExpenseItemId ||
+        (Boolean(e.notes) && e.notes!.includes(savedVendor.vendorId) && e.notes!.includes('Vendor deposit'))
       );
 
-      const estimatedCost = Number(savedVendor.totalContractValue) || 0;
-      const amountPaid = Number(savedVendor.depositPaid) || 0;
-      const actualCost = Number(savedVendor.totalContractValue) || 0;
-      const dueDate = savedVendor.paymentDueDate || '';
-      const paymentStatus = (estimatedCost > 0 && amountPaid >= estimatedCost) ? 'Paid' : (amountPaid > 0 ? 'Partial' : 'Pending');
-
-      let updatedBudgetList: BudgetItem[] | null = null;
-      if (existingBudgetIdx >= 0) {
-        const existing = budget[existingBudgetIdx];
-        const newCategory = savedVendor.category || existing.category || 'General';
-        const newEst = estimatedCost > 0 ? estimatedCost : existing.estimatedCost;
-        const newAct = actualCost > 0 ? actualCost : existing.actualCost;
-        const newDue = dueDate || existing.dueDate;
-
-        // Check if anything relevant to budget actually changed before triggering sync
-        const hasBudgetChanges = 
-          existing.category !== newCategory ||
-          existing.vendorName !== savedVendor.vendorName ||
-          existing.estimatedCost !== newEst ||
-          existing.actualCost !== newAct ||
-          existing.amountPaid !== amountPaid ||
-          existing.dueDate !== newDue ||
-          existing.paymentStatus !== paymentStatus;
-
-        if (hasBudgetChanges) {
-          const updatedBudgetItem: BudgetItem = {
-            ...existing,
-            category: newCategory,
-            vendorName: savedVendor.vendorName,
-            estimatedCost: newEst,
-            actualCost: newAct,
-            amountPaid: amountPaid,
-            dueDate: newDue,
-            paymentStatus: paymentStatus,
-          };
-          updatedBudgetList = budget.map((b, i) => i === existingBudgetIdx ? updatedBudgetItem : b);
-        }
-      } else if (estimatedCost > 0 || amountPaid > 0) {
-        // Create new budget item for this vendor
-        const newBudgetItem: BudgetItem = {
-          itemId: `item-v-${savedVendor.vendorId || Date.now()}`,
+      if (depositVal > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const updatedExpenseItem: ExpenseItem = {
+          itemId: existingExpenseIdx >= 0 ? expenses[existingExpenseIdx].itemId : depositExpenseItemId,
+          description: `${savedVendor.vendorName} Deposit`,
           category: savedVendor.category || 'General',
-          vendorName: savedVendor.vendorName,
-          estimatedCost,
-          actualCost,
-          amountPaid,
-          dueDate,
-          paymentStatus,
+          amount: depositVal,
+          actualCost: depositVal,
+          amountPaid: depositVal,
+          purchaseDate: (existingExpenseIdx >= 0 && expenses[existingExpenseIdx].purchaseDate)
+            ? expenses[existingExpenseIdx].purchaseDate
+            : todayStr,
+          notes: `Vendor deposit for ${savedVendor.vendorName} (Vendor ID: ${savedVendor.vendorId})`,
         };
-        updatedBudgetList = [newBudgetItem, ...budget];
-      }
 
-      if (updatedBudgetList) {
-        await onUpdateBudget(updatedBudgetList);
+        let updatedExpensesList: ExpenseItem[];
+        if (existingExpenseIdx >= 0) {
+          updatedExpensesList = expenses.map((e, idx) => idx === existingExpenseIdx ? updatedExpenseItem : e);
+        } else {
+          updatedExpensesList = [updatedExpenseItem, ...expenses];
+        }
+        await onUpdateExpenses(updatedExpensesList);
+      } else if (existingExpenseIdx >= 0) {
+        // Deposit set to 0 -> clean up linked deposit expense
+        const updatedExpensesList = expenses.filter((_, idx) => idx !== existingExpenseIdx);
+        await onUpdateExpenses(updatedExpensesList);
       }
     }
     
     if (continueAdding) {
       setFormState({
         vendorName: '',
-        category: formState.category || 'General',
+        category: formState.category || '',
         contactName: '',
         emailAddress: '',
         phoneNumber: '',
@@ -343,11 +573,24 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
     });
     await onUpdate(updated);
 
+    // Clean up any legacy vendor-specific budget line item
     if (onUpdateBudget && vendorToDelete.vendorName) {
       const vendorNameClean = vendorToDelete.vendorName.trim().toLowerCase();
       const updatedBudget = budget.filter(b => (b.vendorName || '').trim().toLowerCase() !== vendorNameClean);
       if (updatedBudget.length !== budget.length) {
         await onUpdateBudget(updatedBudget);
+      }
+    }
+
+    // Clean up linked deposit expense item if present
+    if (onUpdateExpenses && vendorToDelete.vendorId) {
+      const depositExpenseItemId = `EXP-V-${vendorToDelete.vendorId}`;
+      const filteredExpenses = expenses.filter(e =>
+        e.itemId !== depositExpenseItemId &&
+        !(Boolean(e.notes) && e.notes!.includes(vendorToDelete.vendorId) && e.notes!.includes('Vendor deposit'))
+      );
+      if (filteredExpenses.length !== expenses.length) {
+        await onUpdateExpenses(filteredExpenses);
       }
     }
 
@@ -793,12 +1036,11 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                 </div>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Category</label>
-                  <input
-                    style={styles.input}
+                  <VendorCategoryCombobox
                     value={formState.category || ''}
-                    onChange={(e) => handleFormChange('category', e.target.value)}
-                    placeholder="e.g. Venue, Photography"
-                    required
+                    onChange={(val) => handleFormChange('category', val)}
+                    categories={categoryOptions}
+                    inputStyle={styles.input}
                   />
                 </div>
                 <div style={styles.formGroup}>
@@ -831,6 +1073,8 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                   <input
                     style={styles.input}
                     type="number"
+                    min="0"
+                    step="0.01"
                     value={formState.totalContractValue !== undefined ? formState.totalContractValue : ''}
                     onChange={(e) => handleFormChange('totalContractValue', e.target.value)}
                   />
@@ -840,17 +1084,31 @@ export default function VendorManager({ vendors, budget = [], onUpdate, onUpdate
                   <input
                     style={styles.input}
                     type="number"
+                    min="0"
+                    step="0.01"
                     value={formState.depositPaid !== undefined ? formState.depositPaid : ''}
                     onChange={(e) => handleFormChange('depositPaid', e.target.value)}
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Balance Owing ($)</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                    <label style={{ ...styles.label, margin: 0 }}>Balance Owing ($)</label>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                      Auto-calculated
+                    </span>
+                  </div>
                   <input
-                    style={styles.input}
+                    style={{
+                      ...styles.input,
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      cursor: 'not-allowed',
+                      color: (formState.balanceOwing || 0) > 0 ? 'var(--color-primary, #e29578)' : 'var(--color-muted)',
+                      fontWeight: 600,
+                    }}
                     type="number"
-                    value={formState.balanceOwing !== undefined ? formState.balanceOwing : ''}
-                    onChange={(e) => handleFormChange('balanceOwing', e.target.value)}
+                    value={formState.balanceOwing !== undefined ? formState.balanceOwing : 0}
+                    readOnly
+                    tabIndex={-1}
                   />
                 </div>
                 <div style={styles.formGroup}>

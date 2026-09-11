@@ -58,5 +58,24 @@ export function runTests() {
   if (outputBudgetRow[0] !== 'B-999') throw new Error('Budget back-to-row failed at Item ID');
   if (outputBudgetRow[3] !== 15000) throw new Error('Budget back-to-row failed at Estimated Cost');
 
+  // 2b. Test Modernized 6-Column Category Budget Mapping & Formulas
+  const modernBudgetHeaders = ['Category ID', 'Category', 'Target Budget', 'Total Spent', 'Remaining', 'Notes'];
+  const modernBudgetRow = ['B1', 'Florals & Decor', '3500', '1200', '2300', 'Arch & centerpieces'];
+  const modernParsed = budgetMapper.fromRow(modernBudgetHeaders, modernBudgetRow);
+  if (modernParsed.itemId !== 'B1') throw new Error('Modern Budget Category ID mapping failed');
+  if (modernParsed.estimatedCost !== 3500) throw new Error('Modern Budget Target Budget parsing failed');
+  if (modernParsed.actualCost !== 1200) throw new Error('Modern Budget Total Spent parsing failed');
+  if (modernParsed.amountPaid !== 2300) throw new Error('Modern Budget Remaining parsing failed');
+  if (modernParsed.notes !== 'Arch & centerpieces') throw new Error('Modern Budget Notes mapping failed');
+
+  const modernOutputRow = budgetMapper.toRow(modernBudgetHeaders, modernParsed, 2);
+  if (modernOutputRow[0] !== 'B1') throw new Error('Modern back-to-row failed at Category ID');
+  if (modernOutputRow[2] !== 3500) throw new Error('Modern back-to-row failed at Target Budget');
+  if (!String(modernOutputRow[3]).includes('SUMIF(EXPENSES!C:C, B2')) throw new Error('Modern back-to-row failed to generate Total Spent formula');
+  if (!String(modernOutputRow[4]).includes('C2 - D2')) throw new Error('Modern back-to-row failed to generate Remaining formula');
+
   console.log('✓ All Sheet2Vow Mapper Unit Tests Passed Successfully.');
 }
+
+runTests();
+

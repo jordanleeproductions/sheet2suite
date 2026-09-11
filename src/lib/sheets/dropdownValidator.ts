@@ -30,17 +30,6 @@ export const MASTER_DROPDOWN_RULES: DropdownRuleConfig[] = [
     columnHeaderMatches: ['Category', 'Vendor Category'],
     settingsRange: '=SETTINGS!$J$2:$J$50',
   },
-  // BUDGET tab
-  {
-    tabCandidateNames: ['BUDGET', 'Budget Ledger', 'Budget'],
-    columnHeaderMatches: ['Category', 'Budget Category'],
-    settingsRange: '=SETTINGS!$K$2:$K$50',
-  },
-  {
-    tabCandidateNames: ['BUDGET', 'Budget Ledger', 'Budget'],
-    columnHeaderMatches: ['Payment Status', 'Status'],
-    settingsRange: '=SETTINGS!$G$2:$G$50',
-  },
   // TO DO tab
   {
     tabCandidateNames: ['TO DO', 'To Do', 'To_Do_List', 'To-Do List', 'TASKS', 'Tasks'],

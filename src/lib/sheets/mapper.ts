@@ -29,12 +29,33 @@ export const GUEST_HEADERS: Record<string, keyof Guest> = {
 };
 
 export const BUDGET_HEADERS: Record<string, keyof BudgetItem> = {
+  // Category / Item ID
+  'Category ID': 'itemId',
   'Item ID': 'itemId',
+  'ID': 'itemId',
+  // Category
   'Category': 'category',
-  'Vendor Name': 'vendorName',
+  'Budget Category': 'category',
+  // Target Budget (replaces Estimated Cost)
+  'Target Budget': 'estimatedCost',
+  'Budget Allocation': 'estimatedCost',
+  'Budget Cap': 'estimatedCost',
   'Estimated Cost': 'estimatedCost',
+  // Total Spent (replaces Actual Cost)
+  'Total Spent': 'actualCost',
+  'Spent': 'actualCost',
   'Actual Cost': 'actualCost',
+  // Remaining (replaces Amount Paid)
+  'Remaining': 'amountPaid',
+  'Remaining Balance': 'amountPaid',
+  'Remaining Cushion': 'amountPaid',
   'Amount Paid': 'amountPaid',
+  // Notes
+  'Notes': 'notes',
+  'Notes / Details': 'notes',
+  // Legacy fields
+  'Vendor Name': 'vendorName',
+  'Vendor': 'vendorName',
   'Due Date': 'dueDate',
   'Payment Status': 'paymentStatus',
 };
@@ -184,10 +205,44 @@ export const budgetMapper = {
       amountPaid: Number(obj.amountPaid) || 0,
       dueDate: String(obj.dueDate || ''),
       paymentStatus: String(obj.paymentStatus || ''),
+      notes: String(obj.notes || ''),
     };
   },
-  toRow(headers: string[], item: BudgetItem): any[] {
-    return mapObjectToRow(headers, item, BUDGET_HEADERS);
+  toRow(headers: string[], item: BudgetItem, rowIndex?: number): any[] {
+    return headers.map(header => {
+      const trimmed = header.trim();
+      if (trimmed === 'Category ID' || trimmed === 'Item ID' || trimmed === 'ID') {
+        return item.itemId || '';
+      }
+      if (trimmed === 'Category' || trimmed === 'Budget Category') {
+        return item.category || '';
+      }
+      if (trimmed === 'Target Budget' || trimmed === 'Budget Allocation' || trimmed === 'Estimated Cost') {
+        return item.estimatedCost !== undefined ? Number(item.estimatedCost) : 0;
+      }
+      if (trimmed === 'Total Spent' || trimmed === 'Spent') {
+        if (rowIndex && rowIndex >= 2) {
+          return `=IF(ISBLANK(B${rowIndex}), "", SUMIF(EXPENSES!C:C, B${rowIndex}, EXPENSES!D:D))`;
+        }
+        return item.actualCost !== undefined ? Number(item.actualCost) : 0;
+      }
+      if (trimmed === 'Remaining' || trimmed === 'Remaining Balance') {
+        if (rowIndex && rowIndex >= 2) {
+          return `=IF(ISBLANK(B${rowIndex}), "", C${rowIndex} - D${rowIndex})`;
+        }
+        return (Number(item.estimatedCost) || 0) - (Number(item.actualCost) || 0);
+      }
+      if (trimmed === 'Notes' || trimmed === 'Notes / Details') {
+        return item.notes || '';
+      }
+      // Fallback for legacy headers
+      const propKey = BUDGET_HEADERS[header];
+      if (propKey) {
+        const val = item[propKey];
+        return val !== undefined ? val : '';
+      }
+      return '';
+    });
   }
 };
 

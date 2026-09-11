@@ -85,14 +85,12 @@ This document defines the authoritative tab structure and column header contract
 
 | Column Header Name | Developer Key | Format / Input Type | Description / Notes |
 |---|---|---|---|
-| `Item ID` | `itemId` | Text (Primary Key) | e.g. `B1`, `B2` |
-| `Category` | `category` | Dropdown | Budget category |
-| `Vendor Name` | `vendorName` | Text | Line item / vendor name |
-| `Estimated Cost` | `estimatedCost` | Currency ($) | Initial estimated cost cap |
-| `Actual Cost` | `actualCost` | Currency ($) | Final actual cost |
-| `Amount Paid` | `amountPaid` | Currency ($) | Amount paid to date |
-| `Due Date` | `dueDate` | Date | Payment due date |
-| `Payment Status` | `paymentStatus` | Dropdown | `Paid`, `Pending`, `Overdue` |
+| `Category ID` | `itemId` | Text (Primary Key) | e.g. `B1`, `B2`, `B3` (legacy alias: `Item ID`) |
+| `Category` | `category` | Plain Text | Master category name (open text supporting custom categories) |
+| `Target Budget` | `estimatedCost` | Currency ($) | Target allocated budget cap (legacy alias: `Estimated Cost`) |
+| `Total Spent` | `actualCost` | Formula / Currency ($) | Live sum from expenses: `=IF(ISBLANK(B2), "", SUMIF(EXPENSES!C:C, B2, EXPENSES!D:D))` |
+| `Remaining` | `remaining` | Formula / Currency ($) | Remaining available: `=IF(ISBLANK(B2), "", C2 - D2)` |
+| `Notes` | `notes` | Text | Category notes, vendor targets, or buffer details |
 
 ---
 

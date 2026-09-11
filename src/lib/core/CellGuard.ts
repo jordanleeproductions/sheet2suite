@@ -14,6 +14,11 @@ export const CellGuard = {
     if (typeof value !== 'string') return value;
 
     const trimmed = value.trim();
+    // Allow safe spreadsheet formulas
+    if (/^=(IF|SUM|ARRAYFORMULA|VLOOKUP|AVERAGE|COUNT)\b/i.test(trimmed)) {
+      return value;
+    }
+
     if (/^[=+\-@\t\r]/.test(trimmed)) {
       // Escape leading formula character with single quote
       return `'${value}`;

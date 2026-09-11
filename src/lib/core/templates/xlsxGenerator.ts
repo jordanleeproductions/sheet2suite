@@ -58,26 +58,38 @@ export async function generateMasterXlsxBuffer(coupleName: string = 'Alex & Sam'
   // Tab 3: Budget Ledger
   const budgetSheet = workbook.addWorksheet('Budget Ledger');
   budgetSheet.columns = [
-    { header: 'Item ID', key: 'itemId', width: 14 },
-    { header: 'Category', key: 'category', width: 18 },
-    { header: 'Vendor Name', key: 'vendor', width: 22 },
-    { header: 'Estimated Cost', key: 'estCost', width: 16 },
-    { header: 'Actual Cost', key: 'actCost', width: 16 },
-    { header: 'Amount Paid', key: 'paid', width: 16 },
-    { header: 'Due Date', key: 'dueDate', width: 14 },
-    { header: 'Payment Status', key: 'status', width: 16 },
+    { header: 'Category ID', key: 'itemId', width: 16 },
+    { header: 'Category', key: 'category', width: 22 },
+    { header: 'Target Budget', key: 'estCost', width: 18 },
+    { header: 'Total Spent', key: 'actCost', width: 18 },
+    { header: 'Remaining', key: 'remaining', width: 18 },
+    { header: 'Notes', key: 'notes', width: 30 },
   ];
   styleHeaderRow(budgetSheet);
 
   budgetSheet.addRow({
-    itemId: 'BUDGET-001',
+    itemId: 'B1',
     category: 'Venue & Catering',
-    vendor: 'Grand Ballroom Hotel',
     estCost: 18000,
-    actCost: 17500,
-    paid: 5000,
-    dueDate: '2026-08-15',
-    status: 'Deposit Paid',
+    actCost: { formula: '=IF(ISBLANK(B2), "", SUMIF(EXPENSES!C:C, B2, EXPENSES!D:D))', result: 0 },
+    remaining: { formula: '=IF(ISBLANK(B2), "", C2 - D2)', result: 18000 },
+    notes: 'Reception ballroom & catering package',
+  });
+  budgetSheet.addRow({
+    itemId: 'B2',
+    category: 'Florals & Decor',
+    estCost: 3500,
+    actCost: { formula: '=IF(ISBLANK(B3), "", SUMIF(EXPENSES!C:C, B3, EXPENSES!D:D))', result: 0 },
+    remaining: { formula: '=IF(ISBLANK(B3), "", C3 - D3)', result: 3500 },
+    notes: 'Ceremony arch, bouquets & centerpieces',
+  });
+  budgetSheet.addRow({
+    itemId: 'B3',
+    category: 'DJ & Music',
+    estCost: 2000,
+    actCost: { formula: '=IF(ISBLANK(B4), "", SUMIF(EXPENSES!C:C, B4, EXPENSES!D:D))', result: 0 },
+    remaining: { formula: '=IF(ISBLANK(B4), "", C4 - D4)', result: 2000 },
+    notes: 'Ceremony audio + 4hr reception DJ',
   });
 
   // Tab 4: Day-Of-Schedule

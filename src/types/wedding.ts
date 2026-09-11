@@ -48,12 +48,12 @@ export interface Guest {
 export interface BudgetItem {
   itemId: string;
   category: string;
-  vendorName: string;
+  vendorName?: string;
   estimatedCost: number;
   actualCost: number;
   amountPaid: number;
-  dueDate: string;
-  paymentStatus: string;
+  dueDate?: string;
+  paymentStatus?: string;
   notes?: string;
 }
 
