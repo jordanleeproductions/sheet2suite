@@ -419,6 +419,12 @@ src/
   4. `By Remaining`: Descending remaining cushion (`(b.estimated - b.actual) - (a.estimated - a.actual)`).
 - **Persistent State:** Saves user preference to `localStorage.getItem('s2v_budget_master_sort')`.
 
+#### 3.8.8 Mobile Category Drill-Down & Bottom Nav Coordination (`[BUG-5]`)
+- **Docked Sheet Elevation (`bottom: 62px`):** Fixed mobile bottom sheet drill-down (`.mobile-bottom-sheet-container`) to dock directly above the 62px persistent bottom navigation bar via `bottom: calc(62px + env(safe-area-inset-bottom, 0px))` with 62px CSS fallback.
+- **Unobscured Bottom Action Button:** Persistent category action button (`+ Log Expense to [Category]`) sits in the sheet footer completely above the mobile bottom nav bar.
+- **Clean Off-Screen Transitions:** Slide-up entry translates from `translateY(calc(100% + 120px))` to `translateY(0)` with smooth cubic-bezier easing.
+- **Z-Index Layering:** Backdrop at `z-index: 110`, bottom sheet at `z-index: 140`, and bottom nav bar at `z-index: 150` ensure seamless tap targets and no visual clipping.
+
 ---
 
 ## 4. Data Storage & Schema Mapping

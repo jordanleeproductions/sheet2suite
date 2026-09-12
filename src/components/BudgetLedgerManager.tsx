@@ -913,16 +913,18 @@ export default function BudgetLedgerManager({
         }
         .mobile-bottom-sheet-container {
           position: fixed;
-          bottom: 0;
+          bottom: 62px;
+          bottom: calc(62px + env(safe-area-inset-bottom, 0px));
           left: 0;
           right: 0;
-          z-index: 120;
+          z-index: 140;
           background-color: var(--color-surface);
           border-top-left-radius: 1.5rem;
           border-top-right-radius: 1.5rem;
           box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
           border-top: 1px solid var(--color-border);
-          max-height: 88vh;
+          border-bottom: 1px solid var(--color-border);
+          max-height: calc(88vh - 62px);
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -2641,7 +2643,7 @@ export default function BudgetLedgerManager({
           <div
             className="mobile-bottom-sheet-container"
             style={{
-              transform: isSheetAnimating ? 'translateY(0)' : 'translateY(100%)',
+              transform: isSheetAnimating ? 'translateY(0)' : 'translateY(calc(100% + 120px))',
             }}
           >
             {/* Grab Handle */}
@@ -3023,8 +3025,7 @@ export default function BudgetLedgerManager({
 
             {/* Persistent Bottom Action Footer */}
             <div style={{
-              padding: '0.75rem 1.25rem',
-              paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+              padding: '0.75rem 1.25rem 0.85rem',
               borderTop: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface)',
               flexShrink: 0,

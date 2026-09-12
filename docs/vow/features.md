@@ -465,6 +465,7 @@ Pending roadmap features and backlog items have been reorganized into specialize
 | **[BUG-2]** | Music Manager (`MusicManager.tsx`) | Audio preview playback triggers console/runtime error when playing mock song items. Resolved with fallback error banner and YouTube Music link. | Medium | Resolved | 2026-08-03 |
 | **[BUG-3]** | Budget / Expenses (`BudgetLedgerManager.tsx`, `mapper.ts`, `sync/route.ts`) | Google Sheets UNFORMATTED_VALUE query returns date serial integers (e.g. `46276`) for Purchase Date, triggering red data-validation flags when re-saved as integers. Resolved with `parseDateOrSerial` day-zero calculation and explicit Google Sheets `DATE` column formatting. | High | Resolved | 2026-09-11 |
 | **[BUG-4]** | Global Modals (`sessionCheck.ts`, `route.ts`) | Expired Google OAuth tokens caused users to lose form data upon submitting Add/Edit/Delete dialogs. Resolved by preemptively checking `/api/auth/session` prior to rendering creation/edit modals and triggering reauth flow cleanly. | High | Resolved | 2026-09-11 |
+| **[BUG-5]** | Mobile Financials Drill-Down (`BudgetLedgerManager.tsx`) | Category slide-up drill-down sheet was anchored to `bottom: 0` without accounting for the 62px fixed mobile bottom nav bar, causing the bottom action button to be obscured. Resolved with `bottom: calc(62px + env(safe-area-inset-bottom, 0px))` docking, adjusted max-height, and clean border delineation. | High | Resolved | 2026-09-11 |
 
 ---
 
