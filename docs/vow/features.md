@@ -422,6 +422,10 @@
   - Constrained `.budget-meter-card` with `overflow: hidden; max-width: 100%; box-sizing: border-box`.
   - Configured `.budget-donut-stats-grid` with `grid-template-columns: repeat(3, minmax(0, 1fr))`, `gap: 0.35rem`, and `min-width: 0` to ensure tiles never expand beyond the mobile container.
   - Compacted tile padding (`0.45rem 0.35rem`) and text labels (`0.575rem` labels, `0.85rem` values) with ellipsis truncation and native `title` hover tooltips on values for narrow screens down to 320px.
+- [x] **[FINANCIALS-STREAMLINED-PROGRESS-TEXT] Streamlined Budget Progress Card Status Label (`BudgetLedgerManager.tsx`):**
+  - Removed verbose redundant text under the progress bar (`$X spent of $Y target budget ($Z planned...)`).
+  - Streamlined the sub-bar row to strictly render the bold `$# REMAINING AVAILABLE` (or `$# OVER BUDGET`) label aligned cleanly to the right under the progress track.
+  - Eliminates visual clutter in the Budget Utilized card for an elevated, clean user experience.
 
 ---
 

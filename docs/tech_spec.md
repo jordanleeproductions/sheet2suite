@@ -91,7 +91,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Dual-Mode Budget Progress Visualizer (`[FINANCIALS-UTILIZATION-DONUT-TOGGLE]`, `[FINANCIALS-DONUT-MOBILE-RESPONSIVE]`):**
   - Segmented toggle supporting **`BAR`** (linear multi-state progress bar) and **`DONUT`** (interactive SVG circular gauge with center utilization percentage and colored status arc).
   - Remembers user preference in `localStorage` (`'s2v_budget_meter_mode'`).
-  - Clear descriptive balance summary positioned directly under the visualizer (`$X spent of $Y target budget · $Z remaining available` or over-budget warning).
+  - Streamlined balance status label positioned directly under the progress bar displaying the crisp `$# REMAINING AVAILABLE` (or over-budget alert) label, eliminating verbose redundant spent-of-target text for an uncluttered user experience (`[FINANCIALS-STREAMLINED-PROGRESS-TEXT]`).
   - **Mobile Responsive Bounds**: Sticky `.budget-meter-card` constrained to `overflow: hidden; box-sizing: border-box`. On mobile screens (<640px), donut chart scales to 110px with centered percent typography, and the 3 summary metric tiles (TOTAL BUDGET, TOTAL SPENT, REMAINING) use `repeat(3, minmax(0, 1fr))` with `min-width: 0`, compact padding (`0.45rem 0.35rem`), ellipsis truncation, and native `title` tooltips, preventing horizontal bleeding past the parent card borders.
 - **Desktop Master-Detail Split-View (`[FINANCIALS-MASTER-DETAIL-VIEW]`):**
   - **Responsive Shell**: On screens `< lg` (<1024px), maintains existing stacked view (budget cards/table above expenses ledger). On screens `>= lg`, transitions to a two-column grid (`lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start`).

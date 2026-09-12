@@ -1510,36 +1510,19 @@ export default function BudgetLedgerManager({
           </div>
         )}
 
-        {/* Descriptive Text Status Row Directly Under the Progress Bar */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginTop: meterMode === 'donut' ? '0.35rem' : '0.5rem',
-          paddingTop: '0.35rem',
-          borderTop: '1px dotted var(--color-border)',
-          fontSize: '0.75rem',
-          fontFamily: 'var(--font-mono)',
-        }}>
-          <span style={{ color: 'var(--color-muted)' }}>
-            {isUnsetMode ? (
-              <span><strong>{formatCurrency(totalActual, currency)}</strong> total spent across all categories (Unset Target Mode)</span>
-            ) : (
-              <span>
-                <strong>{formatCurrency(totalActual, currency)}</strong> spent of <strong>{formatCurrency(effectiveTarget, currency)}</strong> {isFixedCapMode ? 'master cap' : 'target budget'}
-                {isFixedCapMode && (
-                  <span style={{ color: isOverAllocated ? 'var(--color-red)' : 'var(--color-muted)', marginLeft: '0.4rem' }}>
-                    ({formatCurrency(totalEstimate, currency)} planned across categories)
-                  </span>
-                )}
-              </span>
-            )}
-          </span>
-
-          {!isUnsetMode && (
-            isOverallOverBudget ? (
+        {/* Status Row Directly Under the Progress Bar */}
+        {!isUnsetMode && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            marginTop: meterMode === 'donut' ? '0.35rem' : '0.5rem',
+            paddingTop: '0.35rem',
+            borderTop: '1px dotted var(--color-border)',
+            fontSize: '0.75rem',
+            fontFamily: 'var(--font-mono)',
+          }}>
+            {isOverallOverBudget ? (
               <span style={{ color: 'var(--color-red, #dc2626)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                 <AlertTriangle size={13} /> {formatCurrency(totalActual - effectiveTarget, currency)} OVER BUDGET
               </span>
@@ -1547,9 +1530,9 @@ export default function BudgetLedgerManager({
               <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 800 }}>
                 {formatCurrency(overallHeadroom, currency)} REMAINING AVAILABLE
               </span>
-            )
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Category Breakdown: Responsive Desktop Pills vs Mobile Chips */}
         {activeOrAlertStats.length > 0 && (
