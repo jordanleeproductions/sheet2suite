@@ -12,8 +12,9 @@ import {
   musicMapper,
   cateringMapper,
   tableMapper,
+  guestbookMapper,
 } from '@/lib/sheets/mapper';
-import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, WeddingData } from '@/lib/sheets/types';
+import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, GuestbookEntry, WeddingData } from '@/lib/sheets/types';
 
 import { mockDatabase, mockWeddingName, setMockWeddingName } from '@/lib/sheets/mockDb';
 import { CellGuard } from '@/lib/core/CellGuard';
@@ -33,6 +34,7 @@ const HEADERS_MAP = {
   photos: ['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes'],
   gifts: ['Item ID', 'Gift Description / Name', 'Giver / From', 'Category / Store', 'Estimated Value / Cash Amount', 'Thank You Sent', 'Notes'],
   catering: ['Item ID', 'Course Category', 'Item Name', 'Description', 'Is Guest Choice', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Nut-Free'],
+  guestbook: ['Entry ID', 'Date & Time', 'Guest Name', 'Message / Wishes', 'Photo Count', 'Photo Links', 'Drive Folder'],
 };
 
 export async function GET(req: Request) {
@@ -114,6 +116,7 @@ export async function GET(req: Request) {
     const musicTitle = findTitle(['MUSIC', 'Music', 'Playlists', 'Playlist']);
     const cateringTitle = findTitle(['CATERING', 'Catering', 'Catering Menu', 'Menu', 'FOOD', 'Food']);
     const tablesTitle = findTitle(['TABLES', 'Table Assignments', 'Tables', 'Floorplan']);
+    const guestbookTitle = findTitle(['GUESTBOOK', 'Guestbook', 'Guest Book', 'Guest_Book', 'PHOTO GUESTBOOK', 'Photo Guestbook']);
     const dashTitle = availableTitles.some(t => t.toLowerCase() === 'dashboard') ? findTitle(['DASHBOARD', 'Dashboard']) : null;
 
     // Dynamically register ranges only for sheets that actually exist in availableTitles
@@ -139,6 +142,7 @@ export async function GET(req: Request) {
     registerRange('music', musicTitle, 'A1:I1000');
     registerRange('catering', cateringTitle, 'A1:I1000');
     registerRange('tables', tablesTitle, 'A1:F1000');
+    registerRange('guestbook', guestbookTitle, 'A1:G1000');
     registerRange('settingsZ', settingsTitle, 'Z1:Z3');
     if (dashTitle) {
       registerRange('dash', dashTitle, 'B2');
@@ -283,6 +287,15 @@ export async function GET(req: Request) {
       .map(row => tableMapper.fromRow(tableHeaders, row))
       .filter(table => Boolean(table.tableId && table.tableId.trim() !== ''));
 
+    // Parse Guestbook Entries
+    const guestbookRows = getRows('guestbook');
+    const guestbookHeaders = guestbookRows[0] || HEADERS_MAP.guestbook;
+    const guestbook = guestbookRows
+      .slice(1)
+      .filter(isNonEmptyRow)
+      .map(row => guestbookMapper.fromRow(guestbookHeaders, row))
+      .filter(entry => Boolean(entry.entryId || entry.guestName || entry.message));
+
     // Calculate dynamic values for Dashboard UI
     const estimatedCost = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
     const actualCost = expenses.length > 0 
@@ -311,6 +324,7 @@ export async function GET(req: Request) {
       gifts,
       catering,
       tables,
+      guestbook,
     };
 
     return NextResponse.json({
@@ -377,6 +391,8 @@ export async function POST(req: Request) {
         mockDatabase.catering = data as MenuItem[];
       } else if (sheetType === 'tables') {
         mockDatabase.tables = (data as TableConfig[]).filter(t => Boolean(t && t.tableId && t.tableId.trim() !== ''));
+      } else if (sheetType === 'guestbook') {
+        mockDatabase.guestbook = data as GuestbookEntry[];
       }
 
       // Recompute metrics
@@ -596,6 +612,12 @@ export async function POST(req: Request) {
         const validTables = (data as TableConfig[]).filter(item => Boolean(item && item.tableId && item.tableId.trim() !== ''));
         validTables.forEach(item => {
           values.push(tableMapper.toRow(headers, item));
+        });
+      } else if (sheetType === 'guestbook') {
+        targetTitle = findTitle(['GUESTBOOK', 'Guestbook', 'Guest Book', 'Guest_Book']) || 'GUESTBOOK';
+        range = `'${targetTitle}'!A1:G1000`;
+        (data as GuestbookEntry[]).forEach(item => {
+          values.push(guestbookMapper.toRow(headers, item));
         });
       }
 

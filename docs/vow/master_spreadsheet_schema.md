@@ -4,7 +4,7 @@ This document defines the authoritative tab structure and column header contract
 
 ---
 
-## 📊 Complete Sheet Architecture Overview (15 Tabs)
+## 📊 Complete Sheet Architecture Overview (16 Tabs)
 
 | Tab Name | Sheet Table Name | Key Purpose | Status |
 |---|---|---|---|
@@ -20,6 +20,7 @@ This document defines the authoritative tab structure and column header contract
 | **`PHOTOS`** | Photography Shot List | Shot list requirements, timing & status | ✏️ Active |
 | **`TO DO`** | To Do List | Task checklist, categories, due dates & status | ✏️ Active |
 | **`GIFT REGISTRY`** | Gift Registry | Gifts received, amounts & thank-you cards | ✏️ Active |
+| **`GUESTBOOK`** | Guestbook Feed | Guest photo uploads, messages & memories | ✏️ Active |
 | **`DECOR INVENTORY`**| Decor Inventory | Venue decor, packing checklist & cleanup | ✏️ Active |
 | **`Calc_Data`** | System Lookup | System metric lookup table for formulas | 🔒 Internal |
 | **`SETTINGS`** | Config & Dropdowns | Master Settings table & enum dropdown lists | 🔒 System Config |
@@ -241,6 +242,22 @@ Pure human-readable visual dashboard containing aggregate summary KPI cards (`To
 
 ## ⚙️ Tab 14: `Calc_Data` *(System Internal)*
 Metric lookup table (`Metric Category`, `Metric Name`, `Value`) calculated from `GUESTS`, `BUDGET`, and `TO DO` sheets for dashboard widgets.
+
+---
+
+## 📸 Tab 15: `GUESTBOOK` *(Guest Photo Uploads & Heartfelt Wishes)*
+**Sheet Table Name**: `Guestbook Feed`  
+Stores guest comments, heartfelt wedding wishes, photo upload counts, direct Google Drive links, and target folder details submitted via the public QR / guest photo upload portal (`/upload/[token]`). Operates as the permanent single source of truth across serverless environments so submission counts never disappear on page refresh. Auto-provisioned dynamically if missing from older user spreadsheets.
+
+| Column Header | JSON Key | Data Type | Notes / Description |
+| :--- | :--- | :--- | :--- |
+| `Entry ID` | `entryId` | Text (Primary Key) | Unique submission ID (e.g. `GB101`, `GB739102`) |
+| `Date & Time` | `submittedAt` | Text / DateTime | Human-readable submission timestamp (e.g. `Sep 12, 2026, 4:30 PM`) |
+| `Guest Name` | `guestName` | Text | Name provided by guest on upload form (defaults to `Anonymous Guest`) |
+| `Message / Wishes` | `message` | Text | Heartfelt note, congratulations, or photo caption |
+| `Photo Count` | `photoCount` | Integer | Total number of photo/video files uploaded in this submission |
+| `Photo Links` | `photoLinks` | Text | Direct Google Drive web view URLs (newline or comma-separated) |
+| `Drive Folder` | `driveFolder` | Text | Target Google Drive folder name where files were saved |
 
 ---
 

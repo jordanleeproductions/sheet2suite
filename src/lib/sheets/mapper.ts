@@ -1,4 +1,4 @@
-import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
+import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, GuestbookEntry, AgeCategory, RSVPStatus, KanbanStage } from './types';
 import { parseDateOrSerial, parseTimeOrSerial } from '@/lib/currency';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
@@ -635,3 +635,56 @@ export const tableMapper = {
     return mapObjectToRow(headers, formattedItem as any, TABLES_HEADERS);
   }
 };
+
+export const GUESTBOOK_HEADERS: Record<string, keyof GuestbookEntry> = {
+  'Entry ID': 'entryId',
+  'ID': 'entryId',
+  'Date & Time': 'submittedAt',
+  'Date': 'submittedAt',
+  'Timestamp': 'submittedAt',
+  'Time': 'submittedAt',
+  'Guest Name': 'guestName',
+  'Uploader Name': 'guestName',
+  'Name': 'guestName',
+  'Message / Wishes': 'message',
+  'Message': 'message',
+  'Caption': 'message',
+  'Notes': 'message',
+  'Photo Count': 'photoCount',
+  'Photos': 'photoCount',
+  'File Count': 'photoCount',
+  'Photo Links': 'photoLinks',
+  'Links': 'photoLinks',
+  'Drive Folder': 'driveFolder',
+  'Folder': 'driveFolder',
+};
+
+export const guestbookMapper = {
+  fromRow(headers: string[], row: any[]): GuestbookEntry {
+    const obj = mapRowToObject<GuestbookEntry>(headers, row, GUESTBOOK_HEADERS);
+    const photoCount = parseInt(String(obj.photoCount || '0'), 10) || 0;
+    return {
+      entryId: String(obj.entryId || '').trim(),
+      submittedAt: String(obj.submittedAt || '').trim(),
+      guestName: String(obj.guestName || 'Anonymous Guest').trim(),
+      message: String(obj.message || '').trim(),
+      photoCount,
+      photoLinks: String(obj.photoLinks || '').trim(),
+      driveFolder: String(obj.driveFolder || '').trim(),
+    };
+  },
+  fromRows(rows: any[][]): GuestbookEntry[] {
+    if (!rows || rows.length < 2) return [];
+    const headers = rows[0].map(h => String(h || '').trim());
+    return rows.slice(1)
+      .map(row => guestbookMapper.fromRow(headers, row))
+      .filter(entry => entry.entryId || (entry.guestName && entry.guestName !== 'Anonymous Guest') || entry.message || entry.photoCount > 0);
+  },
+  toRow(headers: string[], item: GuestbookEntry): any[] {
+    return mapObjectToRow(headers, item, GUESTBOOK_HEADERS);
+  },
+  toRows(headers: string[], items: GuestbookEntry[]): any[][] {
+    return [headers, ...items.map(item => guestbookMapper.toRow(headers, item))];
+  }
+};
+

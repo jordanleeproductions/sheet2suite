@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ScheduleEvent, Vendor } from '@/lib/sheets/types';
-import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle, Check } from 'lucide-react';
+import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle, Check, Trash2, Search, FileText, Users, Tag } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import TimeDialPicker from '@/components/TimeDialPicker';
 import { parseTimeOrSerial } from '@/lib/currency';
@@ -52,6 +52,28 @@ export function isOvernightEvent(event: Partial<ScheduleEvent>): boolean {
   if (event.isAfterMidnight === true) return true;
   if (event.isAfterMidnight === false) return false;
   return isLateNightTime(event.startTime);
+}
+
+export function getEventDurationLabel(startTime?: string, endTime?: string, isAfterMidnight?: boolean): string | null {
+  if (!startTime || !endTime) return null;
+  const tStart = parseTimeOrSerial(startTime, '24h');
+  const tEnd = parseTimeOrSerial(endTime, '24h');
+  if (!tStart || !tEnd || !tStart.includes(':') || !tEnd.includes(':')) return null;
+  const [sh, sm] = tStart.split(':').map(Number);
+  const [eh, em] = tEnd.split(':').map(Number);
+  if (isNaN(sh) || isNaN(sm) || isNaN(eh) || isNaN(em)) return null;
+  let startMin = sh * 60 + sm;
+  let endMin = eh * 60 + em;
+  if (endMin < startMin || isAfterMidnight) {
+    endMin += 1440;
+  }
+  const diff = endMin - startMin;
+  if (diff <= 0) return null;
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  if (hours > 0 && mins > 0) return `${hours} hr${hours > 1 ? 's' : ''} ${mins} min${mins > 1 ? 's' : ''}`;
+  if (hours > 0) return `${hours} hr${hours > 1 ? 's' : ''}`;
+  return `${mins} min${mins > 1 ? 's' : ''}`;
 }
 
 export function parseTimeToMinutes(timeStr: string | undefined | null): number {
@@ -232,6 +254,10 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
   const selectedRoles = useMemo(() => {
     return parseResponsibilities(formState.responsibility);
   }, [formState.responsibility]);
+
+  const durationText = useMemo(() => {
+    return getEventDurationLabel(formState.startTime, formState.endTime, formState.isAfterMidnight);
+  }, [formState.startTime, formState.endTime, formState.isAfterMidnight]);
 
   const toggleRole = (roleToToggle: string) => {
     const trimmed = roleToToggle.trim();
@@ -566,21 +592,104 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
       {(isAdding || editingIndex !== null) && (
         <div className="timeline-modal-overlay" style={styles.modalOverlay}>
           <style>{`
-            @media (max-width: 640px) {
-              .timeline-modal-overlay {
-                padding: 0.5rem !important;
-              }
-              .timeline-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-              }
-              .timeline-form-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-              .timeline-field-span-2 {
-                grid-column: span 1 !important;
-              }
+            .timeline-modal-overlay {
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              background-color: rgba(13, 27, 42, 0.65) !important;
+              backdrop-filter: blur(4px) !important;
+              display: flex !important;
+              justify-content: center !important;
+              align-items: center !important;
+              z-index: 1000 !important;
+              padding: 1.5rem !important;
+            }
+            .timeline-modal-content {
+              width: 100% !important;
+              max-width: 820px !important;
+              max-height: 90vh !important;
+              border-radius: 16px !important;
+              display: flex !important;
+              flex-direction: column !important;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+              overflow: hidden !important;
+              background-color: var(--color-bg, #fcfbf9) !important;
+              border: 1.5px solid var(--color-primary) !important;
+            }
+            .timeline-form-scroll-body {
+              flex: 1 !important;
+              overflow-y: auto !important;
+              padding: 1.5rem !important;
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 1.15rem !important;
+            }
+            .timeline-section-card {
+              background-color: var(--color-surface, #ffffff);
+              border: 1px solid var(--color-border, #e5e7eb);
+              border-radius: 12px;
+              padding: 1.15rem 1.25rem;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+              display: flex;
+              flex-direction: column;
+              gap: 0.85rem;
+            }
+            .timeline-section-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding-bottom: 0.6rem;
+              border-bottom: 1px solid var(--color-border, #f1f5f9);
+            }
+            .timeline-section-title {
+              font-family: var(--font-mono);
+              font-size: 0.72rem;
+              font-weight: 800;
+              letter-spacing: 0.05em;
+              color: var(--color-primary);
+              display: flex;
+              align-items: center;
+              gap: 0.45rem;
+              margin: 0;
+            }
+            .timeline-timing-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 1.25rem;
+              align-items: flex-start;
+            }
+            .timeline-details-grid {
+              display: grid;
+              grid-template-columns: 1.2fr 1fr;
+              gap: 1.25rem;
+            }
+            .timeline-role-pill {
+              display: inline-flex;
+              align-items: center;
+              gap: 0.35rem;
+              font-size: 0.75rem;
+              font-family: var(--font-sans);
+              font-weight: 600;
+              padding: 0.35rem 0.65rem;
+              border-radius: 20px;
+              cursor: pointer;
+              transition: all 0.15s ease;
+              border: 1px solid var(--color-border, #d1d5db);
+              background-color: transparent;
+              color: var(--color-text);
+              touch-action: manipulation;
+            }
+            .timeline-role-pill:hover {
+              border-color: var(--color-primary);
+              background-color: rgba(205, 162, 80, 0.08);
+            }
+            .timeline-role-pill.selected {
+              background-color: var(--color-primary) !important;
+              color: var(--color-on-primary, #ffffff) !important;
+              border-color: var(--color-primary) !important;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
             }
             .midnight-alert-box {
               width: 100% !important;
@@ -600,70 +709,221 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
               white-space: normal !important;
               word-break: break-word !important;
             }
-            @media (max-width: 520px) {
-              .midnight-toggle-group {
+            @media (max-width: 768px) {
+              .timeline-modal-overlay {
+                padding: 0.5rem !important;
+                align-items: flex-end !important;
+              }
+              .timeline-modal-content {
+                width: 100% !important;
+                max-height: 94vh !important;
+                border-radius: 16px 16px 0 0 !important;
+              }
+              .timeline-form-scroll-body {
+                padding: 1rem !important;
+                gap: 1rem !important;
+              }
+              .timeline-timing-grid {
                 grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+              }
+              .timeline-details-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.85rem !important;
+              }
+              .timeline-footer-actions {
+                padding: 0.85rem 1rem !important;
+                flex-wrap: wrap !important;
+                gap: 0.5rem !important;
+              }
+              .timeline-footer-right {
+                flex-wrap: wrap !important;
+                width: 100% !important;
+                justify-content: flex-end !important;
               }
             }
           `}</style>
+
           <div className="timeline-modal-content" style={styles.modalContent}>
+            {/* Header */}
             <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAdding ? 'ADD TIMELINE MOMENT' : 'EDIT TIMELINE MOMENT'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingIndex(null); }}>
+              <div>
+                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)', margin: 0 }} className="modalTitle">
+                  {isAdding ? 'ADD TIMELINE MOMENT' : 'EDIT TIMELINE MOMENT'}
+                </h3>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'var(--font-sans)' }}>
+                  {isAdding ? 'Schedule a new itinerary moment, location, and assign responsible roles.' : 'Refine schedule times, moment details, venue location, and assignees.'}
+                </p>
+              </div>
+              <button
+                style={{
+                  ...styles.closeBtn,
+                  color: 'var(--color-on-primary, #ffffff)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background-color 0.15s ease',
+                }}
+                className="closeBtn"
+                onClick={() => { setIsAdding(false); setEditingIndex(null); }}
+                title="Close modal"
+              >
                 <X size={18} />
               </button>
             </div>
             
+            {/* Form */}
             <form onSubmit={saveEvent} style={styles.form}>
-              <div className="timeline-form-grid" style={styles.formGrid}>
-                <div style={styles.fieldGroup}>
-                  <TimeDialPicker
-                    label="START TIME"
-                    required
-                    placeholder="e.g. 04:00 PM"
-                    value={formState.startTime || ''}
-                    onChange={(val) => handleInputChange('startTime', val)}
-                  />
+              <div className="timeline-form-scroll-body">
+                
+                {/* SECTION 1: TIMING & DURATION */}
+                <div className="timeline-section-card">
+                  <div className="timeline-section-header">
+                    <h4 className="timeline-section-title">
+                      <Clock size={15} />
+                      <span>TIMING & DURATION</span>
+                    </h4>
+                    {durationText && (
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.14))',
+                        color: 'var(--color-gold, #cda250)',
+                        border: '1px solid var(--color-gold, #cda250)',
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '12px',
+                        fontSize: '0.72rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                      }}>
+                        <Clock size={12} />
+                        <span>EST. DURATION: {durationText}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="timeline-timing-grid">
+                    <div style={styles.fieldGroup}>
+                      <TimeDialPicker
+                        label="START TIME"
+                        required
+                        placeholder="e.g. 04:00 PM"
+                        value={formState.startTime || ''}
+                        onChange={(val) => handleInputChange('startTime', val)}
+                      />
+                    </div>
+
+                    <div style={styles.fieldGroup}>
+                      <TimeDialPicker
+                        label="END TIME"
+                        placeholder="e.g. 04:30 PM"
+                        value={formState.endTime || ''}
+                        onChange={(val) => handleInputChange('endTime', val)}
+                        referenceStartTime={formState.startTime}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Overnight / Past Midnight Alert */}
+                  {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '') || formState.isAfterMidnight) && (
+                    <div style={{ width: '100%', marginTop: '0.25rem' }}>
+                      <div className="midnight-alert-box" style={styles.midnightAlertBox}>
+                        <div style={styles.midnightAlertHeader}>
+                          <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem', flexShrink: 0 }} />
+                          <span style={styles.midnightAlertTitle}>EVENT RUNS PAST MIDNIGHT?</span>
+                        </div>
+                        <p style={styles.midnightAlertDesc}>
+                          Selected time is between 12:00 AM – 4:00 AM. Is this moment at the end of the wedding night (e.g. after-party) or early morning prep?
+                        </p>
+                        <div className="midnight-toggle-group" style={styles.midnightToggleGroup}>
+                          <button
+                            type="button"
+                            className="midnight-toggle-btn"
+                            style={{
+                              ...styles.midnightToggleBtn,
+                              backgroundColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#ffffff',
+                              color: formState.isAfterMidnight !== false ? '#ffffff' : '#4c1d95',
+                              borderColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#a78bfa',
+                              fontWeight: 700
+                            }}
+                            onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: true, eventDate: 'Next Day (+1)' }))}
+                          >
+                            🌙 YES — OVERNIGHT (+1 DAY)
+                          </button>
+                          <button
+                            type="button"
+                            className="midnight-toggle-btn"
+                            style={{
+                              ...styles.midnightToggleBtn,
+                              backgroundColor: formState.isAfterMidnight === false ? '#0d9488' : '#ffffff',
+                              color: formState.isAfterMidnight === false ? '#ffffff' : '#4c1d95',
+                              borderColor: formState.isAfterMidnight === false ? '#0d9488' : '#a78bfa',
+                              fontWeight: 700
+                            }}
+                            onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: false, eventDate: 'Main Wedding Day' }))}
+                          >
+                            ☀️ NO — EARLY MORNING
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div style={styles.fieldGroup}>
-                  <TimeDialPicker
-                    label="END TIME"
-                    placeholder="e.g. 04:30 PM"
-                    value={formState.endTime || ''}
-                    onChange={(val) => handleInputChange('endTime', val)}
-                    referenceStartTime={formState.startTime}
-                  />
+                {/* SECTION 2: MOMENT & VENUE LOCATION */}
+                <div className="timeline-section-card">
+                  <div className="timeline-section-header">
+                    <h4 className="timeline-section-title">
+                      <Sparkles size={15} />
+                      <span>MOMENT & VENUE LOCATION</span>
+                    </h4>
+                  </div>
+
+                  <div className="timeline-details-grid">
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>EVENT MOMENT NAME *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ceremony Service, Groomsmen Prep, First Dance"
+                        value={formState.eventMoment || ''}
+                        onChange={(e) => handleInputChange('eventMoment', e.target.value)}
+                        style={styles.input}
+                      />
+                    </div>
+
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>LOCATION / VENUE</label>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <MapPin size={15} style={{ position: 'absolute', left: '10px', color: 'var(--color-muted)' }} />
+                        <input
+                          type="text"
+                          placeholder="e.g. Courtyard Lawn, Main Ballroom"
+                          value={formState.location || ''}
+                          onChange={(e) => handleInputChange('location', e.target.value)}
+                          style={{
+                            ...styles.input,
+                            paddingLeft: '2.1rem',
+                            width: '100%',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>EVENT MOMENT *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ceremony Service"
-                    value={formState.eventMoment || ''}
-                    onChange={(e) => handleInputChange('eventMoment', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>LOCATION</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Courtyard Lawn"
-                    value={formState.location || ''}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <label style={styles.label}>RESPONSIBILITY / VENDORS & ROLES</label>
+                {/* SECTION 3: RESPONSIBILITY & ASSIGNED ROLES */}
+                <div className="timeline-section-card">
+                  <div className="timeline-section-header">
+                    <h4 className="timeline-section-title">
+                      <Users size={15} />
+                      <span>ASSIGNED ROLES & VENDORS</span>
+                    </h4>
                     {selectedRoles.length > 0 && (
                       <button
                         type="button"
@@ -671,29 +931,31 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: 'var(--color-muted)',
+                          color: '#ef4444',
                           fontSize: '0.7rem',
                           fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
                           cursor: 'pointer',
-                          textDecoration: 'underline',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
                         }}
                       >
-                        CLEAR ALL ({selectedRoles.length})
+                        <Trash2 size={12} /> CLEAR ALL ({selectedRoles.length})
                       </button>
                     )}
                   </div>
 
-                  {/* Selected Roles Chips */}
-                  {selectedRoles.length > 0 && (
+                  {/* Selected Roles Chips Box */}
+                  {selectedRoles.length > 0 ? (
                     <div style={{
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: '0.35rem',
-                      marginBottom: '0.5rem',
-                      padding: '0.45rem 0.6rem',
-                      backgroundColor: 'var(--color-bg-subtle, #f8f9fa)',
-                      borderRadius: 'var(--border-radius-sm, 6px)',
-                      border: '1px solid var(--color-border, #e5e7eb)',
+                      gap: '0.4rem',
+                      padding: '0.65rem 0.85rem',
+                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border, #e2e8f0)',
                     }}>
                       {selectedRoles.map((role) => (
                         <span
@@ -701,17 +963,17 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0.2rem 0.55rem',
+                            gap: '0.35rem',
+                            padding: '0.25rem 0.65rem',
                             borderRadius: '999px',
                             backgroundColor: 'var(--color-primary)',
                             color: 'var(--color-on-primary, #ffffff)',
-                            fontSize: '0.75rem',
+                            fontSize: '0.78rem',
                             fontWeight: 600,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                           }}
                         >
-                          <User size={11} />
+                          <User size={12} />
                           <span>{role}</span>
                           <button
                             type="button"
@@ -724,6 +986,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
+                              marginLeft: '2px',
                               opacity: 0.85,
                             }}
                             title={`Remove ${role}`}
@@ -733,112 +996,150 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                         </span>
                       ))}
                     </div>
+                  ) : (
+                    <div style={{
+                      padding: '0.65rem 0.85rem',
+                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                      borderRadius: '8px',
+                      border: '1px dashed var(--color-border, #cbd5e1)',
+                      fontSize: '0.76rem',
+                      color: 'var(--color-muted)',
+                      fontFamily: 'var(--font-sans)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                    }}>
+                      <Users size={14} style={{ color: 'var(--color-muted)' }} />
+                      <span>No assignees added yet. Tap quick tags below or search to assign wedding party or vendors.</span>
+                    </div>
                   )}
 
-                  {/* Combobox Search & Input */}
-                  <div ref={roleDropdownRef} style={{ position: 'relative', width: '100%' }}>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          placeholder={selectedRoles.length === 0 ? "Select roles below or type custom assignee..." : "Type custom name or search roles..."}
-                          value={customRoleInput}
-                          onChange={(e) => {
-                            setCustomRoleInput(e.target.value);
-                            setIsRoleDropdownOpen(true);
-                          }}
-                          onFocus={() => setIsRoleDropdownOpen(true)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              if (customRoleInput.trim()) {
-                                addCustomRole(customRoleInput);
-                              }
-                            } else if (e.key === ',') {
-                              e.preventDefault();
-                              if (customRoleInput.trim()) {
-                                addCustomRole(customRoleInput);
-                              }
-                            }
-                          }}
-                          style={{
-                            ...styles.input,
-                            paddingRight: '2.5rem',
-                          }}
-                        />
+                  {/* Search & Custom Input Bar */}
+                  <div ref={roleDropdownRef} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
+                    <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                      <Search size={15} style={{ position: 'absolute', left: '10px', color: 'var(--color-muted)', pointerEvents: 'none' }} />
+                      <input
+                        type="text"
+                        placeholder="Search roles & vendors or type custom assignee..."
+                        value={customRoleInput}
+                        onChange={(e) => {
+                          setCustomRoleInput(e.target.value);
+                          setIsRoleDropdownOpen(true);
+                        }}
+                        onFocus={() => setIsRoleDropdownOpen(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            if (customRoleInput.trim()) addCustomRole(customRoleInput);
+                          }
+                        }}
+                        style={{
+                          ...styles.input,
+                          paddingLeft: '2.2rem',
+                          paddingRight: customRoleInput ? '2.2rem' : '0.75rem',
+                          width: '100%',
+                        }}
+                      />
+                      {customRoleInput && (
                         <button
                           type="button"
-                          onClick={() => setIsRoleDropdownOpen(prev => !prev)}
-                          title="Toggle roles and vendors list"
+                          onClick={() => setCustomRoleInput('')}
                           style={{
                             position: 'absolute',
-                            right: '6px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'transparent',
+                            right: '8px',
+                            background: 'none',
                             border: 'none',
                             color: 'var(--color-muted)',
-                            padding: '0.35rem',
                             cursor: 'pointer',
+                            padding: '3px',
                           }}
+                          title="Clear input"
                         >
-                          <ChevronDown size={16} />
-                        </button>
-                      </div>
-
-                      {customRoleInput.trim() && (
-                        <button
-                          type="button"
-                          onClick={() => addCustomRole(customRoleInput)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.2rem',
-                            padding: '0.55rem 0.85rem',
-                            fontSize: '0.75rem',
-                            fontFamily: 'var(--font-mono)',
-                            fontWeight: 700,
-                            borderRadius: 'var(--border-radius-sm, 6px)',
-                            backgroundColor: 'var(--color-primary)',
-                            color: 'var(--color-on-primary, #ffffff)',
-                            border: 'none',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <Plus size={13} /> ADD
+                          <X size={14} />
                         </button>
                       )}
                     </div>
 
-                    {/* Multi-Select Combobox Dropdown */}
+                    {customRoleInput.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => addCustomRole(customRoleInput)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          padding: '0.55rem 0.95rem',
+                          fontSize: '0.75rem',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
+                          borderRadius: 'var(--border-radius-sm, 6px)',
+                          backgroundColor: 'var(--color-primary)',
+                          color: 'var(--color-on-primary, #ffffff)',
+                          border: 'none',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                        }}
+                      >
+                        <Plus size={14} /> ADD
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setIsRoleDropdownOpen(prev => !prev)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.55rem 0.85rem',
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        borderRadius: 'var(--border-radius-sm, 6px)',
+                        backgroundColor: isRoleDropdownOpen ? 'var(--color-primary)' : 'var(--color-bg, #ffffff)',
+                        color: isRoleDropdownOpen ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                        border: '1px solid var(--color-border, #d1d5db)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title="Toggle full roles catalog"
+                    >
+                      <Tag size={13} />
+                      <span>{isRoleDropdownOpen ? 'HIDE ROLES' : 'ALL ROLES'}</span>
+                      {isRoleDropdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+
+                    {/* Expandable Role Drawer / Popover */}
                     {isRoleDropdownOpen && (
                       <div
                         style={{
                           position: 'absolute',
-                          top: 'calc(100% + 4px)',
+                          top: 'calc(100% + 6px)',
                           left: 0,
                           right: 0,
                           maxHeight: '220px',
                           overflowY: 'auto',
                           backgroundColor: 'var(--color-surface, #ffffff)',
-                          border: '1px solid var(--color-muted, #d1d5db)',
-                          borderRadius: 'var(--border-radius-sm)',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
-                          zIndex: 50,
+                          border: '1px solid var(--color-border, #cbd5e1)',
+                          borderRadius: '8px',
+                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+                          zIndex: 60,
                         }}
                       >
                         <div style={{
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          padding: '0.45rem 0.75rem',
-                          borderBottom: '1px solid var(--color-border)',
-                          backgroundColor: 'var(--color-bg-subtle, #f9fafb)',
+                          padding: '0.5rem 0.85rem',
+                          borderBottom: '1px solid var(--color-border, #f1f5f9)',
+                          backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
                         }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
-                            SELECT ASSIGNEES ({selectedRoles.length} SELECTED)
+                          <span style={{ fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
+                            DIRECTORY ROLES & VENDORS ({previousResponsibilities.length})
                           </span>
                           <button
                             type="button"
@@ -846,7 +1147,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                             style={{
                               background: 'transparent',
                               border: 'none',
-                              fontSize: '0.7rem',
+                              fontSize: '0.72rem',
                               fontWeight: 700,
                               color: 'var(--color-primary)',
                               cursor: 'pointer',
@@ -865,11 +1166,11 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                               alignItems: 'center',
                               gap: '0.4rem',
                               width: '100%',
-                              padding: '0.55rem 0.75rem',
+                              padding: '0.6rem 0.85rem',
                               textAlign: 'left',
                               fontSize: '0.8rem',
                               fontFamily: 'var(--font-sans)',
-                              backgroundColor: 'rgba(205, 162, 80, 0.1)',
+                              backgroundColor: 'rgba(205, 162, 80, 0.12)',
                               color: 'var(--color-primary)',
                               fontWeight: 700,
                               border: 'none',
@@ -877,7 +1178,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                               cursor: 'pointer',
                             }}
                           >
-                            <Plus size={14} /> Add custom: &ldquo;{customRoleInput.trim()}&rdquo;
+                            <Plus size={14} /> Add custom assignee: &ldquo;{customRoleInput.trim()}&rdquo;
                           </button>
                         )}
 
@@ -898,19 +1199,19 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   width: '100%',
-                                  padding: '0.55rem 0.75rem',
+                                  padding: '0.55rem 0.85rem',
                                   textAlign: 'left',
                                   fontSize: '0.8rem',
                                   fontFamily: 'var(--font-sans)',
-                                  backgroundColor: isSelected ? 'var(--color-bg-subtle, #f3f4f6)' : 'transparent',
+                                  backgroundColor: isSelected ? 'rgba(205, 162, 80, 0.08)' : 'transparent',
                                   color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
                                   fontWeight: isSelected ? 700 : 500,
                                   border: 'none',
-                                  borderBottom: '1px solid var(--color-border, #f3f4f6)',
+                                  borderBottom: '1px solid var(--color-border, #f8fafc)',
                                   cursor: 'pointer',
                                 }}
                               >
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                                   <span style={{
                                     width: '16px',
                                     height: '16px',
@@ -938,143 +1239,115 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                   </div>
 
                   {/* Quick-Pick Popular Suggestion Badges */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
                     <span style={{ fontSize: '0.675rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-muted)' }}>
-                      QUICK ADD:
+                      QUICK TOGGLE POPULAR ROLES:
                     </span>
-                    {[
-                      'Photographer',
-                      'Videographer',
-                      'Bridal Party',
-                      'Groomsmen',
-                      'Planner / Coordinator',
-                      'DJ / MC',
-                      'Caterer / Staff',
-                      'Officiant',
-                      'Bride',
-                      'Groom'
-                    ].map(sug => {
-                      const isSelected = selectedRoles.some(r => r.toLowerCase() === sug.toLowerCase());
-                      return (
-                        <button
-                          key={sug}
-                          type="button"
-                          onClick={() => toggleRole(sug)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.2rem',
-                            fontSize: '0.675rem',
-                            fontFamily: 'var(--font-sans)',
-                            padding: '0.15rem 0.45rem',
-                            borderRadius: '4px',
-                            border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-muted)'}`,
-                            backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
-                            color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                          }}
-                          title={isSelected ? `Remove ${sug}` : `Add ${sug}`}
-                        >
-                          {isSelected ? <Check size={10} /> : <Plus size={10} />}
-                          <span>{sug}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>NOTES / DETAILS</label>
-                  <textarea
-                    placeholder="Provide specific guidelines, cues, setup details..."
-                    value={formState.notes || ''}
-                    rows={3}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
-                    style={styles.textarea}
-                  />
-                </div>
-
-                {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '') || formState.isAfterMidnight) && (
-                  <div style={{ ...styles.fieldGroup, gridColumn: 'span 2', width: '100%' }}>
-                    <div className="midnight-alert-box" style={styles.midnightAlertBox}>
-                      <div style={styles.midnightAlertHeader}>
-                        <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem', flexShrink: 0 }} />
-                        <span style={styles.midnightAlertTitle}>EVENT RUNS PAST MIDNIGHT?</span>
-                      </div>
-                      <p style={styles.midnightAlertDesc}>
-                        Selected time is between 12:00 AM – 4:00 AM. Is this moment at the end of the wedding night (e.g. after-party) or early morning prep?
-                      </p>
-                      <div className="midnight-toggle-group" style={styles.midnightToggleGroup}>
-                        <button
-                          type="button"
-                          className="midnight-toggle-btn"
-                          style={{
-                            ...styles.midnightToggleBtn,
-                            backgroundColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#ffffff',
-                            color: formState.isAfterMidnight !== false ? '#ffffff' : '#4c1d95',
-                            borderColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#a78bfa',
-                            fontWeight: 700
-                          }}
-                          onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: true, eventDate: 'Next Day (+1)' }))}
-                        >
-                          🌙 YES — OVERNIGHT (+1 DAY)
-                        </button>
-                        <button
-                          type="button"
-                          className="midnight-toggle-btn"
-                          style={{
-                            ...styles.midnightToggleBtn,
-                            backgroundColor: formState.isAfterMidnight === false ? '#0d9488' : '#ffffff',
-                            color: formState.isAfterMidnight === false ? '#ffffff' : '#4c1d95',
-                            borderColor: formState.isAfterMidnight === false ? '#0d9488' : '#a78bfa',
-                            fontWeight: 700
-                          }}
-                          onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: false, eventDate: 'Main Wedding Day' }))}
-                        >
-                          ☀️ NO — EARLY MORNING
-                        </button>
-                      </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                      {[
+                        'Photographer',
+                        'Videographer',
+                        'Bridal Party',
+                        'Groomsmen',
+                        'Planner / Coordinator',
+                        'DJ / MC',
+                        'Caterer / Staff',
+                        'Officiant',
+                        'Bride',
+                        'Groom',
+                        'Florist',
+                        'Glam Team (Hair & Makeup)'
+                      ].map(sug => {
+                        const isSelected = selectedRoles.some(r => r.toLowerCase() === sug.toLowerCase());
+                        return (
+                          <button
+                            key={sug}
+                            type="button"
+                            onClick={() => toggleRole(sug)}
+                            className={`timeline-role-pill ${isSelected ? 'selected' : ''}`}
+                            title={isSelected ? `Remove ${sug}` : `Add ${sug}`}
+                          >
+                            {isSelected ? <Check size={11} /> : <Plus size={11} />}
+                            <span>{sug}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* SECTION 4: NOTES & CUES */}
+                <div className="timeline-section-card">
+                  <div className="timeline-section-header">
+                    <h4 className="timeline-section-title">
+                      <FileText size={15} />
+                      <span>NOTES / DETAILS & VENDOR GUIDELINES</span>
+                    </h4>
+                  </div>
+
+                  <div style={styles.fieldGroup}>
+                    <textarea
+                      placeholder="Provide specific guidelines, audio/lighting cues, setup instructions, or VIP coordination notes..."
+                      value={formState.notes || ''}
+                      rows={3}
+                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      style={styles.textarea}
+                    />
+                  </div>
+                </div>
+
               </div>
 
-              <div style={styles.formActions}>
-                {editingIndex !== null && (
+              {/* Sticky Footer Action Bar */}
+              <div style={styles.formActions} className="timeline-footer-actions">
+                {editingIndex !== null ? (
                   <button 
                     type="button" 
                     style={styles.deleteBtn}
                     onClick={() => setEventToDeleteIndex(editingIndex)}
                   >
+                    <Trash2 size={13} style={{ marginRight: '4px' }} />
                     DELETE
                   </button>
-                )}
-                <button 
-                  type="button" 
-                  style={styles.cancelBtn} 
-                  onClick={() => { setIsAdding(false); setEditingIndex(null); }}
-                >
-                  CANCEL
-                </button>
-                {isAdding && (
+                ) : <div />}
+
+                <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }} className="timeline-footer-right">
+                  <button 
+                    type="button" 
+                    style={styles.cancelBtn} 
+                    onClick={() => { setIsAdding(false); setEditingIndex(null); }}
+                  >
+                    CANCEL
+                  </button>
+                  {isAdding && (
+                    <button
+                      type="button"
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: 'var(--color-surface, #ffffff)',
+                        color: 'var(--color-primary)',
+                        border: '1.5px solid var(--color-primary)',
+                      }}
+                      disabled={isSyncing}
+                      onClick={(e) => saveEvent(e, true)}
+                    >
+                      {isSyncing ? 'SAVING...' : 'SAVE & ADD NEXT'}
+                    </button>
+                  )}
                   <button
-                    type="button"
+                    type="submit"
                     style={{
                       ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
                     }}
                     disabled={isSyncing}
-                    onClick={(e) => saveEvent(e, true)}
                   >
-                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
+                    <Check size={14} />
+                    <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}</span>
                   </button>
-                )}
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}
-                </button>
+                </div>
               </div>
             </form>
           </div>
@@ -1084,7 +1357,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
       {/* IN-APP DELETE TIMELINE EVENT CONFIRMATION MODAL */}
       {eventToDeleteIndex !== null && schedule[eventToDeleteIndex] && (
         <div style={styles.modalOverlay} onClick={() => setEventToDeleteIndex(null)}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div style={{ ...styles.modalContent, maxWidth: '440px', borderRadius: '14px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ ...styles.modalHeader, backgroundColor: 'var(--color-red)' }} className="modalHeader">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <AlertCircle size={20} />
@@ -1741,30 +2014,33 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1rem',
   },
   modalContent: {
-    backgroundColor: 'var(--color-bg)',
-    border: '2px solid var(--color-primary)',
-    borderRadius: 'var(--border-radius-lg)',
+    backgroundColor: 'var(--color-bg, #fcfbf9)',
+    border: '1.5px solid var(--color-primary)',
+    borderRadius: '16px',
     width: '100%',
-    maxWidth: '520px',
+    maxWidth: '820px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     overflow: 'hidden',
   },
   modalHeader: {
     backgroundColor: 'var(--color-primary)',
     color: 'var(--color-on-primary)',
-    padding: '1rem 1.25rem',
+    padding: '1.15rem 1.5rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexShrink: 0,
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
   },
   modalTitle: {
     fontFamily: 'var(--font-serif)',
-    fontSize: '1.15rem',
+    fontSize: '1.2rem',
+    fontWeight: 700,
     color: 'var(--color-on-primary)',
+    letterSpacing: '0.02em',
   },
   closeBtn: {
     background: 'none',
@@ -1790,38 +2066,44 @@ const styles: Record<string, React.CSSProperties> = {
   fieldGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.25rem',
+    gap: '0.35rem',
   },
   label: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 600,
-    color: 'var(--color-muted)',
+    fontSize: '0.68rem',
+    fontWeight: 700,
+    color: 'var(--color-text)',
+    letterSpacing: '0.04em',
   },
   input: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    fontSize: '0.85rem',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid var(--color-border, #d1d5db)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
+    fontSize: '0.875rem',
     backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
+    outline: 'none',
+    transition: 'border-color 0.15s ease',
   },
   textarea: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    fontSize: '0.85rem',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid var(--color-border, #d1d5db)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
+    fontSize: '0.875rem',
     fontFamily: 'var(--font-sans)',
     backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
+    outline: 'none',
+    resize: 'vertical',
   },
   formActions: {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: '0.75rem',
-    padding: '0.875rem 1.25rem',
-    borderTop: '1px solid var(--color-muted)',
-    backgroundColor: 'var(--color-bg)',
+    padding: '1rem 1.5rem',
+    borderTop: '1px solid var(--color-border, #e5e7eb)',
+    backgroundColor: 'var(--color-bg, #ffffff)',
     flexShrink: 0,
     position: 'sticky',
     bottom: 0,
@@ -1830,33 +2112,40 @@ const styles: Record<string, React.CSSProperties> = {
   deleteBtn: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: '#ef4444',
-    color: '#000000',
+    fontWeight: 700,
+    padding: '0.55rem 1.15rem',
+    backgroundColor: '#dc2626',
+    color: '#ffffff',
     border: 'none',
-    borderRadius: 'var(--border-radius-sm)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
     cursor: 'pointer',
     marginRight: 'auto',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    boxShadow: '0 1px 3px rgba(220, 38, 38, 0.25)',
   },
   cancelBtn: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    padding: '0.5rem 1rem',
+    fontWeight: 600,
+    padding: '0.55rem 1.15rem',
     backgroundColor: 'transparent',
-    color: 'var(--color-muted)',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
+    color: 'var(--color-text)',
+    border: '1px solid var(--color-border, #d1d5db)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
     cursor: 'pointer',
   },
   saveBtn: {
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
-    fontWeight: 600,
-    padding: '0.5rem 1rem',
+    fontWeight: 700,
+    padding: '0.55rem 1.25rem',
     backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
+    color: 'var(--color-on-primary, #ffffff)',
     border: 'none',
-    borderRadius: 'var(--border-radius-sm)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
     cursor: 'pointer',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
   }
 };

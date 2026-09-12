@@ -108,6 +108,35 @@ export let mockDatabase: WeddingData = {
     { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Bride & Groom)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
     { tableId: 'table-1', tableName: 'Table 1 - Head Table', shape: 'circle', capacity: 8 },
     { tableId: 'table-2', tableName: 'Table 2 - Family VIP', shape: 'circle', capacity: 8 },
+  ],
+  guestbook: [
+    {
+      entryId: 'GB101',
+      submittedAt: '2026-09-12 04:30 PM',
+      guestName: 'Marcus & Jessica Vance',
+      message: 'Wishing you both a lifetime of unconditional love and laughter! Cheers to the happy couple! 🥂',
+      photoCount: 3,
+      photoLinks: 'https://drive.google.com/file/d/mock-photo-1/view, https://drive.google.com/file/d/mock-photo-2/view',
+      driveFolder: 'Guest Uploads'
+    },
+    {
+      entryId: 'GB102',
+      submittedAt: '2026-09-12 05:15 PM',
+      guestName: 'Elena Rostova',
+      message: 'The ceremony was absolutely breathtaking. So honored to celebrate this special day with you!',
+      photoCount: 2,
+      photoLinks: 'https://drive.google.com/file/d/mock-photo-3/view',
+      driveFolder: 'Guest Uploads'
+    },
+    {
+      entryId: 'GB103',
+      submittedAt: '2026-09-12 06:40 PM',
+      guestName: 'Uncle Bob & Aunt Sarah',
+      message: 'Welcome to the family! Can not wait to dance the night away!',
+      photoCount: 1,
+      photoLinks: 'https://drive.google.com/file/d/mock-photo-4/view',
+      driveFolder: 'Guest Uploads'
+    }
   ]
 };
 

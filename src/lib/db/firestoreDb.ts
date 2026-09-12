@@ -61,7 +61,7 @@ export interface UserDocument {
 
 export interface GuestUploadRecord {
   id: string; // Document ID (upload_{timestamp}_{rand})
-  spreadsheetId: string;
+  spreadsheetId?: string;
   userEmail?: string;
   uploaderName: string;
   caption: string;

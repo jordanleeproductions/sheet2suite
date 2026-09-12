@@ -251,6 +251,12 @@
     - Desktop: `PHOTOGRAPHER SHOT LIST` $\rightarrow$ Mobile: `SHOT LIST`
     - Desktop: `GUESTBOOK & PHOTO NOTES` $\rightarrow$ Mobile: `GUESTBOOK`
   - Eliminated horizontal scrolling, text wrapping, and truncated badge counters on mobile devices while maintaining dynamic counters (`{shots.length}`, `{guestUploads.length}`) and desktop label fidelity.
+- [x] **[PHOTO-GUESTBOOK-SHEET-TAB] Google Sheet `GUESTBOOK` Tab Integration & Zero-Disappearing Refresh (`mapper.ts`, `sync/route.ts`, `upload/[token]/route.ts`, `PhotoShotListManager.tsx`, `vow/page.tsx`):**
+  - Redesigned guest photo uploads and comments so they save directly to a dedicated `GUESTBOOK` tab in Google Sheets instead of purely relying on ephemeral serverless container storage (`guest_uploads`) or Google Drive text files.
+  - Standardized `GUESTBOOK` sheet schema: `Entry ID`, `Date & Time`, `Guest Name`, `Message / Wishes`, `Photo Count`, `Photo Links`, `Drive Folder`.
+  - Added dynamic tab auto-provisioning with styled header rows if the tab does not yet exist in older user sheets.
+  - Wired bidirectional sync (`GET /api/sync` and `POST /api/sync`) for `guestbook` mapping, allowing full CRUD and deletion moderation directly from the web app.
+  - Connected `weddingData.guestbook` directly to `PhotoShotListManager.tsx`, permanently fixing the bug where the guest count (`GUESTBOOK (0)`) disappeared upon refreshing the browser.
 
 ---
 
@@ -465,6 +471,16 @@
   - **Vendor Directory Integration**: Automatically pulls vendor business names and categories from `weddingData.vendors` into the suggestion pool.
   - **Event Card & UP NEXT Badges**: Renders individual styled role badges on timeline cards and the UP NEXT active banner with 1-click timeline filtering.
   - **100% Backward Compatibility**: Stores multiple roles as clean comma-separated values in Google Sheets Column E (`Responsibility / Vendors`), ensuring seamless sync, export, and Print Studio parity.
+- [x] **[TIMELINE-MODAL-REDESIGN] Desktop & Mobile Add/Edit Timeline Moment UX Overhaul (`TimelineManager.tsx`, `TimeDialPicker.tsx`):**
+  - **Expanded Desktop Canvas**: Widened modal width from a cramped 520px to 820px (`max-width: 820px; width: 94vw`), giving dual time pickers and input fields generous visual breathing room and eliminating truncated combobox placeholders (`"Type custom name or sea"`).
+  - **4 Structured Information Cards**: Structured the modal body into distinct elevated cards:
+    1. *Timing & Duration*: Dual start/end time pickers side-by-side, dynamic duration badge (`⏱ EST. DURATION: X hrs Y mins`), and past-midnight rollover alerts.
+    2. *Moment & Venue Location*: Side-by-side grid for Event Moment Name and Venue Location with `MapPin` icon.
+    3. *Assigned Roles & Vendors*: Active role chips with count, dedicated search bar with clear button, custom `+ ADD` pill button, quick-toggle popular role pills (`+` / `✓`), and an expandable role directory catalog with styled checkboxes.
+    4. *Notes & Vendor Guidelines*: Spacious textarea with `FileText` icon for cues, setup notes, and vendor instructions.
+  - **TimeDialPicker Duration Sub-row Separation**: Separated minute presets (`:00`, `:15`, `:30`, `:45`) from duration offsets (`+30m`, `+45m`, `+1h`, `+1.5h`, `+2h`) with a dashed divider and dedicated styling to prevent chip stacking clutter.
+  - **High-Contrast Action Footer**: Redesigned the sticky footer with high-contrast red `DELETE` button (`#dc2626` background, `#ffffff` text, `Trash2` icon) to fix illegible black-on-red text, paired with `CANCEL`, `SAVE & ADD NEXT`, and primary `SAVE MOMENT / SAVE CHANGES`.
+  - **Mobile Responsive Design**: Modal automatically adapts to a single-column layout with safe-area padding and touch-friendly tap targets on mobile viewports (< 768px).
 
 ---
 

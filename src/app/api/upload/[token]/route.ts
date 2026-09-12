@@ -121,10 +121,10 @@ export async function POST(
 
     console.log(`Received ${files.length} valid photo/video upload(s) from "${uploaderName}" for spreadsheet: ${payload.spreadsheetId}`);
 
-    // Resolve Google Drive Client for the couple's workspace
+    // Resolve Google Drive & Sheets Client for the couple's workspace
     let drive: any = null;
+    let auth: any = null;
     try {
-      let auth: any = null;
       if (payload.spreadsheetId) {
         try {
           auth = await getGoogleAuthAsync(undefined, payload.spreadsheetId);
@@ -310,6 +310,104 @@ export async function POST(
         } catch (driveTxtErr) {
           console.warn('[Upload Route] Note file sync warning:', driveTxtErr);
         }
+      }
+
+      // 6. Record submission directly into Google Sheet 'GUESTBOOK' tab (Single Source of Truth)
+      if (payload.spreadsheetId && auth) {
+        try {
+          const sheets = google.sheets({ version: 'v4', auth });
+          const spreadsheetId = payload.spreadsheetId;
+
+          const entryId = `GB${Date.now().toString().slice(-6)}`;
+          const timeFormatted = new Date().toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          });
+
+          const photoLinks = (uploadedFiles || [])
+            .map(f => f.webViewLink || '')
+            .filter(Boolean)
+            .join('\n');
+
+          const rowValues = [
+            entryId,
+            timeFormatted,
+            uploaderName.trim() || 'Anonymous Guest',
+            caption.trim() || '',
+            files.length,
+            photoLinks,
+            payload.folderName || 'Guest Uploads',
+          ];
+
+          // Check if GUESTBOOK tab exists; if not, auto-create it with headers
+          const metaRes = await sheets.spreadsheets.get({ spreadsheetId });
+          const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
+          const hasGuestbookTab = availableTitles.some(t => t.toLowerCase() === 'guestbook' || t.toLowerCase() === 'guest book');
+
+          if (!hasGuestbookTab) {
+            try {
+              await sheets.spreadsheets.batchUpdate({
+                spreadsheetId,
+                requestBody: {
+                  requests: [
+                    {
+                      addSheet: {
+                        properties: {
+                          title: 'GUESTBOOK',
+                        },
+                      },
+                    },
+                  ],
+                },
+              });
+
+              // Add header row
+              await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: "'GUESTBOOK'!A1:G1",
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {
+                  values: [['Entry ID', 'Date & Time', 'Guest Name', 'Message / Wishes', 'Photo Count', 'Photo Links', 'Drive Folder']],
+                },
+              });
+            } catch (createTabErr) {
+              console.warn('[Upload Route] Could not auto-create GUESTBOOK tab:', createTabErr);
+            }
+          }
+
+          // Append new entry row to GUESTBOOK tab
+          await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: "'GUESTBOOK'!A:G",
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            requestBody: {
+              values: [rowValues],
+            },
+          });
+          console.log(`[Upload Route] Appended guestbook entry "${entryId}" for "${uploaderName}" to GUESTBOOK tab`);
+        } catch (sheetSyncErr) {
+          console.warn('[Upload Route] Could not record entry in GUESTBOOK sheet tab:', sheetSyncErr);
+        }
+      }
+    }
+
+    // Mock Mode Guestbook Support
+    if (payload.spreadsheetId === 'mock-sheet-id-vow-12345') {
+      try {
+        const { mockDatabase } = await import('@/lib/sheets/mockDb');
+        if (!mockDatabase.guestbook) mockDatabase.guestbook = [];
+        mockDatabase.guestbook.unshift({
+          entryId: `GB${Date.now().toString().slice(-4)}`,
+          submittedAt: new Date().toISOString(),
+          guestName: uploaderName.trim() || 'Anonymous Guest',
+          message: caption.trim(),
+          photoCount: files.length,
+          photoLinks: '',
+          driveFolder: payload.folderName || 'Guest Uploads',
+        });
+      } catch (mErr) {
+        console.warn('[Upload Route] Mock guestbook sync error:', mErr);
       }
     }
 

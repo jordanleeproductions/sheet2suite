@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task, PhotoShot, GiftItem, RSVPStatus, KanbanStage } from '@/lib/sheets/types';
+import { WeddingData, Guest, BudgetItem, ScheduleEvent, Task, PhotoShot, GiftItem, RSVPStatus, KanbanStage, GuestbookEntry } from '@/lib/sheets/types';
 import DashboardMetrics, { ModuleConfig } from '@/components/DashboardMetrics';
 import GuestListManager from '@/components/GuestListManager';
 import BudgetLedgerManager from '@/components/BudgetLedgerManager';
@@ -879,7 +879,7 @@ export default function Sheet2VowDashboard() {
   };
 
   // Sync / Update specific sheet category back to Google Sheets
-  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'tables' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts' | 'catering', updatedData: any) => {
+  const syncUpdate = async (sheetType: 'dashboard' | 'guests' | 'tables' | 'budget' | 'expenses' | 'schedule' | 'tasks' | 'music' | 'vendors' | 'photos' | 'gifts' | 'catering' | 'guestbook', updatedData: any) => {
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
@@ -2773,7 +2773,9 @@ export default function Sheet2VowDashboard() {
                 <PhotoShotListManager
                   photos={weddingData.photos || []}
                   vendors={weddingData.vendors || []}
+                  guestbook={weddingData.guestbook || []}
                   onUpdatePhotos={(data: PhotoShot[]) => syncUpdate('photos', data)}
+                  onUpdateGuestbook={(data: GuestbookEntry[]) => syncUpdate('guestbook', data)}
                   isSyncing={isSyncing}
                   spreadsheetId={spreadsheetId}
                   weddingName={weddingName}

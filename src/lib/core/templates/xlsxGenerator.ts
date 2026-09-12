@@ -185,7 +185,29 @@ export async function generateMasterXlsxBuffer(coupleName: string = 'Alex & Sam'
   ];
   styleHeaderRow(giftSheet);
 
-  // Tab 10: Settings
+  // Tab 10: GUESTBOOK
+  const guestbookSheet = workbook.addWorksheet('GUESTBOOK');
+  guestbookSheet.columns = [
+    { header: 'Entry ID', key: 'entryId', width: 14 },
+    { header: 'Date & Time', key: 'submittedAt', width: 22 },
+    { header: 'Guest Name', key: 'guestName', width: 20 },
+    { header: 'Message / Wishes', key: 'message', width: 36 },
+    { header: 'Photo Count', key: 'photoCount', width: 14 },
+    { header: 'Photo Links', key: 'photoLinks', width: 30 },
+    { header: 'Drive Folder', key: 'driveFolder', width: 22 },
+  ];
+  styleHeaderRow(guestbookSheet);
+  guestbookSheet.addRow({
+    entryId: 'GB101',
+    submittedAt: 'Sep 12, 2026, 4:30 PM',
+    guestName: 'Jessica Martinez',
+    message: 'Wishing you both a lifetime of love and laughter! So happy to celebrate with you.',
+    photoCount: 3,
+    photoLinks: '',
+    driveFolder: 'Guest Uploads',
+  });
+
+  // Tab 11: Settings
   const settingsSheet = workbook.addWorksheet('Settings');
   settingsSheet.columns = [
     { header: 'Property', key: 'prop', width: 20 },

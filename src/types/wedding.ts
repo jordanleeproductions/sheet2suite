@@ -156,6 +156,16 @@ export interface MenuItem {
   isGuestChoice?: boolean;
 }
 
+export interface GuestbookEntry {
+  entryId: string;
+  submittedAt: string;
+  guestName: string;
+  message: string;
+  photoCount: number;
+  photoLinks: string;
+  driveFolder?: string;
+}
+
 export interface EnabledModules {
   metrics: boolean;
   guests: boolean;
@@ -171,6 +181,7 @@ export interface EnabledModules {
   thanks: boolean;
   print: boolean;
   catering: boolean;
+  guestbook?: boolean;
 }
 
 export interface WeddingData {
@@ -186,4 +197,5 @@ export interface WeddingData {
   photos: PhotoShot[];
   gifts: GiftItem[];
   catering?: MenuItem[];
+  guestbook?: GuestbookEntry[];
 }

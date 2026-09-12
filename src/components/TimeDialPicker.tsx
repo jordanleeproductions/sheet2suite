@@ -203,30 +203,34 @@ export default function TimeDialPicker({
       {/* Quick 15-Minute Rounding Chips */}
       <div style={styles.chipsRow}>
         <span style={styles.chipsLabel}>MIN:</span>
-        {['00', '15', '30', '45'].map((min) => {
-          const isSelected = currentMinute === min;
-          return (
-            <button
-              key={min}
-              type="button"
-              onClick={() => handleSetMinute(min)}
-              style={{
-                ...styles.minuteChip,
-                backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-surface, #ffffff)',
-                color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
-                borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
-                fontWeight: isSelected ? 700 : 500,
-              }}
-            >
-              :{min}
-            </button>
-          );
-        })}
+        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          {['00', '15', '30', '45'].map((min) => {
+            const isSelected = currentMinute === min;
+            return (
+              <button
+                key={min}
+                type="button"
+                onClick={() => handleSetMinute(min)}
+                style={{
+                  ...styles.minuteChip,
+                  backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-surface, #ffffff)',
+                  color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                  borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
+                  fontWeight: isSelected ? 700 : 500,
+                }}
+              >
+                :{min}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* Smart duration offsets if reference start time is provided */}
-        {referenceStartTime && (
-          <div style={styles.durationOffsetsGroup}>
-            <span style={styles.chipsLabel}>+DURATION:</span>
+      {/* Smart duration offsets if reference start time is provided */}
+      {referenceStartTime && (
+        <div style={styles.durationRow}>
+          <span style={styles.chipsLabel}>+ADD DURATION:</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', alignItems: 'center' }}>
             {[
               { label: '+30m', min: 30 },
               { label: '+45m', min: 45 },
@@ -248,8 +252,8 @@ export default function TimeDialPicker({
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -354,14 +358,14 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'all 0.15s ease',
     touchAction: 'manipulation',
   },
-  durationOffsetsGroup: {
+  durationRow: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.3rem',
-    marginLeft: '0.25rem',
-    borderLeft: '1px solid var(--color-border)',
-    paddingLeft: '0.35rem',
+    gap: '0.35rem',
+    marginTop: '0.25rem',
+    paddingTop: '0.25rem',
+    borderTop: '1px dashed var(--color-border, #e5e7eb)',
   },
   durationChip: {
     padding: '0.25rem 0.45rem',

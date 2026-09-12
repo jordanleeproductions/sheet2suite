@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { PhotoShot, Vendor } from '@/lib/sheets/types';
+import { PhotoShot, Vendor, GuestbookEntry } from '@/lib/sheets/types';
 import { 
   Camera, 
   Plus, 
@@ -39,7 +39,9 @@ import type { GuestUploadRecord } from '@/lib/db/firestoreDb';
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
   vendors?: Vendor[];
+  guestbook?: GuestbookEntry[];
   onUpdatePhotos: (updatedPhotos: PhotoShot[]) => Promise<void>;
+  onUpdateGuestbook?: (updatedGuestbook: GuestbookEntry[]) => Promise<void>;
   isSyncing?: boolean;
   spreadsheetId?: string;
   weddingName?: string;
@@ -52,7 +54,9 @@ interface PhotoShotListManagerProps {
 export default function PhotoShotListManager({ 
   photos, 
   vendors = [], 
+  guestbook = [],
   onUpdatePhotos, 
+  onUpdateGuestbook,
   isSyncing,
   spreadsheetId,
   weddingName,
@@ -69,8 +73,29 @@ export default function PhotoShotListManager({
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
 
-  // Guest Uploads State
-  const [guestUploads, setGuestUploads] = useState<GuestUploadRecord[]>([]);
+  // Helper to map a Google Sheet GuestbookEntry to GuestUploadRecord format
+  const mapGuestbookToUploadRecord = (entry: GuestbookEntry): GuestUploadRecord => {
+    const rawLinks = (entry.photoLinks || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    return {
+      id: entry.entryId,
+      spreadsheetId: spreadsheetId || '',
+      uploaderName: entry.guestName || 'Anonymous Guest',
+      caption: entry.message || '',
+      fileCount: entry.photoCount || rawLinks.length || 0,
+      files: rawLinks.map((link, idx) => ({
+        id: `${entry.entryId}_${idx}`,
+        name: `Photo ${idx + 1}`,
+        webViewLink: link,
+      })),
+      folderName: entry.driveFolder || 'Guest Uploads',
+      uploadedAt: entry.submittedAt,
+    };
+  };
+
+  // Guest Uploads State (Single Source of Truth: Google Sheet 'GUESTBOOK' tab via props)
+  const [guestUploads, setGuestUploads] = useState<GuestUploadRecord[]>(() => {
+    return (guestbook || []).map(mapGuestbookToUploadRecord);
+  });
   const [isLoadingGuestUploads, setIsLoadingGuestUploads] = useState<boolean>(false);
   const [guestSearchTerm, setGuestSearchTerm] = useState<string>('');
   const [onlyWithNotes, setOnlyWithNotes] = useState<boolean>(false);
@@ -408,7 +433,14 @@ export default function PhotoShotListManager({
     })})`;
   };
 
-  // Fetch Guest Upload Records from /api/drive/guest-uploads
+  // Sync guestUploads whenever the authoritative guestbook prop from Google Sheet updates
+  React.useEffect(() => {
+    if (guestbook && Array.isArray(guestbook) && guestbook.length > 0) {
+      setGuestUploads(guestbook.map(mapGuestbookToUploadRecord));
+    }
+  }, [guestbook]);
+
+  // Fetch Guest Upload Records from /api/drive/guest-uploads (secondary / fallback)
   const fetchGuestUploads = React.useCallback(async () => {
     setIsLoadingGuestUploads(true);
     try {
@@ -418,7 +450,12 @@ export default function PhotoShotListManager({
       const res = await fetch(`/api/drive/guest-uploads?${params.toString()}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.uploads)) {
-        setGuestUploads(data.uploads);
+        setGuestUploads(prev => {
+          if (prev.length === 0) return data.uploads;
+          const existingIds = new Set(prev.map(p => p.id));
+          const newItems = data.uploads.filter((u: GuestUploadRecord) => !existingIds.has(u.id));
+          return [...prev, ...newItems];
+        });
       }
     } catch (err) {
       console.warn('[PhotoShotListManager] Could not fetch guest uploads:', err);
@@ -436,16 +473,21 @@ export default function PhotoShotListManager({
     if (!uploadToDelete) return;
     setIsDeletingUpload(true);
     try {
-      const res = await fetch(`/api/drive/guest-uploads?id=${encodeURIComponent(uploadToDelete.id)}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.success) {
-        setGuestUploads(prev => prev.filter(u => u.id !== uploadToDelete.id));
-        setUploadToDelete(null);
-      } else {
-        alert(data.error || 'Failed to delete guest entry');
+      // 1. Delete from Google Sheet GUESTBOOK tab (Single Source of Truth)
+      if (onUpdateGuestbook && guestbook) {
+        const updated = guestbook.filter(g => g.entryId !== uploadToDelete.id);
+        await onUpdateGuestbook(updated);
       }
+
+      // 2. Also delete from Firestore if present
+      try {
+        await fetch(`/api/drive/guest-uploads?id=${encodeURIComponent(uploadToDelete.id)}`, {
+          method: 'DELETE',
+        });
+      } catch (_) {}
+
+      setGuestUploads(prev => prev.filter(u => u.id !== uploadToDelete.id));
+      setUploadToDelete(null);
     } catch (err: any) {
       alert(err?.message || 'Failed to delete guest entry');
     } finally {
