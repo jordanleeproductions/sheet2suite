@@ -408,6 +408,11 @@
   - Search input takes 50% width with integrated clear button (`✕`).
   - Added interactive category sort dropdown (`Alphabetical`, `By Budget`, `By Spent`, `By Remaining`) with custom `ArrowUpDown` icon and `localStorage` persistence (`'s2v_budget_master_sort'`).
   - Dynamically sorts `displayedMasterStats` by category name A-Z, allocated budget ceiling (descending), total spent outlay (descending), or remaining cushion (descending).
+- [x] **[FINANCIALS-DONUT-MOBILE-RESPONSIVE] Mobile Responsive Donut Stats Cards & Overflow Prevention (`BudgetLedgerManager.tsx`):**
+  - Resolved horizontal bleeding of the 3 summary cards (Total Budget, Total Spent, Remaining) in mobile view under the Donut utilization gauge.
+  - Constrained `.budget-meter-card` with `overflow: hidden; max-width: 100%; box-sizing: border-box`.
+  - Configured `.budget-donut-stats-grid` with `grid-template-columns: repeat(3, minmax(0, 1fr))`, `gap: 0.35rem`, and `min-width: 0` to ensure tiles never expand beyond the mobile container.
+  - Compacted tile padding (`0.45rem 0.35rem`) and text labels (`0.575rem` labels, `0.85rem` values) with ellipsis truncation and native `title` hover tooltips on values for narrow screens down to 320px.
 
 ---
 
@@ -466,6 +471,7 @@ Pending roadmap features and backlog items have been reorganized into specialize
 | **[BUG-3]** | Budget / Expenses (`BudgetLedgerManager.tsx`, `mapper.ts`, `sync/route.ts`) | Google Sheets UNFORMATTED_VALUE query returns date serial integers (e.g. `46276`) for Purchase Date, triggering red data-validation flags when re-saved as integers. Resolved with `parseDateOrSerial` day-zero calculation and explicit Google Sheets `DATE` column formatting. | High | Resolved | 2026-09-11 |
 | **[BUG-4]** | Global Modals (`sessionCheck.ts`, `route.ts`) | Expired Google OAuth tokens caused users to lose form data upon submitting Add/Edit/Delete dialogs. Resolved by preemptively checking `/api/auth/session` prior to rendering creation/edit modals and triggering reauth flow cleanly. | High | Resolved | 2026-09-11 |
 | **[BUG-5]** | Mobile Financials Drill-Down (`BudgetLedgerManager.tsx`) | Category slide-up drill-down sheet was anchored to `bottom: 0` without accounting for the 62px fixed mobile bottom nav bar, causing the bottom action button to be obscured. Resolved with `bottom: calc(62px + env(safe-area-inset-bottom, 0px))` docking, adjusted max-height, and clean border delineation. | High | Resolved | 2026-09-11 |
+| **[BUG-6]** | Financials Mobile Donut View (`BudgetLedgerManager.tsx`) | In mobile mode on the financials page with Donut utilization selected, the 3 metric cards under the donut bled over the right border of the parent card. Resolved with `repeat(3, minmax(0, 1fr))`, `min-width: 0`, responsive padding, text truncation, and card `overflow: hidden`. | Medium | Resolved | 2026-09-11 |
 
 ---
 

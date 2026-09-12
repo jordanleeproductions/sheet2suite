@@ -882,6 +882,65 @@ export default function BudgetLedgerManager({
             background-color: var(--color-surface) !important;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
             padding: 0.85rem 1rem !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            max-width: 100% !important;
+          }
+          .budget-donut-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            gap: 0.65rem !important;
+            padding: 0.25rem 0 !important;
+            justify-content: center !important;
+          }
+          .budget-donut-chart-wrapper {
+            width: 110px !important;
+            height: 110px !important;
+          }
+          .donut-center-percent {
+            font-size: 1.15rem !important;
+          }
+          .budget-donut-stats-grid {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            gap: 0.35rem !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            flex: 1 1 100% !important;
+          }
+          .budget-donut-tile {
+            min-width: 0 !important;
+            padding: 0.45rem 0.35rem !important;
+            box-sizing: border-box !important;
+            text-align: center !important;
+            align-items: center !important;
+            overflow: hidden !important;
+          }
+          .budget-donut-tile .snapshot-tile-label {
+            font-size: 0.575rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            width: 100% !important;
+            display: block !important;
+          }
+          .budget-donut-tile .snapshot-tile-value {
+            font-size: 0.85rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            width: 100% !important;
+            display: block !important;
+          }
+          .budget-donut-tile .snapshot-tile-sub {
+            font-size: 0.575rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            width: 100% !important;
+            display: block !important;
           }
         }
 
@@ -1330,7 +1389,7 @@ export default function BudgetLedgerManager({
 
         {/* Progress Track / Donut Chart View */}
         {meterMode === 'donut' ? (
-          <div style={{
+          <div className="budget-donut-container" style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-around',
@@ -1339,8 +1398,8 @@ export default function BudgetLedgerManager({
             padding: '0.75rem 0.5rem',
           }}>
             {/* SVG Donut Chart */}
-            <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
-              <svg width="130" height="130" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+            <div className="budget-donut-chart-wrapper" style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
+              <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
                 {/* Background Ring Track */}
                 <circle
                   cx="50"
@@ -1377,7 +1436,7 @@ export default function BudgetLedgerManager({
                 textAlign: 'center',
                 pointerEvents: 'none',
               }}>
-                <span style={{
+                <span className="donut-center-percent" style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: isUnsetMode ? '0.85rem' : '1.3rem',
                   fontWeight: 800,
@@ -1399,37 +1458,38 @@ export default function BudgetLedgerManager({
             </div>
 
             {/* Donut Side Stats Grid */}
-            <div style={{
+            <div className="budget-donut-stats-grid" style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               gap: '0.75rem',
               flex: '1 1 300px',
+              minWidth: 0,
             }}>
-              <div style={styles.snapshotTile}>
-                <span style={styles.snapshotTileLabel}>TOTAL BUDGET</span>
-                <span style={styles.snapshotTileValue}>
+              <div className="budget-donut-tile" style={styles.snapshotTile} title={isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}>
+                <span className="snapshot-tile-label" style={styles.snapshotTileLabel}>TOTAL BUDGET</span>
+                <span className="snapshot-tile-value" style={styles.snapshotTileValue}>
                   {isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}
                 </span>
-                <span style={styles.snapshotTileSub}>
+                <span className="snapshot-tile-sub" style={styles.snapshotTileSub}>
                   {isUnsetMode ? 'No Hard Limit' : isFixedCapMode ? 'Fixed Master Cap' : 'Dynamic Category Sum'}
                 </span>
               </div>
-              <div style={styles.snapshotTile}>
-                <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
-                <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>
+              <div className="budget-donut-tile" style={styles.snapshotTile} title={formatCurrency(totalActual, currency)}>
+                <span className="snapshot-tile-label" style={styles.snapshotTileLabel}>TOTAL SPENT</span>
+                <span className="snapshot-tile-value" style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>
                   {formatCurrency(totalActual, currency)}
                 </span>
-                <span style={styles.snapshotTileSub}>{expenses.length} purchase{expenses.length === 1 ? '' : 's'}</span>
+                <span className="snapshot-tile-sub" style={styles.snapshotTileSub}>{expenses.length} purchase{expenses.length === 1 ? '' : 's'}</span>
               </div>
-              <div style={styles.snapshotTile}>
-                <span style={styles.snapshotTileLabel}>REMAINING</span>
-                <span style={{
+              <div className="budget-donut-tile" style={styles.snapshotTile} title={isUnsetMode ? 'Open' : formatCurrency(Math.abs(overallHeadroom), currency)}>
+                <span className="snapshot-tile-label" style={styles.snapshotTileLabel}>REMAINING</span>
+                <span className="snapshot-tile-value" style={{
                   ...styles.snapshotTileValue,
                   color: isOverallOverBudget ? 'var(--color-red)' : 'var(--color-green, #10b981)'
                 }}>
                   {isUnsetMode ? 'Open' : formatCurrency(Math.abs(overallHeadroom), currency)}
                 </span>
-                <span style={{
+                <span className="snapshot-tile-sub" style={{
                   ...styles.snapshotTileSub,
                   color: isOverallOverBudget ? '#b91c1c' : '#15803d',
                   fontWeight: 700
