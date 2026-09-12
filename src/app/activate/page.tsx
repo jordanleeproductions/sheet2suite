@@ -38,12 +38,19 @@ export default function ActivationPage() {
   const [showDrivePickerModal, setShowDrivePickerModal] = useState<boolean>(false);
   const [driveFolder, setDriveFolder] = useState('My Drive / Sheet2Suite / Sheet2Vow');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [detectedWorkspace, setDetectedWorkspace] = useState<any | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get('email');
       const productParam = params.get('product');
+      const sheetParam = params.get('spreadsheetId') || params.get('sheetId');
+
+      if (sheetParam) {
+        router.push(`/vow?spreadsheetId=${encodeURIComponent(sheetParam)}`);
+        return;
+      }
 
       if (emailParam) setEmail(emailParam);
       if (productParam) setTargetProductCode(productParam.toUpperCase());
@@ -59,6 +66,19 @@ export default function ActivationPage() {
       if (savedToken) setGoogleToken(savedToken);
       if (savedFolder) setDriveFolder(savedFolder);
 
+      // Check if user already has an active or co-planned workspace
+      const lookupEmail = emailParam || savedEmail;
+      if (lookupEmail) {
+        fetch(`/api/workspaces?email=${encodeURIComponent(lookupEmail)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
+              setDetectedWorkspace(data.workspaces[0]);
+            }
+          })
+          .catch(() => {});
+      }
+
       // Listen for popup postMessage completion
       const handleAuthMessage = (event: MessageEvent) => {
         if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
@@ -68,6 +88,15 @@ export default function ActivationPage() {
             setEmail(user.email);
             setIsGoogleConnected(true);
             localStorage.setItem('s2v_google_email', user.email);
+
+            fetch(`/api/workspaces?email=${encodeURIComponent(user.email)}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
+                  setDetectedWorkspace(data.workspaces[0]);
+                }
+              })
+              .catch(() => {});
           }
           if (user?.name) {
             localStorage.setItem('s2v_google_name', user.name);
@@ -85,7 +114,7 @@ export default function ActivationPage() {
       window.addEventListener('message', handleAuthMessage);
       return () => window.removeEventListener('message', handleAuthMessage);
     }
-  }, []);
+  }, [router]);
 
   const activeProduct = SUITE_PRODUCTS[targetProductCode] || SUITE_PRODUCTS.SHEET2VOW;
 
@@ -190,13 +219,17 @@ export default function ActivationPage() {
       const createdSpreadsheetId = provData.provisioned.spreadsheetId;
       const userEmailToSave = email || googleEmail || 'user@sheet2suite.com';
 
+      const resolvedPartnerEmail = productConfig.admin2Email || productConfig.partner2?.email || undefined;
+      const coPlannersToSave = resolvedPartnerEmail ? [resolvedPartnerEmail] : [];
+
       // Step 2: Register workspace in Sheet2Suite database
       await fetch('/api/workspaces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userEmail: userEmailToSave,
-          partnerEmail: productConfig.admin1Email || undefined,
+          partnerEmail: resolvedPartnerEmail,
+          coPlanners: coPlannersToSave,
           spreadsheetId: createdSpreadsheetId,
           spreadsheetName: provData.provisioned?.title || `${workspaceTitle} Database`,
           driveFolderPath: driveFolder,
@@ -218,7 +251,7 @@ export default function ActivationPage() {
         if (productConfig.budget !== undefined) localStorage.setItem('s2v_budget', String(productConfig.budget));
         if (productConfig.currency) localStorage.setItem('s2v_currency', productConfig.currency);
         if (productConfig.modules) localStorage.setItem('s2v_enabled_modules', JSON.stringify(productConfig.modules));
-        if (productConfig.admin1Email) localStorage.setItem('s2v_spouse_email', productConfig.admin1Email);
+        if (resolvedPartnerEmail) localStorage.setItem('s2v_spouse_email', resolvedPartnerEmail);
         if (productConfig.styleTheme) localStorage.setItem('s2v_style_theme', productConfig.styleTheme);
         if (productConfig.colorMode) localStorage.setItem('s2v_theme', productConfig.colorMode);
         if (productConfig.showTopNav !== undefined) localStorage.setItem('s2v_show_top_nav', String(productConfig.showTopNav));
@@ -262,6 +295,59 @@ export default function ActivationPage() {
             {step === 3 && 'Setup Complete! Launching your canvas...'}
           </p>
         </div>
+
+        {/* Workspace Access Detected Banner */}
+        {detectedWorkspace && step === 0 && (
+          <div
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              border: '2px solid #10b981',
+              borderRadius: '12px',
+              padding: '1rem 1.25rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Sparkles size={22} style={{ color: '#059669', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#065f46' }}>
+                  💍 Workspace / Partner Access Detected!
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#047857' }}>
+                  You have collaborator access to <strong>{detectedWorkspace.spreadsheetName || 'Wedding Database'}</strong>. No Etsy order verification required!
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const target = detectedWorkspace.productName?.toLowerCase().includes('vow') ? 'vow' : 'vow';
+                router.push(`/${target}?spreadsheetId=${encodeURIComponent(detectedWorkspace.spreadsheetId)}`);
+              }}
+              style={{
+                backgroundColor: '#059669',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.6rem 1.1rem',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <span>ENTER WORKSPACE</span>
+              <ArrowRight size={15} />
+            </button>
+          </div>
+        )}
 
         {/* STEP 0: License & Order Verification */}
         {step === 0 && (

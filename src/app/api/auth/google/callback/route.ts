@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
+import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth, getGoogleAuthAsync } from '@/lib/sheets/client';
 import { LocalLicensingDb } from '@/lib/db/licensingDb';
 import { LocalFirestore } from '@/lib/db/firestoreDb';
 
@@ -88,8 +88,8 @@ export async function GET(req: NextRequest) {
         vowFolderId = createVow.data.id!;
       }
 
-      // Check local database for existing registered workspaces for this user email
-      const existingDbWorkspaces = LocalLicensingDb.getWorkspacesByEmail(userEmail);
+      // Check database for existing registered workspaces for this user email or co-planner status
+      const existingDbWorkspaces = await LocalLicensingDb.getWorkspacesByEmailAsync(userEmail);
       const spreadsheetId: string | undefined = existingDbWorkspaces[0]?.spreadsheetId;
       const webViewLink: string | undefined = existingDbWorkspaces[0]?.webViewLink;
 
@@ -119,7 +119,45 @@ export async function GET(req: NextRequest) {
       } catch (e) {}
     }
 
+    // If partner/co-planner arrived via invite link carrying spreadsheetId, link them to the workspace
+    if (stateSpreadsheetId && userEmail) {
+      try {
+        await LocalLicensingDb.addCoPlannerAsync(stateSpreadsheetId, userEmail);
+      } catch (cpErr) {
+        console.warn('[OAuth] Could not automatically link co-planner in workspace:', cpErr);
+      }
+
+      // Automatically grant Google Drive edit permissions using workspace owner / server credentials
+      try {
+        const driveAuth = await getGoogleAuthAsync(undefined, stateSpreadsheetId);
+        const driveClient = google.drive({ version: 'v3', auth: driveAuth });
+        await driveClient.permissions.create({
+          fileId: stateSpreadsheetId,
+          sendNotificationEmail: false,
+          requestBody: {
+            role: 'writer',
+            type: 'user',
+            emailAddress: userEmail.trim().toLowerCase(),
+          },
+        });
+        console.log(`[OAuth] Automatically granted Drive writer permission to co-planner ${userEmail} on ${stateSpreadsheetId}`);
+      } catch (permErr: any) {
+        console.warn('[OAuth] Note on auto-granting drive permission to co-planner:', permErr?.message);
+      }
+    }
+
     const effectiveSheetId = stateSpreadsheetId || provisionData?.spreadsheetId;
+    const hasExistingWorkspace = Boolean(effectiveSheetId || provisionData?.hasExistingWorkspace);
+
+    if (effectiveSheetId) {
+      provisionData = {
+        ...provisionData,
+        hasExistingWorkspace: true,
+        spreadsheetId: effectiveSheetId,
+        folderPath: provisionData?.folderPath || 'My Drive / Sheet2Suite / Sheet2Vow',
+        webViewLink: provisionData?.webViewLink || `https://docs.google.com/spreadsheets/d/${effectiveSheetId}/edit`,
+      };
+    }
 
     // Persist refresh token and token metadata in Firestore / Local storage for long-lived silent re-auth
     try {
@@ -159,6 +197,7 @@ export async function GET(req: NextRequest) {
       accessToken: tokens.access_token,
       provision: {
         ...provisionData,
+        hasExistingWorkspace: hasExistingWorkspace,
         spreadsheetId: effectiveSheetId || provisionData?.spreadsheetId,
       },
     });

@@ -35,6 +35,8 @@ export default function ShareModal({
   const [scope, setScope] = useState<ShareScope>(initialScope);
   const [expiresInDays, setExpiresInDays] = useState<number>(30);
   const [copied, setCopied] = useState(false);
+  const [partnerCopied, setPartnerCopied] = useState(false);
+  const [showPartnerSharePicker, setShowPartnerSharePicker] = useState(false);
 
   // Scope labels mapping
   const scopeLabels: Record<ShareScope, string> = {
@@ -105,7 +107,7 @@ export default function ShareModal({
         <div style={styles.header} className="modalHeader">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Share2 size={20} style={{ color: 'var(--color-primary)' }} />
-            <h3 style={styles.title}>Create Vendor Share Link</h3>
+            <h3 style={styles.title}>Share & Collaborate</h3>
           </div>
           <button style={styles.closeBtn} onClick={onClose} title="Cancel and close">
             <X size={20} />
@@ -113,6 +115,213 @@ export default function ShareModal({
         </div>
 
         <div style={styles.body}>
+          {/* Partner & Co-Planner Workspace Sharing Banner */}
+          {(() => {
+            const activeSheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+            const partnerUrl = typeof window !== 'undefined'
+              ? `${window.location.origin}/vow?spreadsheetId=${encodeURIComponent(activeSheetId)}`
+              : `/vow?spreadsheetId=${activeSheetId}`;
+            const weddingTitle = weddingName || 'Our Wedding';
+            const shareTitle = `${weddingTitle} - Co-Planner Workspace Invitation`;
+            const shareText = `Hi! Join me as an authorized co-planner on Sheet2Vow for ${weddingTitle}.\nAccess our live wedding database workspace: ${partnerUrl}`;
+            const emailSubject = `${weddingTitle} - Co-Planning Invite`;
+            const emailBody = `Hi! Join me as an authorized co-planner on Sheet2Vow for ${weddingTitle}.\n\nAccess your shared wedding workspace instantly here:\n${partnerUrl}\n\nSpreadsheet ID: ${activeSheetId}\n\nOnce you open this link and connect with Google, you'll have full co-planner access!`;
+
+            return (
+              <div style={{
+                backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                border: '1px solid var(--color-primary, #0b57d0)',
+                borderRadius: 'var(--border-radius-sm, 8px)',
+                padding: '0.85rem 1rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, minWidth: '220px' }}>
+                    <span style={{ fontSize: '1.25rem' }}>💍</span>
+                    <div>
+                      <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-text, #0f172a)' }}>
+                        Sharing with your Partner or Co-Planner?
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748b)' }}>
+                        Give them full collaborator access to your live wedding database workspace.
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPartnerSharePicker(prev => !prev)}
+                      style={{
+                        backgroundColor: showPartnerSharePicker ? 'var(--color-primary, #0b57d0)' : 'transparent',
+                        color: showPartnerSharePicker ? '#ffffff' : 'var(--color-primary, #0b57d0)',
+                        border: '1px solid var(--color-primary, #0b57d0)',
+                        borderRadius: '6px',
+                        padding: '0.45rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <Share2 size={13} />
+                      <span>{showPartnerSharePicker ? 'CLOSE' : 'SHARE'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(partnerUrl);
+                        setPartnerCopied(true);
+                        setTimeout(() => setPartnerCopied(false), 2500);
+                      }}
+                      style={{
+                        backgroundColor: partnerCopied ? '#059669' : 'var(--color-primary, #0b57d0)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.45rem 0.85rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                    >
+                      {partnerCopied ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{partnerCopied ? 'COPIED!' : 'COPY LINK'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Multi-Channel Options Picker */}
+                {showPartnerSharePicker && (
+                  <div style={{
+                    paddingTop: '0.65rem',
+                    borderTop: '1px solid var(--color-border, #e2e8f0)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-text)' }}>
+                        CHOOSE HOW TO SHARE INVITE:
+                      </span>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)' }}>
+                        Includes Spreadsheet ID
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.4rem' }}>
+                      <a
+                        href={`sms:?&body=${encodeURIComponent(shareText)}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.4rem 0.5rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          color: 'var(--color-text)',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid var(--color-border, #cbd5e1)',
+                          borderRadius: '6px',
+                          textDecoration: 'none',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <span>💬</span>
+                        <span>Text (SMS)</span>
+                      </a>
+
+                      <a
+                        href={`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.4rem 0.5rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          color: 'var(--color-text)',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid var(--color-border, #cbd5e1)',
+                          borderRadius: '6px',
+                          textDecoration: 'none',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <span>✉️</span>
+                        <span>Email</span>
+                      </a>
+
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.4rem 0.5rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          color: '#15803d',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #86efac',
+                          borderRadius: '6px',
+                          textDecoration: 'none',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <span>📱</span>
+                        <span>WhatsApp</span>
+                      </a>
+
+                      {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await navigator.share({
+                                title: shareTitle,
+                                text: shareText,
+                                url: partnerUrl,
+                              });
+                            } catch (_) {}
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: '0.4rem 0.5rem',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            color: 'var(--color-primary)',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid var(--color-primary)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <span>📲</span>
+                          <span>Device Share</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Unconfirmed Draft Warning Banner */}
           <div style={{
             backgroundColor: 'rgba(234, 179, 8, 0.1)',
@@ -126,7 +335,7 @@ export default function ShareModal({
           }}>
             <AlertCircle size={16} style={{ color: '#eab308', flexShrink: 0 }} />
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
-              <strong>Draft Link Mode:</strong> This link will only become active and valid after you click <strong>Activate Link</strong> below.
+              <strong>Vendor Portal Mode:</strong> Vendor share links below will only activate after clicking <strong>Activate Link</strong>.
             </span>
           </div>
 

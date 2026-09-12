@@ -86,7 +86,7 @@ function ensureCollectionDir(collectionName: string): string {
 // Initialize Firebase Admin SDK if in cloud environment or service account exists
 let firestoreInstance: Firestore | null = null;
 
-function getCloudFirestore(): Firestore | null {
+export function getCloudFirestore(): Firestore | null {
   if (firestoreInstance) return firestoreInstance;
 
   try {

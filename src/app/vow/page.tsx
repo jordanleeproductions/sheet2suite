@@ -51,7 +51,15 @@ export default function Sheet2VowDashboard() {
   const handleDirectGoogleAuth = async () => {
     setIsAuthenticating(true);
     try {
-      const sheetParam = spreadsheetId ? `?spreadsheetId=${encodeURIComponent(spreadsheetId)}` : '';
+      const urlSheet = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('spreadsheetId') ||
+          new URLSearchParams(window.location.search).get('sheetId') ||
+          new URLSearchParams(window.location.search).get('id') ||
+          new URLSearchParams(window.location.search).get('sheet')
+        : '';
+      const storedSheet = typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') : '';
+      const targetSheet = spreadsheetId || urlSheet || storedSheet || '';
+      const sheetParam = targetSheet ? `?spreadsheetId=${encodeURIComponent(targetSheet)}` : '';
       const res = await fetch(`/api/auth/google${sheetParam}`);
       const data = await res.json();
 
@@ -92,18 +100,35 @@ export default function Sheet2VowDashboard() {
               }
             }
 
-            const hasExistingWorkspace = provision?.hasExistingWorkspace ?? Boolean(provision?.spreadsheetId);
-            if (hasExistingWorkspace && provision?.spreadsheetId) {
-              setSpreadsheetId(provision.spreadsheetId);
+            const querySheetId = typeof window !== 'undefined'
+              ? new URLSearchParams(window.location.search).get('spreadsheetId') ||
+                new URLSearchParams(window.location.search).get('sheetId') ||
+                new URLSearchParams(window.location.search).get('id') ||
+                new URLSearchParams(window.location.search).get('sheet')
+              : null;
+            const storedSheetId = typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') : null;
+
+            const targetSpreadsheetId = provision?.spreadsheetId || querySheetId || targetSheet || storedSheetId;
+            const hasExistingWorkspace = Boolean(targetSpreadsheetId) || Boolean(provision?.hasExistingWorkspace);
+
+            if (hasExistingWorkspace && targetSpreadsheetId) {
+              setSpreadsheetId(targetSpreadsheetId);
               if (typeof window !== 'undefined') {
-                localStorage.setItem('s2v_spreadsheet_id', provision.spreadsheetId);
+                localStorage.setItem('s2v_spreadsheet_id', targetSpreadsheetId);
                 localStorage.setItem('s2v_is_onboarded', 'true');
+                try {
+                  const currentUrl = new URL(window.location.href);
+                  if (currentUrl.searchParams.get('spreadsheetId') !== targetSpreadsheetId) {
+                    currentUrl.searchParams.set('spreadsheetId', targetSpreadsheetId);
+                    window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+                  }
+                } catch (_) {}
               }
               setIsMockMode(false);
               setIsOnboarded(true);
-              addToast(`Welcome back ${user.email}!`, 'success');
+              addToast(`Welcome ${user?.name ? user.name : 'back'}! Connecting to workspace...`, 'success');
               // Fetch latest metadata (wedding date, location, budget) directly from Google Sheet SETTINGS
-              fetchWeddingData(accessToken, provision.spreadsheetId);
+              fetchWeddingData(accessToken, targetSpreadsheetId);
             } else {
               setSpreadsheetId('');
               setIsMockMode(false);
@@ -468,8 +493,15 @@ export default function Sheet2VowDashboard() {
 
     if (pushToHistory && typeof window !== 'undefined') {
       const hash = `#${tab}${filter ? `?filter=${encodeURIComponent(filter)}` : ''}`;
-      if (window.location.hash !== hash) {
-        window.history.pushState({ tab, filter }, '', hash);
+      const activeSheet = spreadsheetId || localStorage.getItem('s2v_spreadsheet_id') || '';
+      const searchParams = new URLSearchParams(window.location.search);
+      if (activeSheet && !searchParams.get('spreadsheetId') && !searchParams.get('sheetId')) {
+        searchParams.set('spreadsheetId', activeSheet);
+      }
+      const searchStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
+      const targetUrl = `${window.location.pathname}${searchStr}${hash}`;
+      if (window.location.hash !== hash || (activeSheet && !window.location.search.includes('spreadsheetId'))) {
+        window.history.pushState({ tab, filter }, '', targetUrl);
       }
     }
   };
@@ -517,13 +549,20 @@ export default function Sheet2VowDashboard() {
     };
   }, []);
 
-  // Load configuration from local storage on mount
+  // Load configuration from local storage or URL query parameters on mount
   useEffect(() => {
-    const savedSheetId = localStorage.getItem('s2v_spreadsheet_id');
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const urlSheetId = urlParams?.get('spreadsheetId') || urlParams?.get('sheetId') || urlParams?.get('id') || urlParams?.get('sheet');
+    const savedSheetId = urlSheetId || localStorage.getItem('s2v_spreadsheet_id');
+    if (urlSheetId && typeof window !== 'undefined') {
+      localStorage.setItem('s2v_spreadsheet_id', urlSheetId);
+    }
+
     const savedToken = localStorage.getItem('s2v_google_token');
-    const savedOnboarded = localStorage.getItem('s2v_is_onboarded');
     const savedMock = localStorage.getItem('s2v_is_mock');
     const savedDemo = localStorage.getItem('s2v_is_demo');
+    const isOfflineMode = savedMock === 'true' || savedDemo === 'true';
+    const savedOnboarded = (savedToken && (urlSheetId || localStorage.getItem('s2v_is_onboarded') === 'true')) || (isOfflineMode && localStorage.getItem('s2v_is_onboarded') === 'true') ? 'true' : 'false';
     const savedName = localStorage.getItem('s2v_wedding_name');
     const savedDate = localStorage.getItem('s2v_wedding_date');
     const savedStyleTheme = localStorage.getItem('s2v_style_theme');
@@ -551,6 +590,15 @@ export default function Sheet2VowDashboard() {
 
     if (savedSheetId) {
       setSpreadsheetId(savedSheetId);
+      if (typeof window !== 'undefined') {
+        try {
+          const currentUrl = new URL(window.location.href);
+          if (!currentUrl.searchParams.get('spreadsheetId') && !currentUrl.searchParams.get('sheetId')) {
+            currentUrl.searchParams.set('spreadsheetId', savedSheetId);
+            window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+          }
+        } catch (_) {}
+      }
       const localDismissed = localStorage.getItem(`s2v_welcome_dismissed_${savedSheetId}`);
       if (localDismissed === 'true') {
         setHasDismissedWelcomeCard(true);
@@ -2338,6 +2386,7 @@ export default function Sheet2VowDashboard() {
           onOpenGoogleAuth={handleDirectGoogleAuth}
           onExploreDemo={handleExpressOnboard}
           isAuthenticating={isAuthenticating}
+          spreadsheetId={spreadsheetId}
         />
       ) : (
         /* Logged In Dashboard View */

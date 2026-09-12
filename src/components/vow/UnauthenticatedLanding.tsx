@@ -15,13 +15,17 @@ interface UnauthenticatedLandingProps {
   onOpenGoogleAuth: () => void;
   onExploreDemo: () => void;
   isAuthenticating?: boolean;
+  spreadsheetId?: string;
 }
 
 export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
   onOpenGoogleAuth,
   onExploreDemo,
   isAuthenticating = false,
+  spreadsheetId,
 }) => {
+  const isInvited = Boolean(spreadsheetId);
+
   return (
     <div
       style={{
@@ -51,8 +55,8 @@ export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
             alignItems: 'center',
             gap: '0.4rem',
             padding: '0.35rem 0.85rem',
-            backgroundColor: '#e8f0fe',
-            color: '#0b57d0',
+            backgroundColor: isInvited ? '#ecfdf5' : '#e8f0fe',
+            color: isInvited ? '#047857' : '#0b57d0',
             borderRadius: '20px',
             fontSize: '0.75rem',
             fontWeight: 800,
@@ -61,7 +65,7 @@ export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
           }}
         >
           <Sparkles size={15} />
-          <span>GOOGLE SHEETS NATIVE WEDDING PLATFORM</span>
+          <span>{isInvited ? '💍 CO-PLANNER WORKSPACE INVITATION' : 'GOOGLE SHEETS NATIVE WEDDING PLATFORM'}</span>
         </div>
 
         {/* Hero Title */}
@@ -76,7 +80,7 @@ export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
             marginBottom: '0.85rem',
           }}
         >
-          Your Google Sheet is your Wedding Database.
+          {isInvited ? "Join your partner's wedding workspace." : 'Your Google Sheet is your Wedding Database.'}
         </h1>
 
         {/* Subtitle */}
@@ -89,7 +93,9 @@ export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
             lineHeight: 1.6,
           }}
         >
-          A clean digital canvas for spreadsheet purists. Zero proprietary tracking databases — 100% data sovereignty in your personal Google Drive.
+          {isInvited
+            ? "You've been invited to collaborate as an authorized co-planner! Sign in with your Google account to get instant access to the shared guest list, budget, seating chart, and timeline."
+            : 'A clean digital canvas for spreadsheet purists. Zero proprietary tracking databases — 100% data sovereignty in your personal Google Drive.'}
         </p>
 
         {/* Primary Action Buttons */}
@@ -152,35 +158,37 @@ export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Login to Google to Get Started</span>
+                <span>{isInvited ? 'Login with Google to Join Workspace' : 'Login to Google to Get Started'}</span>
                 <ArrowRight size={18} style={{ color: '#5f6368' }} />
               </>
             )}
           </button>
 
-          {/* Instant Demo Exploration */}
-          <button
-            type="button"
-            onClick={onExploreDemo}
-            style={{
-              backgroundColor: '#f8fafc',
-              color: '#0f172a',
-              padding: '0.85rem 1.5rem',
-              borderRadius: '12px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.85rem',
-              fontWeight: 800,
-              fontFamily: 'var(--font-mono, monospace)',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'background-color 0.15s ease',
-            }}
-          >
-            <Zap size={18} style={{ color: '#f59e0b' }} />
-            <span>EXPLORE DEMO WORKSPACE</span>
-          </button>
+          {/* Instant Demo Exploration (only for new self-serve visitors) */}
+          {!isInvited && (
+            <button
+              type="button"
+              onClick={onExploreDemo}
+              style={{
+                backgroundColor: '#f8fafc',
+                color: '#0f172a',
+                padding: '0.85rem 1.5rem',
+                borderRadius: '12px',
+                border: '1px solid #cbd5e1',
+                fontSize: '0.85rem',
+                fontWeight: 800,
+                fontFamily: 'var(--font-mono, monospace)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'background-color 0.15s ease',
+              }}
+            >
+              <Zap size={18} style={{ color: '#f59e0b' }} />
+              <span>EXPLORE DEMO WORKSPACE</span>
+            </button>
+          )}
         </div>
 
         {/* Feature Cards Grid */}

@@ -1,10 +1,11 @@
 import { Sheet2SuiteLicense } from '@/types/licensing';
-import { LocalFirestore, LicenseDocument } from '@/lib/db/firestoreDb';
+import { LocalFirestore, LicenseDocument, getCloudFirestore } from '@/lib/db/firestoreDb';
 
 export interface WorkspaceRecord {
   workspaceId: string;
   userEmail: string;
   partnerEmail?: string;
+  coPlanners?: string[];
   spreadsheetId: string;
   spreadsheetName: string;
   driveFolderPath: string;
@@ -26,9 +27,107 @@ export const LocalLicensingDb = {
     const workspaces = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
     return workspaces.filter(
       (w) =>
-        w.userEmail.toLowerCase() === normalized ||
-        (w.partnerEmail && w.partnerEmail.toLowerCase() === normalized)
+        w.userEmail?.toLowerCase() === normalized ||
+        (w.partnerEmail && w.partnerEmail.toLowerCase() === normalized) ||
+        (w.coPlanners && Array.isArray(w.coPlanners) && w.coPlanners.some((cp) => cp.trim().toLowerCase() === normalized))
     );
+  },
+
+  // 1b. Async query checking Cloud Firestore + local fallback
+  async getWorkspacesByEmailAsync(email: string): Promise<WorkspaceRecord[]> {
+    const normalized = email.trim().toLowerCase();
+    const cloudDb = getCloudFirestore();
+    const results: WorkspaceRecord[] = [];
+    const seenIds = new Set<string>();
+
+    if (cloudDb) {
+      try {
+        // Query 1: userEmail
+        const qUser = await cloudDb.collection('workspaces').where('userEmail', '==', normalized).get();
+        qUser.forEach((doc: any) => {
+          const data = doc.data() as WorkspaceRecord;
+          const id = data.workspaceId || doc.id;
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            results.push(data);
+          }
+        });
+
+        // Query 2: partnerEmail
+        const qPartner = await cloudDb.collection('workspaces').where('partnerEmail', '==', normalized).get();
+        qPartner.forEach((doc: any) => {
+          const data = doc.data() as WorkspaceRecord;
+          const id = data.workspaceId || doc.id;
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            results.push(data);
+          }
+        });
+
+        // Query 3: coPlanners array-contains
+        const qCo = await cloudDb.collection('workspaces').where('coPlanners', 'array-contains', normalized).get();
+        qCo.forEach((doc: any) => {
+          const data = doc.data() as WorkspaceRecord;
+          const id = data.workspaceId || doc.id;
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            results.push(data);
+          }
+        });
+
+        if (results.length > 0) return results;
+      } catch (err: any) {
+        console.warn('[LicensingDb] Error querying Cloud Firestore workspaces by email:', err?.message);
+      }
+    }
+
+    // Local file storage scan fallback
+    return this.getWorkspacesByEmail(email);
+  },
+
+  // 1c. Find workspace by spreadsheet ID async
+  async getWorkspaceBySpreadsheetIdAsync(spreadsheetId: string): Promise<WorkspaceRecord | null> {
+    const cleanId = spreadsheetId.trim();
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        const snap = await cloudDb.collection('workspaces').where('spreadsheetId', '==', cleanId).limit(1).get();
+        if (!snap.empty) {
+          return snap.docs[0].data() as WorkspaceRecord;
+        }
+      } catch (err: any) {
+        console.warn('[LicensingDb] Error querying Cloud Firestore by spreadsheetId:', err?.message);
+      }
+    }
+
+    const localAll = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
+    return localAll.find((w) => w.spreadsheetId === cleanId) || null;
+  },
+
+  // 1d. Add co-planner email to an existing workspace
+  async addCoPlannerAsync(spreadsheetId: string, coPlannerEmail: string): Promise<WorkspaceRecord | null> {
+    const cleanId = spreadsheetId.trim();
+    const normalizedEmail = coPlannerEmail.trim().toLowerCase();
+    const workspace = await this.getWorkspaceBySpreadsheetIdAsync(cleanId);
+    if (!workspace) return null;
+
+    if (
+      workspace.userEmail?.toLowerCase() === normalizedEmail ||
+      workspace.partnerEmail?.toLowerCase() === normalizedEmail
+    ) {
+      return workspace;
+    }
+
+    const existingCoPlanners = Array.isArray(workspace.coPlanners) ? [...workspace.coPlanners] : [];
+    if (!existingCoPlanners.some((cp) => cp.trim().toLowerCase() === normalizedEmail)) {
+      existingCoPlanners.push(normalizedEmail);
+      workspace.coPlanners = existingCoPlanners;
+      workspace.lastActiveAt = new Date().toISOString();
+
+      await LocalFirestore.setDocAsync('workspaces', workspace.workspaceId, workspace);
+    }
+
+    return workspace;
   },
 
   // 2. Save or update a workspace record

@@ -26,7 +26,11 @@ import {
   ArrowUp,
   ArrowDown,
   Eye,
-  EyeOff
+  EyeOff,
+  Copy,
+  MessageSquare,
+  Mail,
+  Smartphone
 } from 'lucide-react';
 
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
@@ -128,6 +132,7 @@ export default function AdvancedSettingsModal({
   const [isGrantingCoPlanner, setIsGrantingCoPlanner] = useState(false);
   const [revokingEmail, setRevokingEmail] = useState<string | null>(null);
   const [coPlannerMsg, setCoPlannerMsg] = useState<{ text: string; isError: boolean } | null>(null);
+  const [showSharePicker, setShowSharePicker] = useState(false);
 
   React.useEffect(() => {
     if (!spreadsheetId) return;
@@ -1171,51 +1176,246 @@ export default function AdvancedSettingsModal({
                     </div>
                   )}
 
-                  {/* Zero-Cost Mailto & Link Helper */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
-                    <a
-                      href={`mailto:?subject=${encodeURIComponent(`${initialName} - Co-Planning Invite`)}&body=${encodeURIComponent(`Hi! Join me as a co-planner on Sheet2Vow for ${initialName}.\n\nSpreadsheet ID: ${spreadsheetId}\nAccess URL: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
-                      style={{
-                        fontSize: '0.7rem',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '0.35rem 0.6rem',
-                        backgroundColor: 'transparent',
-                        color: 'var(--color-primary)',
-                        border: '1px solid var(--color-muted)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        textDecoration: 'none',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                      }}
-                    >
-                      ✉️ OPEN PERSONAL EMAIL APP
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          navigator.clipboard.writeText(window.location.href);
-                          setCoPlannerMsg({ text: 'Co-planner URL copied to clipboard!', isError: false });
-                        }
-                      }}
-                      style={{
-                        fontSize: '0.7rem',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '0.35rem 0.6rem',
-                        backgroundColor: 'transparent',
-                        color: 'var(--color-text)',
-                        border: '1px solid var(--color-muted)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                      }}
-                    >
-                      📋 COPY CO-PLANNER LINK
-                    </button>
-                  </div>
+                  {/* Multi-Channel Co-Planner Sharing & Link Helper [SHARE-4] */}
+                  {(() => {
+                    const activeSheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+                    const coPlannerInviteUrl = typeof window !== 'undefined'
+                      ? `${window.location.origin}/vow?spreadsheetId=${encodeURIComponent(activeSheetId)}`
+                      : `/vow?spreadsheetId=${activeSheetId}`;
+                    const shareTitle = `${weddingName || 'Our Wedding'} - Co-Planner Workspace Invite`;
+                    const shareText = `Hi! Join me as an authorized co-planner on Sheet2Vow for ${weddingName || 'our wedding'}.\nAccess our live wedding database workspace here: ${coPlannerInviteUrl}`;
+                    const emailSubject = `${weddingName || 'Our Wedding'} - Co-Planning Invite`;
+                    const emailBody = `Hi! Join me as an authorized co-planner on Sheet2Vow for ${weddingName || 'our wedding'}.\n\nAccess your shared wedding workspace instantly here:\n${coPlannerInviteUrl}\n\nSpreadsheet ID: ${activeSheetId}\n\nOnce you open this link and connect with Google, you'll have full co-planner access!`;
+
+                    return (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => setShowSharePicker(prev => !prev)}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 700,
+                              padding: '0.4rem 0.75rem',
+                              backgroundColor: showSharePicker ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f1f5f9)',
+                              color: showSharePicker ? '#ffffff' : 'var(--color-primary)',
+                              border: '1px solid var(--color-primary)',
+                              borderRadius: 'var(--border-radius-sm)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Share2 size={13} />
+                            <span>{showSharePicker ? 'CLOSE SHARE OPTIONS' : '📲 SHARE INVITE (TEXT, EMAIL, MSG)'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (typeof window !== 'undefined') {
+                                navigator.clipboard.writeText(coPlannerInviteUrl);
+                                setCoPlannerMsg({ text: 'Co-planner invite link copied! Send it to your partner.', isError: false });
+                              }
+                            }}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontFamily: 'var(--font-mono)',
+                              padding: '0.4rem 0.75rem',
+                              backgroundColor: 'transparent',
+                              color: 'var(--color-text)',
+                              border: '1px solid var(--color-muted)',
+                              borderRadius: 'var(--border-radius-sm)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                            }}
+                          >
+                            <Copy size={13} />
+                            <span>COPY LINK</span>
+                          </button>
+                        </div>
+
+                        {/* Interactive Multi-Channel Sharing Panel */}
+                        {showSharePicker && (
+                          <div style={{
+                            marginTop: '0.65rem',
+                            padding: '0.85rem 1rem',
+                            backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                            border: '1px solid var(--color-border, #e2e8f0)',
+                            borderRadius: 'var(--border-radius-sm, 8px)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.6rem',
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-text)' }}>
+                                CHOOSE HOW TO SEND LINK:
+                              </span>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)' }}>
+                                Link includes Spreadsheet ID
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem' }}>
+                              {/* 1. Text Message / SMS */}
+                              <a
+                                href={`sms:?&body=${encodeURIComponent(shareText)}`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  padding: '0.45rem 0.6rem',
+                                  fontSize: '0.725rem',
+                                  fontWeight: 600,
+                                  color: 'var(--color-text)',
+                                  backgroundColor: 'var(--color-card, #ffffff)',
+                                  border: '1px solid var(--color-border, #cbd5e1)',
+                                  borderRadius: '6px',
+                                  textDecoration: 'none',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <span>💬</span>
+                                <span>Text (SMS)</span>
+                              </a>
+
+                              {/* 2. Email */}
+                              <a
+                                href={`mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  padding: '0.45rem 0.6rem',
+                                  fontSize: '0.725rem',
+                                  fontWeight: 600,
+                                  color: 'var(--color-text)',
+                                  backgroundColor: 'var(--color-card, #ffffff)',
+                                  border: '1px solid var(--color-border, #cbd5e1)',
+                                  borderRadius: '6px',
+                                  textDecoration: 'none',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <span>✉️</span>
+                                <span>Email</span>
+                              </a>
+
+                              {/* 3. WhatsApp / Messaging */}
+                              <a
+                                href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  padding: '0.45rem 0.6rem',
+                                  fontSize: '0.725rem',
+                                  fontWeight: 600,
+                                  color: '#15803d',
+                                  backgroundColor: 'var(--color-card, #ffffff)',
+                                  border: '1px solid #86efac',
+                                  borderRadius: '6px',
+                                  textDecoration: 'none',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <span>📱</span>
+                                <span>WhatsApp</span>
+                              </a>
+
+                              {/* 4. Native Device Share Sheet */}
+                              {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.share({
+                                        title: shareTitle,
+                                        text: shareText,
+                                        url: coPlannerInviteUrl,
+                                      });
+                                      setCoPlannerMsg({ text: 'Invite shared successfully!', isError: false });
+                                    } catch (err: any) {
+                                      if (err.name !== 'AbortError') {
+                                        setCoPlannerMsg({ text: 'Share action was cancelled or failed.', isError: true });
+                                      }
+                                    }
+                                  }}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    padding: '0.45rem 0.6rem',
+                                    fontSize: '0.725rem',
+                                    fontWeight: 600,
+                                    color: 'var(--color-primary)',
+                                    backgroundColor: 'var(--color-card, #ffffff)',
+                                    border: '1px solid var(--color-primary)',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <span>📲</span>
+                                  <span>Device Share</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Direct URL preview with copy */}
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              backgroundColor: 'var(--color-bg, #f1f5f9)',
+                              padding: '0.35rem 0.5rem',
+                              borderRadius: '4px',
+                              border: '1px solid var(--color-border, #e2e8f0)',
+                              marginTop: '0.2rem',
+                            }}>
+                              <span style={{
+                                fontSize: '0.65rem',
+                                fontFamily: 'var(--font-mono)',
+                                color: 'var(--color-muted)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: 1,
+                              }}>
+                                {coPlannerInviteUrl}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (typeof window !== 'undefined') {
+                                    navigator.clipboard.writeText(coPlannerInviteUrl);
+                                    setCoPlannerMsg({ text: 'Link copied to clipboard!', isError: false });
+                                  }
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--color-primary)',
+                                  cursor: 'pointer',
+                                  fontFamily: 'var(--font-mono)',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                COPY
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Disconnect Workspace */}

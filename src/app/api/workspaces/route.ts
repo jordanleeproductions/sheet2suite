@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const records = LocalLicensingDb.getWorkspacesByEmail(email);
+    const records = await LocalLicensingDb.getWorkspacesByEmailAsync(email);
 
     return NextResponse.json({
       success: true,
@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     const {
       userEmail,
       partnerEmail,
+      coPlanners,
       spreadsheetId,
       spreadsheetName,
       driveFolderPath,
@@ -59,9 +60,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const resolvedCoPlanners = Array.isArray(coPlanners)
+      ? coPlanners
+      : partnerEmail
+      ? [partnerEmail]
+      : [];
+
     const saved = LocalLicensingDb.saveWorkspace({
       userEmail,
       partnerEmail,
+      coPlanners: resolvedCoPlanners,
       spreadsheetId,
       spreadsheetName: spreadsheetName || 'Wedding Database',
       driveFolderPath: driveFolderPath || 'My Drive / Sheet2Suite / Sheet2Vow',
