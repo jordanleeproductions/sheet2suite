@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
-import { Plus, Edit2, Check, X, Trash2, HelpCircle, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Check, X, Trash2, HelpCircle, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw, ArrowUpDown } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, formatDateConsistent, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
@@ -140,8 +140,18 @@ export default function BudgetLedgerManager({
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
 
   // Desktop Master-Detail State
+  type MasterCategorySort = 'alphabetical' | 'budget' | 'spent' | 'remaining';
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [masterCategorySearch, setMasterCategorySearch] = useState<string>('');
+  const [masterCategorySort, setMasterCategorySort] = useState<MasterCategorySort>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('s2v_budget_master_sort') as MasterCategorySort;
+      if (saved === 'alphabetical' || saved === 'budget' || saved === 'spent' || saved === 'remaining') {
+        return saved;
+      }
+    }
+    return 'alphabetical';
+  });
   const [detailExpenseSearch, setDetailExpenseSearch] = useState<string>('');
 
   // Mobile Bottom Sheet Drill-Down State (< lg)
@@ -437,12 +447,27 @@ export default function BudgetLedgerManager({
       list = list.filter(c => c.category.toLowerCase().includes(masterCategorySearch.toLowerCase().trim()));
     }
     return [...list].sort((a, b) => {
-      if (a.isOver && !b.isOver) return -1;
-      if (!a.isOver && b.isOver) return 1;
-      const aHasOutlay = a.actual > 0;
-      const bHasOutlay = b.actual > 0;
-      if (aHasOutlay && !bHasOutlay) return -1;
-      if (!aHasOutlay && bHasOutlay) return 1;
+      if (masterCategorySort === 'budget') {
+        if (b.estimated !== a.estimated) {
+          return b.estimated - a.estimated;
+        }
+        return a.category.localeCompare(b.category);
+      }
+      if (masterCategorySort === 'spent') {
+        if (b.actual !== a.actual) {
+          return b.actual - a.actual;
+        }
+        return a.category.localeCompare(b.category);
+      }
+      if (masterCategorySort === 'remaining') {
+        const remA = a.estimated - a.actual;
+        const remB = b.estimated - b.actual;
+        if (remB !== remA) {
+          return remB - remA;
+        }
+        return a.category.localeCompare(b.category);
+      }
+      // Default: 'alphabetical'
       return a.category.localeCompare(b.category);
     });
   })();
@@ -1652,24 +1677,99 @@ export default function BudgetLedgerManager({
               </button>
             </div>
 
-            {/* Master Category Search */}
-            <div>
-              <input
-                type="text"
-                placeholder="FILTER CATEGORIES..."
-                value={masterCategorySearch}
-                onChange={(e) => setMasterCategorySearch(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.45rem 0.65rem',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  backgroundColor: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-              />
+            {/* Master Category Search & Sort Controls */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input
+                  type="text"
+                  placeholder="FILTER CATEGORIES..."
+                  value={masterCategorySearch}
+                  onChange={(e) => setMasterCategorySearch(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem 0.65rem',
+                    paddingRight: masterCategorySearch ? '1.5rem' : '0.65rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text)',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {masterCategorySearch && (
+                  <button
+                    type="button"
+                    onClick={() => setMasterCategorySearch('')}
+                    style={{
+                      position: 'absolute',
+                      right: '0.35rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-muted)',
+                      cursor: 'pointer',
+                      padding: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    title="Clear filter"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              <div style={{ position: 'relative', width: '100%' }}>
+                <select
+                  value={masterCategorySort}
+                  onChange={(e) => {
+                    const val = e.target.value as MasterCategorySort;
+                    setMasterCategorySort(val);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('s2v_budget_master_sort', val);
+                    }
+                  }}
+                  aria-label="Sort categories"
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem 1.75rem 0.45rem 0.65rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text)',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="budget">By Budget</option>
+                  <option value="spent">By Spent</option>
+                  <option value="remaining">By Remaining</option>
+                </select>
+                <div style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: 'var(--color-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}>
+                  <ArrowUpDown size={12} />
+                </div>
+              </div>
             </div>
           </div>
 

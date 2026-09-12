@@ -403,6 +403,11 @@
   - Added preemptive background session check `verifyActiveSession()` triggered immediately before displaying Add New, Edit, or Delete modals across Financials (`BudgetLedgerManager`), Guest List (`GuestListManager`), and Vendors (`VendorManager`).
   - Implemented lightweight `GET /api/auth/session` endpoint verifying Google OAuth credentials and token viability with 45-second local cache TTL.
   - Automatically dispatches `'s2v:session-expired'` event to trigger the re-authentication modal before the user types in form fields, preventing work loss due to expired sessions.
+- [x] **[FINANCIALS-CATEGORY-SORT-DROPDOWN] Half-Width Category Filter & Sorting Dropdown on Desktop Rail (`BudgetLedgerManager.tsx`):**
+  - Refactored the desktop Master Rail header search input into a balanced 2-column grid (`grid-template-columns: 1fr 1fr; gap: 0.5rem`).
+  - Search input takes 50% width with integrated clear button (`✕`).
+  - Added interactive category sort dropdown (`Alphabetical`, `By Budget`, `By Spent`, `By Remaining`) with custom `ArrowUpDown` icon and `localStorage` persistence (`'s2v_budget_master_sort'`).
+  - Dynamically sorts `displayedMasterStats` by category name A-Z, allocated budget ceiling (descending), total spent outlay (descending), or remaining cushion (descending).
 
 ---
 

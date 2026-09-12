@@ -409,6 +409,16 @@ src/
 - **Sheet Column Date Number Formatting:** Automatically applies `repeatCell` format updates setting `numberFormat: { type: 'DATE', pattern: 'yyyy-mm-dd' }` on the `Expenses` tab's `Purchase Date` column, ensuring native Google Sheets UI renders dates without data-validation error triangles.
 - **Consistent 2-Decimal Currency Precision:** Passes `forceDecimals: true` to `formatCurrency` across all itemized expense rows, mobile cards, category snapshot headers, and bottom-sheet totals to ensure uniform financial accounting presentation (`$140.00`).
 
+#### 3.8.7 Category Budget Sorting & Balanced Rail Controls (`[FINANCIALS-CATEGORY-SORT-DROPDOWN]`)
+- **2-Column Master Header Grid:** Splits the desktop Category Budgets rail search row into a 50/50 dual control row with `gridTemplateColumns: '1fr 1fr'`.
+- **Category Filter Search:** 50% width input with inline clear button (`✕`) for rapid text filtering.
+- **Category Sorting Dropdown:** Styled `<select>` control with `ArrowUpDown` indicator and persistent sorting across 4 modes:
+  1. `Alphabetical`: A–Z sorting via `a.category.localeCompare(b.category)`.
+  2. `By Budget`: Descending target allocation cap (`b.estimated - a.estimated`).
+  3. `By Spent`: Descending actual outlay (`b.actual - a.actual`).
+  4. `By Remaining`: Descending remaining cushion (`(b.estimated - b.actual) - (a.estimated - a.actual)`).
+- **Persistent State:** Saves user preference to `localStorage.getItem('s2v_budget_master_sort')`.
+
 ---
 
 ## 4. Data Storage & Schema Mapping
