@@ -5,56 +5,19 @@ import { ScheduleEvent } from '@/lib/sheets/types';
 import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle, Check } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import TimeDialPicker from '@/components/TimeDialPicker';
+import { parseTimeOrSerial } from '@/lib/currency';
 
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
   if (!timeStr) return '';
-  const str = timeStr.trim();
-  const match = str.match(/(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/i);
-  if (!match) return timeStr;
-
-  let hours = parseInt(match[1], 10);
-  const minutes = match[2] ? match[2].padStart(2, '0') : '00';
-  const meridiem = match[3] ? match[3].replace(/\./g, '').toUpperCase() : undefined;
-
-  if (format === '24h') {
-    if (meridiem === 'PM' && hours < 12) hours += 12;
-    if (meridiem === 'AM' && hours === 12) hours = 0;
-    const paddedHours = hours.toString().padStart(2, '0');
-    return `${paddedHours}:${minutes}`;
-  }
-
-  // 12h formatting - clean up unnecessary seconds and remove leading zero on hours
-  let displayMeridiem = meridiem;
-  if (!displayMeridiem) {
-    displayMeridiem = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-  } else {
-    if (hours === 0) hours = 12;
-    else if (hours > 12) hours = hours % 12;
-  }
-  return `${hours}:${minutes} ${displayMeridiem}`;
+  return parseTimeOrSerial(timeStr, format || '12h');
 }
 
 export function isLateNightTime(timeStr: string | undefined | null): boolean {
   if (!timeStr) return false;
-  const str = timeStr.trim().toLowerCase();
-  
-  // Explicitly reject PM times from being flagged as overnight
-  if (str.includes('pm') || str.includes('p.m.')) return false;
-
-  if (str.includes('am') || str.includes('a.m.')) {
-    const match = str.match(/(\d{1,2})/);
-    if (match) {
-      const hour = parseInt(match[1], 10);
-      if (hour === 12 || (hour >= 1 && hour <= 4)) {
-        return true;
-      }
-    }
-  }
-
-  const match24 = str.match(/^0([0-4]):/);
-  if (match24) return true;
-  return false;
+  const time24 = parseTimeOrSerial(timeStr, '24h');
+  if (!time24 || !time24.includes(':')) return false;
+  const hour = parseInt(time24.split(':')[0], 10);
+  return hour === 0 || (hour >= 1 && hour <= 4);
 }
 
 export function isOvernightEvent(event: Partial<ScheduleEvent>): boolean {
@@ -65,23 +28,10 @@ export function isOvernightEvent(event: Partial<ScheduleEvent>): boolean {
 
 export function parseTimeToMinutes(timeStr: string | undefined | null): number {
   if (!timeStr) return 0;
-  const str = timeStr.trim().toLowerCase();
-  
-  // Robust match handles optional seconds (:ss) and varied meridiems
-  const match = str.match(/(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/i);
-  if (!match) return 0;
-
-  let hours = parseInt(match[1], 10);
-  const minutes = match[2] ? parseInt(match[2], 10) : 0;
-  const meridiem = match[3] ? match[3].replace(/\./g, '').toLowerCase() : undefined;
-
-  if (meridiem === 'pm' && hours < 12) {
-    hours += 12;
-  } else if (meridiem === 'am' && hours === 12) {
-    hours = 0;
-  }
-
-  return hours * 60 + minutes;
+  const time24 = parseTimeOrSerial(timeStr, '24h');
+  if (!time24 || !time24.includes(':')) return 0;
+  const [h, m] = time24.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
 }
 
 export function compareScheduleEvents(a: ScheduleEvent, b: ScheduleEvent): number {
@@ -205,7 +155,11 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
 
   const startEdit = (event: ScheduleEvent, index: number) => {
     setEditingIndex(index);
-    setFormState(event);
+    setFormState({
+      ...event,
+      startTime: parseTimeOrSerial(event.startTime),
+      endTime: parseTimeOrSerial(event.endTime),
+    });
     setIsAdding(false);
   };
 
@@ -235,11 +189,17 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
       return;
     }
 
+    const cleanForm: ScheduleEvent = {
+      ...(formState as ScheduleEvent),
+      startTime: parseTimeOrSerial(formState.startTime),
+      endTime: parseTimeOrSerial(formState.endTime),
+    };
+
     let updated: ScheduleEvent[];
     if (isAdding) {
-      updated = [...schedule, formState as ScheduleEvent];
+      updated = [...schedule, cleanForm];
     } else if (editingIndex !== null) {
-      updated = schedule.map((ev, i) => i === editingIndex ? (formState as ScheduleEvent) : ev);
+      updated = schedule.map((ev, i) => i === editingIndex ? cleanForm : ev);
     } else {
       return;
     }

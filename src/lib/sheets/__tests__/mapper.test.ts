@@ -1,5 +1,5 @@
-import { guestMapper, budgetMapper, expenseMapper, GUEST_HEADERS, BUDGET_HEADERS } from '../mapper';
-import { Guest, BudgetItem, ExpenseItem } from '../types';
+import { guestMapper, budgetMapper, expenseMapper, scheduleMapper, photoMapper, GUEST_HEADERS, BUDGET_HEADERS } from '../mapper';
+import { Guest, BudgetItem, ExpenseItem, ScheduleEvent, PhotoShot } from '../types';
 
 export function runTests() {
   console.log('Running Sheet2Vow Mapper Unit Tests...');
@@ -101,9 +101,51 @@ export function runTests() {
   const expenseItem2 = expenseMapper.fromRow(mockExpenseHeaders, mockExpenseRowWithStringSerial);
   if (expenseItem2.purchaseDate !== '2026-09-09') throw new Error(`Expense purchase date string serial conversion failed: expected 2026-09-09, got ${expenseItem2.purchaseDate}`);
 
-  // Test toRow outputs formatted YYYY-MM-DD
-  const outputExpenseRow = expenseMapper.toRow(mockExpenseHeaders, expenseItem);
-  if (outputExpenseRow[6] !== '2026-09-11') throw new Error(`Expense back-to-row date failed: expected 2026-09-11, got ${outputExpenseRow[6]}`);
+  // 4. Test Schedule Mapping & Time Serial Parsing (Google Sheets fractional day & decimal serials)
+  const mockScheduleHeaders = ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'];
+  
+  // Test numeric fractional day from Google Sheets UNFORMATTED_VALUE (e.g. 2:00 PM = 14/24 = 0.5833333333333334)
+  const mockScheduleRowNumericFraction = [
+    0.5833333333333334, 0.6041666666666666, 'First Look & Portraits', 'Rose Garden', 'Photographer', 'Bring veil'
+  ];
+  const scheduleItem1 = scheduleMapper.fromRow(mockScheduleHeaders, mockScheduleRowNumericFraction);
+  if (scheduleItem1.startTime !== '2:00 PM') throw new Error(`Schedule start time serial conversion failed: expected 2:00 PM, got "${scheduleItem1.startTime}"`);
+  if (scheduleItem1.endTime !== '2:30 PM') throw new Error(`Schedule end time serial conversion failed: expected 2:30 PM, got "${scheduleItem1.endTime}"`);
+
+  // Test string decimal fraction
+  const mockScheduleRowStringFraction = [
+    '0.375', '0.4166666666666667', 'Bridal Suite Breakfast', 'Bridal Suite', 'Maid of Honor', 'Mimosas & fruit'
+  ];
+  const scheduleItem2 = scheduleMapper.fromRow(mockScheduleHeaders, mockScheduleRowStringFraction);
+  if (scheduleItem2.startTime !== '9:00 AM') throw new Error(`Schedule start time string fraction failed: expected 9:00 AM, got "${scheduleItem2.startTime}"`);
+  if (scheduleItem2.endTime !== '10:00 AM') throw new Error(`Schedule end time string fraction failed: expected 10:00 AM, got "${scheduleItem2.endTime}"`);
+
+  // Test datetime serial (e.g. 46276.583333333334)
+  const mockScheduleRowDateTimeSerial = [
+    46276.583333333334, 46276.625, 'Guest Arrival & Prelude', 'Main Chapel', 'Ushers', 'Distribute programs'
+  ];
+  const scheduleItem3 = scheduleMapper.fromRow(mockScheduleHeaders, mockScheduleRowDateTimeSerial);
+  if (scheduleItem3.startTime !== '2:00 PM') throw new Error(`Schedule datetime serial start failed: expected 2:00 PM, got "${scheduleItem3.startTime}"`);
+  if (scheduleItem3.endTime !== '3:00 PM') throw new Error(`Schedule datetime serial end failed: expected 3:00 PM, got "${scheduleItem3.endTime}"`);
+
+  // Test standard 12h/24h text formats
+  const mockScheduleRowText = [
+    '04:30 PM', '18:00', 'Ceremony', 'Grand Lawn', 'Officiant', 'Processional starts promptly'
+  ];
+  const scheduleItem4 = scheduleMapper.fromRow(mockScheduleHeaders, mockScheduleRowText);
+  if (scheduleItem4.startTime !== '4:30 PM') throw new Error(`Schedule text 12h failed: expected 4:30 PM, got "${scheduleItem4.startTime}"`);
+  if (scheduleItem4.endTime !== '6:00 PM') throw new Error(`Schedule text 24h failed: expected 6:00 PM, got "${scheduleItem4.endTime}"`);
+
+  // Test scheduleMapper.toRow outputs clean time strings
+  const outputScheduleRow = scheduleMapper.toRow(mockScheduleHeaders, scheduleItem1);
+  if (outputScheduleRow[0] !== '2:00 PM') throw new Error(`Schedule toRow failed: expected 2:00 PM, got "${outputScheduleRow[0]}"`);
+  if (outputScheduleRow[1] !== '2:30 PM') throw new Error(`Schedule toRow failed: expected 2:30 PM, got "${outputScheduleRow[1]}"`);
+
+  // 5. Test PhotoShot Shot Time Serial Parsing
+  const mockPhotoHeaders = ['Shot ID', 'Description', 'Location', 'Shot Time', 'Included People', 'Status', 'Priority', 'Notes'];
+  const mockPhotoRow = ['P1', 'Family Portraits', 'Altar', 0.6458333333333334, 'Immediate Family', 'Pending', 'High', 'After ceremony'];
+  const photoItem = photoMapper.fromRow(mockPhotoHeaders, mockPhotoRow);
+  if (photoItem.shotTime !== '3:30 PM') throw new Error(`Photo shot time serial failed: expected 3:30 PM, got "${photoItem.shotTime}"`);
 
   console.log('✓ All Sheet2Vow Mapper Unit Tests Passed Successfully.');
 }

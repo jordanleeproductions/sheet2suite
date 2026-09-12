@@ -2,6 +2,7 @@
 
 import React, { useRef } from 'react';
 import { Clock } from 'lucide-react';
+import { parseTimeOrSerial } from '@/lib/currency';
 
 interface TimeDialPickerProps {
   label: string;
@@ -12,35 +13,16 @@ interface TimeDialPickerProps {
   referenceStartTime?: string; // Optional: when provided (e.g. for End Time), enables +30m, +1h quick duration chips
 }
 
-// Convert 12h time string (e.g. "04:30 PM", "4:30:00 PM") to 24h "HH:mm" for native <input type="time">
+// Convert 12h or raw time string (e.g. "04:30 PM", "4:30:00 PM", 0.58333) to 24h "HH:mm" for native <input type="time">
 export function time12To24(timeStr: string | undefined | null): string {
   if (!timeStr) return '';
-  const match = timeStr.trim().match(/(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?/i);
-  if (!match) return '';
-  let hours = parseInt(match[1], 10);
-  const minutes = match[2] ? match[2].padStart(2, '0') : '00';
-  const meridiem = match[3] ? match[3].replace(/\./g, '').toLowerCase() : '';
-
-  if (meridiem === 'pm' && hours < 12) {
-    hours += 12;
-  } else if (meridiem === 'am' && hours === 12) {
-    hours = 0;
-  }
-
-  const paddedH = hours < 10 ? `0${hours}` : `${hours}`;
-  return `${paddedH}:${minutes}`;
+  return parseTimeOrSerial(timeStr, '24h');
 }
 
-// Convert 24h "HH:mm" to standard 12h "h:mm A" (e.g. "16:30" -> "4:30 PM", "08:00" -> "8:00 AM")
+// Convert 24h or raw time to standard 12h "h:mm A" (e.g. "16:30" -> "4:30 PM", "08:00" -> "8:00 AM")
 export function time24To12(time24: string | undefined | null): string {
   if (!time24) return '';
-  const match = time24.trim().match(/^(\d{1,2}):(\d{2})/);
-  if (!match) return time24;
-  let hours = parseInt(match[1], 10);
-  const minutes = match[2];
-  const meridiem = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  return `${hours}:${minutes} ${meridiem}`;
+  return parseTimeOrSerial(time24, '12h');
 }
 
 // Helper to add minutes to a 12h time string

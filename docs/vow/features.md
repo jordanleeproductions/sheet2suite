@@ -440,6 +440,11 @@
   - Preserves 100% free-text editing and typing so users can override or enter custom vendor assignments at any time.
 - [x] **[SCHED-6] Responsive Past-Midnight Warning Card Layout (`TimelineManager.tsx`):**
   - Added responsive boundary guardrails (`box-sizing: border-box`, `width: 100%`, `overflow: hidden`) preventing horizontal overflow on mobile screens.
+- [x] **[SCHED-7] Google Sheets Time Serial Fraction Normalization & Explicit TIME Column Formatting (`currency.ts`, `mapper.ts`, `TimelineManager.tsx`, `TimeDialPicker.tsx`, `sync/route.ts`):**
+  - **Root Cause**: Google Sheets `UNFORMATTED_VALUE` returns times formatted in cells as numeric day fractions (e.g. `0.5833333333333334` for `2:00 PM`, `0.6041666666666666` for `2:30 PM`, `0.375` for `9:00 AM`). Previous regex matched the leading `"0"`, setting hours to 0 and formatting all events identically as `12:00 AM`.
+  - **Normalization Engine (`parseTimeOrSerial`)**: Converts day fractions, datetime serials (`46276.58333`), ISO strings (`1899-12-30T14:30:00Z`), and 24h/12h strings into clean canonical 12-hour (`2:00 PM`) and 24-hour (`14:00`) formats.
+  - **End-to-End Integration**: Integrated into `scheduleMapper`, `photoMapper`, `TimelineManager.tsx` (`formatTimeDisplay`, `parseTimeToMinutes`, `isLateNightTime`), and `TimeDialPicker.tsx` (`time12To24`, `time24To12`).
+  - **Explicit TIME Formatting**: Added Google Sheets API `repeatCell` with `pattern: 'hh:mm am/pm'` on `Schedule` time columns during synchronization.
 
 ---
 
@@ -472,6 +477,7 @@ Pending roadmap features and backlog items have been reorganized into specialize
 | **[BUG-4]** | Global Modals (`sessionCheck.ts`, `route.ts`) | Expired Google OAuth tokens caused users to lose form data upon submitting Add/Edit/Delete dialogs. Resolved by preemptively checking `/api/auth/session` prior to rendering creation/edit modals and triggering reauth flow cleanly. | High | Resolved | 2026-09-11 |
 | **[BUG-5]** | Mobile Financials Drill-Down (`BudgetLedgerManager.tsx`) | Category slide-up drill-down sheet was anchored to `bottom: 0` without accounting for the 62px fixed mobile bottom nav bar, causing the bottom action button to be obscured. Resolved with `bottom: calc(62px + env(safe-area-inset-bottom, 0px))` docking, adjusted max-height, and clean border delineation. | High | Resolved | 2026-09-11 |
 | **[BUG-6]** | Financials Mobile Donut View (`BudgetLedgerManager.tsx`) | In mobile mode on the financials page with Donut utilization selected, the 3 metric cards under the donut bled over the right border of the parent card. Resolved with `repeat(3, minmax(0, 1fr))`, `min-width: 0`, responsive padding, text truncation, and card `overflow: hidden`. | Medium | Resolved | 2026-09-11 |
+| **[BUG-7]** | Timeline & Schedule Times (`TimelineManager.tsx`, `mapper.ts`, `currency.ts`) | All event times rendered as 12:00 AM because Google Sheets UNFORMATTED_VALUE returned raw time day-fractions (e.g. `0.5833333333333334` for 2:00 PM), which regex parsed as hour 0. Resolved with `parseTimeOrSerial` fraction-of-day calculation and explicit TIME formatting. | Critical | Resolved | 2026-09-11 |
 
 ---
 

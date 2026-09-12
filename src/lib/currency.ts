@@ -115,3 +115,69 @@ export function formatDateToMMDDYYYY(dateStr: string | undefined | null): string
   }
   return dateStr.trim();
 }
+
+/**
+ * Parses any time value (including Excel/Google Sheets numeric fractions of a day like 0.5833333333333334,
+ * datetime serial numbers like 46276.58333, ISO timestamps, and 12h/24h text strings)
+ * into a canonical display string (default 12h: "2:00 PM", or 24h: "14:00").
+ */
+export function parseTimeOrSerial(val: any, format: '12h' | '24h' = '12h'): string {
+  if (val === null || val === undefined) return '';
+  const str = String(val).trim();
+  if (!str || str === '-' || str.toLowerCase() === 'invalid date' || str.toLowerCase() === 'invalid time') return '';
+
+  let hours24 = 0;
+  let minutes = 0;
+  let hasParsed = false;
+
+  // 1. Numeric check: Excel/Google Sheets fraction of day or datetime serial
+  const num = Number(str);
+  if (!isNaN(num)) {
+    const fraction = num >= 1 ? (num - Math.floor(num)) : num;
+    const totalMinutes = Math.round(fraction * 1440) % 1440;
+    hours24 = Math.floor(totalMinutes / 60);
+    minutes = totalMinutes % 60;
+    hasParsed = true;
+  }
+
+  // 2. ISO / Datetime string check (e.g. 1899-12-30T14:30:00.000Z or 2026-09-11 14:30:00)
+  if (!hasParsed) {
+    const isoMatch = str.match(/(?:T|\s)(\d{1,2}):(\d{2})(?::(\d{2}))?/i);
+    if (isoMatch) {
+      hours24 = parseInt(isoMatch[1], 10);
+      minutes = parseInt(isoMatch[2], 10);
+      hasParsed = true;
+    }
+  }
+
+  // 3. Standard time string check (e.g. '02:30 PM', '2:30pm', '14:30', '2 PM', '2:30:00 PM')
+  if (!hasParsed) {
+    const match = str.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?$/i);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = match[2] ? parseInt(match[2], 10) : 0;
+      const meridiem = match[3] ? match[3].replace(/\./g, '').toUpperCase() : undefined;
+
+      if (meridiem === 'PM' && h < 12) h += 12;
+      else if (meridiem === 'AM' && h === 12) h = 0;
+      else if (!meridiem && h >= 24) h = h % 24;
+
+      hours24 = h;
+      minutes = m;
+      hasParsed = true;
+    }
+  }
+
+  if (!hasParsed) {
+    return str;
+  }
+
+  if (format === '24h') {
+    return `${String(hours24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  const meridiem = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 || 12;
+  return `${hours12}:${String(minutes).padStart(2, '0')} ${meridiem}`;
+}
+

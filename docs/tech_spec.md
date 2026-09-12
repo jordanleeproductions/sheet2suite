@@ -99,6 +99,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 ### 2.6 Day-Of Timeline (`TimelineManager.tsx`)
 - Day-Of itinerary timeline with "UP NEXT" active moment banner ticker.
 - Filter by responsibility (*Bridal Party*, *Catering*, *Photography*, *Guests*) and late-night tracking (`🌙 +1 DAY`).
+- **Time Serial Normalization Engine (`[SCHED-7]`):** Normalizes spreadsheet numeric day-fractions (e.g. `0.5833333333333334` -> `2:00 PM`), datetime serials (`46276.58333`), ISO strings, and 12h/24h text representations through canonical `parseTimeOrSerial` in `currency.ts`. Eliminates `12:00 AM` false-positive display bugs caused by raw floating-point times from Google Sheets API `UNFORMATTED_VALUE`. Explicitly formats `Schedule` sheet time columns with `numberFormat: { type: 'TIME', pattern: 'hh:mm am/pm' }` during sync batch updates.
 
 ### 2.7 Vendor Directory (`VendorManager.tsx`)
 - Vendor contact directory, categories, contract values, deposit paid, and staff meal requirements.

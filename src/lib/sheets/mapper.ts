@@ -1,5 +1,5 @@
 import { Guest, TableConfig, BudgetItem, ExpenseItem, ScheduleEvent, Vendor, Task, PhotoShot, GiftItem, Song, MenuItem, AgeCategory, RSVPStatus, KanbanStage } from './types';
-import { parseDateOrSerial } from '@/lib/currency';
+import { parseDateOrSerial, parseTimeOrSerial } from '@/lib/currency';
 
 // Dictionaries mapping human-readable sheet headers to camelCase properties
 export const GUEST_HEADERS: Record<string, keyof Guest> = {
@@ -299,8 +299,8 @@ export const scheduleMapper = {
     const obj = mapRowToObject<ScheduleEvent>(headers, row, SCHEDULE_HEADERS);
     const rawMidnight = String(obj.isAfterMidnight || '').toLowerCase();
     return {
-      startTime: String(obj.startTime || ''),
-      endTime: String(obj.endTime || ''),
+      startTime: parseTimeOrSerial(obj.startTime),
+      endTime: parseTimeOrSerial(obj.endTime),
       eventMoment: String(obj.eventMoment || ''),
       location: String(obj.location || ''),
       responsibility: String(obj.responsibility || ''),
@@ -309,7 +309,12 @@ export const scheduleMapper = {
     };
   },
   toRow(headers: string[], event: ScheduleEvent): any[] {
-    return mapObjectToRow(headers, event, SCHEDULE_HEADERS);
+    const normalizedEvent: ScheduleEvent = {
+      ...event,
+      startTime: parseTimeOrSerial(event.startTime),
+      endTime: parseTimeOrSerial(event.endTime),
+    };
+    return mapObjectToRow(headers, normalizedEvent, SCHEDULE_HEADERS);
   }
 };
 
@@ -418,7 +423,7 @@ export const photoMapper = {
       shotId: String(obj.shotId || ''),
       description: String(obj.description || ''),
       location: String(obj.location || ''),
-      shotTime: String(obj.shotTime || ''),
+      shotTime: parseTimeOrSerial(obj.shotTime),
       people: String(obj.people || ''),
       status: (obj.status || 'Pending') as any,
       priority,

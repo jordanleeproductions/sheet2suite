@@ -683,6 +683,46 @@ export async function POST(req: Request) {
           console.warn(`[Sync] Non-critical date formatting warning for ${targetTitle}:`, formatErr);
         }
       }
+
+      // Ensure time column formatting in Google Sheets if applicable (e.g. Schedule Start/End Time)
+      if (sheetType === 'schedule' && targetSheetId !== undefined) {
+        const timeColIndices = headers
+          .map((h, i) => (h.toLowerCase().includes('time') ? i : -1))
+          .filter(i => i !== -1);
+        for (const colIdx of timeColIndices) {
+          try {
+            await sheetsClient.spreadsheets.batchUpdate({
+              spreadsheetId,
+              requestBody: {
+                requests: [
+                  {
+                    repeatCell: {
+                      range: {
+                        sheetId: targetSheetId,
+                        startRowIndex: 1,
+                        endRowIndex: 1000,
+                        startColumnIndex: colIdx,
+                        endColumnIndex: colIdx + 1,
+                      },
+                      cell: {
+                        userEnteredFormat: {
+                          numberFormat: {
+                            type: 'TIME',
+                            pattern: 'hh:mm am/pm',
+                          }
+                        }
+                      },
+                      fields: 'userEnteredFormat.numberFormat',
+                    }
+                  }
+                ]
+              }
+            });
+          } catch (timeFormatErr) {
+            console.warn(`[Sync] Non-critical time formatting warning for ${targetTitle}:`, timeFormatErr);
+          }
+        }
+      }
     }
 
     return NextResponse.json({
