@@ -10,13 +10,13 @@ const SESSION_CACHE_TTL_MS = 45 * 1000; // 45 seconds cache to avoid duplicate n
 export async function verifyActiveSession(): Promise<boolean> {
   if (typeof window === 'undefined') return true;
 
+  const spreadsheetId = localStorage.getItem('s2v_spreadsheet_id') || '';
+  const token = localStorage.getItem('s2v_google_token') || '';
+
   // In mock or demo mode, sessions never expire
   const isMock = localStorage.getItem('s2v_is_mock') === 'true';
   const isDemo = localStorage.getItem('s2v_is_demo') === 'true';
-  if (isMock || isDemo) return true;
-
-  const spreadsheetId = localStorage.getItem('s2v_spreadsheet_id') || '';
-  const token = localStorage.getItem('s2v_google_token') || '';
+  if (isMock || isDemo || spreadsheetId.startsWith('mock-') || spreadsheetId.includes('mock')) return true;
 
   // If running completely local without sheet/token, allow user to proceed
   if (!spreadsheetId && !token) return true;
@@ -34,7 +34,7 @@ export async function verifyActiveSession(): Promise<boolean> {
     });
 
     const data = await res.json();
-    if (res.status === 401 || data.isAuthError || data.valid === false) {
+    if (res.status === 401 || data.isAuthError === true) {
       // Invalidate cache
       lastVerifiedTimestamp = 0;
       // Dispatch global event so page.tsx reveals the re-authentication modal

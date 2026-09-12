@@ -663,18 +663,40 @@ export default function PhotoShotListManager({
             font-size: 0.72rem !important;
             gap: 0.35rem !important;
           }
+        }
+        .photo-tab-full-title {
+          display: inline;
+        }
+        .photo-tab-short-title {
+          display: none;
+        }
+        @media (max-width: 640px) {
+          .photo-tab-full-title {
+            display: none !important;
+          }
+          .photo-tab-short-title {
+            display: inline !important;
+          }
           .photo-view-switcher {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
+            display: flex !important;
+            flex-direction: row !important;
             width: 100% !important;
-            gap: 0.5rem !important;
+            gap: 0.35rem !important;
+            padding: 0.25rem !important;
+            background-color: var(--color-surface) !important;
+            border: 1px solid var(--color-muted) !important;
+            border-radius: 9999px !important;
             overflow-x: visible !important;
           }
           .photo-view-tab {
-            width: 100% !important;
+            flex: 1 !important;
+            width: auto !important;
             justify-content: center !important;
-            padding: 0.5rem 0.35rem !important;
-            font-size: 0.72rem !important;
+            padding: 0.45rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            border-radius: 9999px !important;
+            border: none !important;
             gap: 0.35rem !important;
           }
         }
@@ -711,8 +733,8 @@ export default function PhotoShotListManager({
           }}
         >
           <Camera size={15} />
-          <span className="hidden sm:inline">PHOTOGRAPHER SHOT LIST</span>
-          <span className="sm:hidden">SHOT LIST</span>
+          <span className="photo-tab-full-title">PHOTOGRAPHER SHOT LIST</span>
+          <span className="photo-tab-short-title">SHOT LIST</span>
           <span style={{
             backgroundColor: activeView === 'shotlist' ? 'rgba(255,255,255,0.22)' : 'var(--color-bg)',
             color: activeView === 'shotlist' ? 'inherit' : 'var(--color-muted)',
@@ -744,8 +766,8 @@ export default function PhotoShotListManager({
           }}
         >
           <Heart size={15} style={{ color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)' }} />
-          <span className="hidden sm:inline">GUESTBOOK & PHOTO NOTES</span>
-          <span className="sm:hidden">GUESTBOOK</span>
+          <span className="photo-tab-full-title">GUESTBOOK & PHOTO NOTES</span>
+          <span className="photo-tab-short-title">GUESTBOOK</span>
           <span style={{
             backgroundColor: activeView === 'guestbook' ? 'rgba(255,255,255,0.22)' : 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
             color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)',
@@ -2151,8 +2173,28 @@ export default function PhotoShotListManager({
       )}
 
       {/* Mobile Floating Action Button (FAB) */}
-      {activeView === 'shotlist' && (
-        <MobileFAB onClick={startAddShot} label="Add Photo Shot" />
+      {activeView === 'shotlist' ? (
+        <MobileFAB onClick={startAddShot} label="Add Photo Shot" disabled={isSyncing} />
+      ) : (
+        <MobileFAB
+          onClick={handleCopyGuestUploadUrl}
+          label="Share Guest Upload Link"
+          icon={UploadCloud}
+          subActions={[
+            {
+              label: 'Copy Guest Link',
+              onClick: handleCopyGuestUploadUrl,
+              icon: Copy,
+              color: 'var(--color-primary)',
+            },
+            {
+              label: 'Choose Drive Folder',
+              onClick: () => setIsDrivePickerOpen(true),
+              icon: FolderOpen,
+              color: '#d97706',
+            },
+          ]}
+        />
       )}
     </div>
   );

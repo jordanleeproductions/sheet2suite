@@ -25,9 +25,9 @@ export async function getGoogleAuthAsync(accessToken?: string, spreadsheetIdOrEm
         });
         return oauth2Client;
       }
-      if (tokenDoc?.accessToken) {
+      if (accessToken || tokenDoc?.accessToken) {
         oauth2Client.setCredentials({
-          access_token: tokenDoc.accessToken,
+          access_token: accessToken || tokenDoc?.accessToken,
         });
         return oauth2Client;
       }

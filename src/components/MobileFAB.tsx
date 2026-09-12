@@ -25,7 +25,7 @@ export default function MobileFAB({
   label,
   icon: Icon = Plus,
   disabled = false,
-  bottomOffset = '5.125rem', // Sits cleanly above the 62px mobile bottom nav bar
+  bottomOffset = 'calc(5.25rem + env(safe-area-inset-bottom, 0px))', // Sits cleanly above the 62px mobile bottom nav bar
   subActions,
   className = '',
 }: MobileFABProps) {
@@ -53,7 +53,7 @@ export default function MobileFAB({
             style={{
               position: 'fixed',
               inset: 0,
-              zIndex: 98,
+              zIndex: 164,
               backgroundColor: 'rgba(0, 0, 0, 0.25)',
               backdropFilter: 'blur(2px)',
             }}
@@ -65,7 +65,7 @@ export default function MobileFAB({
               position: 'fixed',
               bottom: `calc(${bottomOffset} + 68px)`,
               right: '1.25rem',
-              zIndex: 99,
+              zIndex: 165,
               display: 'flex',
               flexDirection: 'column',
               gap: '0.75rem',
@@ -143,7 +143,7 @@ export default function MobileFAB({
           position: 'fixed',
           bottom: bottomOffset,
           right: '1.25rem',
-          zIndex: 100,
+          zIndex: 160,
           width: '56px',
           height: '56px',
           borderRadius: '50%',
@@ -171,8 +171,8 @@ export default function MobileFAB({
         />
       </button>
 
-      {/* Scoped CSS ensuring FAB is strictly visible on mobile viewports */}
-      <style jsx>{`
+      {/* CSS ensuring FAB is strictly visible on mobile viewports */}
+      <style>{`
         .mobile-fab-btn:active {
           transform: scale(0.92) !important;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;

@@ -22,6 +22,7 @@ import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import AppVersionBadge from '@/components/AppVersionBadge';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
+import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import Link from 'next/link';
 import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
@@ -126,6 +127,7 @@ export default function Sheet2VowDashboard() {
               }
               setIsMockMode(false);
               setIsOnboarded(true);
+              invalidateSessionCheckCache();
               addToast(`Welcome ${user?.name ? user.name : 'back'}! Connecting to workspace...`, 'success');
               // Fetch latest metadata (wedding date, location, budget) directly from Google Sheet SETTINGS
               fetchWeddingData(accessToken, targetSpreadsheetId);
@@ -175,7 +177,9 @@ export default function Sheet2VowDashboard() {
   const handleReauth = async () => {
     setIsReauthenticating(true);
     try {
-      const res = await fetch('/api/auth/google?prompt=select_account');
+      const targetSheet = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+      const sheetParam = targetSheet ? `&spreadsheetId=${encodeURIComponent(targetSheet)}` : '';
+      const res = await fetch(`/api/auth/google?prompt=select_account${sheetParam}`);
       const data = await res.json();
 
       if (data.authUrl && typeof window !== 'undefined') {
@@ -200,6 +204,7 @@ export default function Sheet2VowDashboard() {
             if (user?.email) setGoogleUserEmail(user.email);
             if (user?.picture) setGoogleUserAvatar(user.picture);
 
+            invalidateSessionCheckCache();
             setShowSessionExpiredModal(false);
             addToast('Session Reconnected!', 'success');
             // Re-fetch data with the fresh token directly

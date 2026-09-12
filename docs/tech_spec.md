@@ -130,7 +130,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Required photography moments (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
 - Priority levels support photographer-friendly enums (`Must Have`, `Nice To Have`, `Optional`) in the UI, bi-directionally translated to Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`High`, `Medium`, `Low`).
 - Interactive `Captured` vs `Pending` checkoff toggles and **`EMAIL LIST`** photographer email generator (`mailto:`).
-- **Responsive Mobile Segmented View Switcher (`[PHOTO-MOBILE-BALANCED-TABS]`):** 2-column balanced grid (`50% / 50%`) on mobile screens (`< 640px`) featuring shortened labels (`SHOT LIST` and `GUESTBOOK`) with dynamic count badges, completely eliminating horizontal scrolling and layout overflow.
+- **Responsive Mobile Segmented View Switcher & Elevated FAB (`[PHOTO-MOBILE-BALANCED-TABS]`, `[BUG-9]`):** Full-width rounded pill segmented control (`50% / 50%`) on mobile screens (`< 640px`) featuring responsive titles (`SHOT LIST` and `GUESTBOOK`) with dynamic count badges, completely eliminating text duplication and layout overflow. Integrated with elevated `MobileFAB` (`zIndex: 160`, `bottomOffset: calc(5.25rem + env(safe-area-inset-bottom, 0px))`) supporting Add Photo Shot on Shot List view and speed-dial actions (Copy Link, Choose Drive Folder) on Guestbook view.
 
 ### 2.12 Print & Export Studio (`PrintTemplatesModal.tsx`)
 - 🖨️ **Print Studio Launcher:** Header action button (`Printer` icon) and contextual module triggers opening the Print Studio portal.
