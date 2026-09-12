@@ -2717,6 +2717,7 @@ export default function Sheet2VowDashboard() {
               {activeTab === 'schedule' && weddingData && (
                 <TimelineManager
                   schedule={weddingData.schedule}
+                  vendors={weddingData.vendors}
                   onUpdate={(data) => syncUpdate('schedule', data)}
                   isSyncing={isSyncing}
                   timeFormat={timeFormat}

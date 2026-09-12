@@ -458,6 +458,13 @@
   - **Normalization Engine (`parseTimeOrSerial`)**: Converts day fractions, datetime serials (`46276.58333`), ISO strings (`1899-12-30T14:30:00Z`), and 24h/12h strings into clean canonical 12-hour (`2:00 PM`) and 24-hour (`14:00`) formats.
   - **End-to-End Integration**: Integrated into `scheduleMapper`, `photoMapper`, `TimelineManager.tsx` (`formatTimeDisplay`, `parseTimeToMinutes`, `isLateNightTime`), and `TimeDialPicker.tsx` (`time12To24`, `time24To12`).
   - **Explicit TIME Formatting**: Added Google Sheets API `repeatCell` with `pattern: 'hh:mm am/pm'` on `Schedule` time columns during synchronization.
+- [x] **[SCHED-MULTI-ASSIGNEE] Multi-Assignee & Multi-Role Selection Engine (`TimelineManager.tsx`, `src/app/vow/page.tsx`):**
+  - **Multi-Role Chip Interface**: Add/Edit Timeline Moment modal displays selected roles as removable chips with dismiss buttons (`✕`) and a "CLEAR ALL" action.
+  - **Searchable Combobox & Custom Typing**: Allows typing custom assignees (with `Enter` or `,` submission) or searching existing roles. Each dropdown item features a selection checkmark and allows picking multiple roles without prematurely closing the menu.
+  - **Quick-Add Popular Badges**: Clickable pill tags directly under the input (`+ Photographer`, `+ Videographer`, `+ Bridal Party`, `+ Planner`, `+ DJ / MC`, `+ Caterer`, `+ Officiant`, `+ Bride`, `+ Groom`) for 1-click toggling.
+  - **Vendor Directory Integration**: Automatically pulls vendor business names and categories from `weddingData.vendors` into the suggestion pool.
+  - **Event Card & UP NEXT Badges**: Renders individual styled role badges on timeline cards and the UP NEXT active banner with 1-click timeline filtering.
+  - **100% Backward Compatibility**: Stores multiple roles as clean comma-separated values in Google Sheets Column E (`Responsibility / Vendors`), ensuring seamless sync, export, and Print Studio parity.
 
 ---
 

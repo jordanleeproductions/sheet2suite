@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ScheduleEvent } from '@/lib/sheets/types';
+import { ScheduleEvent, Vendor } from '@/lib/sheets/types';
 import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle, Check } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import TimeDialPicker from '@/components/TimeDialPicker';
@@ -10,6 +10,34 @@ import { parseTimeOrSerial } from '@/lib/currency';
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
   if (!timeStr) return '';
   return parseTimeOrSerial(timeStr, format || '12h');
+}
+
+export function parseResponsibilities(raw: string | undefined | null): string[] {
+  if (!raw) return [];
+  const parts = raw.split(/[,/]/).map(r => r.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const part of parts) {
+    const lower = part.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      unique.push(part);
+    }
+  }
+  return unique;
+}
+
+export function formatResponsibilities(roles: string[]): string {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const r of roles) {
+    const trimmed = r.trim();
+    if (trimmed && !seen.has(trimmed.toLowerCase())) {
+      seen.add(trimmed.toLowerCase());
+      unique.push(trimmed);
+    }
+  }
+  return unique.join(', ');
 }
 
 export function isLateNightTime(timeStr: string | undefined | null): boolean {
@@ -47,19 +75,21 @@ export function compareScheduleEvents(a: ScheduleEvent, b: ScheduleEvent): numbe
 
 interface TimelineManagerProps {
   schedule: ScheduleEvent[];
+  vendors?: Vendor[];
   onUpdate: (updatedSchedule: ScheduleEvent[]) => Promise<void>;
   isSyncing: boolean;
   timeFormat?: '12h' | '24h';
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
 }
 
-export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFormat = '12h', onOpenPrintStudio }: TimelineManagerProps) {
+export default function TimelineManager({ schedule, vendors = [], onUpdate, isSyncing, timeFormat = '12h', onOpenPrintStudio }: TimelineManagerProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // expand first by default
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [eventToDeleteIndex, setEventToDeleteIndex] = useState<number | null>(null);
   
   const [formState, setFormState] = useState<Partial<ScheduleEvent>>({});
+  const [customRoleInput, setCustomRoleInput] = useState<string>('');
 
   // Search, Role Filter, and UP NEXT Active State
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,11 +100,21 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
 
-  const roles = Array.from(new Set(
-    schedule.flatMap(e => (e.responsibility || '').split(/[,/]/).map(r => r.trim()).filter(Boolean))
-  ));
+  const roles = useMemo(() => {
+    const all = schedule.flatMap(e => parseResponsibilities(e.responsibility));
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const r of all) {
+      const lower = r.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        unique.push(r);
+      }
+    }
+    return unique.sort((a, b) => a.localeCompare(b));
+  }, [schedule]);
 
-  // Unique list of previous responsibility entries + standard options
+  // Unique list of previous responsibility entries + standard options + vendors
   const previousResponsibilities = useMemo(() => {
     const list: string[] = [];
     const seen = new Set<string>();
@@ -87,32 +127,37 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
     };
 
     schedule.forEach(e => {
-      if (e.responsibility) addRole(e.responsibility);
-    });
-
-    schedule.forEach(e => {
       if (e.responsibility) {
-        e.responsibility.split(/[,/]/).forEach(r => addRole(r));
+        parseResponsibilities(e.responsibility).forEach(r => addRole(r));
       }
     });
 
+    if (vendors && Array.isArray(vendors)) {
+      vendors.forEach(v => {
+        if (v.vendorName) addRole(v.vendorName);
+        if (v.category) addRole(v.category);
+      });
+    }
+
     [
-      'Planner / Coordinator',
       'Photographer',
       'Videographer',
+      'Bridal Party',
+      'Groomsmen',
+      'Planner / Coordinator',
       'DJ / MC',
       'Caterer / Staff',
       'Officiant',
       'Florist',
       'Glam Team (Hair & Makeup)',
-      'Bridal Party',
-      'Groomsmen',
       'Musicians / Band',
-      'Transportation / Driver'
+      'Transportation / Driver',
+      'Bride',
+      'Groom'
     ].forEach(r => addRole(r));
 
     return list;
-  }, [schedule]);
+  }, [schedule, vendors]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -138,7 +183,9 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
           (event.responsibility || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (event.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
 
+        const eventRoles = parseResponsibilities(event.responsibility);
         const matchesRole = selectedRole === 'ALL' || 
+          eventRoles.some(r => r.toLowerCase() === selectedRole.toLowerCase()) ||
           (event.responsibility || '').toLowerCase().includes(selectedRole.toLowerCase());
 
         return matchesSearch && matchesRole;
@@ -160,6 +207,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
       startTime: parseTimeOrSerial(event.startTime),
       endTime: parseTimeOrSerial(event.endTime),
     });
+    setCustomRoleInput('');
     setIsAdding(false);
   };
 
@@ -169,15 +217,54 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
       endTime: '',
       eventMoment: '',
       location: '',
-      responsibility: '',
+      responsibility: selectedRole !== 'ALL' ? selectedRole : '',
       notes: '',
     });
+    setCustomRoleInput('');
     setIsAdding(true);
     setEditingIndex(null);
   };
 
   const handleInputChange = (field: keyof ScheduleEvent, value: string) => {
     setFormState(prev => ({ ...prev, [field]: value }));
+  };
+
+  const selectedRoles = useMemo(() => {
+    return parseResponsibilities(formState.responsibility);
+  }, [formState.responsibility]);
+
+  const toggleRole = (roleToToggle: string) => {
+    const trimmed = roleToToggle.trim();
+    if (!trimmed) return;
+    const current = parseResponsibilities(formState.responsibility);
+    const exists = current.some(r => r.toLowerCase() === trimmed.toLowerCase());
+    let next: string[];
+    if (exists) {
+      next = current.filter(r => r.toLowerCase() !== trimmed.toLowerCase());
+    } else {
+      next = [...current, trimmed];
+    }
+    handleInputChange('responsibility', formatResponsibilities(next));
+  };
+
+  const removeRole = (roleToRemove: string) => {
+    const current = parseResponsibilities(formState.responsibility);
+    const next = current.filter(r => r.toLowerCase() !== roleToRemove.toLowerCase());
+    handleInputChange('responsibility', formatResponsibilities(next));
+  };
+
+  const addCustomRole = (text: string) => {
+    const parts = parseResponsibilities(text);
+    if (parts.length === 0) return;
+    const current = parseResponsibilities(formState.responsibility);
+    const merged = Array.from(new Set([...current, ...parts]));
+    handleInputChange('responsibility', formatResponsibilities(merged));
+    setCustomRoleInput('');
+  };
+
+  const clearAllRoles = () => {
+    handleInputChange('responsibility', '');
+    setCustomRoleInput('');
   };
 
   const saveEvent = async (e: React.FormEvent, continueAdding = false) => {
@@ -395,8 +482,28 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                 )}
                 {activeItem.event.responsibility && (
                   <div style={styles.upNextMetaItem}>
-                    <User size={13} style={{ color: 'var(--color-primary)' }} />
-                    <span>{activeItem.event.responsibility}</span>
+                    <User size={13} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', alignItems: 'center' }}>
+                      {parseResponsibilities(activeItem.event.responsibility).map(role => (
+                        <span
+                          key={role}
+                          onClick={() => setSelectedRole(role)}
+                          style={{
+                            fontSize: '0.725rem',
+                            padding: '0.1rem 0.45rem',
+                            borderRadius: '999px',
+                            backgroundColor: selectedRole.toLowerCase() === role.toLowerCase() ? 'var(--color-primary)' : 'var(--color-bg-subtle, rgba(255,255,255,0.2))',
+                            color: selectedRole.toLowerCase() === role.toLowerCase() ? 'var(--color-on-primary, #ffffff)' : 'currentColor',
+                            border: '1px solid var(--color-border)',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                          title={`Filter timeline by ${role}`}
+                        >
+                          {role}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -432,7 +539,10 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
             ALL ROLES ({schedule.length})
           </button>
           {roles.map(role => {
-            const count = schedule.filter(e => (e.responsibility || '').toLowerCase().includes(role.toLowerCase())).length;
+            const count = schedule.filter(e => 
+              parseResponsibilities(e.responsibility).some(r => r.toLowerCase() === role.toLowerCase()) ||
+              (e.responsibility || '').toLowerCase().includes(role.toLowerCase())
+            ).length;
             const isSelected = selectedRole.toLowerCase() === role.toLowerCase();
             return (
               <button
@@ -552,44 +662,157 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                 </div>
 
                 <div className="timeline-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>RESPONSIBILITY / VENDORS</label>
-                  <div ref={roleDropdownRef} style={{ position: 'relative', width: '100%' }}>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <input
-                        type="text"
-                        placeholder="Select from previous or type custom vendor / role..."
-                        value={formState.responsibility || ''}
-                        onChange={(e) => {
-                          handleInputChange('responsibility', e.target.value);
-                          setIsRoleDropdownOpen(true);
-                        }}
-                        onFocus={() => setIsRoleDropdownOpen(true)}
-                        style={{
-                          ...styles.input,
-                          paddingRight: '2.5rem',
-                        }}
-                      />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label style={styles.label}>RESPONSIBILITY / VENDORS & ROLES</label>
+                    {selectedRoles.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => setIsRoleDropdownOpen(prev => !prev)}
-                        title="Toggle previous vendors & roles list"
+                        onClick={clearAllRoles}
                         style={{
-                          position: 'absolute',
-                          right: '6px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: 'transparent',
+                          background: 'none',
                           border: 'none',
                           color: 'var(--color-muted)',
-                          padding: '0.35rem',
+                          fontSize: '0.7rem',
+                          fontFamily: 'var(--font-mono)',
                           cursor: 'pointer',
+                          textDecoration: 'underline',
                         }}
                       >
-                        <ChevronDown size={16} />
+                        CLEAR ALL ({selectedRoles.length})
                       </button>
+                    )}
+                  </div>
+
+                  {/* Selected Roles Chips */}
+                  {selectedRoles.length > 0 && (
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '0.35rem',
+                      marginBottom: '0.5rem',
+                      padding: '0.45rem 0.6rem',
+                      backgroundColor: 'var(--color-bg-subtle, #f8f9fa)',
+                      borderRadius: 'var(--border-radius-sm, 6px)',
+                      border: '1px solid var(--color-border, #e5e7eb)',
+                    }}>
+                      {selectedRoles.map((role) => (
+                        <span
+                          key={role}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            padding: '0.2rem 0.55rem',
+                            borderRadius: '999px',
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'var(--color-on-primary, #ffffff)',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                          }}
+                        >
+                          <User size={11} />
+                          <span>{role}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeRole(role)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'inherit',
+                              padding: '0',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              opacity: 0.85,
+                            }}
+                            title={`Remove ${role}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Combobox Search & Input */}
+                  <div ref={roleDropdownRef} style={{ position: 'relative', width: '100%' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          placeholder={selectedRoles.length === 0 ? "Select roles below or type custom assignee..." : "Type custom name or search roles..."}
+                          value={customRoleInput}
+                          onChange={(e) => {
+                            setCustomRoleInput(e.target.value);
+                            setIsRoleDropdownOpen(true);
+                          }}
+                          onFocus={() => setIsRoleDropdownOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (customRoleInput.trim()) {
+                                addCustomRole(customRoleInput);
+                              }
+                            } else if (e.key === ',') {
+                              e.preventDefault();
+                              if (customRoleInput.trim()) {
+                                addCustomRole(customRoleInput);
+                              }
+                            }
+                          }}
+                          style={{
+                            ...styles.input,
+                            paddingRight: '2.5rem',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsRoleDropdownOpen(prev => !prev)}
+                          title="Toggle roles and vendors list"
+                          style={{
+                            position: 'absolute',
+                            right: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--color-muted)',
+                            padding: '0.35rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                      </div>
+
+                      {customRoleInput.trim() && (
+                        <button
+                          type="button"
+                          onClick={() => addCustomRole(customRoleInput)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.2rem',
+                            padding: '0.55rem 0.85rem',
+                            fontSize: '0.75rem',
+                            fontFamily: 'var(--font-mono)',
+                            fontWeight: 700,
+                            borderRadius: 'var(--border-radius-sm, 6px)',
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'var(--color-on-primary, #ffffff)',
+                            border: 'none',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <Plus size={13} /> ADD
+                        </button>
+                      )}
                     </div>
 
+                    {/* Multi-Select Combobox Dropdown */}
                     {isRoleDropdownOpen && (
                       <div
                         style={{
@@ -597,31 +820,79 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                           top: 'calc(100% + 4px)',
                           left: 0,
                           right: 0,
-                          maxHeight: '180px',
+                          maxHeight: '220px',
                           overflowY: 'auto',
                           backgroundColor: 'var(--color-surface, #ffffff)',
                           border: '1px solid var(--color-muted, #d1d5db)',
                           borderRadius: 'var(--border-radius-sm)',
-                          boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
                           zIndex: 50,
                         }}
                       >
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.45rem 0.75rem',
+                          borderBottom: '1px solid var(--color-border)',
+                          backgroundColor: 'var(--color-bg-subtle, #f9fafb)',
+                        }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
+                            SELECT ASSIGNEES ({selectedRoles.length} SELECTED)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setIsRoleDropdownOpen(false)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              color: 'var(--color-primary)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            DONE ✓
+                          </button>
+                        </div>
+
+                        {customRoleInput.trim() && (
+                          <button
+                            type="button"
+                            onClick={() => addCustomRole(customRoleInput)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              width: '100%',
+                              padding: '0.55rem 0.75rem',
+                              textAlign: 'left',
+                              fontSize: '0.8rem',
+                              fontFamily: 'var(--font-sans)',
+                              backgroundColor: 'rgba(205, 162, 80, 0.1)',
+                              color: 'var(--color-primary)',
+                              fontWeight: 700,
+                              border: 'none',
+                              borderBottom: '1px solid var(--color-border)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Plus size={14} /> Add custom: &ldquo;{customRoleInput.trim()}&rdquo;
+                          </button>
+                        )}
+
                         {previousResponsibilities
-                          .filter(role => 
-                            !formState.responsibility || 
-                            role.toLowerCase().includes(formState.responsibility.toLowerCase()) ||
-                            formState.responsibility.trim() === ''
+                          .filter(role =>
+                            !customRoleInput.trim() ||
+                            role.toLowerCase().includes(customRoleInput.trim().toLowerCase())
                           )
                           .map((role) => {
-                            const isSelected = (formState.responsibility || '').trim().toLowerCase() === role.toLowerCase();
+                            const isSelected = selectedRoles.some(r => r.toLowerCase() === role.toLowerCase());
                             return (
                               <button
                                 key={role}
                                 type="button"
-                                onClick={() => {
-                                  handleInputChange('responsibility', role);
-                                  setIsRoleDropdownOpen(false);
-                                }}
+                                onClick={() => toggleRole(role)}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -631,7 +902,7 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                                   textAlign: 'left',
                                   fontSize: '0.8rem',
                                   fontFamily: 'var(--font-sans)',
-                                  backgroundColor: isSelected ? 'var(--color-background, #f3f4f6)' : 'transparent',
+                                  backgroundColor: isSelected ? 'var(--color-bg-subtle, #f3f4f6)' : 'transparent',
                                   color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
                                   fontWeight: isSelected ? 700 : 500,
                                   border: 'none',
@@ -639,21 +910,77 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                                   cursor: 'pointer',
                                 }}
                               >
-                                <span>{role}</span>
-                                {isSelected && <Check size={14} style={{ color: 'var(--color-primary)' }} />}
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <span style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    borderRadius: '3px',
+                                    border: `1.5px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-muted)'}`,
+                                    backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}>
+                                    {isSelected && <Check size={12} style={{ color: 'var(--color-on-primary, #ffffff)' }} />}
+                                  </span>
+                                  {role}
+                                </span>
+                                {isSelected && (
+                                  <span style={{ fontSize: '0.675rem', color: 'var(--color-primary)', fontWeight: 700 }}>
+                                    ADDED
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
-                        {previousResponsibilities.filter(role => 
-                          !formState.responsibility || 
-                          role.toLowerCase().includes(formState.responsibility.toLowerCase())
-                        ).length === 0 && (
-                          <div style={{ padding: '0.6rem 0.75rem', fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
-                            Custom role: "{formState.responsibility}"
-                          </div>
-                        )}
                       </div>
                     )}
+                  </div>
+
+                  {/* Quick-Pick Popular Suggestion Badges */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontSize: '0.675rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-muted)' }}>
+                      QUICK ADD:
+                    </span>
+                    {[
+                      'Photographer',
+                      'Videographer',
+                      'Bridal Party',
+                      'Groomsmen',
+                      'Planner / Coordinator',
+                      'DJ / MC',
+                      'Caterer / Staff',
+                      'Officiant',
+                      'Bride',
+                      'Groom'
+                    ].map(sug => {
+                      const isSelected = selectedRoles.some(r => r.toLowerCase() === sug.toLowerCase());
+                      return (
+                        <button
+                          key={sug}
+                          type="button"
+                          onClick={() => toggleRole(sug)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.2rem',
+                            fontSize: '0.675rem',
+                            fontFamily: 'var(--font-sans)',
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '4px',
+                            border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-muted)'}`,
+                            backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
+                            color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
+                          title={isSelected ? `Remove ${sug}` : `Add ${sug}`}
+                        >
+                          {isSelected ? <Check size={10} /> : <Plus size={10} />}
+                          <span>{sug}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -878,6 +1205,26 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                           <span style={styles.locationText}>{event.location}</span>
                         </div>
                       )}
+                      {event.responsibility && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.3rem' }}>
+                          {parseResponsibilities(event.responsibility).map((role) => (
+                            <span
+                              key={role}
+                              style={{
+                                fontSize: '0.675rem',
+                                padding: '0.1rem 0.45rem',
+                                borderRadius: '999px',
+                                backgroundColor: selectedRole.toLowerCase() === role.toLowerCase() ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f3f4f6)',
+                                color: selectedRole.toLowerCase() === role.toLowerCase() ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                                border: '1px solid var(--color-border)',
+                                fontWeight: 600,
+                              }}
+                            >
+                              👤 {role}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     
                     <div style={styles.headerRightActions}>
@@ -897,11 +1244,43 @@ export default function TimelineManager({ schedule, onUpdate, isSyncing, timeFor
                   {isExpanded && (
                     <div className="timeline-card-body" style={styles.cardBody}>
                       {event.responsibility && (
-                        <div style={styles.bodyDetailRow}>
-                          <User size={12} style={styles.cardIcon} />
-                          <span style={styles.bodyDetailText}>
-                            <strong>Responsibility:</strong> {event.responsibility}
-                          </span>
+                        <div style={{ ...styles.bodyDetailRow, flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--color-muted)', fontSize: '0.75rem', fontWeight: 700 }}>
+                            <User size={12} style={styles.cardIcon} />
+                            <span>ASSIGNED ROLES:</span>
+                          </div>
+                          <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center' }}>
+                            {parseResponsibilities(event.responsibility).map((role) => {
+                              const isFiltered = selectedRole.toLowerCase() === role.toLowerCase();
+                              return (
+                                <button
+                                  key={role}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRole(role);
+                                  }}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    fontSize: '0.725rem',
+                                    fontWeight: 600,
+                                    padding: '0.15rem 0.5rem',
+                                    borderRadius: '999px',
+                                    backgroundColor: isFiltered ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f3f4f6)',
+                                    color: isFiltered ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                                    border: `1px solid ${isFiltered ? 'var(--color-primary)' : 'var(--color-border, #e5e7eb)'}`,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                  }}
+                                  title={`Filter itinerary by ${role}`}
+                                >
+                                  <span>{role}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                       
