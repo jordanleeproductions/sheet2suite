@@ -146,6 +146,8 @@
   - The Title and description span the entire top row, allowing the text to breathe naturally without horizontal crowding.
   - The Category dropdown filter, Sort bar, and desktop `+ ADD TASK` button reside on their own dedicated full-width toolbar row below the description (`display: flex; justify-content: space-between; align-items: center; width: 100%`).
   - Completely eliminates cramped multi-line stacking of Category, Sort, and Add Task beside the description text when desktop screens or browser windows are shrunk.
+- [x] **[TASK-CONTROLS-UNDER-METRICS] Relocate Category & Sort Controls Under Progress Metrics (`KanbanBoard.tsx`):** Moved the Category and Sort filter controls out of the top header and positioned them in a dedicated toolbar card directly beneath the "TASK PROGRESS & COMPLETION METRICS" card, creating an uncrowded header and intuitive hierarchy.
+- [x] **[TASK-ASSIGNEE-FILTER] Dynamic Assignee Filter with Unassigned Support (`KanbanBoard.tsx`):** Added an Assignee filter dropdown (`ASSIGNEE: [ALL ASSIGNEES | UNASSIGNED | <Names>]`) displaying dynamic task counts per assignee. Seamlessly filters board columns and progress metrics, and automatically pre-populates the assigned person when adding new tasks.
 
 ---
 

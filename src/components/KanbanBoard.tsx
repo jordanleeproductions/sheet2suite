@@ -304,6 +304,9 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   // Category Filter state ('ALL' or specific category name) [TASK-CATEGORY-FILTER]
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
+  // Assignee Filter state ('ALL', 'UNASSIGNED', or specific assignee name)
+  const [selectedAssignee, setSelectedAssignee] = useState<string>('ALL');
+
   // Compute available categories from tasks, with empty/unspecified category mapping to 'General'
   const categoryOptions = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -316,11 +319,56 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       .map(name => ({ name, count: counts[name] }));
   }, [tasks]);
 
-  // Filter tasks based on category selection
+  // Compute available assignees from tasks with counts
+  const assigneeOptions = React.useMemo(() => {
+    let unassignedCount = 0;
+    const counts: Record<string, number> = {};
+
+    for (const task of tasks) {
+      const assigned = (task.assignedTo || '').trim();
+      if (!assigned || assigned.toLowerCase() === 'unassigned') {
+        unassignedCount++;
+      } else {
+        counts[assigned] = (counts[assigned] || 0) + 1;
+      }
+    }
+
+    const list = Object.keys(counts)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      .map(name => ({ name, count: counts[name] }));
+
+    return {
+      unassignedCount,
+      list,
+    };
+  }, [tasks]);
+
+  // Filter tasks based on category AND assignee selection
   const filteredTasks = React.useMemo(() => {
-    if (selectedCategory === 'ALL') return tasks;
-    return tasks.filter(t => getTaskCategory(t).toLowerCase() === selectedCategory.toLowerCase());
-  }, [tasks, selectedCategory]);
+    return tasks.filter(t => {
+      // Category filter
+      if (selectedCategory !== 'ALL') {
+        if (getTaskCategory(t).toLowerCase() !== selectedCategory.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Assignee filter
+      if (selectedAssignee !== 'ALL') {
+        const assigned = (t.assignedTo || '').trim();
+        const isUnassigned = !assigned || assigned.toLowerCase() === 'unassigned';
+        if (selectedAssignee === 'UNASSIGNED') {
+          if (!isUnassigned) return false;
+        } else {
+          if (assigned.toLowerCase() !== selectedAssignee.toLowerCase()) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }, [tasks, selectedCategory, selectedAssignee]);
 
   // Compute dynamic suggestions for Categories & Assignees from existing tasks [TASK-AUTO-SUGGEST]
   const existingCategories = Array.from(new Set([
@@ -414,7 +462,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       kanbanStage: stage,
       category: selectedCategory !== 'ALL' && selectedCategory.toLowerCase() !== 'general' ? selectedCategory : '',
       priority: 'Medium',
-      assignedTo: '',
+      assignedTo: selectedAssignee !== 'ALL' && selectedAssignee !== 'UNASSIGNED' ? selectedAssignee : '',
       dueDate: '',
       notes: '',
     });
@@ -487,104 +535,12 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header} className="kanban-header">
-        <div className="kanban-header-text">
-          <h2 style={styles.title}>Kanban Checklist</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
-          </p>
-        </div>
-
-        <div style={styles.headerActions} className="kanban-header-actions">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }} className="kanban-controls-row">
-            {/* Category Filter Dropdown [TASK-CATEGORY-FILTER] */}
-            <div style={styles.sortGroup} className="kanban-category-filter-bar">
-              <span style={styles.sortLabel}>CATEGORY:</span>
-              <div className="kanban-category-select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  style={{
-                    padding: '0.35rem 0.6rem',
-                    fontSize: '0.675rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 600,
-                    backgroundColor: selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-input-bg, #ffffff)',
-                    color: selectedCategory !== 'ALL' ? 'var(--color-on-primary)' : 'var(--color-text)',
-                    border: `1px solid ${selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-muted)'}`,
-                    borderRadius: 'var(--border-radius-sm)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    transition: 'var(--transition-smooth)',
-                  }}
-                  className="kanban-category-select"
-                  title="Filter tasks by category"
-                >
-                  <option value="ALL" style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
-                    ALL CATEGORIES ({tasks.length})
-                  </option>
-                  {categoryOptions.map(cat => (
-                    <option key={cat.name} value={cat.name} style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
-                      {cat.name.toUpperCase()} ({cat.count})
-                    </option>
-                  ))}
-                </select>
-
-                {selectedCategory !== 'ALL' && (
-                  <button
-                    type="button"
-                    style={styles.clearSortBtn}
-                    className="kanban-filter-reset"
-                    onClick={() => setSelectedCategory('ALL')}
-                    title="Remove category filter (Select all categories)"
-                  >
-                    RESET
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Sort Bar */}
-            <div style={styles.sortGroup} className="kanban-sort-bar">
-              <span style={styles.sortLabel}>SORT:</span>
-              <button
-                style={{
-                  ...styles.sortBtn,
-                  backgroundColor: sortField === 'priority' ? 'var(--color-primary)' : 'transparent',
-                  color: sortField === 'priority' ? 'var(--color-on-primary)' : 'var(--color-text)',
-                  borderColor: sortField === 'priority' ? 'var(--color-primary)' : 'var(--color-muted)'
-                }}
-                className="kanban-sort-btn"
-                onClick={() => handleSortClick('priority')}
-                title="Sort by Priority"
-              >
-                <AlertTriangle size={13} style={{ marginRight: '0.25rem' }} />
-                PRIORITY {sortField === 'priority' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
-              </button>
-              <button
-                style={{
-                  ...styles.sortBtn,
-                  backgroundColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'transparent',
-                  color: sortField === 'dueDate' ? 'var(--color-on-primary)' : 'var(--color-text)',
-                  borderColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'var(--color-muted)'
-                }}
-                className="kanban-sort-btn"
-                onClick={() => handleSortClick('dueDate')}
-                title="Sort by Due Date"
-              >
-                <Clock size={13} style={{ marginRight: '0.25rem' }} />
-                DUE DATE {sortField === 'dueDate' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
-              </button>
-              {sortField !== 'default' && (
-                <button
-                  style={styles.clearSortBtn}
-                  className="kanban-sort-reset"
-                  onClick={() => setSortField('default')}
-                  title="Reset Sorting"
-                >
-                  RESET
-                </button>
-              )}
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="kanban-header-text">
+            <h2 style={styles.title}>Kanban Checklist</h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
+              Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
+            </p>
           </div>
 
           <button style={{ ...styles.addButton, color: 'var(--color-on-light)' }} className="kanban-add-btn-desktop" onClick={() => startAdd('To Do')} disabled={isSyncing}>
@@ -603,20 +559,25 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
         const percentToDo = total > 0 ? Math.round((toDoCount / total) * 100) : 0;
         const percentInProgress = total > 0 ? Math.round((inProgressCount / total) * 100) : 0;
 
+        const filterSubtitle = [
+          selectedCategory !== 'ALL' ? `Category: ${selectedCategory.toUpperCase()}` : null,
+          selectedAssignee !== 'ALL' ? `Assignee: ${selectedAssignee.toUpperCase()}` : null,
+        ].filter(Boolean).join(' • ');
+
         return (
           <div style={{
             backgroundColor: 'var(--color-surface, #ffffff)',
             border: '1px solid var(--color-muted)',
             borderRadius: 'var(--border-radius-md)',
             padding: '1rem 1.25rem',
-            margin: '1rem 0',
+            margin: '1rem 0 0.75rem 0',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.875rem',
           }}>
             <div className="task-progress-card-header">
               <div className="task-progress-card-title">
-                TASK PROGRESS & COMPLETION METRICS {selectedCategory !== 'ALL' ? `• ${selectedCategory.toUpperCase()}` : ''}
+                TASK PROGRESS & COMPLETION METRICS {filterSubtitle ? `• ${filterSubtitle}` : ''}
               </div>
               <div className="task-progress-toggle-group">
                 <button
@@ -738,6 +699,159 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           </div>
         );
       })()}
+
+      {/* Controls Bar: Category Filter, Assignee Filter & Sort Bar (Under Progress Metrics) */}
+      <div className="kanban-filter-sort-bar">
+        <div className="kanban-filters-group">
+          {/* Category Filter Dropdown [TASK-CATEGORY-FILTER] */}
+          <div style={styles.sortGroup} className="kanban-category-filter-bar">
+            <span style={styles.sortLabel}>CATEGORY:</span>
+            <div className="kanban-category-select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={{
+                  padding: '0.4rem 0.65rem',
+                  fontSize: '0.72rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 600,
+                  backgroundColor: selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-input-bg, #ffffff)',
+                  color: selectedCategory !== 'ALL' ? 'var(--color-on-primary)' : 'var(--color-text)',
+                  border: `1px solid ${selectedCategory !== 'ALL' ? 'var(--color-primary)' : 'var(--color-muted)'}`,
+                  borderRadius: 'var(--border-radius-sm)',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  transition: 'var(--transition-smooth)',
+                  minHeight: '34px',
+                }}
+                className="kanban-category-select"
+                title="Filter tasks by category"
+              >
+                <option value="ALL" style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                  ALL CATEGORIES ({tasks.length})
+                </option>
+                {categoryOptions.map(cat => (
+                  <option key={cat.name} value={cat.name} style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                    {cat.name.toUpperCase()} ({cat.count})
+                  </option>
+                ))}
+              </select>
+
+              {selectedCategory !== 'ALL' && (
+                <button
+                  type="button"
+                  style={styles.clearSortBtn}
+                  className="kanban-filter-reset"
+                  onClick={() => setSelectedCategory('ALL')}
+                  title="Remove category filter (Select all categories)"
+                >
+                  <X size={10} style={{ marginRight: '2px' }} /> RESET
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Assignee Filter Dropdown */}
+          <div style={styles.sortGroup} className="kanban-assignee-filter-bar">
+            <span style={styles.sortLabel}>ASSIGNEE:</span>
+            <div className="kanban-assignee-select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <select
+                value={selectedAssignee}
+                onChange={(e) => setSelectedAssignee(e.target.value)}
+                style={{
+                  padding: '0.4rem 0.65rem',
+                  fontSize: '0.72rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 600,
+                  backgroundColor: selectedAssignee !== 'ALL' ? 'var(--color-primary)' : 'var(--color-input-bg, #ffffff)',
+                  color: selectedAssignee !== 'ALL' ? 'var(--color-on-primary)' : 'var(--color-text)',
+                  border: `1px solid ${selectedAssignee !== 'ALL' ? 'var(--color-primary)' : 'var(--color-muted)'}`,
+                  borderRadius: 'var(--border-radius-sm)',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  transition: 'var(--transition-smooth)',
+                  minHeight: '34px',
+                }}
+                className="kanban-assignee-select"
+                title="Filter tasks by assigned person"
+              >
+                <option value="ALL" style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                  ALL ASSIGNEES ({tasks.length})
+                </option>
+                <option value="UNASSIGNED" style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                  UNASSIGNED ({assigneeOptions.unassignedCount})
+                </option>
+                {assigneeOptions.list.map(asg => (
+                  <option key={asg.name} value={asg.name} style={{ backgroundColor: 'var(--color-surface, #ffffff)', color: 'var(--color-text)' }}>
+                    {asg.name.toUpperCase()} ({asg.count})
+                  </option>
+                ))}
+              </select>
+
+              {selectedAssignee !== 'ALL' && (
+                <button
+                  type="button"
+                  style={styles.clearSortBtn}
+                  className="kanban-filter-reset"
+                  onClick={() => setSelectedAssignee('ALL')}
+                  title="Remove assignee filter"
+                >
+                  <X size={10} style={{ marginRight: '2px' }} /> RESET
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sort Bar */}
+        <div style={styles.sortGroup} className="kanban-sort-bar">
+          <span style={styles.sortLabel}>SORT:</span>
+          <button
+            style={{
+              ...styles.sortBtn,
+              backgroundColor: sortField === 'priority' ? 'var(--color-primary)' : 'transparent',
+              color: sortField === 'priority' ? 'var(--color-on-primary)' : 'var(--color-text)',
+              borderColor: sortField === 'priority' ? 'var(--color-primary)' : 'var(--color-muted)',
+              minHeight: '34px',
+            }}
+            className="kanban-sort-btn"
+            onClick={() => handleSortClick('priority')}
+            title="Sort by Priority"
+          >
+            <AlertTriangle size={13} style={{ marginRight: '0.25rem' }} />
+            PRIORITY {sortField === 'priority' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
+          </button>
+          <button
+            style={{
+              ...styles.sortBtn,
+              backgroundColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'transparent',
+              color: sortField === 'dueDate' ? 'var(--color-on-primary)' : 'var(--color-text)',
+              borderColor: sortField === 'dueDate' ? 'var(--color-primary)' : 'var(--color-muted)',
+              minHeight: '34px',
+            }}
+            className="kanban-sort-btn"
+            onClick={() => handleSortClick('dueDate')}
+            title="Sort by Due Date"
+          >
+            <Clock size={13} style={{ marginRight: '0.25rem' }} />
+            DUE DATE {sortField === 'dueDate' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
+          </button>
+          {(sortField !== 'default' || selectedCategory !== 'ALL' || selectedAssignee !== 'ALL') && (
+            <button
+              style={{ ...styles.clearSortBtn, minHeight: '34px' }}
+              className="kanban-sort-reset"
+              onClick={() => {
+                setSortField('default');
+                setSelectedCategory('ALL');
+                setSelectedAssignee('ALL');
+              }}
+              title="Reset all filters and sorting"
+            >
+              <X size={10} style={{ marginRight: '2px' }} /> RESET ALL
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Editor Modal */}
       {(isAdding || editingTask) && (
@@ -1034,7 +1148,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
               <div style={styles.taskList}>
                 {stageTasks.length === 0 ? (
                   <div style={styles.emptyState}>
-                    {selectedCategory !== 'ALL' ? `No ${selectedCategory} tasks in ${stage}.` : 'No tasks here.'}
+                    {selectedCategory !== 'ALL' || selectedAssignee !== 'ALL' ? `No matching tasks in ${stage}.` : 'No tasks here.'}
                   </div>
                 ) : (
                   stageTasks.map(task => {
@@ -1153,7 +1267,27 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
       </div>
 
       {/* CSS details to ensure columns, header, and delete modal switch properly on mobile */}
-      <style jsx global>{`
+      {/* CSS details to ensure columns, header, and delete modal switch properly on mobile */}
+      <style>{`
+        .kanban-filter-sort-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+          background-color: var(--color-surface, #ffffff);
+          border: 1px solid var(--color-muted);
+          border-radius: var(--border-radius-md);
+          padding: 0.75rem 1rem;
+          box-shadow: var(--box-shadow-subtle);
+        }
+        .kanban-filters-group {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
         @media (max-width: 767px) {
           .mobile-hidden {
             display: none !important;
@@ -1187,34 +1321,44 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           .kanban-header-actions {
             width: 100% !important;
           }
-          .kanban-controls-row {
-            display: flex !important;
+          .kanban-filter-sort-bar {
             flex-direction: column !important;
             align-items: stretch !important;
-            width: 100% !important;
-            gap: 0.625rem !important;
+            padding: 0.75rem !important;
+            gap: 0.65rem !important;
           }
-          .kanban-category-filter-bar {
+          .kanban-filters-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            width: 100% !important;
+          }
+          .kanban-category-filter-bar,
+          .kanban-assignee-filter-bar {
+            width: 100% !important;
             display: flex !important;
+            flex-direction: row !important;
             align-items: center !important;
-            width: 100% !important;
-            gap: 0.35rem !important;
+            justify-content: space-between !important;
           }
-          .kanban-category-select-wrapper {
+          .kanban-category-select-wrapper,
+          .kanban-assignee-select-wrapper {
             flex: 1 !important;
             display: flex !important;
-            align-items: center !important;
-            gap: 0.35rem !important;
           }
-          .kanban-category-select {
+          .kanban-category-select,
+          .kanban-assignee-select {
             flex: 1 !important;
             width: 100% !important;
           }
           .kanban-sort-bar {
+            width: 100% !important;
             display: flex !important;
             align-items: center !important;
-            width: 100% !important;
-            gap: 0.35rem !important;
+            justify-content: flex-start !important;
+            gap: 0.4rem !important;
+            padding-top: 0.4rem !important;
+            border-top: 1px dashed var(--color-muted) !important;
           }
           .kanban-sort-btn {
             flex: 1 !important;
