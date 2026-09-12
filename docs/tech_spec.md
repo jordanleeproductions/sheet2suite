@@ -64,6 +64,10 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Native CSV export, printable layout, and switchable Cards vs Compact List view.
 - Responsive mobile header ergonomics with dedicated full-width `+ ADD GUEST` button and quick-filter cluster grouping bar above the search input.
 - Catering & Menu Setup (`MenuSetupManager.tsx`) with 2-way Google Sheets sync to the `CATERING` tab, automatic guest meal choice linkage, and human-readable sequential catalog ID generation (`M101`, `M102`, `M103`...).
+- **Seating Table Grouping & Declined Exclusion (`[GUEST-SEATING-DECLINED-EXCLUSION]`, `[BUG-10]`):** When grouping guests "BY SEATING TABLE", guests with `RSVP Status: Declined` lacking table assignments are strictly excluded from the "UNASSIGNED SEATING" cluster, ensuring the "X NEED TABLES" alert accurately reflects attending and pending guests.
+- **Dedicated Reset Filters Row (`[GUEST-RESET-FILTERS-ROW]`, `[BUG-11]`):** Separates active filter tags and the "RESET FILTERS" action from the select dropdowns into a dedicated responsive row. On mobile viewports, the reset button spans full width (`min-height: 40px`), eliminating viewport bleeding and touch target crowding.
+- **Mobile Catering Filter Dropdowns (`[GUEST-MOBILE-CATERING-DROPDOWNS]`):** In mobile viewports ($\le 640\text{px}$), collapses multi-row wrapped meal/dietary pills into compact `<select>` dropdowns for Meal Filter and Dietary Restrictions with dynamic guest counts, eliminating vertical scroll clutter while preserving full desktop pill breakdown metrics.
+- **Interactive Click-to-Edit Meta Chips (`[GUEST-CLICK-TO-EDIT-CHIPS]`):** Inner guest card chips (*Meal*, *Diet*, *Reception*, *Ceremony*) are interactive with subtle edit indicators (`Edit2` icon) and hover states, immediately launching the guest edit modal on tap.
 
 ### 2.4 Visual Table Seating Plan (`SeatingChartManager.tsx`)
 - Multiple table shapes: **Round Circle Tables** (radial trigonometric node layout), **Rectangle Banquet Tables** (dynamic length scaling, optional head/foot end seats), **Square Tables** (4 or 8 seats on all 4 sides), and **Sweetheart / Single-Side Tables**.

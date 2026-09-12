@@ -128,7 +128,15 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
 
   // Grouping helper for Seating Tables
   const tableGroupsMap = filteredGuests.reduce((acc, guest) => {
-    const table = (guest.tableAssignment || '').trim() || 'Unassigned';
+    const rawTable = (guest.tableAssignment || '').trim();
+    const isUnassigned = !rawTable || rawTable === 'Unassigned';
+
+    // Don't include guests that have declined in the Unassigned Seating
+    if (guest.rsvpStatus === 'Declined' && isUnassigned) {
+      return acc;
+    }
+
+    const table = rawTable || 'Unassigned';
     if (!acc[table]) acc[table] = [];
     acc[table].push(guest);
     return acc;
@@ -351,8 +359,16 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         {guest.rsvpStatus !== 'Declined' && (
           <div style={styles.cardMetaGrid}>
             {/* Table Assignment Chip */}
-            <div style={styles.metaChip} title={`Reception Table: ${getTableDisplayName(guest.tableAssignment)}`}>
-              <span style={styles.metaChipLabel}>RECEPTION</span>
+            <div
+              style={{ ...styles.metaChip, cursor: 'pointer' }}
+              className="guest-clickable-chip"
+              onClick={() => startEdit(guest)}
+              title={`Reception Table: ${getTableDisplayName(guest.tableAssignment)} • Click to edit`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span style={styles.metaChipLabel}>RECEPTION</span>
+                <Edit2 size={9} style={{ color: 'var(--color-muted)', opacity: 0.6 }} />
+              </div>
               <span style={{ ...styles.metaChipValue, color: guest.tableAssignment ? 'var(--color-primary)' : 'var(--color-muted)' }}>
                 <Tag size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
                 <span style={styles.truncateText}>{getTableDisplayName(guest.tableAssignment)}</span>
@@ -360,16 +376,32 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             </div>
 
             {/* Ceremony Seating Chip */}
-            <div style={styles.metaChip} title={`Ceremony Seating: ${guest.ceremonySeating || 'None'}`}>
-              <span style={styles.metaChipLabel}>CEREMONY</span>
+            <div
+              style={{ ...styles.metaChip, cursor: 'pointer' }}
+              className="guest-clickable-chip"
+              onClick={() => startEdit(guest)}
+              title={`Ceremony Seating: ${guest.ceremonySeating || 'None'} • Click to edit`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span style={styles.metaChipLabel}>CEREMONY</span>
+                <Edit2 size={9} style={{ color: 'var(--color-muted)', opacity: 0.6 }} />
+              </div>
               <span style={styles.metaChipValue}>
                 <span style={styles.truncateText}>{guest.ceremonySeating || '—'}</span>
               </span>
             </div>
 
             {/* Meal Choice Chip */}
-            <div style={styles.metaChip} title={`Meal Choice: ${guest.mealChoice || 'None'}`}>
-              <span style={styles.metaChipLabel}>MEAL</span>
+            <div
+              style={{ ...styles.metaChip, cursor: 'pointer' }}
+              className="guest-clickable-chip"
+              onClick={() => startEdit(guest)}
+              title={`Meal Choice: ${guest.mealChoice || 'None'} • Click to edit meal details`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span style={styles.metaChipLabel}>MEAL</span>
+                <Edit2 size={9} style={{ color: 'var(--color-muted)', opacity: 0.6 }} />
+              </div>
               <span style={styles.metaChipValue}>
                 <Utensils size={10} style={{ marginRight: '3px', flexShrink: 0 }} />
                 <span style={styles.truncateText}>{guest.mealChoice || '—'}</span>
@@ -377,17 +409,26 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             </div>
 
             {/* Dietary Restrictions Chip */}
-            <div style={{
-              ...styles.metaChip,
-              borderColor: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-border)',
-              backgroundColor: guest.dietaryRestrictions ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-subtle)',
-            }} title={`Dietary Restrictions: ${guest.dietaryRestrictions || 'None'}`}>
-              <span style={{
-                ...styles.metaChipLabel,
-                color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
-              }}>
-                DIET
-              </span>
+            <div
+              style={{
+                ...styles.metaChip,
+                borderColor: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-border)',
+                backgroundColor: guest.dietaryRestrictions ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-subtle)',
+                cursor: 'pointer',
+              }}
+              className="guest-clickable-chip"
+              onClick={() => startEdit(guest)}
+              title={`Dietary Restrictions: ${guest.dietaryRestrictions || 'None'} • Click to edit dietary details`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span style={{
+                  ...styles.metaChipLabel,
+                  color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
+                }}>
+                  DIET
+                </span>
+                <Edit2 size={9} style={{ color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)', opacity: 0.6 }} />
+              </div>
               <span style={{
                 ...styles.metaChipValue,
                 color: guest.dietaryRestrictions ? 'var(--color-red)' : 'var(--color-muted)',
@@ -699,6 +740,138 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             font-size: 0.72rem !important;
           }
         }
+        .catering-desktop-pills {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .catering-mobile-dropdowns {
+          display: none;
+        }
+        .catering-dropdown-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+        .catering-dropdown-label {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-family: var(--font-mono);
+          font-size: 0.65rem;
+          font-weight: 700;
+          color: var(--color-muted);
+          letter-spacing: 0.04em;
+        }
+        .catering-mobile-select {
+          width: 100%;
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 0.5rem 0.6rem;
+          border-radius: var(--border-radius-sm);
+          border: 1px solid var(--color-muted);
+          background-color: var(--color-surface, #ffffff);
+          color: var(--color-text);
+          cursor: pointer;
+          min-height: 38px;
+        }
+        .guest-clickable-chip {
+          cursor: pointer;
+          transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .guest-clickable-chip:hover {
+          border-color: var(--color-primary) !important;
+          background-color: var(--color-bg, #f3f4f6) !important;
+          transform: translateY(-1px);
+        }
+        .guest-clickable-chip:active {
+          transform: scale(0.98);
+        }
+        .guest-reset-filters-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+          width: 100%;
+          padding-top: 0.25rem;
+          flex-wrap: wrap;
+        }
+        .guest-active-filters-tags {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          flex-wrap: wrap;
+        }
+        .guest-active-filter-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          font-family: var(--font-mono);
+          font-size: 0.65rem;
+          font-weight: 700;
+          background-color: var(--color-bg);
+          border: 1px solid var(--color-muted);
+          color: var(--color-text);
+          padding: 0.2rem 0.45rem;
+          border-radius: 9999px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .guest-active-filter-badge:hover {
+          border-color: var(--color-red);
+          color: var(--color-red);
+          background-color: var(--color-red-muted, #fee2e2);
+        }
+        .guest-reset-filters-btn {
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          font-weight: 700;
+          background-color: var(--color-red-muted, #fee2e2);
+          color: var(--color-red, #ef4444);
+          border: 1px solid var(--color-red);
+          border-radius: var(--border-radius-sm);
+          padding: 0.45rem 0.75rem;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.35rem;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+          margin-left: auto;
+        }
+        .guest-reset-filters-btn:hover {
+          background-color: var(--color-red);
+          color: #ffffff;
+        }
+        @media (max-width: 640px) {
+          .catering-desktop-pills {
+            display: none !important;
+          }
+          .catering-mobile-dropdowns {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+            padding-top: 0.25rem !important;
+          }
+          .guest-reset-filters-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+          }
+          .guest-reset-filters-btn {
+            width: 100% !important;
+            min-height: 40px !important;
+            font-size: 0.75rem !important;
+            margin-left: 0 !important;
+          }
+        }
+        @media (max-width: 420px) {
+          .catering-mobile-dropdowns {
+            grid-template-columns: 1fr !important;
+          }
+        }
       `}</style>
 
       {/* Header Panel */}
@@ -898,85 +1071,132 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
               {/* Collapsible Content Body */}
               {!isCateringCollapsed && (
                 <>
-                  {/* Meal Choice Breakdown Pills [GUEST-5] */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
-                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-                      MEAL TOTALS:
-                    </span>
-                    {summary.mealChoiceBreakdown.length === 0 ? (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
-                    ) : (
-                      summary.mealChoiceBreakdown.map((item, idx) => {
-                        const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
-                            style={{
-                              fontFamily: 'var(--font-mono)',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
-                              color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
-                              border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
-                              borderRadius: '4px',
-                              padding: '0.2rem 0.5rem',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.35rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                            }}
-                            title={`Click to filter list by ${item.meal}`}
-                          >
-                            <span>{item.icon}</span>
-                            <span>{item.meal}:</span>
-                            <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
-                          </button>
-                        );
-                      })
+                  {/* Desktop View: Interactive Metric Breakdown Pills */}
+                  <div className="catering-desktop-pills">
+                    {/* Meal Choice Breakdown Pills [GUEST-5] */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem' }}>
+                      <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                        MEAL TOTALS:
+                      </span>
+                      {summary.mealChoiceBreakdown.length === 0 ? (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
+                      ) : (
+                        summary.mealChoiceBreakdown.map((item, idx) => {
+                          const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--color-bg, #f9fafb)',
+                                color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                                border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
+                                borderRadius: '4px',
+                                padding: '0.2rem 0.5rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                              }}
+                              title={`Click to filter list by ${item.meal}`}
+                            >
+                              <span>{item.icon}</span>
+                              <span>{item.meal}:</span>
+                              <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
+                    {summary.dietaryBreakdown.length > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
+                        <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
+                          DIETARY RESTRICTIONS:
+                        </span>
+                        {summary.dietaryBreakdown.map((item, idx) => {
+                          const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
+                                color: isSelected ? '#ffffff' : 'var(--color-red)',
+                                border: '1px solid #ef4444',
+                                borderRadius: '4px',
+                                padding: '0.2rem 0.5rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                              }}
+                              title={`Click to filter list by ${item.restriction}`}
+                            >
+                              <AlertTriangle size={13} />
+                              <span>{item.restriction.toUpperCase()}:</span>
+                              <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
 
-                  {/* Dedicated Dietary Restrictions Row [GUEST-5] */}
-                  {summary.dietaryBreakdown.length > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px dashed var(--color-muted)' }}>
-                      <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
-                        DIETARY RESTRICTIONS:
-                      </span>
-                      {summary.dietaryBreakdown.map((item, idx) => {
-                        const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
-                            style={{
-                              fontFamily: 'var(--font-mono)',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
-                              color: isSelected ? '#ffffff' : 'var(--color-red)',
-                              border: '1px solid #ef4444',
-                              borderRadius: '4px',
-                              padding: '0.2rem 0.5rem',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.35rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                            }}
-                            title={`Click to filter list by ${item.restriction}`}
-                          >
-                            <AlertTriangle size={13} />
-                            <span>{item.restriction.toUpperCase()}:</span>
-                            <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
-                          </button>
-                        );
-                      })}
+                  {/* Mobile View: Compact Dropdown Filters */}
+                  <div className="catering-mobile-dropdowns">
+                    <div className="catering-dropdown-container">
+                      <label className="catering-dropdown-label">
+                        <Utensils size={12} style={{ color: 'var(--color-primary)' }} /> MEAL FILTER
+                      </label>
+                      <select
+                        value={mealFilter}
+                        onChange={(e) => setMealFilter(e.target.value)}
+                        className="catering-mobile-select"
+                        title="Filter guests by meal choice"
+                      >
+                        <option value="All">ALL MEALS ({summary.mealChoiceBreakdown.reduce((acc, m) => acc + m.count, 0)})</option>
+                        {summary.mealChoiceBreakdown.map((item, idx) => (
+                          <option key={idx} value={item.meal}>
+                            {item.meal} ({item.count})
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  )}
+
+                    <div className="catering-dropdown-container">
+                      <label className="catering-dropdown-label">
+                        <AlertTriangle size={12} style={{ color: 'var(--color-red)' }} /> DIETARY RESTRICTIONS
+                      </label>
+                      <select
+                        value={dietFilter}
+                        onChange={(e) => setDietFilter(e.target.value)}
+                        className="catering-mobile-select"
+                        title="Filter guests by dietary restriction"
+                      >
+                        <option value="All">ALL DIETARY ({summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)})</option>
+                        {summary.dietaryBreakdown.length > 0 && (
+                          <option value="HAS_DIET">ANY RESTRICTION ({summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)})</option>
+                        )}
+                        {summary.dietaryBreakdown.map((item, idx) => (
+                          <option key={idx} value={item.restriction}>
+                            ⚠️ {item.restriction.toUpperCase()} ({item.count})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -1053,31 +1273,57 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
               <option key={grp} value={grp}>{grp.toUpperCase()}</option>
             ))}
           </select>
+        </div>
 
-          {(mealFilter !== 'All' || dietFilter !== 'All') && (
+        {/* Dedicated Reset Filters Row on its own row to prevent mobile bleeding */}
+        {(mealFilter !== 'All' || dietFilter !== 'All' || rsvpFilter !== 'All' || groupFilter !== 'All' || searchTerm.trim() !== '') && (
+          <div className="guest-reset-filters-row">
+            <div className="guest-active-filters-tags">
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--color-muted)', fontWeight: 700 }}>
+                ACTIVE FILTERS:
+              </span>
+              {rsvpFilter !== 'All' && (
+                <span className="guest-active-filter-badge" onClick={() => setRsvpFilter('All')} title="Click to clear RSVP filter">
+                  RSVP: {rsvpFilter.toUpperCase()} <X size={10} />
+                </span>
+              )}
+              {groupFilter !== 'All' && (
+                <span className="guest-active-filter-badge" onClick={() => setGroupFilter('All')} title="Click to clear Group filter">
+                  GROUP: {groupFilter} <X size={10} />
+                </span>
+              )}
+              {mealFilter !== 'All' && (
+                <span className="guest-active-filter-badge" onClick={() => setMealFilter('All')} title="Click to clear Meal filter">
+                  MEAL: {mealFilter} <X size={10} />
+                </span>
+              )}
+              {dietFilter !== 'All' && (
+                <span className="guest-active-filter-badge" onClick={() => setDietFilter('All')} title="Click to clear Dietary filter">
+                  DIET: {dietFilter === 'HAS_DIET' ? 'HAS RESTRICTION' : dietFilter.toUpperCase()} <X size={10} />
+                </span>
+              )}
+              {searchTerm.trim() !== '' && (
+                <span className="guest-active-filter-badge" onClick={() => setSearchTerm('')} title="Click to clear Search">
+                  SEARCH: "{searchTerm}" <X size={10} />
+                </span>
+              )}
+            </div>
             <button
               type="button"
-              onClick={() => { setMealFilter('All'); setDietFilter('All'); }}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                backgroundColor: 'var(--color-red-muted, #fee2e2)',
-                color: 'var(--color-red, #ef4444)',
-                border: '1px solid var(--color-red)',
-                borderRadius: 'var(--border-radius-sm)',
-                padding: '0.4rem 0.6rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.25rem',
+              onClick={() => {
+                setMealFilter('All');
+                setDietFilter('All');
+                setRsvpFilter('All');
+                setGroupFilter('All');
+                setSearchTerm('');
               }}
-              title="Clear active meal and dietary restriction filters"
+              className="guest-reset-filters-btn"
+              title="Clear all active search and filter constraints"
             >
-              <X size={12} /> RESET FILTERS
+              <X size={13} /> RESET FILTERS
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Stats Counter */}
