@@ -663,7 +663,7 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         }
         .guest-add-row {
           display: flex;
-          width: 100%;
+          align-items: center;
         }
         @media (max-width: 768px) {
           .guest-add-row {
@@ -671,16 +671,37 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           }
         }
         .guest-add-btn {
-          width: 100%;
-          min-height: 42px;
-          font-size: 0.82rem;
-          letter-spacing: 0.03em;
+          min-height: 36px;
+          padding: 0.45rem 1.1rem;
+          font-size: 0.78rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          white-space: nowrap;
+          cursor: pointer;
+          transition: var(--transition-smooth);
+        }
+        .guest-add-btn:hover {
+          opacity: 0.95;
+          transform: translateY(-1px);
         }
         .guest-grouping-selector-bar {
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: 0.75rem;
           margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+        }
+        .guest-grouping-left {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          flex-wrap: wrap;
+        }
+        .guest-layout-right {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
           flex-wrap: wrap;
         }
         .guest-grouping-label {
@@ -700,24 +721,17 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           .guest-header-actions {
             display: flex !important;
             align-items: center !important;
-            justify-content: space-between !important;
+            justify-content: flex-end !important;
             width: 100% !important;
             gap: 0.5rem !important;
-          }
-          .guest-view-toggle {
-            display: flex !important;
-          }
-          .guest-view-toggle button {
-            padding: 0.45rem 0.6rem !important;
-            min-height: 36px !important;
-            font-size: 0.7rem !important;
           }
           .guest-action-buttons-row {
             display: flex !important;
             gap: 0.5rem !important;
-            margin-left: auto !important;
+            width: 100% !important;
           }
           .guest-action-buttons-row button {
+            flex: 1 1 auto !important;
             min-height: 36px !important;
             padding: 0.45rem 0.65rem !important;
             display: flex !important;
@@ -728,12 +742,22 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             width: 100% !important;
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 0.4rem !important;
+            gap: 0.6rem !important;
           }
-          .guest-grouping-selector-bar .guest-view-toggle {
+          .guest-grouping-left,
+          .guest-layout-right {
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.35rem !important;
+          }
+          .guest-grouping-left .guest-view-toggle,
+          .guest-layout-right .guest-view-toggle {
             width: 100% !important;
           }
-          .guest-grouping-selector-bar .guest-view-toggle button {
+          .guest-grouping-left .guest-view-toggle button,
+          .guest-layout-right .guest-view-toggle button {
             flex: 1 1 auto !important;
             padding: 0.45rem 0.5rem !important;
             min-height: 38px !important;
@@ -883,30 +907,6 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           </p>
         </div>
         <div className="guest-header-actions">
-          {/* Independent Layout Mode Toggle (CARDS vs LIST) [GUEST-6] */}
-          <div className="guest-view-toggle">
-            <button
-              style={{
-                backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setLayoutMode('cards')}
-              title="Card Grid Cards Layout"
-            >
-              <Grid size={13} style={{ marginRight: '0.2rem' }} /> CARDS
-            </button>
-            <button
-              style={{
-                backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
-                color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setLayoutMode('list')}
-              title="Compact Desktop List Rows Layout [GUEST-6]"
-            >
-              <List size={13} style={{ marginRight: '0.2rem' }} /> LIST
-            </button>
-          </div>
-
           {/* Quick Export & Print Actions */}
           <div className="guest-action-buttons-row" style={styles.actionButtonGroup}>
             <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
@@ -916,13 +916,6 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
               <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
             </button>
           </div>
-        </div>
-
-        {/* Dedicated Add Guest Row */}
-        <div className="guest-add-row">
-          <button style={{ ...styles.addButton, ...styles.guestAddBtn }} className="guest-add-btn" onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD GUEST
-          </button>
         </div>
       </div>
 
@@ -1206,40 +1199,74 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
 
       {/* Filter and Search Bar with Grouping Mode Selector above */}
       <div style={styles.filterBar}>
-        {/* Grouping Mode Selector (ALL | SEATING | GROUPS) */}
+        {/* Grouping Mode Selector (ALL | SEATING | GROUPS) & Cards / List Layout Toggle Row */}
         <div className="guest-grouping-selector-bar">
-          <span className="guest-grouping-label">GROUPING VIEW:</span>
-          <div className="guest-view-toggle">
-            <button
-              style={{
-                backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
-                color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setGroupingMode('all')}
-              title="All Guests View"
-            >
-              <Grid size={13} style={{ marginRight: '0.2rem' }} /> ALL GUESTS
-            </button>
-            <button
-              style={{
-                backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
-                color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setGroupingMode('seating')}
-              title="Seating Chart Grouping View"
-            >
-              <Utensils size={13} style={{ marginRight: '0.2rem' }} /> BY SEATING TABLE
-            </button>
-            <button
-              style={{
-                backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
-                color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
-              }}
-              onClick={() => setGroupingMode('party')}
-              title="Party Grouping View"
-            >
-              <Users size={13} style={{ marginRight: '0.2rem' }} /> BY PARTY GROUP
-            </button>
+          <div className="guest-grouping-left">
+            <span className="guest-grouping-label">GROUPING VIEW:</span>
+            <div className="guest-view-toggle">
+              <button
+                type="button"
+                style={{
+                  backgroundColor: groupingMode === 'all' ? 'var(--color-primary)' : 'transparent',
+                  color: groupingMode === 'all' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setGroupingMode('all')}
+                title="All Guests View"
+              >
+                <Grid size={13} style={{ marginRight: '0.2rem' }} /> ALL GUESTS
+              </button>
+              <button
+                type="button"
+                style={{
+                  backgroundColor: groupingMode === 'seating' ? 'var(--color-primary)' : 'transparent',
+                  color: groupingMode === 'seating' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setGroupingMode('seating')}
+                title="Seating Chart Grouping View"
+              >
+                <Utensils size={13} style={{ marginRight: '0.2rem' }} /> BY SEATING TABLE
+              </button>
+              <button
+                type="button"
+                style={{
+                  backgroundColor: groupingMode === 'party' ? 'var(--color-primary)' : 'transparent',
+                  color: groupingMode === 'party' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setGroupingMode('party')}
+                title="Party Grouping View"
+              >
+                <Users size={13} style={{ marginRight: '0.2rem' }} /> BY PARTY GROUP
+              </button>
+            </div>
+          </div>
+
+          {/* Cards & List Layout Toggle in the same row [GUEST-6] */}
+          <div className="guest-layout-right">
+            <span className="guest-grouping-label">VIEW:</span>
+            <div className="guest-view-toggle">
+              <button
+                type="button"
+                style={{
+                  backgroundColor: layoutMode === 'cards' ? 'var(--color-primary)' : 'transparent',
+                  color: layoutMode === 'cards' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setLayoutMode('cards')}
+                title="Card Grid Cards Layout"
+              >
+                <Grid size={13} style={{ marginRight: '0.2rem' }} /> CARDS
+              </button>
+              <button
+                type="button"
+                style={{
+                  backgroundColor: layoutMode === 'list' ? 'var(--color-primary)' : 'transparent',
+                  color: layoutMode === 'list' ? 'var(--color-on-primary)' : 'var(--color-muted)'
+                }}
+                onClick={() => setLayoutMode('list')}
+                title="Compact Desktop List Rows Layout [GUEST-6]"
+              >
+                <List size={13} style={{ marginRight: '0.2rem' }} /> LIST
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1326,15 +1353,30 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         )}
       </div>
 
-      {/* Stats Counter */}
-      <div style={styles.statsBar}>
-        <span>FOUND: <strong>{filteredGuests.length}</strong> GUESTS</span>
-        <span>
-          ATTENDING: <strong>{guests.filter(g => g.rsvpStatus === 'Attending').length}</strong> | 
-          DECLINED: <strong>{guests.filter(g => g.rsvpStatus === 'Declined').length}</strong> | 
-          PENDING: <strong>{guests.filter(g => g.rsvpStatus === 'No Response').length}</strong>
-        </span>
-      </div>      {/* View Content (ALL | SEATING | GROUPS crossed with CARDS | LIST layout) */}
+      {/* Stats Counter & Desktop Add Guest Action Bar */}
+      <div className="guest-stats-action-bar" style={styles.statsBar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <span>FOUND: <strong>{filteredGuests.length}</strong> GUESTS</span>
+          <span style={{ color: 'var(--color-muted)' }}>
+            ATTENDING: <strong>{guests.filter(g => g.rsvpStatus === 'Attending').length}</strong> | 
+            DECLINED: <strong>{guests.filter(g => g.rsvpStatus === 'Declined').length}</strong> | 
+            PENDING: <strong>{guests.filter(g => g.rsvpStatus === 'No Response').length}</strong>
+          </span>
+        </div>
+        <div className="guest-add-row">
+          <button
+            style={{ ...styles.addButton, ...styles.guestAddBtn }}
+            className="guest-add-btn"
+            onClick={startAdd}
+            disabled={isSyncing}
+            title="Add New Guest Invitation"
+          >
+            <Plus size={15} style={{ marginRight: '0.35rem' }} /> ADD GUEST
+          </button>
+        </div>
+      </div>
+
+      {/* View Content (ALL | SEATING | GROUPS crossed with CARDS | LIST layout) */}
       {groupingMode === 'all' && (
         layoutMode === 'cards' ? (
           <div style={styles.grid}>
@@ -1827,11 +1869,11 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'var(--transition-smooth)',
   },
   guestAddBtn: {
-    width: '100%',
-    padding: '0.625rem 1rem',
-    fontSize: '0.8rem',
+    padding: '0.45rem 1rem',
+    fontSize: '0.78rem',
     fontWeight: 700,
     boxShadow: 'var(--box-shadow-subtle)',
+    whiteSpace: 'nowrap',
   },
   filterBar: {
     display: 'flex',
@@ -1869,6 +1911,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-muted)',
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
     flexWrap: 'wrap',
     borderBottom: '1px dotted var(--color-muted)',
     paddingBottom: '0.5rem',

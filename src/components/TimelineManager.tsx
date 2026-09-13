@@ -792,16 +792,17 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.35rem',
-                        backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.14))',
-                        color: 'var(--color-gold, #cda250)',
-                        border: '1px solid var(--color-gold, #cda250)',
-                        padding: '0.2rem 0.6rem',
+                        backgroundColor: 'rgba(245, 158, 11, 0.14)',
+                        color: 'var(--color-gold-dark, #92400e)',
+                        border: '1px solid rgba(217, 119, 6, 0.4)',
+                        padding: '0.2rem 0.65rem',
                         borderRadius: '12px',
                         fontSize: '0.72rem',
                         fontFamily: 'var(--font-mono)',
-                        fontWeight: 700,
+                        fontWeight: 800,
+                        letterSpacing: '0.02em',
                       }}>
-                        <Clock size={12} />
+                        <Clock size={12} style={{ color: '#b45309', flexShrink: 0 }} />
                         <span>EST. DURATION: {durationText}</span>
                       </div>
                     )}

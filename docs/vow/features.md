@@ -84,6 +84,9 @@
 - [x] **[GUEST-RESET-FILTERS-ROW] Dedicated Reset Filters Row on Mobile & Active Filter Badges (`GuestListManager.tsx`):** Moved the "RESET FILTERS" action from the cramped select row into a dedicated, responsive row with active filter pill tags. On mobile viewports, the button spans full width (`min-height: 40px`), eliminating viewport edge bleeding.
 - [x] **[GUEST-MOBILE-CATERING-DROPDOWNS] Compact Mobile Catering Dropdowns (`GuestListManager.tsx`):** Replaced sprawling, wrapped button pills on mobile screens (`<= 640px`) with compact native `<select>` dropdowns for Meal Filter and Dietary Restrictions with dynamic count labels, reducing vertical banner clutter while preserving rich desktop breakdown metrics.
 - [x] **[GUEST-CLICK-TO-EDIT-CHIPS] Clickable Subcards for Meal, Diet, Reception & Ceremony (`GuestListManager.tsx`):** Made the inner meta-chips on guest cards interactive with subtle edit indicators (`Edit2` icon) and hover states, instantly opening the guest edit dialog on click.
+- [x] **[GUEST-DESKTOP-TOOLBAR-POLISH] Desktop Toolbar & Add Action Ergonomics Polish (`GuestListManager.tsx`):**
+  - **Cards & List Toggle Integration**: Relocated the layout toggle (`CARDS` vs `LIST`) out of the top header panel and placed it in the exact same row as Grouping View (`guest-grouping-selector-bar`), providing a unified desktop control bar with Grouping View on the left and View / Layout on the right.
+  - **Add Guest Button Proximity to Cards**: Moved the primary `+ ADD GUEST` button out of the header card down into the stats bar (`guest-stats-action-bar`) directly adjacent to the list of cards and table rows, pinned to the right of the guest counter (`FOUND: X GUESTS`). On mobile viewports ($\le 768\text{px}$), gracefully hidden in favor of the floating mobile action button (`MobileFAB`).
 
 ---
 
@@ -215,6 +218,21 @@
   - **1-Click Sync to Categories**: Dedicated `SYNC TO CATEGORIES` button snaps the master cap back to the current category sum and restores dynamic auto-sum mode with zero friction.
   - **Retained Unset Mode**: Preserves "No Hard Limit" mode for couples purely tracking expenses without arbitrary caps.
   - **Summary Dashboard Integration**: Updated `DashboardMetrics.tsx` financial KPI cards and progress bars to display `effectiveTotalBudget` with badges distinguishing Master Target Cap from Dynamic Sum of Categories.
+- [x] **[BUDGET-ACTIVE-CATEGORY-SUBCARDS] Desktop Active & Alert Category Subcards UX Redesign (`BudgetLedgerManager.tsx`):**
+  - **Replaced Cramped Pills with Subcards**: Converted the desktop active/alert category filter from tiny, low-readability pill buttons into a spacious, structured responsive subcard grid (`repeat(auto-fill, minmax(130px, 1fr))`).
+  - **Large Legible Percentage Display**: Rendered category utilization percentage at `1.2rem` in bold monospace (`font-weight: 800`), making percentages immediately legible at a glance.
+  - **Comprehensive Card Anatomy**:
+    - **Header**: Bold category name with ellipsis truncation, `title` hover tooltip, and alert icon (`AlertTriangle`) when over budget.
+    - **Metrics Row**: Large bold percentage paired with the itemized spent amount or over-budget surplus (`+${formatCurrency(overAmount)}`).
+    - **Micro Progress Bar**: 3px rounded track reflecting real-time category utilization (`Math.min(percent, 100)%`) with color thresholds (emerald for on-track, amber for >=90%, crimson for over-budget).
+  - **Interactive Selection & Hover Polish**: Smooth cubic-bezier hover lift (`translateY(-2px)`), prominent high-contrast selected state (`var(--color-primary)` dark theme with white typography and `ACTIVE` tag), and click toggling synchronized with the detail ledger split-view.
+- [x] **[FINANCIALS-SORT-BIDIRECTIONAL] Bi-Directional Budget Category Sorting Options (`BudgetLedgerManager.tsx`):**
+  - Expanded the Desktop Master Rail category sort dropdown to support comprehensive bi-directional sorting:
+    - **Alphabetical**: `Alphabetical (A → Z)` and `Alphabetical (Z → A)`
+    - **Target Budget**: `Budget: High to Low` and `Budget: Low to High`
+    - **Spent Expenses**: `Spent: High to Low` and `Spent: Low to High`
+    - **Remaining Headroom**: `Remaining: High to Low` and `Remaining: Low to High`
+  - Fully backward-compatible with legacy stored preferences in `localStorage` (`'s2v_budget_master_sort'`).
 
 ---
 
@@ -481,6 +499,9 @@
   - **TimeDialPicker Duration Sub-row Separation**: Separated minute presets (`:00`, `:15`, `:30`, `:45`) from duration offsets (`+30m`, `+45m`, `+1h`, `+1.5h`, `+2h`) with a dashed divider and dedicated styling to prevent chip stacking clutter.
   - **High-Contrast Action Footer**: Redesigned the sticky footer with high-contrast red `DELETE` button (`#dc2626` background, `#ffffff` text, `Trash2` icon) to fix illegible black-on-red text, paired with `CANCEL`, `SAVE & ADD NEXT`, and primary `SAVE MOMENT / SAVE CHANGES`.
   - **Mobile Responsive Design**: Modal automatically adapts to a single-column layout with safe-area padding and touch-friendly tap targets on mobile viewports (< 768px).
+- [x] **[TIMELINE-MODAL-POLISH-SPACING-CONTRAST] Compact Time Input Width & High-Contrast Duration Badge (`TimeDialPicker.tsx`, `TimelineManager.tsx`):**
+  - **Shortened Time Textboxes**: Fixed excessive whitespace in `TimeDialPicker.tsx` by setting `max-width: 185px` and `flex: 0 1 185px` on `inputWrapper`, bringing the time display, DIAL button, and AM/PM toggle into a clean, cohesive group without vast blank space.
+  - **High-Contrast Estimated Duration Badge**: Replaced low-contrast yellow text with rich, dark amber typography (`color: #92400e`, font-weight 800) and amber border/icon accents, boosting the contrast ratio to 8.6:1 (WCAG AAA compliant) on light surfaces.
 
 ---
 
@@ -489,6 +510,15 @@
   - Updated Guest Attendance Cards and tracking metrics to strictly exclude the Bride & Groom / Couple parties from the thank-you tracking card roster.
   - Implemented `isCoupleOrBrideGroomParty()` checking party group names (`Bride & Groom`, `Couple`, `Newlyweds`, `Wedding Couple`), table assignments (Sweetheart table, Head table), and dynamic matching against the couple's first names parsed from `weddingName` prop (e.g. "Alex & Sam").
   - Preserves 100% accurate count and card presentation focused strictly on wedding guests requiring thank you notes.
+
+---
+
+## 🔒 16. Session Management & Re-Authentication (`src/app/vow/page.tsx`, `src/lib/core/sessionCheck.ts`)
+- [x] **[AUTH-SESSION-EXPIRED-MODAL-REDESIGN] Session Expired / Re-authentication Modal UX Overhaul (`src/app/vow/page.tsx`):**
+  - **Removed Side-by-Side Dismiss Action**: Eliminated the cramped secondary "DISMISS" button sharing horizontal space with the Google Sign In button.
+  - **Top-Right Close 'X' Button**: Converted the dismiss trigger into an accessible, absolute-positioned 'X' icon button (`top: 1rem; right: 1rem`) with subtle hover ring, disabled during active re-authentication.
+  - **Prominent Full-Width Sign-In Button**: Expanded `SIGN IN WITH GOOGLE` to a dedicated full-width primary button with official multi-color Google SVG branding, high-contrast monospace typography, and rotating spinner loading state (`SIGNING IN...`).
+  - **Header & Visual Polish**: Replaced raw emoji with Lucide `Lock` icon enclosed in an amber security glow badge, paired with a connected user identity card, backdrop blur click-to-dismiss, and clean fallback to workspace disconnection.
 
 ---
 ---

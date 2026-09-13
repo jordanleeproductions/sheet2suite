@@ -140,17 +140,35 @@ export default function BudgetLedgerManager({
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
 
   // Desktop Master-Detail State
-  type MasterCategorySort = 'alphabetical' | 'budget' | 'spent' | 'remaining';
+  type MasterCategorySort =
+    | 'alphabetical-asc'
+    | 'alphabetical-desc'
+    | 'budget-desc'
+    | 'budget-asc'
+    | 'spent-desc'
+    | 'spent-asc'
+    | 'remaining-desc'
+    | 'remaining-asc'
+    | 'alphabetical'
+    | 'budget'
+    | 'spent'
+    | 'remaining';
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [masterCategorySearch, setMasterCategorySearch] = useState<string>('');
   const [masterCategorySort, setMasterCategorySort] = useState<MasterCategorySort>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('s2v_budget_master_sort') as MasterCategorySort;
-      if (saved === 'alphabetical' || saved === 'budget' || saved === 'spent' || saved === 'remaining') {
-        return saved;
-      }
+      if (saved === 'alphabetical' || saved === 'alphabetical-asc') return 'alphabetical-asc';
+      if (saved === 'alphabetical-desc') return 'alphabetical-desc';
+      if (saved === 'budget' || saved === 'budget-desc') return 'budget-desc';
+      if (saved === 'budget-asc') return 'budget-asc';
+      if (saved === 'spent' || saved === 'spent-desc') return 'spent-desc';
+      if (saved === 'spent-asc') return 'spent-asc';
+      if (saved === 'remaining' || saved === 'remaining-desc') return 'remaining-desc';
+      if (saved === 'remaining-asc') return 'remaining-asc';
     }
-    return 'alphabetical';
+    return 'alphabetical-asc';
   });
   const [detailExpenseSearch, setDetailExpenseSearch] = useState<string>('');
 
@@ -447,19 +465,31 @@ export default function BudgetLedgerManager({
       list = list.filter(c => c.category.toLowerCase().includes(masterCategorySearch.toLowerCase().trim()));
     }
     return [...list].sort((a, b) => {
-      if (masterCategorySort === 'budget') {
+      if (masterCategorySort === 'budget-desc' || masterCategorySort === 'budget') {
         if (b.estimated !== a.estimated) {
           return b.estimated - a.estimated;
         }
         return a.category.localeCompare(b.category);
       }
-      if (masterCategorySort === 'spent') {
+      if (masterCategorySort === 'budget-asc') {
+        if (a.estimated !== b.estimated) {
+          return a.estimated - b.estimated;
+        }
+        return a.category.localeCompare(b.category);
+      }
+      if (masterCategorySort === 'spent-desc' || masterCategorySort === 'spent') {
         if (b.actual !== a.actual) {
           return b.actual - a.actual;
         }
         return a.category.localeCompare(b.category);
       }
-      if (masterCategorySort === 'remaining') {
+      if (masterCategorySort === 'spent-asc') {
+        if (a.actual !== b.actual) {
+          return a.actual - b.actual;
+        }
+        return a.category.localeCompare(b.category);
+      }
+      if (masterCategorySort === 'remaining-desc' || masterCategorySort === 'remaining') {
         const remA = a.estimated - a.actual;
         const remB = b.estimated - b.actual;
         if (remB !== remA) {
@@ -467,7 +497,18 @@ export default function BudgetLedgerManager({
         }
         return a.category.localeCompare(b.category);
       }
-      // Default: 'alphabetical'
+      if (masterCategorySort === 'remaining-asc') {
+        const remA = a.estimated - a.actual;
+        const remB = b.estimated - b.actual;
+        if (remA !== remB) {
+          return remA - remB;
+        }
+        return a.category.localeCompare(b.category);
+      }
+      if (masterCategorySort === 'alphabetical-desc') {
+        return b.category.localeCompare(a.category);
+      }
+      // Default: 'alphabetical-asc' / 'alphabetical'
       return a.category.localeCompare(b.category);
     });
   })();
@@ -851,6 +892,12 @@ export default function BudgetLedgerManager({
           }
           .budget-desktop-pills-bar {
             display: flex !important;
+          }
+          .budget-desktop-category-card {
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .budget-desktop-category-card:hover {
+            transform: translateY(-2px);
           }
           .budget-mobile-chips-container {
             display: none !important;
@@ -1563,7 +1610,12 @@ export default function BudgetLedgerManager({
                 )}
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                gap: '0.5rem',
+                alignItems: 'stretch',
+              }}>
                 {activeOrAlertStats.length === 0 ? (
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic', fontFamily: 'var(--font-mono)' }}>
                     No active category budgets or expenses recorded yet. Select any category below to begin logging.
@@ -1575,52 +1627,127 @@ export default function BudgetLedgerManager({
                       <button
                         key={stat.category}
                         type="button"
-                        onClick={() => setSelectedCategoryId(stat.category)}
+                        className="budget-desktop-category-card"
+                        onClick={() => setSelectedCategoryId(isSelected && selectedCategoryId ? '' : stat.category)}
+                        title={`${stat.category} — ${stat.percent}% utilized (${formatCurrency(stat.actual, currency)} spent of ${formatCurrency(stat.estimated, currency)} target)`}
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.4rem',
-                          padding: '0.25rem 0.65rem',
-                          borderRadius: '999px',
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.7rem',
-                          fontWeight: 700,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '0.35rem',
+                          padding: '0.55rem 0.65rem',
+                          borderRadius: '8px',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          border: isSelected
+                            ? '1.5px solid var(--color-primary)'
+                            : `1px solid ${stat.isOver ? '#fca5a5' : 'var(--color-border)'}`,
                           backgroundColor: isSelected
                             ? 'var(--color-primary)'
-                            : (stat.isOver ? '#fee2e2' : 'var(--color-bg-subtle)'),
-                          color: isSelected
-                            ? 'var(--color-on-primary, #ffffff)'
-                            : (stat.isOver ? '#b91c1c' : 'var(--color-text)'),
-                          border: `1px solid ${isSelected
-                            ? 'var(--color-primary)'
-                            : (stat.isOver ? '#fca5a5' : 'var(--color-border)')
-                            }`,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          boxShadow: isSelected ? '0 1px 4px rgba(0,0,0,0.12)' : 'none',
+                            : (stat.isOver ? '#fff5f5' : 'var(--color-surface)'),
+                          boxShadow: isSelected
+                            ? '0 3px 10px rgba(15, 23, 42, 0.16)'
+                            : (stat.isOver ? '0 1px 3px rgba(239, 68, 68, 0.08)' : '0 1px 3px rgba(0,0,0,0.03)'),
                         }}
                       >
-                        <span>{stat.category}</span>
-                        {stat.isOver ? (
+                        {/* Top Line: Category Name & Alert Badge */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0, gap: '0.25rem' }}>
                           <span style={{
-                            fontSize: '0.625rem',
-                            fontWeight: 800,
-                            color: isSelected ? '#fecaca' : '#b91c1c',
-                            backgroundColor: isSelected ? 'rgba(0,0,0,0.25)' : 'transparent',
-                            padding: isSelected ? '1px 4px' : '0',
-                            borderRadius: '3px',
+                            fontSize: '0.725rem',
+                            fontWeight: 700,
+                            color: isSelected
+                              ? 'var(--color-on-primary, #ffffff)'
+                              : (stat.isOver ? '#991b1b' : 'var(--color-text)'),
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            lineHeight: 1.2,
                           }}>
-                            +{formatCurrency(stat.overAmount, currency)}
+                            {stat.category}
                           </span>
-                        ) : (
+                          {stat.isOver ? (
+                            <span
+                              title={`Over budget by ${formatCurrency(stat.overAmount, currency)}`}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                flexShrink: 0,
+                                color: isSelected ? '#fecaca' : '#dc2626',
+                              }}
+                            >
+                              <AlertTriangle size={12} />
+                            </span>
+                          ) : isSelected ? (
+                            <span style={{
+                              fontSize: '0.55rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              color: '#93c5fd',
+                              letterSpacing: '0.04em',
+                              flexShrink: 0,
+                            }}>
+                              ACTIVE
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Middle Line: Prominent Percentage & Amount */}
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', width: '100%', gap: '0.25rem' }}>
                           <span style={{
-                            fontSize: '0.625rem',
-                            opacity: isSelected ? 0.9 : 0.7,
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '1.2rem',
+                            fontWeight: 800,
+                            lineHeight: 1,
+                            letterSpacing: '-0.02em',
+                            color: isSelected
+                              ? 'var(--color-on-primary, #ffffff)'
+                              : (stat.isOver
+                                ? '#dc2626'
+                                : (stat.percent >= 90 ? 'var(--color-gold-dark, #d97706)' : 'var(--color-text)')),
                             fontVariantNumeric: 'tabular-nums',
                           }}>
                             {stat.percent}%
                           </span>
-                        )}
+                          <span style={{
+                            fontSize: '0.65rem',
+                            fontFamily: 'var(--font-mono)',
+                            fontWeight: 600,
+                            color: isSelected
+                              ? 'rgba(255, 255, 255, 0.75)'
+                              : (stat.isOver ? '#b91c1c' : 'var(--color-muted)'),
+                            fontVariantNumeric: 'tabular-nums',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {stat.isOver
+                              ? `+${formatCurrency(stat.overAmount, currency, true)}`
+                              : formatCurrency(stat.actual, currency, true)}
+                          </span>
+                        </div>
+
+                        {/* Bottom Line: Micro Progress Bar */}
+                        <div style={{
+                          width: '100%',
+                          height: '3px',
+                          borderRadius: '2px',
+                          backgroundColor: isSelected
+                            ? 'rgba(255, 255, 255, 0.2)'
+                            : 'var(--color-bg-subtle, #e2e8f0)',
+                          overflow: 'hidden',
+                          marginTop: '0.1rem',
+                        }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.min(stat.percent, 100)}%`,
+                            borderRadius: '2px',
+                            backgroundColor: isSelected
+                              ? (stat.isOver ? '#f87171' : (stat.percent >= 90 ? '#fcd34d' : '#60a5fa'))
+                              : (stat.isOver ? '#ef4444' : (stat.percent >= 90 ? '#f59e0b' : '#10b981')),
+                            transition: 'width 0.3s ease',
+                          }} />
+                        </div>
                       </button>
                     );
                   })
@@ -1769,7 +1896,13 @@ export default function BudgetLedgerManager({
 
               <div style={{ position: 'relative', width: '100%' }}>
                 <select
-                  value={masterCategorySort}
+                  value={
+                    masterCategorySort === 'budget' ? 'budget-desc' :
+                    masterCategorySort === 'spent' ? 'spent-desc' :
+                    masterCategorySort === 'remaining' ? 'remaining-desc' :
+                    masterCategorySort === 'alphabetical' ? 'alphabetical-asc' :
+                    masterCategorySort
+                  }
                   onChange={(e) => {
                     const val = e.target.value as MasterCategorySort;
                     setMasterCategorySort(val);
@@ -1797,10 +1930,14 @@ export default function BudgetLedgerManager({
                     overflow: 'hidden',
                   }}
                 >
-                  <option value="alphabetical">Alphabetical</option>
-                  <option value="budget">By Budget</option>
-                  <option value="spent">By Spent</option>
-                  <option value="remaining">By Remaining</option>
+                  <option value="alphabetical-asc">Alphabetical (A → Z)</option>
+                  <option value="alphabetical-desc">Alphabetical (Z → A)</option>
+                  <option value="budget-desc">Budget: High to Low</option>
+                  <option value="budget-asc">Budget: Low to High</option>
+                  <option value="spent-desc">Spent: High to Low</option>
+                  <option value="spent-asc">Spent: Low to High</option>
+                  <option value="remaining-desc">Remaining: High to Low</option>
+                  <option value="remaining-asc">Remaining: Low to High</option>
                 </select>
                 <div style={{
                   position: 'absolute',

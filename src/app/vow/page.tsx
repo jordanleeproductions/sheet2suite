@@ -24,7 +24,7 @@ import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -2135,7 +2135,8 @@ export default function Sheet2VowDashboard() {
             position: 'fixed',
             inset: 0,
             backgroundColor: 'rgba(0,0,0,0.65)',
-            backdropFilter: 'blur(4px)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
@@ -2143,128 +2144,201 @@ export default function Sheet2VowDashboard() {
             padding: '1rem',
             animation: 'fadeIn 0.2s ease-out',
           }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isReauthenticating) {
+              setShowSessionExpiredModal(false);
+            }
+          }}
         >
           <div
             style={{
+              position: 'relative',
               background: 'var(--color-surface)',
-              border: '2px solid var(--color-border)',
+              border: '1px solid var(--color-border)',
               borderRadius: 'var(--border-radius-lg, 1rem)',
-              padding: '2rem 2rem 1.75rem',
-              maxWidth: '420px',
+              padding: '1.75rem',
+              maxWidth: '430px',
               width: '100%',
               boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem',
+              gap: '1.15rem',
             }}
           >
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Top Right Close 'X' Button */}
+            <button
+              type="button"
+              onClick={() => setShowSessionExpiredModal(false)}
+              disabled={isReauthenticating}
+              aria-label="Close modal"
+              title="Close"
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg-subtle, rgba(0,0,0,0.03))',
+                color: 'var(--color-muted)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: isReauthenticating ? 'not-allowed' : 'pointer',
+                opacity: isReauthenticating ? 0.5 : 1,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            {/* Header: Icon + Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', paddingRight: '2rem' }}>
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(234, 179, 8, 0.15)',
-                border: '1.5px solid rgba(234, 179, 8, 0.4)',
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                background: 'rgba(234, 179, 8, 0.12)',
+                border: '1.5px solid rgba(234, 179, 8, 0.35)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                fontSize: '1.2rem',
+                color: '#d97706',
               }}>
-                🔒
+                <Lock size={20} />
               </div>
               <div>
                 <div style={{
                   fontFamily: 'var(--font-mono)',
                   fontWeight: 800,
-                  fontSize: '0.85rem',
-                  letterSpacing: '0.08em',
+                  fontSize: '0.9rem',
+                  letterSpacing: '0.06em',
                   color: 'var(--color-text)',
                   textTransform: 'uppercase',
                 }}>
                   Session Expired
                 </div>
                 <div style={{
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   color: 'var(--color-muted)',
                   marginTop: '0.15rem',
                 }}>
-                  Your Google session has timed out
+                  Google authorization timed out
                 </div>
               </div>
             </div>
 
-            {/* Body */}
+            {/* Explanatory Body */}
             <p style={{
               fontSize: '0.875rem',
               color: 'var(--color-text)',
               lineHeight: 1.6,
               margin: 0,
             }}>
-              Your Google OAuth token has expired. Sign back in to refresh your session — your workspace data and settings will remain untouched.
+              Your Google OAuth session has timed out. Sign back in with your Google account to restore full cloud synchronization — your workspace changes and data remain safe.
             </p>
 
-            {/* User identity pill */}
+            {/* User identity card */}
             {googleUserEmail && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 0.75rem',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                padding: '0.65rem 0.85rem',
                 background: 'var(--color-bg-subtle)',
                 border: '1px solid var(--color-border)',
-                borderRadius: 'var(--border-radius-sm)',
-                fontSize: '0.8rem',
-                color: 'var(--color-muted)',
+                borderRadius: 'var(--border-radius-sm, 8px)',
               }}>
-                {googleUserAvatar && (
-                  <img
-                    src={googleUserAvatar}
-                    alt=""
-                    style={{ width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0 }}
-                  />
-                )}
-                <span style={{ fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {googleUserEmail}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+                  {googleUserAvatar ? (
+                    <img
+                      src={googleUserAvatar}
+                      alt=""
+                      style={{ width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'var(--color-primary)',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}>
+                      {googleUserName ? googleUserName.charAt(0).toUpperCase() : 'G'}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: 'var(--color-text)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {googleUserEmail}
+                    </span>
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: '0.625rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  color: 'var(--color-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  flexShrink: 0,
+                }}>
+                  CONNECTED
                 </span>
               </div>
             )}
 
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+            {/* Dedicated Primary Sign In Button (Full Width) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.25rem' }}>
               <button
                 type="button"
                 onClick={handleReauth}
                 disabled={isReauthenticating}
                 style={{
-                  flex: 1,
-                  padding: '0.65rem 1rem',
+                  width: '100%',
+                  padding: '0.8rem 1.25rem',
                   background: 'var(--color-primary)',
-                  color: 'var(--color-on-primary, #fff)',
+                  color: 'var(--color-on-primary, #ffffff)',
                   border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: 'var(--border-radius-sm, 8px)',
                   fontFamily: 'var(--font-mono)',
                   fontWeight: 800,
-                  fontSize: '0.78rem',
+                  fontSize: '0.825rem',
                   letterSpacing: '0.06em',
                   cursor: isReauthenticating ? 'not-allowed' : 'pointer',
                   opacity: isReauthenticating ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
-                  transition: 'opacity 0.15s ease',
+                  gap: '0.6rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {isReauthenticating ? (
                   <>
-                    <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite', fontSize: '0.9rem' }}>⟳</span>
+                    <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
                     SIGNING IN...
                   </>
                 ) : (
                   <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
@@ -2274,47 +2348,29 @@ export default function Sheet2VowDashboard() {
                   </>
                 )}
               </button>
-              <button
-                type="button"
-                onClick={() => setShowSessionExpiredModal(false)}
-                disabled={isReauthenticating}
-                style={{
-                  padding: '0.65rem 1rem',
-                  background: 'transparent',
-                  color: 'var(--color-muted)',
-                  border: '1.5px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                DISMISS
-              </button>
-            </div>
 
-            {/* Disconnect fallback */}
-            <div style={{ textAlign: 'center', paddingTop: '0.25rem' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowSessionExpiredModal(false);
-                  setShowDisconnectModal(true);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-muted)',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  fontFamily: 'var(--font-sans)',
-                }}
-              >
-                Disconnect workspace instead
-              </button>
+              {/* Secondary Disconnect workspace option */}
+              <div style={{ textAlign: 'center', paddingTop: '0.1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSessionExpiredModal(false);
+                    setShowDisconnectModal(true);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-muted)',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  Disconnect workspace instead
+                </button>
+              </div>
             </div>
           </div>
         </div>
