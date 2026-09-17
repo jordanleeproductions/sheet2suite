@@ -16,14 +16,15 @@ interface GuestListManagerProps {
   availableTables?: string[];
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
   initialRsvpFilter?: RSVPStatus | 'All';
+  initialMealFilter?: string;
 }
 
-export default function GuestListManager({ guests, catering, tables = [], onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter }: GuestListManagerProps) {
+export default function GuestListManager({ guests, catering, tables = [], onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter, initialMealFilter }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
   const [groupFilter, setGroupFilter] = useState<string>('All');
-  const [mealFilter, setMealFilter] = useState<string>('All');
+  const [mealFilter, setMealFilter] = useState<string>(initialMealFilter || 'All');
   const [dietFilter, setDietFilter] = useState<string>('All');
   const [isCateringCollapsed, setIsCateringCollapsed] = useState<boolean>(false);
 
@@ -32,6 +33,12 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
       setRsvpFilter(initialRsvpFilter);
     }
   }, [initialRsvpFilter]);
+
+  React.useEffect(() => {
+    if (initialMealFilter !== undefined) {
+      setMealFilter(initialMealFilter);
+    }
+  }, [initialMealFilter]);
   
   // Edit Dialog State
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);

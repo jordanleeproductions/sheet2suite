@@ -11,7 +11,7 @@ interface MenuSetupManagerProps {
   catering?: MenuItem[];
   onUpdateCatering?: (updatedItems: MenuItem[]) => Promise<void>;
   onUpdateGuests?: (updatedGuests: Guest[]) => Promise<void>;
-  onOpenGuestRegistry?: () => void;
+  onOpenGuestRegistry?: (mealFilter?: string) => void;
   isSyncing?: boolean;
 }
 
@@ -177,6 +177,7 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
   const entrees = menuItems.filter(i => i.category === 'entree');
   const appetizers = menuItems.filter(i => i.category === 'appetizer');
   const desserts = menuItems.filter(i => i.category === 'dessert');
+  const guestSelectionEntrees = entrees.filter(i => i.isGuestChoice !== false);
 
   return (
     <div style={styles.container}>
@@ -197,6 +198,17 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
             .menu-add-btn {
               display: none !important;
             }
+          }
+          .entree-kpi-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .entree-kpi-card:hover {
+            border-color: var(--color-primary) !important;
+            box-shadow: var(--box-shadow-hover) !important;
+            transform: translateY(-2px);
+          }
+          .entree-kpi-card:active {
+            transform: translateY(0);
           }
         `}</style>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
@@ -240,6 +252,119 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
         </div>
       </div>
 
+      {/* Guest Selection Entree Breakdown Cards */}
+      {guestSelectionEntrees.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem' }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              color: 'var(--color-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              GUEST SELECTION ENTREE ORDERS
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.65rem',
+              color: 'var(--color-muted)',
+              fontStyle: 'italic'
+            }}>
+              Click any entree card to view matching guests in Guest List
+            </span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.75rem',
+          }}>
+            {guestSelectionEntrees.map((item) => {
+              const count = getItemGuestCount(item.name);
+              return (
+                <div
+                  key={item.id || item.name}
+                  onClick={() => onOpenGuestRegistry && onOpenGuestRegistry(item.name)}
+                  className="entree-kpi-card"
+                  style={{
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    border: '1px solid var(--color-muted)',
+                    borderRadius: 'var(--border-radius-md)',
+                    padding: '0.875rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    boxShadow: 'var(--box-shadow-subtle)',
+                  }}
+                  title={`Click to filter Guest List for "${item.name}"`}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <span style={{
+                      fontFamily: 'var(--font-serif)',
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      color: 'var(--color-text)',
+                      lineHeight: 1.3
+                    }}>
+                      {item.name}
+                    </span>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--color-bg-subtle, rgba(0,0,0,0.05))',
+                      color: 'var(--color-primary)',
+                      flexShrink: 0
+                    }}>
+                      <ChevronRight size={13} />
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '1.5rem',
+                        fontWeight: 800,
+                        color: count > 0 ? 'var(--color-primary)' : 'var(--color-muted)',
+                        lineHeight: 1
+                      }}>
+                        {count}
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        color: 'var(--color-muted)'
+                      }}>
+                        {count === 1 ? 'Guest Order' : 'Guest Orders'}
+                      </span>
+                    </div>
+
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-primary)',
+                    }}>
+                      View Guests →
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Filter Tabs */}
       <div style={styles.filterBar}>
         {[
@@ -281,22 +406,6 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                     {item.category.toUpperCase()}
                   </span>
 
-                  {item.id && (
-                    <span style={{
-                      fontSize: '0.65rem',
-                      fontFamily: 'var(--font-mono, monospace)',
-                      fontWeight: 700,
-                      letterSpacing: '0.05em',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      backgroundColor: 'var(--color-bg-subtle, rgba(0,0,0,0.05))',
-                      color: 'var(--color-muted, #64748b)',
-                      border: '1px solid var(--color-border, rgba(0,0,0,0.1))'
-                    }}>
-                      {item.id}
-                    </span>
-                  )}
-
                   {item.isGuestChoice !== false && (
                     <span style={{
                       ...styles.categoryBadge,
@@ -333,19 +442,27 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
 
               {/* Bottom Order Counter */}
               <div style={styles.cardFooter}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Award size={14} style={{ color: orderCount > 0 ? 'var(--color-green)' : 'var(--color-muted)' }} />
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: orderCount > 0 ? 'var(--color-green)' : 'var(--color-muted)' }}>
-                    {orderCount} {orderCount === 1 ? 'Guest Order' : 'Guest Orders'}
-                  </span>
-                </div>
+                {item.isGuestChoice !== false ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Award size={14} style={{ color: orderCount > 0 ? 'var(--color-green)' : 'var(--color-muted)' }} />
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: orderCount > 0 ? 'var(--color-green)' : 'var(--color-muted)' }}>
+                      {orderCount} {orderCount === 1 ? 'Guest Order' : 'Guest Orders'}
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                      Buffet / Shared Course
+                    </span>
+                  </div>
+                )}
 
-                {item.category === 'entree' && onOpenGuestRegistry && (
+                {item.category === 'entree' && item.isGuestChoice !== false && onOpenGuestRegistry && (
                   <button
                     type="button"
-                    onClick={onOpenGuestRegistry}
+                    onClick={() => onOpenGuestRegistry(item.name)}
                     style={styles.linkBtn}
-                    title="View RSVPs in Guest Registry"
+                    title={`View RSVPs for ${item.name} in Guest List`}
                   >
                     Guest List <ChevronRight size={12} />
                   </button>

@@ -482,11 +482,17 @@ export default function Sheet2VowDashboard() {
   // Navigation
   const [activeTab, setActiveTab] = useState<'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('home');
   const [guestInitialFilter, setGuestInitialFilter] = useState<RSVPStatus | 'All'>('All');
+  const [guestInitialMealFilter, setGuestInitialMealFilter] = useState<string>('All');
   const [taskInitialFilter, setTaskInitialFilter] = useState<KanbanStage | undefined>(undefined);
   const [musicInitialFilter, setMusicInitialFilter] = useState<string | undefined>(undefined);
 
   // Tab switching with browser History API push & URL hash sync
-  const switchTab = (tab: 'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks', filter?: string, pushToHistory = true) => {
+  const switchTab = (
+    tab: 'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks',
+    filter?: string,
+    pushToHistory = true,
+    extra?: { mealFilter?: string }
+  ) => {
     triggerHaptic(10);
     const targetTab = tab === 'metrics' ? 'home' : tab;
     setActiveTab(targetTab as any);
@@ -495,9 +501,15 @@ export default function Sheet2VowDashboard() {
       if (tab === 'tasks') setTaskInitialFilter(filter as any);
       if (tab === 'music') setMusicInitialFilter(filter);
     }
+    if (tab === 'guests' && extra?.mealFilter) {
+      setGuestInitialMealFilter(extra.mealFilter);
+    }
 
     if (pushToHistory && typeof window !== 'undefined') {
-      const hash = `#${tab}${filter ? `?filter=${encodeURIComponent(filter)}` : ''}`;
+      const queryParts: string[] = [];
+      if (filter) queryParts.push(`filter=${encodeURIComponent(filter)}`);
+      if (extra?.mealFilter) queryParts.push(`meal=${encodeURIComponent(extra.mealFilter)}`);
+      const hash = `#${tab}${queryParts.length > 0 ? `?${queryParts.join('&')}` : ''}`;
       const activeSheet = spreadsheetId || localStorage.getItem('s2v_spreadsheet_id') || '';
       const searchParams = new URLSearchParams(window.location.search);
       if (activeSheet && !searchParams.get('spreadsheetId') && !searchParams.get('sheetId')) {
@@ -506,7 +518,7 @@ export default function Sheet2VowDashboard() {
       const searchStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
       const targetUrl = `${window.location.pathname}${searchStr}${hash}`;
       if (window.location.hash !== hash || (activeSheet && !window.location.search.includes('spreadsheetId'))) {
-        window.history.pushState({ tab, filter }, '', targetUrl);
+        window.history.pushState({ tab, filter, mealFilter: extra?.mealFilter }, '', targetUrl);
       }
     }
   };
@@ -520,15 +532,16 @@ export default function Sheet2VowDashboard() {
         const [tabName, queryStr] = hash.split('?');
         const params = new URLSearchParams(queryStr || '');
         const filter = params.get('filter') || undefined;
+        const meal = params.get('meal') || undefined;
 
-        const validTabs = ['home', 'metrics', 'guests', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
+        const validTabs = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
         if (validTabs.includes(tabName)) {
-          switchTab(tabName as any, filter, false);
+          switchTab(tabName as any, filter, false, meal ? { mealFilter: meal } : undefined);
           return;
         }
       }
       if (event.state?.tab) {
-        switchTab(event.state.tab, event.state.filter, false);
+        switchTab(event.state.tab, event.state.filter, false, event.state.mealFilter ? { mealFilter: event.state.mealFilter } : undefined);
       } else {
         switchTab('home', undefined, false);
       }
@@ -542,10 +555,11 @@ export default function Sheet2VowDashboard() {
       const [tabName, queryStr] = initialHash.split('?');
       const params = new URLSearchParams(queryStr || '');
       const filter = params.get('filter') || undefined;
+      const meal = params.get('meal') || undefined;
 
-      const validTabs = ['home', 'metrics', 'guests', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
+      const validTabs = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
       if (validTabs.includes(tabName)) {
-        switchTab(tabName as any, filter, false);
+        switchTab(tabName as any, filter, false, meal ? { mealFilter: meal } : undefined);
       }
     }
 
@@ -2707,6 +2721,7 @@ export default function Sheet2VowDashboard() {
                   onUpdate={(data) => syncUpdate('guests', data)}
                   isSyncing={isSyncing}
                   initialRsvpFilter={guestInitialFilter}
+                  initialMealFilter={guestInitialMealFilter}
                   onOpenPrintStudio={(tmpl) => {
                     setPrintModalInitialTemplate(tmpl);
                     setShowPrintModal(true);
@@ -2720,7 +2735,7 @@ export default function Sheet2VowDashboard() {
                   catering={weddingData.catering}
                   onUpdateCatering={(data) => syncUpdate('catering', data)}
                   onUpdateGuests={(data) => syncUpdate('guests', data)}
-                  onOpenGuestRegistry={() => switchTab('guests')}
+                  onOpenGuestRegistry={(mealFilter) => switchTab('guests', undefined, true, mealFilter ? { mealFilter } : undefined)}
                   isSyncing={isSyncing}
                 />
               )}

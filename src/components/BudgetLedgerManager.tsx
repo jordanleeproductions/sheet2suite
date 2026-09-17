@@ -196,16 +196,30 @@ export default function BudgetLedgerManager({
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeBottomSheetCategory) {
-        closeBottomSheet();
+      if (e.key === 'Escape') {
+        if (isAddingExpense || editingExpense) {
+          closeExpenseModal();
+        } else if (isAdding || editingItem) {
+          closeModal();
+        } else if (itemToDelete) {
+          setItemToDelete(null);
+        } else if (expenseToDelete) {
+          setExpenseToDelete(null);
+        } else if (activeBottomSheetCategory) {
+          closeBottomSheet();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeBottomSheetCategory]);
+  }, [activeBottomSheetCategory, isAdding, editingItem, isAddingExpense, editingExpense, itemToDelete, expenseToDelete]);
+
+  const hasAnyModalOrSheetOpen = Boolean(
+    isAdding || editingItem || isAddingExpense || editingExpense || itemToDelete || expenseToDelete || activeBottomSheetCategory
+  );
 
   React.useEffect(() => {
-    if (activeBottomSheetCategory) {
+    if (hasAnyModalOrSheetOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -213,7 +227,7 @@ export default function BudgetLedgerManager({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [activeBottomSheetCategory]);
+  }, [hasAnyModalOrSheetOpen]);
 
   // Unique categories for summaries & dropdowns
   const budgetCategories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
@@ -592,22 +606,35 @@ export default function BudgetLedgerManager({
     });
     setIsAdding(true);
     setEditingItem(null);
+    setIsAddingExpense(false);
+    setEditingExpense(null);
+    setItemToDelete(null);
+    setExpenseToDelete(null);
   };
 
   const startEditBudget = async (item: BudgetItem) => {
     if (!(await verifyActiveSession())) return;
     setFormState({
       ...item,
-      estimatedCost: item.estimatedCost,
+      estimatedCost: (item.estimatedCost !== undefined && item.estimatedCost !== null && item.estimatedCost > 0) ? item.estimatedCost : ('' as any),
     });
     setEditingItem(item);
     setIsAdding(false);
+    setIsAddingExpense(false);
+    setEditingExpense(null);
+    setItemToDelete(null);
+    setExpenseToDelete(null);
   };
 
   const promptDeleteItem = async (item: BudgetItem | null) => {
     if (!item) return;
     if (!(await verifyActiveSession())) return;
     setItemToDelete(item);
+    setExpenseToDelete(null);
+    setIsAdding(false);
+    setEditingItem(null);
+    setIsAddingExpense(false);
+    setEditingExpense(null);
   };
 
   const closeModal = () => {
@@ -715,20 +742,33 @@ export default function BudgetLedgerManager({
     });
     setIsAddingExpense(true);
     setEditingExpense(null);
+    setIsAdding(false);
+    setEditingItem(null);
+    setItemToDelete(null);
+    setExpenseToDelete(null);
   };
 
   const startEditExpense = async (item: ExpenseItem) => {
     if (!(await verifyActiveSession())) return;
     const amt = item.amount ?? item.actualCost ?? item.amountPaid ?? 0;
-    setExpenseFormState({ ...item, amount: amt });
+    setExpenseFormState({ ...item, amount: amt > 0 ? amt : ('' as any) });
     setEditingExpense(item);
     setIsAddingExpense(false);
+    setIsAdding(false);
+    setEditingItem(null);
+    setItemToDelete(null);
+    setExpenseToDelete(null);
   };
 
   const promptDeleteExpense = async (item: ExpenseItem | null) => {
     if (!item) return;
     if (!(await verifyActiveSession())) return;
     setExpenseToDelete(item);
+    setItemToDelete(null);
+    setIsAdding(false);
+    setEditingItem(null);
+    setIsAddingExpense(false);
+    setEditingExpense(null);
   };
 
   const closeExpenseModal = () => {
@@ -898,6 +938,13 @@ export default function BudgetLedgerManager({
           }
           .budget-desktop-category-card:hover {
             transform: translateY(-2px);
+          }
+          .budget-detail-table-add-btn {
+            transition: all 0.15s ease !important;
+          }
+          .budget-detail-table-add-btn:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
           }
           .budget-mobile-chips-container {
             display: none !important;
@@ -2458,72 +2505,106 @@ export default function BudgetLedgerManager({
                 </button>
               </div>
             ) : (
-              <div style={styles.tableWrapper}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.th}>DESCRIPTION</th>
-                      <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
-                      <th style={styles.th}>PURCHASE DATE</th>
-                      <th style={styles.th}>NOTES</th>
-                      <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedDetailExpenses.map(exp => {
-                      const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
-                      return (
-                        <tr key={exp.itemId} style={styles.tr}>
-                          <td style={styles.td}>
-                            <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
-                          </td>
-                          <td style={{ ...styles.td, textAlign: 'right' }}>
-                            <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                              {formatCurrency(amt, currency, true)}
-                            </span>
-                          </td>
-                          <td style={styles.td}>
-                            <span style={{ ...styles.monoText, fontVariantNumeric: 'tabular-nums' }}>{formatDateConsistent(exp.purchaseDate)}</span>
-                          </td>
-                          <td style={styles.td}>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
-                          </td>
-                          <td style={{ ...styles.td, textAlign: 'center' }}>
-                            <div style={styles.actionsCell}>
-                              <button style={styles.actionBtn} onClick={() => startEditExpense(exp)} title="Edit Expense">
-                                <Edit2 size={12} />
-                              </button>
-                              {onUpdateExpenses && (
-                                <button
-                                  style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
-                                  onClick={() => promptDeleteExpense(exp)}
-                                  disabled={isSyncing}
-                                  title="Delete Expense"
-                                >
-                                  <Trash2 size={12} />
+              <>
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>DESCRIPTION</th>
+                        <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
+                        <th style={styles.th}>PURCHASE DATE</th>
+                        <th style={styles.th}>NOTES</th>
+                        <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayedDetailExpenses.map(exp => {
+                        const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
+                        return (
+                          <tr key={exp.itemId} style={styles.tr}>
+                            <td style={styles.td}>
+                              <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
+                            </td>
+                            <td style={{ ...styles.td, textAlign: 'right' }}>
+                              <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                                {formatCurrency(amt, currency, true)}
+                              </span>
+                            </td>
+                            <td style={styles.td}>
+                              <span style={{ ...styles.monoText, fontVariantNumeric: 'tabular-nums' }}>{formatDateConsistent(exp.purchaseDate)}</span>
+                            </td>
+                            <td style={styles.td}>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
+                            </td>
+                            <td style={{ ...styles.td, textAlign: 'center' }}>
+                              <div style={styles.actionsCell}>
+                                <button style={styles.actionBtn} onClick={() => startEditExpense(exp)} title="Edit Expense">
+                                  <Edit2 size={12} />
                                 </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                                {onUpdateExpenses && (
+                                  <button
+                                    style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
+                                    onClick={() => promptDeleteExpense(exp)}
+                                    disabled={isSyncing}
+                                    title="Delete Expense"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
 
-                    {/* Footer Row */}
-                    <tr style={styles.footerTr}>
-                      <td style={{ ...styles.td, fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                        TOTAL FOR {effectiveSelectedCategoryId.toUpperCase()}
-                      </td>
-                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                        <span style={{ ...styles.monoText, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
-                          {formatCurrency(displayedDetailExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency, true)}
-                        </span>
-                      </td>
-                      <td colSpan={3} style={styles.td}></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                      {/* Footer Row */}
+                      <tr style={styles.footerTr}>
+                        <td style={{ ...styles.td, fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                          TOTAL FOR {effectiveSelectedCategoryId.toUpperCase()}
+                        </td>
+                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
+                          <span style={{ ...styles.monoText, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                            {formatCurrency(displayedDetailExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency, true)}
+                          </span>
+                        </td>
+                        <td colSpan={3} style={styles.td}></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Bottom Quick-Add Action for Detail Expenses Table */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingTop: '0.75rem',
+                  borderTop: '1px solid var(--color-border)',
+                  marginTop: '0.25rem',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                }}>
+                  <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {displayedDetailExpenses.length} expense{displayedDetailExpenses.length === 1 ? '' : 's'} recorded for {effectiveSelectedCategoryId}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => startAddExpense(effectiveSelectedCategoryId)}
+                    disabled={isSyncing}
+                    className="budget-detail-table-add-btn"
+                    style={{
+                      ...styles.addButton,
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.725rem',
+                      gap: '0.35rem',
+                      color: 'var(--color-on-primary, #ffffff)',
+                    }}
+                    title={`Add new expense to ${effectiveSelectedCategoryId}`}
+                  >
+                    <Plus size={14} strokeWidth={2.5} /> + ADD EXPENSE
+                  </button>
+                </div>
+              </>
             )}
           </div>
             </>
@@ -3243,8 +3324,15 @@ export default function BudgetLedgerManager({
       {/* BUDGET ITEM ADD/EDIT MODAL                                    */}
       {/* ============================================================ */}
       {(isAdding || editingItem) && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div
+          style={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSyncing) {
+              closeModal();
+            }
+          }}
+        >
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {editingItem ? 'EDIT BUDGET CATEGORY' : '+ NEW BUDGET CATEGORY'}
@@ -3311,10 +3399,6 @@ export default function BudgetLedgerManager({
                       type="number"
                       value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
                       onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleFormChange('estimatedCost', '');
-                        e.target.select();
-                      }}
                       style={{ ...styles.input, paddingLeft: '2.2rem', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-primary)' }}
                       min="1"
                       step="any"
@@ -3378,8 +3462,15 @@ export default function BudgetLedgerManager({
       {/* EXPENSE ITEM ADD/EDIT MODAL                                   */}
       {/* ============================================================ */}
       {(isAddingExpense || editingExpense) && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div
+          style={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSyncing) {
+              closeExpenseModal();
+            }
+          }}
+        >
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {editingExpense ? 'EDIT EXPENSE' : '+ NEW EXPENSE'}
@@ -3426,7 +3517,7 @@ export default function BudgetLedgerManager({
                         <optgroup label="Active Budget Categories">
                           {activeOrAlertStats.map(s => (
                             <option key={s.category} value={s.category}>
-                              {s.category} (${s.estimated.toLocaleString('en-US')} budgeted)
+                              {s.category} (${(s.estimated || 0).toLocaleString('en-US')} budgeted)
                             </option>
                           ))}
                         </optgroup>
@@ -3475,10 +3566,6 @@ export default function BudgetLedgerManager({
                       type="number"
                       value={expenseFormState.amount !== undefined && expenseFormState.amount !== null ? expenseFormState.amount : ''}
                       onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleExpenseFormChange('amount', '');
-                        e.target.select();
-                      }}
                       style={{ ...styles.input, paddingLeft: '1.75rem' }}
                       min="0"
                       step="any"
@@ -3539,8 +3626,15 @@ export default function BudgetLedgerManager({
       {/* DELETE CONFIRMATION MODALS                                    */}
       {/* ============================================================ */}
       {itemToDelete && (
-        <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, maxWidth: '400px' }}>
+        <div
+          style={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSyncing) {
+              setItemToDelete(null);
+            }
+          }}
+        >
+          <div style={{ ...styles.modalContent, maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-red)' }}>DELETE BUDGET ITEM</h3>
               <button style={styles.closeBtn} onClick={() => setItemToDelete(null)}>
@@ -3567,8 +3661,15 @@ export default function BudgetLedgerManager({
       )}
 
       {expenseToDelete && (
-        <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, maxWidth: '400px' }}>
+        <div
+          style={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSyncing) {
+              setExpenseToDelete(null);
+            }
+          }}
+        >
+          <div style={{ ...styles.modalContent, maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-red)' }}>DELETE EXPENSE</h3>
               <button style={styles.closeBtn} onClick={() => setExpenseToDelete(null)}>
@@ -3576,7 +3677,7 @@ export default function BudgetLedgerManager({
               </button>
             </div>
             <div style={{ padding: '1.25rem', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', color: 'var(--color-text)' }}>
-              Are you sure you want to delete expense <strong>{expenseToDelete.description}</strong> (${expenseToDelete.actualCost.toLocaleString()})?
+              Are you sure you want to delete expense <strong>{expenseToDelete.description}</strong> (${(expenseToDelete.actualCost || 0).toLocaleString()})?
             </div>
             <div style={styles.formActions}>
               <button style={styles.cancelBtn} onClick={() => setExpenseToDelete(null)}>
@@ -3886,14 +3987,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   modalOverlay: {
     position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     inset: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     backdropFilter: 'blur(4px)',
-    zIndex: 999,
+    WebkitBackdropFilter: 'blur(4px)',
+    zIndex: 1100,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '1rem',
+    pointerEvents: 'auto',
   },
   modalContent: {
     backgroundColor: 'var(--color-surface)',
@@ -3906,6 +4013,8 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     maxHeight: '90vh',
     overflow: 'hidden',
+    pointerEvents: 'auto',
+    cursor: 'default',
   },
   modalHeader: {
     display: 'flex',

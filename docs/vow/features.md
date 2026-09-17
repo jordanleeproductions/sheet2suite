@@ -95,6 +95,12 @@
 - [x] **[CATERING-2WAY-SYNC] 2-Way Google Sheets Sync for Catering Menu (`CATERING` Tab):** Full bi-directional synchronization between the app and the `CATERING` spreadsheet tab. Automatically links Course Category to `=SETTINGS!$P$2:$P$50`, populates entree choices into the Guest Registry, and retains cross-device menu changes.
 - [x] **[MENU-DELETE-MODAL] In-App Delete Menu Item Confirmation Modal:** Replaced native browser `window.confirm()` popup with a styled, accessible in-app modal featuring item name highlights, descriptive impact details, and responsive action buttons.
 - [x] **[MENU-SEQUENTIAL-ITEM-IDS] Human-Readable Sequential Catalog Code Generation (`M101`, `M102`, ...):** Replaced random machine timestamp IDs (`menu-1725...`) with clean, sequential catalog codes (`M101`, `M102`, `M108`, etc.) matching the master spreadsheet schema contract. Added smart gap-filling for deleted items and visible monospace SKU badges on menu cards for effortless cross-referencing with the `CATERING` tab.
+- [x] **[MENU-GUEST-ENTREE-STATS-AND-FILTER-REDIRECT] Guest Selection Entree Statistic Cards & Relational Guest List Filter Redirection (`MenuSetupManager.tsx`, `GuestListManager.tsx`, `src/app/vow/page.tsx`):**
+  - Added an interactive row of statistic cards directly beneath the main KPI overview summary bar for each Guest Selection Entree dish (`isGuestChoice !== false`).
+  - Displays individual entree dish names, real-time RSVP guest order counts (`X Guest Orders`), and an interactive `View Guests →` affordance.
+  - Tapping or clicking an entree card seamlessly redirects the couple to the **Guest List** tab filtered directly by that selected entree (`initialMealFilter` / `#guests?meal=...`), with the active meal pill highlighted.
+  - Removed the cluttering technical menu item catalog ID badge (`item.id`) from the user-facing cards.
+  - Conditionally displays the guest order count badge only on items designated for individual guest selection (`isGuestChoice !== false`), displaying a subtle "Buffet / Shared Course" tag on non-choice dishes.
 - [x] **[SYNC-RESILIENT-OPTIONAL-TABS] Resilient Google Sheets Dynamic Tab Querying & Auto-Provisioning (`/api/sync`):**
   - Updated `GET /api/sync` to only register cell ranges in Google Sheets API `batchGet` for tabs that actually exist in the connected workbook. Prevents fatal `400 Bad Request: Unable to parse range: 'CATERING'!A1:I1000` errors when opening older spreadsheets created before the `CATERING` or other newer tabs existed.
   - Dynamically initializes missing optional tabs with empty arrays (`catering: []`, `tables: []`) during read sync.
@@ -151,6 +157,10 @@
   - Completely eliminates cramped multi-line stacking of Category, Sort, and Add Task beside the description text when desktop screens or browser windows are shrunk.
 - [x] **[TASK-CONTROLS-UNDER-METRICS] Relocate Category & Sort Controls Under Progress Metrics (`KanbanBoard.tsx`):** Moved the Category and Sort filter controls out of the top header and positioned them in a dedicated toolbar card directly beneath the "TASK PROGRESS & COMPLETION METRICS" card, creating an uncrowded header and intuitive hierarchy.
 - [x] **[TASK-ASSIGNEE-FILTER] Dynamic Assignee Filter with Unassigned Support (`KanbanBoard.tsx`):** Added an Assignee filter dropdown (`ASSIGNEE: [ALL ASSIGNEES | UNASSIGNED | <Names>]`) displaying dynamic task counts per assignee. Seamlessly filters board columns and progress metrics, and automatically pre-populates the assigned person when adding new tasks.
+- [x] **[TASK-COLUMN-BOTTOM-ADD] Desktop Kanban Column Bottom Quick-Add Buttons (`KanbanBoard.tsx`):**
+  - Added dedicated quick-add action buttons (`+ ADD TO DO TASK`, `+ ADD IN PROGRESS TASK`, `+ ADD DONE TASK`) pinned to the bottom of each column list (To Do, In Progress, Done) on desktop viewports.
+  - Automatically pre-fills the stage in the task modal according to the clicked column, allowing users who have scrolled to the bottom of a long task list to rapidly create a new task without scrolling all the way back up to the top toolbar.
+  - Features styled hover transitions with border color accents and background tinting matching the active design system.
 
 ---
 
@@ -233,6 +243,16 @@
     - **Spent Expenses**: `Spent: High to Low` and `Spent: Low to High`
     - **Remaining Headroom**: `Remaining: High to Low` and `Remaining: Low to High`
   - Fully backward-compatible with legacy stored preferences in `localStorage` (`'s2v_budget_master_sort'`).
+- [x] **[BUDGET-MODAL-FREEZE-FIX] Desktop Edit Modal Freeze & Unresponsive Clicks Hardening (`BudgetLedgerManager.tsx`):**
+  - **Focus & State Loop Elimination**: Removed synchronous `handleFormChange` / `handleExpenseFormChange` state updates and unsafe `.select()` calls from `onFocus` handlers on `type="number"` inputs, eliminating focus thrashing and re-render loops in Chromium browsers. Cleanly pre-populates allocation and amount inputs so `onFocus` does not mutate state.
+  - **Comprehensive Escape Key Dismissal**: Extended global `keydown` listener so pressing `Escape` dismisses whichever modal is active (`isAddingExpense`, `editingExpense`, `isAdding`, `editingItem`, `itemToDelete`, `expenseToDelete`, or `activeBottomSheetCategory`).
+  - **Backdrop Click Dismissal**: Added `onClick` dismissal on `modalOverlay` with `e.target === e.currentTarget` guards and `e.stopPropagation()` on `modalContent` across all budget and expense add, edit, and delete dialogs.
+  - **Z-Index & Pointer Events Hardening**: Elevated modal overlay `zIndex` from `999` to `1100` (above all header popovers and sidebars) with explicit `top/left/right/bottom/inset: 0` and `pointerEvents: 'auto'`.
+  - **Modal State Mutual Exclusivity & Body Scroll Lock**: Enforced mutual exclusivity across modal state setters and synchronized `document.body.style.overflow = 'hidden'` whenever any budget modal or sheet is open.
+- [x] **[FINANCIALS-DESKTOP-TABLE-BOTTOM-ADD] Desktop Expense Table Bottom Quick-Add Action Bar (`BudgetLedgerManager.tsx`):**
+  - Added a dedicated bottom action bar beneath the Desktop detail expense table displaying recorded expense count and a prominent `+ ADD EXPENSE` button.
+  - Enables users who have scrolled through a long list of category receipts and invoices to immediately log a new purchase without scrolling back to the top of the detail ledger card.
+  - Pre-populates the modal's category dropdown with the currently selected budget category for instant entry.
 
 ---
 

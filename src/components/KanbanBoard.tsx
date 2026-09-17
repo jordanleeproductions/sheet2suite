@@ -1261,6 +1261,36 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                   })
                 )}
               </div>
+
+              {/* Column Bottom Quick-Add Button */}
+              <button
+                type="button"
+                onClick={() => startAdd(stage)}
+                disabled={isSyncing}
+                className="kanban-column-bottom-add-btn"
+                style={{
+                  marginTop: '0.75rem',
+                  padding: '0.5rem 0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.725rem',
+                  fontWeight: 700,
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-primary)',
+                  border: '1px dashed var(--color-border)',
+                  borderRadius: 'var(--border-radius-sm, 6px)',
+                  cursor: isSyncing ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s ease',
+                  opacity: isSyncing ? 0.6 : 1,
+                  boxShadow: 'var(--box-shadow-subtle)',
+                }}
+                title={`Add task to ${stage}`}
+              >
+                <Plus size={13} strokeWidth={2.5} /> + ADD {stage.toUpperCase()} TASK
+              </button>
             </div>
           );
         })}
@@ -1287,6 +1317,11 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
           align-items: center;
           gap: 0.75rem;
           flex-wrap: wrap;
+        }
+        .kanban-column-bottom-add-btn:hover {
+          background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.04)) !important;
+          border-color: var(--color-primary) !important;
+          transform: translateY(-1px);
         }
         @media (max-width: 767px) {
           .mobile-hidden {
