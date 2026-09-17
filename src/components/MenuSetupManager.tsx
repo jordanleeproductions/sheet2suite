@@ -328,34 +328,23 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-                      <span style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '1.5rem',
-                        fontWeight: 800,
-                        color: count > 0 ? 'var(--color-primary)' : 'var(--color-muted)',
-                        lineHeight: 1
-                      }}>
-                        {count}
-                      </span>
-                      <span style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        color: 'var(--color-muted)'
-                      }}>
-                        {count === 1 ? 'Guest Order' : 'Guest Orders'}
-                      </span>
-                    </div>
-
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem', marginTop: '0.75rem' }}>
                     <span style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-primary)',
+                      fontSize: '1.5rem',
+                      fontWeight: 800,
+                      color: count > 0 ? 'var(--color-primary)' : 'var(--color-muted)',
+                      lineHeight: 1
                     }}>
-                      View Guests →
+                      {count}
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      color: 'var(--color-muted)'
+                    }}>
+                      {count === 1 ? 'Guest Order' : 'Guest Orders'}
                     </span>
                   </div>
                 </div>

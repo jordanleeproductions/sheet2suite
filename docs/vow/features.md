@@ -97,7 +97,7 @@
 - [x] **[MENU-SEQUENTIAL-ITEM-IDS] Human-Readable Sequential Catalog Code Generation (`M101`, `M102`, ...):** Replaced random machine timestamp IDs (`menu-1725...`) with clean, sequential catalog codes (`M101`, `M102`, `M108`, etc.) matching the master spreadsheet schema contract. Added smart gap-filling for deleted items and visible monospace SKU badges on menu cards for effortless cross-referencing with the `CATERING` tab.
 - [x] **[MENU-GUEST-ENTREE-STATS-AND-FILTER-REDIRECT] Guest Selection Entree Statistic Cards & Relational Guest List Filter Redirection (`MenuSetupManager.tsx`, `GuestListManager.tsx`, `src/app/vow/page.tsx`):**
   - Added an interactive row of statistic cards directly beneath the main KPI overview summary bar for each Guest Selection Entree dish (`isGuestChoice !== false`).
-  - Displays individual entree dish names, real-time RSVP guest order counts (`X Guest Orders`), and an interactive `View Guests →` affordance.
+  - Displays individual entree dish names, real-time RSVP guest order counts (`X Guest Orders`), and a top-right chevron affordance indicating interactive clickability.
   - Tapping or clicking an entree card seamlessly redirects the couple to the **Guest List** tab filtered directly by that selected entree (`initialMealFilter` / `#guests?meal=...`), with the active meal pill highlighted.
   - Removed the cluttering technical menu item catalog ID badge (`item.id`) from the user-facing cards.
   - Conditionally displays the guest order count badge only on items designated for individual guest selection (`isGuestChoice !== false`), displaying a subtle "Buffet / Shared Course" tag on non-choice dishes.
