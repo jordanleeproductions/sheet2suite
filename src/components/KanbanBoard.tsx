@@ -1289,7 +1289,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                 }}
                 title={`Add task to ${stage}`}
               >
-                <Plus size={13} strokeWidth={2.5} /> + ADD {stage.toUpperCase()} TASK
+                <Plus size={13} strokeWidth={2.5} /> ADD {stage.toUpperCase()} TASK
               </button>
             </div>
           );

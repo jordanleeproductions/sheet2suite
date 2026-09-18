@@ -1157,7 +1157,7 @@ export default function BudgetLedgerManager({
                     }}
                     title="Define a fixed Master Target Cap ceiling"
                   >
-                    + SET MASTER CAP
+                    SET MASTER CAP
                   </button>
                   <button
                     type="button"
@@ -2132,7 +2132,7 @@ export default function BudgetLedgerManager({
                               }}
                               title={`Set Budget for ${stat.category}`}
                             >
-                              + Set Budget
+                              Set Budget
                             </button>
                           )}
                         </div>
@@ -2273,7 +2273,7 @@ export default function BudgetLedgerManager({
                       style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
                       disabled={isSyncing}
                     >
-                      <Plus size={14} style={{ marginRight: '0.25rem' }} />ADD EXPENSE
+                      <Plus size={14} style={{ marginRight: '0.25rem' }} /> ADD EXPENSE
                     </button>
                   </div>
                 </div>
@@ -2601,7 +2601,7 @@ export default function BudgetLedgerManager({
                     }}
                     title={`Add new expense to ${effectiveSelectedCategoryId}`}
                   >
-                    <Plus size={14} strokeWidth={2.5} /> + ADD EXPENSE
+                    <Plus size={14} strokeWidth={2.5} /> ADD EXPENSE
                   </button>
                 </div>
               </>
@@ -3313,7 +3313,7 @@ export default function BudgetLedgerManager({
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 }}
               >
-                <Plus size={16} strokeWidth={2.5} /> + Log Expense to {bottomSheetStat.category}
+                <Plus size={16} strokeWidth={2.5} /> Log Expense to {bottomSheetStat.category}
               </button>
             </div>
           </div>
@@ -3335,7 +3335,7 @@ export default function BudgetLedgerManager({
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {editingItem ? 'EDIT BUDGET CATEGORY' : '+ NEW BUDGET CATEGORY'}
+                {editingItem ? 'EDIT BUDGET CATEGORY' : 'ADD BUDGET CATEGORY'}
               </h3>
               <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeModal}>
                 <X size={18} />
@@ -3473,7 +3473,7 @@ export default function BudgetLedgerManager({
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {editingExpense ? 'EDIT EXPENSE' : '+ NEW EXPENSE'}
+                {editingExpense ? 'EDIT EXPENSE' : 'ADD EXPENSE'}
               </h3>
               <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeExpenseModal}>
                 <X size={18} />
@@ -3701,13 +3701,13 @@ export default function BudgetLedgerManager({
         onClick={startAddExpense}
         subActions={[
           {
-            label: '+ New Expense',
+            label: 'New Expense',
             onClick: startAddExpense,
             icon: ShoppingBag,
             color: 'var(--color-primary, #0f172a)',
           },
           {
-            label: '+ New Budget Category',
+            label: 'New Budget Category',
             onClick: startAddBudget,
             icon: Plus,
             color: 'var(--color-surface, #ffffff)',

@@ -410,7 +410,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
               }}
             >
               <FolderPlus size={15} />
-              <span>+ New folder</span>
+              <span>New folder</span>
             </button>
 
             <button
@@ -702,7 +702,7 @@ export const GoogleDrivePickerModal: React.FC<GoogleDrivePickerModalProps> = ({
                   <FolderOpen size={44} style={{ color: '#C4C7C5', marginBottom: '0.5rem' }} />
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1F1F1F' }}>No sub-folders inside this directory</div>
                   <p style={{ fontSize: '0.725rem', marginTop: '0.2rem', color: '#444746' }}>
-                    Click <strong>"+ New folder"</strong> above to create a dedicated wedding destination folder
+                    Click <strong>"New folder"</strong> above to create a dedicated wedding destination folder
                   </p>
                 </div>
               ) : viewMode === 'list' ? (

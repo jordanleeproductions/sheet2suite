@@ -229,7 +229,7 @@ export default function TimeDialPicker({
       {/* Smart duration offsets if reference start time is provided */}
       {referenceStartTime && (
         <div style={styles.durationRow}>
-          <span style={styles.chipsLabel}>+ADD DURATION:</span>
+          <span style={styles.chipsLabel}>ADD DURATION:</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', alignItems: 'center' }}>
             {[
               { label: '+30m', min: 30 },
