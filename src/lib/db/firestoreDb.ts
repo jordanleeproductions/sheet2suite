@@ -96,20 +96,49 @@ export function getCloudFirestore(): Firestore | null {
       return firestoreInstance;
     }
 
+    // Resolve Firebase / Google Cloud Project ID accurately
+    let detectedProjectId =
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT ||
+      process.env.GCLOUD_PROJECT;
+
+    if (!detectedProjectId && process.env.FIREBASE_CONFIG) {
+      try {
+        const parsed = JSON.parse(process.env.FIREBASE_CONFIG);
+        if (parsed.projectId) detectedProjectId = parsed.projectId;
+      } catch (_) {}
+    }
+
+    if (!detectedProjectId) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.GOOGLE_REDIRECT_URI || '';
+      const match = appUrl.match(/--([a-z0-9-]+)\./);
+      if (match && match[1]) {
+        detectedProjectId = match[1];
+      } else {
+        detectedProjectId = 'sheet2suite-7036e';
+      }
+    }
+
     // Check for standard Firebase/GCP credentials
     if (
       process.env.FIREBASE_CONFIG ||
       process.env.GOOGLE_APPLICATION_CREDENTIALS ||
       process.env.FIREBASE_PROJECT_ID ||
       process.env.K_SERVICE || // Google Cloud Run / Firebase App Hosting environment
-      process.env.FIREBASE_SERVICE_ACCOUNT
+      process.env.FIREBASE_SERVICE_ACCOUNT ||
+      process.env.GOOGLE_CLIENT_EMAIL
     ) {
-      let appOptions: AppOptions = {};
+      let appOptions: AppOptions = {
+        projectId: detectedProjectId,
+      };
 
       if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         try {
           const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
           appOptions.credential = cert(serviceAccount);
+          if (serviceAccount.project_id) {
+            appOptions.projectId = serviceAccount.project_id;
+          }
         } catch (parseErr) {
           console.warn('[Firestore] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', parseErr);
         }
@@ -124,7 +153,7 @@ export function getCloudFirestore(): Firestore | null {
         privateKey = privateKey.replace(/\\n/g, '\n');
 
         appOptions.credential = cert({
-          projectId: process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || 'sheet2suite-prod',
+          projectId: detectedProjectId,
           clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
           privateKey,
         });
@@ -226,11 +255,22 @@ export const LocalFirestore = {
   setDoc<T = any>(collectionName: string, docId: string, data: T): T {
     const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...data };
 
-    // 1. Sync to local file storage
+    // 1. Sync to local file storage with merge support to preserve existing refreshToken
     try {
       const dirPath = ensureCollectionDir(collectionName);
       const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(docWithId, null, 2), 'utf-8');
+      let existingData: any = {};
+      if (fs.existsSync(filePath)) {
+        try {
+          existingData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        } catch (_) {}
+      }
+      const merged = { ...existingData, ...docWithId };
+      // If new data doesn't have refreshToken but existing had it, preserve existing
+      if (!(data as any)?.refreshToken && existingData?.refreshToken) {
+        merged.refreshToken = existingData.refreshToken;
+      }
+      fs.writeFileSync(filePath, JSON.stringify(merged, null, 2), 'utf-8');
     } catch (fsErr) {
       console.warn(`[Firestore] Local file write warning:`, fsErr);
     }
@@ -273,20 +313,37 @@ export const LocalFirestore = {
 
   /**
    * Finds an auth token document by either docId, spreadsheetId, or userEmail.
-   * Checks Cloud Firestore queries as well as local file storage fallback.
+   * Cross-checks Cloud Firestore queries, linked user/sheet records, and local file storage.
    */
   async findAuthTokenDocAsync(lookupKey: string): Promise<AuthTokenDocument | null> {
     if (!lookupKey) return null;
     const cleanKey = lookupKey.trim();
+    const cloudDb = getCloudFirestore();
 
-    // 1. Direct document lookup by docId (case-insensitive)
-    const direct = await this.getDocAsync<AuthTokenDocument>('auth_tokens', cleanKey);
+    // 1. Direct document lookup by docId
+    let direct = await this.getDocAsync<AuthTokenDocument>('auth_tokens', cleanKey);
     if (direct?.refreshToken) return direct;
 
-    const cloudDb = getCloudFirestore();
+    // 1b. If direct exists but lacks refreshToken, check its associated userEmail or spreadsheetId
+    if (direct) {
+      if (direct.userEmail && direct.userEmail.toLowerCase() !== cleanKey.toLowerCase()) {
+        const userDoc = await this.getDocAsync<AuthTokenDocument>('auth_tokens', direct.userEmail);
+        if (userDoc?.refreshToken) {
+          return { ...direct, refreshToken: userDoc.refreshToken };
+        }
+      }
+      if (direct.spreadsheetId && direct.spreadsheetId !== cleanKey) {
+        const sheetDoc = await this.getDocAsync<AuthTokenDocument>('auth_tokens', direct.spreadsheetId);
+        if (sheetDoc?.refreshToken) {
+          return { ...direct, refreshToken: sheetDoc.refreshToken };
+        }
+      }
+    }
+
+    // 2. Query Cloud Firestore
     if (cloudDb) {
       try {
-        // 2. Query Cloud Firestore by spreadsheetId
+        // Query by spreadsheetId
         const bySheet = await cloudDb
           .collection('auth_tokens')
           .where('spreadsheetId', '==', cleanKey)
@@ -294,10 +351,15 @@ export const LocalFirestore = {
           .get();
         if (!bySheet.empty) {
           const doc = bySheet.docs[0].data() as AuthTokenDocument;
-          if (doc?.refreshToken || doc?.accessToken) return doc;
+          if (doc?.refreshToken) return doc;
+          if (doc?.userEmail) {
+            const userDoc = await this.getDocAsync<AuthTokenDocument>('auth_tokens', doc.userEmail);
+            if (userDoc?.refreshToken) return { ...doc, refreshToken: userDoc.refreshToken };
+          }
+          if (doc?.accessToken) direct = direct || doc;
         }
 
-        // 3. Query Cloud Firestore by userEmail
+        // Query by userEmail
         const byEmail = await cloudDb
           .collection('auth_tokens')
           .where('userEmail', '==', cleanKey.toLowerCase())
@@ -305,7 +367,25 @@ export const LocalFirestore = {
           .get();
         if (!byEmail.empty) {
           const doc = byEmail.docs[0].data() as AuthTokenDocument;
-          if (doc?.refreshToken || doc?.accessToken) return doc;
+          if (doc?.refreshToken) return doc;
+          if (doc?.spreadsheetId) {
+            const sheetDoc = await this.getDocAsync<AuthTokenDocument>('auth_tokens', doc.spreadsheetId);
+            if (sheetDoc?.refreshToken) return { ...doc, refreshToken: sheetDoc.refreshToken };
+          }
+          if (doc?.accessToken) direct = direct || doc;
+        }
+
+        // Global fallback: Look for ANY active token document in auth_tokens with a valid refreshToken
+        const activeTokens = await cloudDb
+          .collection('auth_tokens')
+          .where('refreshToken', '!=', null)
+          .limit(1)
+          .get();
+        if (!activeTokens.empty) {
+          const activeDoc = activeTokens.docs[0].data() as AuthTokenDocument;
+          if (activeDoc?.refreshToken) {
+            return direct ? { ...direct, refreshToken: activeDoc.refreshToken } : activeDoc;
+          }
         }
       } catch (err: any) {
         console.warn('[Firestore] Error querying auth_tokens by field:', err?.message);
@@ -326,7 +406,20 @@ export const LocalFirestore = {
             doc.userEmail?.toLowerCase() === cleanKey.toLowerCase() ||
             doc.id?.toLowerCase() === cleanKey.toLowerCase()
           ) {
-            if (doc.refreshToken || doc.accessToken) return doc;
+            if (doc.refreshToken) return doc;
+            if (doc.accessToken) direct = direct || doc;
+          }
+        } catch (e) {}
+      }
+
+      // Local fallback for any document with a refreshToken
+      for (const file of files) {
+        if (!file.endsWith('.json')) continue;
+        try {
+          const raw = fs.readFileSync(path.join(dirPath, file), 'utf-8');
+          const doc = JSON.parse(raw) as AuthTokenDocument;
+          if (doc.refreshToken) {
+            return direct ? { ...direct, refreshToken: doc.refreshToken } : doc;
           }
         } catch (e) {}
       }

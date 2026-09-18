@@ -22,12 +22,52 @@ export async function getGoogleAuthAsync(accessToken?: string, spreadsheetIdOrEm
         oauth2Client.setCredentials({
           access_token: accessToken || tokenDoc.accessToken,
           refresh_token: tokenDoc.refreshToken,
+          expiry_date: tokenDoc.expiryDate,
         });
+
+        // Proactively refresh if accessToken is missing, expired, or expiring in < 5 minutes
+        const now = Date.now();
+        const isExpiring = !tokenDoc.accessToken || !tokenDoc.expiryDate || (tokenDoc.expiryDate - now < 5 * 60 * 1000);
+        if (isExpiring) {
+          try {
+            const tokenRes = await oauth2Client.getAccessToken();
+            const freshAccessToken = tokenRes?.token;
+            if (freshAccessToken) {
+              oauth2Client.setCredentials({
+                access_token: freshAccessToken,
+                refresh_token: tokenDoc.refreshToken,
+                expiry_date: now + 3500 * 1000,
+              });
+
+              // Persist refreshed accessToken back to Firestore asynchronously
+              const updatedDoc = {
+                ...tokenDoc,
+                accessToken: freshAccessToken,
+                expiryDate: now + 3500 * 1000,
+                updatedAt: new Date().toISOString(),
+              };
+
+              if (spreadsheetIdOrEmail) {
+                await LocalFirestore.setDocAsync('auth_tokens', spreadsheetIdOrEmail, updatedDoc);
+              }
+              if (tokenDoc.userEmail && tokenDoc.userEmail !== spreadsheetIdOrEmail) {
+                await LocalFirestore.setDocAsync('auth_tokens', tokenDoc.userEmail, updatedDoc);
+              }
+              if (tokenDoc.spreadsheetId && tokenDoc.spreadsheetId !== spreadsheetIdOrEmail) {
+                await LocalFirestore.setDocAsync('auth_tokens', tokenDoc.spreadsheetId, updatedDoc);
+              }
+            }
+          } catch (refreshErr) {
+            console.warn('[Google Auth] Proactive refresh error:', refreshErr);
+          }
+        }
+
         return oauth2Client;
       }
       if (accessToken || tokenDoc?.accessToken) {
         oauth2Client.setCredentials({
           access_token: accessToken || tokenDoc?.accessToken,
+          expiry_date: tokenDoc?.expiryDate,
         });
         return oauth2Client;
       }

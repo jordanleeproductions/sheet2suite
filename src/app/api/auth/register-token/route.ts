@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
       const sheetDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetId);
       existingRefreshToken = sheetDoc?.refreshToken;
     }
+    if (!existingRefreshToken) {
+      const fallbackDoc = await LocalFirestore.findAuthTokenDocAsync('global_fallback');
+      existingRefreshToken = fallbackDoc?.refreshToken;
+    }
 
     const tokenData: any = {
       userEmail: userEmail || undefined,

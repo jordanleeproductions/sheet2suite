@@ -128,6 +128,19 @@ export default function Sheet2VowDashboard() {
               setIsMockMode(false);
               setIsOnboarded(true);
               invalidateSessionCheckCache();
+
+              // Synchronize token registration with Cloud Firestore
+              if (accessToken) {
+                fetch('/api/auth/register-token', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    spreadsheetId: targetSpreadsheetId,
+                    userEmail: user?.email,
+                    accessToken,
+                  }),
+                }).catch((e) => console.warn('[OAuth] Could not register token:', e));
+              }
               addToast(`Welcome ${user?.name ? user.name : 'back'}! Connecting to workspace...`, 'success');
               // Fetch latest metadata (wedding date, location, budget) directly from Google Sheet SETTINGS
               fetchWeddingData(accessToken, targetSpreadsheetId);
@@ -179,7 +192,7 @@ export default function Sheet2VowDashboard() {
     try {
       const targetSheet = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
       const sheetParam = targetSheet ? `&spreadsheetId=${encodeURIComponent(targetSheet)}` : '';
-      const res = await fetch(`/api/auth/google?prompt=select_account${sheetParam}`);
+      const res = await fetch(`/api/auth/google?prompt=consent${sheetParam}`);
       const data = await res.json();
 
       if (data.authUrl && typeof window !== 'undefined') {
@@ -199,6 +212,16 @@ export default function Sheet2VowDashboard() {
               if (typeof window !== 'undefined') {
                 localStorage.setItem('s2v_google_token', accessToken);
               }
+              // Synchronize token registration with Cloud Firestore
+              fetch('/api/auth/register-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  spreadsheetId: targetSheet,
+                  userEmail: user?.email,
+                  accessToken,
+                }),
+              }).catch((e) => console.warn('[OAuth] Could not register token:', e));
             }
             if (user?.name) setGoogleUserName(user.name);
             if (user?.email) setGoogleUserEmail(user.email);

@@ -30,7 +30,10 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${protocol}://${host}/api/auth/google/callback`;
 
     const url = req.nextUrl;
-    const promptParam = url.searchParams.get('prompt') || 'consent';
+    const promptParam = url.searchParams.get('prompt');
+    const effectivePrompt = promptParam
+      ? (promptParam.includes('consent') ? promptParam : `${promptParam} consent`)
+      : 'consent';
     const spreadsheetIdParam = url.searchParams.get('spreadsheetId') || undefined;
 
     const oauth2Client = getOAuth2Client(redirectUri);
@@ -38,7 +41,7 @@ export async function GET(req: NextRequest) {
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: promptParam,
+      prompt: effectivePrompt,
       state: spreadsheetIdParam ? JSON.stringify({ spreadsheetId: spreadsheetIdParam }) : undefined,
     });
 

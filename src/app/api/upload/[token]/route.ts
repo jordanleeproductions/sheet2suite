@@ -17,34 +17,39 @@ async function getOrCreateFolder(drive: any, folderName: string, parentId?: stri
     queryParts.push("'root' in parents");
   }
 
-  const searchRes = await drive.files.list({
-    q: queryParts.join(' and '),
-    fields: 'files(id, name)',
-    spaces: 'drive',
-    supportsAllDrives: true,
-    includeItemsFromAllDrives: true,
-  });
+  try {
+    const searchRes = await drive.files.list({
+      q: queryParts.join(' and '),
+      fields: 'files(id, name)',
+      spaces: 'drive',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
 
-  if (searchRes.data.files && searchRes.data.files.length > 0) {
-    return searchRes.data.files[0].id;
+    if (searchRes.data.files && searchRes.data.files.length > 0) {
+      return searchRes.data.files[0].id;
+    }
+
+    const folderMetadata: any = {
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+    };
+
+    if (parentId && parentId !== 'root') {
+      folderMetadata.parents = [parentId];
+    }
+
+    const createRes = await drive.files.create({
+      requestBody: folderMetadata,
+      fields: 'id, name',
+      supportsAllDrives: true,
+    });
+
+    return createRes.data.id;
+  } catch (err) {
+    console.warn(`[Upload Route] getOrCreateFolder error for "${folderName}":`, err);
+    return parentId || 'root';
   }
-
-  const folderMetadata: any = {
-    name: folderName,
-    mimeType: 'application/vnd.google-apps.folder',
-  };
-
-  if (parentId && parentId !== 'root') {
-    folderMetadata.parents = [parentId];
-  }
-
-  const createRes = await drive.files.create({
-    requestBody: folderMetadata,
-    fields: 'id, name',
-    supportsAllDrives: true,
-  });
-
-  return createRes.data.id;
 }
 
 export async function GET(
@@ -140,6 +145,18 @@ export async function POST(
         }
       }
       if (!auth) {
+        // Fallback: Check if ANY valid refresh token is recorded in Firestore
+        try {
+          const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+          const fallbackDoc = await LocalFirestore.findAuthTokenDocAsync('global_fallback');
+          if (fallbackDoc?.refreshToken) {
+            auth = await getGoogleAuthAsync(undefined, fallbackDoc.spreadsheetId || fallbackDoc.userEmail);
+          }
+        } catch (fbErr) {
+          console.warn('[Upload Route] Global fallback lookup warning:', fbErr);
+        }
+      }
+      if (!auth) {
         // Fallback to environment tokens or service account if available
         auth = await getGoogleAuthAsync(undefined);
       }
@@ -193,7 +210,7 @@ export async function POST(
         targetFolderId = currentParent;
       }
 
-      // 3. Upload each file directly to Google Drive
+      // 3. Upload each file directly to Google Drive with 401 retry resilience
       const uploadedFiles: { id?: string; name: string; webViewLink?: string }[] = [];
       for (const file of files) {
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -207,19 +224,50 @@ export async function POST(
         const guestSlug = uploaderName.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
         const fileName = `${guestSlug ? `${guestSlug}_` : ''}${baseName || 'photo'}_${Date.now()}${ext}`;
 
-        const uploadRes = await drive.files.create({
-          requestBody: {
-            name: fileName,
-            parents: targetFolderId ? [targetFolderId] : undefined,
-            description: caption ? `Uploaded by ${uploaderName}. Note: ${caption}` : `Uploaded by ${uploaderName}`,
-          },
-          media: {
-            mimeType: file.type || 'application/octet-stream',
-            body: stream,
-          },
-          fields: 'id, name, webViewLink',
-          supportsAllDrives: true,
-        });
+        let uploadRes: any;
+        try {
+          uploadRes = await drive.files.create({
+            requestBody: {
+              name: fileName,
+              parents: targetFolderId ? [targetFolderId] : undefined,
+              description: caption ? `Uploaded by ${uploaderName}. Note: ${caption}` : `Uploaded by ${uploaderName}`,
+            },
+            media: {
+              mimeType: file.type || 'application/octet-stream',
+              body: stream,
+            },
+            fields: 'id, name, webViewLink',
+            supportsAllDrives: true,
+          });
+        } catch (uploadErr: any) {
+          if (uploadErr?.status === 401 || uploadErr?.message?.includes('Invalid Credentials') || uploadErr?.code === 401) {
+            console.warn('[Upload Route] 401 detected during file upload, attempting token refresh retry...');
+            if (auth && typeof auth.getAccessToken === 'function') {
+              await auth.getAccessToken();
+              drive = google.drive({ version: 'v3', auth });
+              const retryStream = new Readable();
+              retryStream.push(buffer);
+              retryStream.push(null);
+              uploadRes = await drive.files.create({
+                requestBody: {
+                  name: fileName,
+                  parents: targetFolderId ? [targetFolderId] : undefined,
+                  description: caption ? `Uploaded by ${uploaderName}. Note: ${caption}` : `Uploaded by ${uploaderName}`,
+                },
+                media: {
+                  mimeType: file.type || 'application/octet-stream',
+                  body: retryStream,
+                },
+                fields: 'id, name, webViewLink',
+                supportsAllDrives: true,
+              });
+            } else {
+              throw uploadErr;
+            }
+          } else {
+            throw uploadErr;
+          }
+        }
 
         uploadedFiles.push({
           id: uploadRes.data.id,
