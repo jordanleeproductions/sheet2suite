@@ -79,6 +79,12 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Desktop Toolbar & Add Action Ergonomics Polish (`[GUEST-DESKTOP-TOOLBAR-POLISH]`):**
   - **Cards & List Toggle Integration**: Relocated the layout toggle (`CARDS` vs `LIST`) out of the top header panel and integrated it directly into the Grouping View selector bar (`guest-grouping-selector-bar`), placing Grouping View (`ALL GUESTS`, `BY SEATING TABLE`, `BY PARTY GROUP`) on the left and Layout Mode (`CARDS`, `LIST`) on the right in a unified desktop control bar.
   - **Add Guest Button Proximity to Cards**: Moved the primary `+ ADD GUEST` button out of the top header card down into the stats bar (`guest-stats-action-bar`) directly adjacent to the cards and table view. Pinned neatly to the right of the guest counter (`FOUND: X GUESTS`), eliminating the need to scroll hundreds of pixels back to the top header to log new guests. On mobile viewports ($\le 768\text{px}$), the button remains gracefully hidden in favor of the mobile floating action button (`MobileFAB`).
+- **Inclusive (OR) Multi-Select Quick Filters (`[CATERING-INCLUSIVE-OR-FILTERS]`):**
+  - Upgraded Guest List catering filters from mutually-exclusive single selection to inclusive OR multi-selection across both Dietary Restrictions and Meal Choices.
+  - Multi-select matching evaluates `selectedDietFilters.some(...)` and `selectedMealFilters.some(...)`, allowing users to select multiple dietary restrictions (e.g. Vegetarian + Gluten-Free + Nut Allergy) or multiple entrees to inspect all guests with any of the selected preferences.
+  - Includes a dedicated `ANY RESTRICTION` quick-filter pill matching any guest having non-empty `dietaryRestrictions`.
+  - Active filter tags row renders separate dismissible badges (`DIET: ... ✕`, `MEAL: ... ✕`) with individual removal and global `RESET FILTERS`.
+  - Added Guest Dietary Restrictions overview cards in the Catering page (`MenuSetupManager.tsx`) under Entree Orders with direct cross-tab redirection to filtered Guest Registry.
 
 ### 2.4 Visual Table Seating Plan (`SeatingChartManager.tsx`)
 - Multiple table shapes: **Round Circle Tables** (radial trigonometric node layout), **Rectangle Banquet Tables** (dynamic length scaling, optional head/foot end seats), **Square Tables** (4 or 8 seats on all 4 sides), and **Sweetheart / Single-Side Tables**.

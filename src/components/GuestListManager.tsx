@@ -17,15 +17,24 @@ interface GuestListManagerProps {
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
   initialRsvpFilter?: RSVPStatus | 'All';
   initialMealFilter?: string;
+  initialDietFilter?: string;
 }
 
-export default function GuestListManager({ guests, catering, tables = [], onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter, initialMealFilter }: GuestListManagerProps) {
+export default function GuestListManager({ guests, catering, tables = [], onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter, initialMealFilter, initialDietFilter }: GuestListManagerProps) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
   const [groupFilter, setGroupFilter] = useState<string>('All');
-  const [mealFilter, setMealFilter] = useState<string>(initialMealFilter || 'All');
-  const [dietFilter, setDietFilter] = useState<string>('All');
+  
+  // Inclusive (OR) Quick Filters for Catering Meals & Dietary Restrictions
+  const [selectedMealFilters, setSelectedMealFilters] = useState<string[]>(() => {
+    if (initialMealFilter && initialMealFilter !== 'All') return [initialMealFilter];
+    return [];
+  });
+  const [selectedDietFilters, setSelectedDietFilters] = useState<string[]>(() => {
+    if (initialDietFilter && initialDietFilter !== 'All') return [initialDietFilter];
+    return [];
+  });
   const [isCateringCollapsed, setIsCateringCollapsed] = useState<boolean>(false);
 
   React.useEffect(() => {
@@ -36,9 +45,52 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
 
   React.useEffect(() => {
     if (initialMealFilter !== undefined) {
-      setMealFilter(initialMealFilter);
+      if (initialMealFilter && initialMealFilter !== 'All') {
+        setSelectedMealFilters([initialMealFilter]);
+      } else {
+        setSelectedMealFilters([]);
+      }
     }
   }, [initialMealFilter]);
+
+  React.useEffect(() => {
+    if (initialDietFilter !== undefined) {
+      if (initialDietFilter && initialDietFilter !== 'All') {
+        setSelectedDietFilters([initialDietFilter]);
+      } else {
+        setSelectedDietFilters([]);
+      }
+    }
+  }, [initialDietFilter]);
+
+  // Toggle meal filter with inclusive OR behavior
+  const toggleMealFilter = (meal: string) => {
+    setSelectedMealFilters(prev => {
+      const exists = prev.some(m => m.toLowerCase() === meal.toLowerCase());
+      if (exists) {
+        return prev.filter(m => m.toLowerCase() !== meal.toLowerCase());
+      } else {
+        return [...prev, meal];
+      }
+    });
+  };
+
+  // Toggle dietary filter with inclusive OR behavior
+  const toggleDietFilter = (restriction: string) => {
+    if (restriction === 'HAS_DIET') {
+      setSelectedDietFilters(prev => prev.includes('HAS_DIET') ? [] : ['HAS_DIET']);
+      return;
+    }
+    setSelectedDietFilters(prev => {
+      const cleaned = prev.filter(f => f !== 'HAS_DIET');
+      const exists = cleaned.some(f => f.toLowerCase() === restriction.toLowerCase());
+      if (exists) {
+        return cleaned.filter(f => f.toLowerCase() !== restriction.toLowerCase());
+      } else {
+        return [...cleaned, restriction];
+      }
+    });
+  };
   
   // Edit Dialog State
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -125,10 +177,19 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
       ((rsvpFilter === 'Pending' || rsvpFilter === 'No Response') && 
        (guest.rsvpStatus === 'Pending' || guest.rsvpStatus === 'No Response' || !guest.rsvpStatus));
     const matchesGroup = groupFilter === 'All' || guest.partyGroup === groupFilter;
-    const matchesMeal = mealFilter === 'All' || (guest.mealChoice || '').toLowerCase() === mealFilter.toLowerCase();
-    const matchesDiet = dietFilter === 'All' || 
-      (dietFilter === 'HAS_DIET' ? Boolean((guest.dietaryRestrictions || '').trim()) : 
-      (guest.dietaryRestrictions || '').toLowerCase().includes(dietFilter.toLowerCase()));
+    
+    // Inclusive (OR) meal filtering: matches if ANY selected meal matches guest.mealChoice
+    const matchesMeal = selectedMealFilters.length === 0 || 
+      selectedMealFilters.some(m => (guest.mealChoice || '').trim().toLowerCase() === m.trim().toLowerCase());
+
+    // Inclusive (OR) dietary filtering: matches if ANY selected restriction is contained in guest.dietaryRestrictions
+    const matchesDiet = selectedDietFilters.length === 0 ||
+      selectedDietFilters.some(d => {
+        if (d === 'HAS_DIET') {
+          return Boolean((guest.dietaryRestrictions || '').trim());
+        }
+        return (guest.dietaryRestrictions || '').toLowerCase().includes(d.toLowerCase());
+      });
     
     return matchesSearch && matchesRsvp && matchesGroup && matchesMeal && matchesDiet;
   });
@@ -1041,11 +1102,24 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                 onClick={() => setIsCateringCollapsed(!isCateringCollapsed)}
                 title={isCateringCollapsed ? "Click to expand Catering Filters" : "Click to collapse Catering Filters"}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <Utensils size={18} style={{ color: 'var(--color-primary)' }} />
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>
                     CATERING FILTERS
                   </span>
+                  {(selectedMealFilters.length > 0 || selectedDietFilters.length > 0) && (
+                    <span style={{
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-on-primary, #ffffff)',
+                      fontSize: '0.65rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      padding: '0.1rem 0.45rem',
+                      borderRadius: '10px',
+                    }}>
+                      {selectedMealFilters.length + selectedDietFilters.length} Active (OR)
+                    </span>
+                  )}
                   <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
                     ({summary.mealChoiceBreakdown.reduce((acc, m) => acc + m.count, 0)} meals selected • {summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)} dietary tags)
                   </span>
@@ -1082,12 +1156,12 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                         <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>No meal choices selected yet</span>
                       ) : (
                         summary.mealChoiceBreakdown.map((item, idx) => {
-                          const isSelected = mealFilter.toLowerCase() === item.meal.toLowerCase();
+                          const isSelected = selectedMealFilters.some(m => m.toLowerCase() === item.meal.toLowerCase());
                           return (
                             <button
                               key={idx}
                               type="button"
-                              onClick={() => setMealFilter(prev => prev.toLowerCase() === item.meal.toLowerCase() ? 'All' : item.meal)}
+                              onClick={() => toggleMealFilter(item.meal)}
                               style={{
                                 fontFamily: 'var(--font-mono)',
                                 fontSize: '0.75rem',
@@ -1096,18 +1170,20 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                                 color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
                                 border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
                                 borderRadius: '4px',
-                                padding: '0.2rem 0.5rem',
+                                padding: '0.2rem 0.55rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.35rem',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
+                                boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.15)' : 'none',
                               }}
-                              title={`Click to filter list by ${item.meal}`}
+                              title={`Click to toggle filter for ${item.meal} (Inclusive OR)`}
                             >
                               <span>{item.icon}</span>
                               <span>{item.meal}:</span>
                               <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-primary)' }}>{item.count}</strong>
+                              {isSelected && <Check size={11} style={{ marginLeft: '2px' }} />}
                             </button>
                           );
                         })
@@ -1120,33 +1196,71 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                         <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', fontWeight: 600 }}>
                           DIETARY RESTRICTIONS:
                         </span>
+
+                        {/* ANY RESTRICTION QUICK FILTER */}
+                        {(() => {
+                          const isAnySelected = selectedDietFilters.includes('HAS_DIET');
+                          const totalDietCount = summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0);
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => toggleDietFilter('HAS_DIET')}
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                backgroundColor: isAnySelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
+                                color: isAnySelected ? '#ffffff' : 'var(--color-red)',
+                                border: isAnySelected ? '2px solid var(--color-red)' : '1px solid #ef4444',
+                                borderRadius: '4px',
+                                padding: '0.2rem 0.55rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                boxShadow: isAnySelected ? '0 2px 4px rgba(239,68,68,0.25)' : 'none',
+                              }}
+                              title="Click to view all guests with any dietary restriction"
+                            >
+                              <AlertTriangle size={13} />
+                              <span>ANY RESTRICTION:</span>
+                              <strong style={{ color: isAnySelected ? '#ffffff' : 'var(--color-red)' }}>{totalDietCount}</strong>
+                              {isAnySelected && <Check size={11} style={{ marginLeft: '2px' }} />}
+                            </button>
+                          );
+                        })()}
+
+                        {/* Individual Dietary Restriction Quick Filters */}
                         {summary.dietaryBreakdown.map((item, idx) => {
-                          const isSelected = dietFilter.toLowerCase() === item.restriction.toLowerCase();
+                          const isSelected = selectedDietFilters.some(d => d.toLowerCase() === item.restriction.toLowerCase());
                           return (
                             <button
                               key={idx}
                               type="button"
-                              onClick={() => setDietFilter(prev => prev.toLowerCase() === item.restriction.toLowerCase() ? 'All' : item.restriction)}
+                              onClick={() => toggleDietFilter(item.restriction)}
                               style={{
                                 fontFamily: 'var(--font-mono)',
                                 fontSize: '0.75rem',
                                 fontWeight: 700,
                                 backgroundColor: isSelected ? 'var(--color-red)' : 'rgba(239,68,68,0.1)',
                                 color: isSelected ? '#ffffff' : 'var(--color-red)',
-                                border: '1px solid #ef4444',
+                                border: isSelected ? '2px solid var(--color-red)' : '1px solid #ef4444',
                                 borderRadius: '4px',
-                                padding: '0.2rem 0.5rem',
+                                padding: '0.2rem 0.55rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.35rem',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
+                                boxShadow: isSelected ? '0 2px 4px rgba(239,68,68,0.25)' : 'none',
                               }}
-                              title={`Click to filter list by ${item.restriction}`}
+                              title={`Click to toggle filter for ${item.restriction} (Inclusive OR)`}
                             >
                               <AlertTriangle size={13} />
                               <span>{item.restriction.toUpperCase()}:</span>
                               <strong style={{ color: isSelected ? '#ffffff' : 'var(--color-red)' }}>{item.count}</strong>
+                              {isSelected && <Check size={11} style={{ marginLeft: '2px' }} />}
                             </button>
                           );
                         })}
@@ -1161,15 +1275,22 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                         <Utensils size={12} style={{ color: 'var(--color-primary)' }} /> MEAL FILTER
                       </label>
                       <select
-                        value={mealFilter}
-                        onChange={(e) => setMealFilter(e.target.value)}
+                        value={selectedMealFilters.length === 1 ? selectedMealFilters[0] : selectedMealFilters.length > 1 ? '__MULTI__' : 'All'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'All') setSelectedMealFilters([]);
+                          else if (val !== '__MULTI__') setSelectedMealFilters([val]);
+                        }}
                         className="catering-mobile-select"
                         title="Filter guests by meal choice"
                       >
                         <option value="All">ALL MEALS ({summary.mealChoiceBreakdown.reduce((acc, m) => acc + m.count, 0)})</option>
+                        {selectedMealFilters.length > 1 && (
+                          <option value="__MULTI__">✓ {selectedMealFilters.length} MEALS SELECTED (OR)</option>
+                        )}
                         {summary.mealChoiceBreakdown.map((item, idx) => (
                           <option key={idx} value={item.meal}>
-                            {item.meal} ({item.count})
+                            {selectedMealFilters.some(m => m.toLowerCase() === item.meal.toLowerCase()) ? '✓ ' : ''}{item.meal} ({item.count})
                           </option>
                         ))}
                       </select>
@@ -1180,18 +1301,26 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                         <AlertTriangle size={12} style={{ color: 'var(--color-red)' }} /> DIETARY RESTRICTIONS
                       </label>
                       <select
-                        value={dietFilter}
-                        onChange={(e) => setDietFilter(e.target.value)}
+                        value={selectedDietFilters.includes('HAS_DIET') ? 'HAS_DIET' : selectedDietFilters.length === 1 ? selectedDietFilters[0] : selectedDietFilters.length > 1 ? '__MULTI__' : 'All'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'All') setSelectedDietFilters([]);
+                          else if (val === 'HAS_DIET') setSelectedDietFilters(['HAS_DIET']);
+                          else if (val !== '__MULTI__') setSelectedDietFilters([val]);
+                        }}
                         className="catering-mobile-select"
                         title="Filter guests by dietary restriction"
                       >
                         <option value="All">ALL DIETARY ({summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)})</option>
+                        {selectedDietFilters.length > 1 && !selectedDietFilters.includes('HAS_DIET') && (
+                          <option value="__MULTI__">✓ {selectedDietFilters.length} RESTRICTIONS SELECTED (OR)</option>
+                        )}
                         {summary.dietaryBreakdown.length > 0 && (
                           <option value="HAS_DIET">ANY RESTRICTION ({summary.dietaryBreakdown.reduce((acc, d) => acc + d.count, 0)})</option>
                         )}
                         {summary.dietaryBreakdown.map((item, idx) => (
                           <option key={idx} value={item.restriction}>
-                            ⚠️ {item.restriction.toUpperCase()} ({item.count})
+                            {selectedDietFilters.some(d => d.toLowerCase() === item.restriction.toLowerCase()) ? '✓ ' : ''}⚠️ {item.restriction.toUpperCase()} ({item.count})
                           </option>
                         ))}
                       </select>
@@ -1310,7 +1439,7 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         </div>
 
         {/* Dedicated Reset Filters Row on its own row to prevent mobile bleeding */}
-        {(mealFilter !== 'All' || dietFilter !== 'All' || rsvpFilter !== 'All' || groupFilter !== 'All' || searchTerm.trim() !== '') && (
+        {(selectedMealFilters.length > 0 || selectedDietFilters.length > 0 || rsvpFilter !== 'All' || groupFilter !== 'All' || searchTerm.trim() !== '') && (
           <div className="guest-reset-filters-row">
             <div className="guest-active-filters-tags">
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--color-muted)', fontWeight: 700 }}>
@@ -1326,16 +1455,37 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                   GROUP: {groupFilter} <X size={10} />
                 </span>
               )}
-              {mealFilter !== 'All' && (
-                <span className="guest-active-filter-badge" onClick={() => setMealFilter('All')} title="Click to clear Meal filter">
-                  MEAL: {mealFilter} <X size={10} />
+              {selectedMealFilters.map((meal, idx) => (
+                <span 
+                  key={`meal-${idx}`} 
+                  className="guest-active-filter-badge" 
+                  onClick={() => toggleMealFilter(meal)} 
+                  title={`Click to remove ${meal} filter`}
+                >
+                  MEAL: {meal} <X size={10} />
+                </span>
+              ))}
+              {selectedDietFilters.includes('HAS_DIET') && (
+                <span 
+                  className="guest-active-filter-badge" 
+                  onClick={() => toggleDietFilter('HAS_DIET')} 
+                  title="Click to remove Any Restriction filter"
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--color-red)', color: 'var(--color-red)' }}
+                >
+                  DIET: ANY RESTRICTION <X size={10} />
                 </span>
               )}
-              {dietFilter !== 'All' && (
-                <span className="guest-active-filter-badge" onClick={() => setDietFilter('All')} title="Click to clear Dietary filter">
-                  DIET: {dietFilter === 'HAS_DIET' ? 'HAS RESTRICTION' : dietFilter.toUpperCase()} <X size={10} />
+              {selectedDietFilters.filter(d => d !== 'HAS_DIET').map((diet, idx) => (
+                <span 
+                  key={`diet-${idx}`} 
+                  className="guest-active-filter-badge" 
+                  onClick={() => toggleDietFilter(diet)} 
+                  title={`Click to remove ${diet} filter`}
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--color-red)', color: 'var(--color-red)' }}
+                >
+                  DIET: {diet.toUpperCase()} <X size={10} />
                 </span>
-              )}
+              ))}
               {searchTerm.trim() !== '' && (
                 <span className="guest-active-filter-badge" onClick={() => setSearchTerm('')} title="Click to clear Search">
                   SEARCH: "{searchTerm}" <X size={10} />
@@ -1345,8 +1495,8 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             <button
               type="button"
               onClick={() => {
-                setMealFilter('All');
-                setDietFilter('All');
+                setSelectedMealFilters([]);
+                setSelectedDietFilters([]);
                 setRsvpFilter('All');
                 setGroupFilter('All');
                 setSearchTerm('');

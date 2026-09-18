@@ -87,6 +87,12 @@
 - [x] **[GUEST-DESKTOP-TOOLBAR-POLISH] Desktop Toolbar & Add Action Ergonomics Polish (`GuestListManager.tsx`):**
   - **Cards & List Toggle Integration**: Relocated the layout toggle (`CARDS` vs `LIST`) out of the top header panel and placed it in the exact same row as Grouping View (`guest-grouping-selector-bar`), providing a unified desktop control bar with Grouping View on the left and View / Layout on the right.
   - **Add Guest Button Proximity to Cards**: Moved the primary `+ ADD GUEST` button out of the header card down into the stats bar (`guest-stats-action-bar`) directly adjacent to the list of cards and table rows, pinned to the right of the guest counter (`FOUND: X GUESTS`). On mobile viewports ($\le 768\text{px}$), gracefully hidden in favor of the floating mobile action button (`MobileFAB`).
+- [x] **[CATERING-INCLUSIVE-OR-FILTERS] Inclusive (OR) Quick Filters for Catering Meals & Dietary Restrictions (`GuestListManager.tsx`, `MenuSetupManager.tsx`, `src/app/vow/page.tsx`):**
+  - **Multi-Select Inclusive (OR) Logic**: Replaced single-choice filters with multi-select state arrays (`selectedDietFilters: string[]`, `selectedMealFilters: string[]`). Selecting multiple quick-filter pills matches any guest who meets ANY of the selected dietary restrictions or meal choices.
+  - **'ANY RESTRICTION' Quick Filter**: Added dedicated `ANY RESTRICTION` pill to instantly surface all guests with recorded dietary restrictions.
+  - **Active State Highlighting**: Selected pills display checkmark icons (`✓`), solid high-contrast backgrounds, and drop shadows with toggle on/off behavior.
+  - **Granular Filter Dismissal**: Filter tags row displays individual dismissible badges (`DIET: ... ✕`, `MEAL: ... ✕`) alongside the full `RESET FILTERS` action.
+  - **Catering Page Dietary Overview**: Integrated a dedicated "GUEST DIETARY RESTRICTIONS" summary section in `MenuSetupManager.tsx` directly beneath Guest Selection Entree Orders, showing real-time counts and 1-click redirection into the filtered Guest List.
 
 ---
 

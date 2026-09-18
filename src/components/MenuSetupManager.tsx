@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { MenuItem, DEFAULT_MENU_ITEMS, generateNextMenuItemId } from '@/lib/menuData';
 import { Guest } from '@/lib/sheets/types';
-import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, ChevronRight, RefreshCw } from 'lucide-react';
+import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, ChevronRight, RefreshCw, AlertTriangle } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 
 interface MenuSetupManagerProps {
   guests: Guest[];
   catering?: MenuItem[];
   onUpdateCatering?: (updatedItems: MenuItem[]) => Promise<void>;
   onUpdateGuests?: (updatedGuests: Guest[]) => Promise<void>;
-  onOpenGuestRegistry?: (mealFilter?: string) => void;
+  onOpenGuestRegistry?: (mealFilter?: string, dietFilter?: string) => void;
   isSyncing?: boolean;
 }
 
@@ -178,6 +179,9 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
   const appetizers = menuItems.filter(i => i.category === 'appetizer');
   const desserts = menuItems.filter(i => i.category === 'dessert');
   const guestSelectionEntrees = entrees.filter(i => i.isGuestChoice !== false);
+
+  const relationalSummary = React.useMemo(() => calculateRelationalCateringSummary(guests, []), [guests]);
+  const dietaryBreakdown = relationalSummary.dietaryBreakdown;
 
   return (
     <div style={styles.container}>
@@ -350,6 +354,105 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Guest Dietary Restrictions Breakdown Cards */}
+      {dietaryBreakdown.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem' }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              color: 'var(--color-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              GUEST DIETARY RESTRICTIONS
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.65rem',
+              color: 'var(--color-muted)',
+              fontStyle: 'italic'
+            }}>
+              Click any restriction card to view matching guests in Guest List
+            </span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.75rem',
+          }}>
+            {dietaryBreakdown.map((item) => (
+              <div
+                key={item.restriction}
+                onClick={() => onOpenGuestRegistry && onOpenGuestRegistry(undefined, item.restriction)}
+                className="entree-kpi-card"
+                style={{
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: 'var(--border-radius-md)',
+                  padding: '0.875rem 1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--box-shadow-subtle)',
+                }}
+                title={`Click to filter Guest List for "${item.restriction}"`}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    color: 'var(--color-text)',
+                    lineHeight: 1.3
+                  }}>
+                    ⚠️ {item.restriction.toUpperCase()}
+                  </span>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    color: 'var(--color-red, #ef4444)',
+                    flexShrink: 0
+                  }}>
+                    <ChevronRight size={13} />
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem', marginTop: '0.75rem' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '1.5rem',
+                    fontWeight: 800,
+                    color: 'var(--color-red, #ef4444)',
+                    lineHeight: 1
+                  }}>
+                    {item.count}
+                  </span>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    color: 'var(--color-muted)'
+                  }}>
+                    {item.count === 1 ? 'Guest Tag' : 'Guest Tags'}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
