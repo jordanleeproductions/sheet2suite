@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Camera, UploadCloud, Heart, CheckCircle2, AlertCircle, Image as ImageIcon, Video as VideoIcon, X, Sparkles, RefreshCw, User, MessageSquare } from 'lucide-react';
+import { Camera, UploadCloud, Heart, CheckCircle2, AlertCircle, Image as ImageIcon, Video as VideoIcon, X, Sparkles, RefreshCw, User, MessageSquare, Clock } from 'lucide-react';
 
 interface FilePreviewItem {
   id: string;
@@ -18,6 +18,7 @@ export default function GuestUploadPage() {
   // Metadata State
   const [weddingName, setWeddingName] = useState<string>('Our Wedding');
   const [targetFolder, setTargetFolder] = useState<string>('');
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
   const [isLoadingMeta, setIsLoadingMeta] = useState<boolean>(true);
 
@@ -29,6 +30,24 @@ export default function GuestUploadPage() {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+
+  // Helper to format expiration date and time
+  const formatExpirationDateTime = (timestamp: number): string => {
+    if (!timestamp || timestamp <= 0) return 'No Expiration';
+    const d = new Date(timestamp);
+    const datePart = d.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const timePart = d.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
+    return `${datePart} at ${timePart}`;
+  };
 
   // Fetch Metadata & Verify Token
   useEffect(() => {
@@ -46,6 +65,21 @@ export default function GuestUploadPage() {
         setWeddingName(data.weddingName || 'Our Wedding');
         if (data.folderName || data.folderPath) {
           setTargetFolder(data.folderName || data.folderPath);
+        }
+        if (data.exp !== undefined && data.exp !== null) {
+          setExpiresAt(Number(data.exp));
+        } else {
+          try {
+            const parts = token.split('.');
+            if (parts.length === 3) {
+              const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+              const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+              const parsed = JSON.parse(jsonPayload);
+              if (parsed.exp !== undefined) {
+                setExpiresAt(Number(parsed.exp));
+              }
+            }
+          } catch (_) {}
         }
         setIsValidToken(true);
       } catch (err) {
@@ -383,9 +417,26 @@ export default function GuestUploadPage() {
         )}
       </div>
 
-      {/* Footer Branding */}
+      {/* Footer Branding & Link Expiration */}
       <footer style={styles.footer}>
-        <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#6b7280' }}>
+        {expiresAt !== null && (
+          <div style={styles.expirationNotice}>
+            <Clock size={13} style={{ color: '#cda250', flexShrink: 0 }} />
+            <span>
+              {expiresAt === 0 ? (
+                'This photo guestbook link does not expire'
+              ) : (
+                <>
+                  Link valid through{' '}
+                  <span style={{ color: '#f1f5f9', fontWeight: 600 }}>
+                    {formatExpirationDateTime(expiresAt)}
+                  </span>
+                </>
+              )}
+            </span>
+          </div>
+        )}
+        <span style={{ fontFamily: 'monospace', fontSize: '0.68rem', color: '#64748b', letterSpacing: '0.05em' }}>
           POWERED BY SHEET2VOW • GOOGLE DRIVE INTEGRATION
         </span>
       </footer>
@@ -721,5 +772,22 @@ const styles: Record<string, React.CSSProperties> = {
   footer: {
     marginTop: '2rem',
     textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.4rem',
+  },
+  expirationNotice: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    fontFamily: 'monospace',
+    fontSize: '0.72rem',
+    color: '#94a3b8',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    border: '1px solid #334155',
+    padding: '0.35rem 0.85rem',
+    borderRadius: '9999px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
   },
 };

@@ -254,6 +254,7 @@ To provide external vendors (DJs, Photographers, Coordinators, Caterers) with se
 ### 3.5 Guest Photo & Video Upload Portal & Drive Folder Setup (`/upload/[token]` & `PhotoShotListManager.tsx`)
 - **Direct-to-Drive Guest Upload Portal (`/upload/[token]/page.tsx`):** Standalone mobile-optimized web portal where wedding guests scan reception QR codes or follow a shortlink to upload photos and videos directly from their mobile camera roll or live camera without signing in or installing apps.
 - **Strict File Format Validation:** Server and client enforce photo & video formats (`image/*`, `video/*`, JPG, PNG, HEIC, MP4, MOV, etc.) rejecting unsupported document formats.
+- **Link Expiration & Validity Indicator:** Displays a formatted expiration badge (`Link valid through [Date] at [Time] [Timezone]`) or permanent access notice in the portal footer, ensuring guests know when the upload window closes.
 - **In-App Portal Setup (`PhotoShotListManager.tsx`):** Accessible via the `📸 GUEST UPLOADS` header button in the Photography Shot List. Allows couples to:
   - Select or create any Google Drive folder for upload storage using `GoogleDrivePickerModal.tsx`.
   - Set access expiration duration (`7d`, `14d`, `30d`, `60d`, `90d` recommended, `180d`, `365d`, or permanent / no expiration).
