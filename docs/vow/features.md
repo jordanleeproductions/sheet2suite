@@ -299,7 +299,11 @@
   - Resolved overnight 502 `"Could not connect to Google Drive"` failure for anonymous guest uploads by enforcing `prompt=consent` across all Google OAuth entry points, guaranteeing Google always returns long-lived `refresh_token` credentials.
   - Implemented proactive token refresh in `getGoogleAuthAsync`: when an access token is expired or expiring in < 5 minutes, `oauth2Client.getAccessToken()` automatically contacts Google's token endpoint, refreshes credentials, and asynchronously updates Cloud Firestore and local storage.
   - Upgraded `LocalFirestore`: parsed `FIREBASE_CONFIG` to accurately resolve `projectId: sheet2suite-7036e`, enhanced `setDoc` with non-destructive merge to prevent dropping refresh tokens on disk, and added multi-tier fallback lookup (`spreadsheetId` $\leftrightarrow$ `userEmail` $\leftrightarrow$ `activeTokens`).
-  - Added 401 retry resilience in `POST /api/upload/[token]` to seamlessly refresh credentials and retry photo uploads if a transient token expiration occurs during batch file transmission.
+- [x] **[PHOTO-GUESTBOOK-UI-GRID-TABLE] Guestbook Desktop Multi-Card Grid, Table/List View Switcher & Timestamp Formatting Fix (`PhotoShotListManager.tsx`, `mapper.ts`):**
+  - **Serial Date & Timestamp Engine**: Solved numeric serial date glitch (e.g. `🕒 46283.05763888889` from Google Sheets `UNFORMATTED_VALUE`) via `Math.round((serial - 25569) * 86400 * 1000)` in both `guestbookMapper.fromRow` (`mapper.ts`) and `formatUploadTime` (`PhotoShotListManager.tsx`), normalizing raw float serials, ms timestamps, and ISO strings into readable localized date and time formats (`Sep 18, 2026, 1:23 AM`).
+  - **Desktop Multi-Column Cards Grid**: Converted the guestbook cards feed from a single stretched column into a responsive CSS grid (`grid-template-columns: repeat(auto-fill, minmax(360px, 1fr))`), displaying a balanced 2-to-3 column gallery on desktop viewports.
+  - **Cards vs Table / List View Toggle**: Added a view mode toggle (`guestViewMode: 'card' | 'table'`) featuring `LayoutGrid` and `List` icons in the Guestbook toolbar adjacent to "With Written Notes Only", providing instant 1-click switching between visual cards and an organized tabular ledger.
+  - **Guestbook Data Table**: In Table mode, renders an editorial table layout showing Guest (avatar initials + uploader name + note badge), Date & Time (clock icon + formatted timestamp), Message / Wishes quote, Photos & Files pills (with 1-click links into Google Drive), Target Google Drive Album, and Delete moderation action.
 
 ---
 

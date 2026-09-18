@@ -29,7 +29,9 @@ import {
   Heart,
   MessageSquare,
   Image as ImageIcon,
-  RefreshCw
+  RefreshCw,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import GoogleDrivePickerModal, { SelectedFolder } from '@/components/GoogleDrivePickerModal';
@@ -99,6 +101,7 @@ export default function PhotoShotListManager({
   const [isLoadingGuestUploads, setIsLoadingGuestUploads] = useState<boolean>(false);
   const [guestSearchTerm, setGuestSearchTerm] = useState<string>('');
   const [onlyWithNotes, setOnlyWithNotes] = useState<boolean>(false);
+  const [guestViewMode, setGuestViewMode] = useState<'card' | 'table'>('card');
   const [uploadToDelete, setUploadToDelete] = useState<GuestUploadRecord | null>(null);
   const [isDeletingUpload, setIsDeletingUpload] = useState<boolean>(false);
 
@@ -495,21 +498,72 @@ export default function PhotoShotListManager({
     }
   };
 
-  // Format timestamp helper
-  const formatUploadTime = (isoString?: string): string => {
-    if (!isoString) return '';
+  // Format timestamp helper (handles ISO strings, unix/ms timestamps, and Excel/Google Sheets serial dates)
+  const formatUploadTime = (input?: string | number | null): string => {
+    if (input === undefined || input === null || input === '') return '';
     try {
-      const d = new Date(isoString);
-      if (isNaN(d.getTime())) return isoString;
-      return d.toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-    } catch (e) {
-      return isoString || '';
+      if (typeof input === 'number') {
+        if (input >= 1000 && input <= 100000) {
+          // Google Sheets / Excel serial date (days since Dec 30, 1899)
+          const d = new Date(Math.round((input - 25569) * 86400 * 1000));
+          if (!isNaN(d.getTime())) return d.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+        }
+        const d = new Date(input > 1e11 ? input : input * 1000);
+        if (!isNaN(d.getTime())) return d.toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        });
+      }
+
+      const str = String(input).trim();
+      if (!str) return '';
+
+      const num = Number(str);
+      if (!isNaN(num)) {
+        if (num >= 1000 && num <= 100000) {
+          const d = new Date(Math.round((num - 25569) * 86400 * 1000));
+          if (!isNaN(d.getTime())) return d.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+        }
+        if (num > 100000) {
+          const d = new Date(num > 1e11 ? num : num * 1000);
+          if (!isNaN(d.getTime())) return d.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+        }
+      }
+
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        });
+      }
+      return str;
+    } catch {
+      return String(input || '');
     }
   };
 
@@ -1195,6 +1249,61 @@ export default function PhotoShotListManager({
                 <span>With Written Notes Only</span>
               </label>
 
+              {/* View Mode Toggle: Cards vs Table */}
+              <div style={{
+                display: 'inline-flex',
+                border: '1px solid var(--color-muted)',
+                borderRadius: 'var(--border-radius-sm)',
+                overflow: 'hidden',
+                backgroundColor: 'var(--color-surface)',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setGuestViewMode('card')}
+                  style={{
+                    border: 'none',
+                    padding: '0.42rem 0.65rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: guestViewMode === 'card' ? 'var(--color-primary)' : 'transparent',
+                    color: guestViewMode === 'card' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                    transition: 'var(--transition-smooth)',
+                  }}
+                  title="Card View (Multi-column)"
+                >
+                  <LayoutGrid size={14} />
+                  <span>Cards</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGuestViewMode('table')}
+                  style={{
+                    border: 'none',
+                    borderLeft: '1px solid var(--color-muted)',
+                    padding: '0.42rem 0.65rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: guestViewMode === 'table' ? 'var(--color-primary)' : 'transparent',
+                    color: guestViewMode === 'table' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                    transition: 'var(--transition-smooth)',
+                  }}
+                  title="Table View (Spreadsheet / List)"
+                >
+                  <List size={14} />
+                  <span>Table</span>
+                </button>
+              </div>
+
               <div style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '0.75rem',
@@ -1206,236 +1315,432 @@ export default function PhotoShotListManager({
             </div>
           </div>
 
-          {/* Guestbook Feed List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {filteredGuestUploads.map((upload) => {
-              const initials = (upload.uploaderName || 'Guest')
-                .trim()
-                .split(/\s+/)
-                .map(n => n[0])
-                .filter(Boolean)
-                .slice(0, 2)
-                .join('')
-                .toUpperCase();
+          {/* Guestbook Content: Cards or Table */}
+          {guestViewMode === 'card' ? (
+            <div 
+              className="guestbook-cards-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+                gap: '1.25rem',
+                alignItems: 'stretch',
+              }}
+            >
+              {filteredGuestUploads.map((upload) => {
+                const initials = (upload.uploaderName || 'Guest')
+                  .trim()
+                  .split(/\s+/)
+                  .map(n => n[0])
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase();
 
-              const hasCaption = Boolean(upload.caption && upload.caption.trim());
+                const hasCaption = Boolean(upload.caption && upload.caption.trim());
 
-              return (
-                <div
-                  key={upload.id}
-                  className="photo-shot-card"
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    border: '1.5px solid var(--color-muted)',
-                    borderRadius: 'var(--border-radius-md)',
-                    padding: '1.15rem 1.25rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.85rem',
-                    boxShadow: 'var(--box-shadow-subtle)',
-                    transition: 'var(--transition-smooth)',
-                  }}
-                >
-                  {/* Top Row: Avatar + Name + Date + Photo Count + Delete */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        background: hasCaption ? 'linear-gradient(135deg, var(--color-gold, #cda250), #b38636)' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                        color: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-serif)',
-                        fontSize: '1rem',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
-                      }}>
-                        {initials || 'G'}
-                      </div>
-
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <h3 style={{
-                            margin: 0,
-                            fontFamily: 'var(--font-serif)',
-                            fontSize: '1.05rem',
+                return (
+                  <div
+                    key={upload.id}
+                    className="photo-shot-card"
+                    style={{
+                      backgroundColor: 'var(--color-surface)',
+                      border: '1.5px solid var(--color-muted)',
+                      borderRadius: 'var(--border-radius-md)',
+                      padding: '1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '0.95rem',
+                      boxShadow: 'var(--box-shadow-subtle)',
+                      transition: 'var(--transition-smooth)',
+                    }}
+                  >
+                    {/* Top Row: Avatar + Name + Date + Photo Count + Delete */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            background: hasCaption ? 'linear-gradient(135deg, var(--color-gold, #cda250), #b38636)' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                            color: '#ffffff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             fontWeight: 700,
-                            color: 'var(--color-text)',
+                            fontFamily: 'var(--font-serif)',
+                            fontSize: '1rem',
+                            flexShrink: 0,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
                           }}>
-                            {upload.uploaderName || 'Anonymous Guest'}
-                          </h3>
+                            {initials || 'G'}
+                          </div>
 
-                          {hasCaption && (
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
-                              color: 'var(--color-gold, #cda250)',
-                              border: '1px solid var(--color-gold, #cda250)',
-                              borderRadius: '10px',
-                              padding: '0.1rem 0.45rem',
-                              fontSize: '0.68rem',
-                              fontFamily: 'var(--font-mono)',
-                              fontWeight: 700,
-                            }}>
-                              <Heart size={10} fill="currentColor" /> Guest Note
-                            </span>
-                          )}
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                              <h3 style={{
+                                margin: 0,
+                                fontFamily: 'var(--font-serif)',
+                                fontSize: '1.05rem',
+                                fontWeight: 700,
+                                color: 'var(--color-text)',
+                                wordBreak: 'break-word',
+                              }}>
+                                {upload.uploaderName || 'Anonymous Guest'}
+                              </h3>
+
+                              {hasCaption && (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  backgroundColor: 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
+                                  color: 'var(--color-gold, #cda250)',
+                                  border: '1px solid var(--color-gold, #cda250)',
+                                  borderRadius: '10px',
+                                  padding: '0.1rem 0.45rem',
+                                  fontSize: '0.68rem',
+                                  fontFamily: 'var(--font-mono)',
+                                  fontWeight: 700,
+                                  whiteSpace: 'nowrap',
+                                }}>
+                                  <Heart size={10} fill="currentColor" /> Guest Note
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem', color: 'var(--color-muted)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                              <Clock size={11} style={{ flexShrink: 0 }} />
+                              <span>{formatUploadTime(upload.uploadedAt)}</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem', color: 'var(--color-muted)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                          <Clock size={11} />
-                          <span>{formatUploadTime(upload.uploadedAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        backgroundColor: 'var(--color-bg)',
-                        border: '1px solid var(--color-muted)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        padding: '0.25rem 0.55rem',
-                        fontSize: '0.75rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 600,
-                        color: 'var(--color-text)',
-                      }}>
-                        <ImageIcon size={13} style={{ color: 'var(--color-primary)' }} />
-                        <span>{upload.fileCount || upload.files?.length || 1} file(s)</span>
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => setUploadToDelete(upload)}
-                        style={{
-                          ...styles.iconBtn,
-                          color: 'var(--color-muted)',
-                          padding: '0.35rem',
-                        }}
-                        title="Remove guestbook entry"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Message Quote Box */}
-                  {hasCaption ? (
-                    <div style={{
-                      backgroundColor: 'var(--color-bg)',
-                      borderLeft: '3.5px solid var(--color-gold, #cda250)',
-                      borderRadius: '0 var(--border-radius-sm) var(--border-radius-sm) 0',
-                      padding: '0.85rem 1.15rem',
-                      position: 'relative',
-                    }}>
-                      <div style={{
-                        position: 'absolute',
-                        top: '6px',
-                        right: '12px',
-                        opacity: 0.15,
-                        color: 'var(--color-gold, #cda250)',
-                      }}>
-                        <MessageSquare size={24} />
-                      </div>
-                      <p style={{
-                        margin: 0,
-                        fontStyle: 'italic',
-                        fontSize: '0.92rem',
-                        lineHeight: 1.55,
-                        color: 'var(--color-text)',
-                        whiteSpace: 'pre-wrap',
-                      }}>
-                        &ldquo;{upload.caption.trim()}&rdquo;
-                      </p>
-                    </div>
-                  ) : (
-                    <div style={{
-                      fontSize: '0.78rem',
-                      color: 'var(--color-muted)',
-                      fontStyle: 'italic',
-                      padding: '0.2rem 0',
-                    }}>
-                      (Uploaded without a written note)
-                    </div>
-                  )}
-
-                  {/* Uploaded Files Links & Target Google Drive Folder */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '0.75rem',
-                    flexWrap: 'wrap',
-                    paddingTop: '0.5rem',
-                    borderTop: '1px dashed var(--color-muted)',
-                  }}>
-                    {/* File Pills */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', minWidth: 0 }}>
-                      {(upload.files || []).slice(0, 5).map((file, fIdx) => (
-                        <a
-                          key={file.id || fIdx}
-                          href={file.webViewLink || (upload.folderId ? `https://drive.google.com/drive/folders/${upload.folderId}` : '#')}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                          <span style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '0.3rem',
-                            padding: '0.2rem 0.5rem',
                             backgroundColor: 'var(--color-bg)',
                             border: '1px solid var(--color-muted)',
                             borderRadius: 'var(--border-radius-sm)',
+                            padding: '0.2rem 0.5rem',
                             fontSize: '0.72rem',
                             fontFamily: 'var(--font-mono)',
+                            fontWeight: 600,
                             color: 'var(--color-text)',
-                            textDecoration: 'none',
-                            transition: 'var(--transition-smooth)',
-                          }}
-                          title={file.name || 'View photo in Google Drive'}
-                        >
-                          <ImageIcon size={11} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-                          <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {file.name || `Photo ${fIdx + 1}`}
+                          }}>
+                            <ImageIcon size={12} style={{ color: 'var(--color-primary)' }} />
+                            <span>{upload.fileCount || upload.files?.length || 1} file(s)</span>
                           </span>
-                          <ExternalLink size={10} style={{ color: 'var(--color-muted)', flexShrink: 0 }} />
-                        </a>
-                      ))}
-                      {(upload.files || []).length > 5 && (
-                        <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
-                          +{upload.files.length - 5} more
-                        </span>
+
+                          <button
+                            type="button"
+                            onClick={() => setUploadToDelete(upload)}
+                            style={{
+                              ...styles.iconBtn,
+                              color: 'var(--color-muted)',
+                              padding: '0.35rem',
+                            }}
+                            title="Remove guestbook entry"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Message Quote Box */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      {hasCaption ? (
+                        <div style={{
+                          backgroundColor: 'var(--color-bg)',
+                          borderLeft: '3.5px solid var(--color-gold, #cda250)',
+                          borderRadius: '0 var(--border-radius-sm) var(--border-radius-sm) 0',
+                          padding: '0.85rem 1rem',
+                          position: 'relative',
+                        }}>
+                          <div style={{
+                            position: 'absolute',
+                            top: '6px',
+                            right: '10px',
+                            opacity: 0.15,
+                            color: 'var(--color-gold, #cda250)',
+                          }}>
+                            <MessageSquare size={22} />
+                          </div>
+                          <p style={{
+                            margin: 0,
+                            fontStyle: 'italic',
+                            fontSize: '0.9rem',
+                            lineHeight: 1.55,
+                            color: 'var(--color-text)',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                          }}>
+                            &ldquo;{upload.caption.trim()}&rdquo;
+                          </p>
+                        </div>
+                      ) : (
+                        <div style={{
+                          fontSize: '0.78rem',
+                          color: 'var(--color-muted)',
+                          fontStyle: 'italic',
+                          padding: '0.35rem 0',
+                        }}>
+                          (Uploaded without a written note)
+                        </div>
                       )}
                     </div>
 
-                    {/* Target Folder Tag */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', marginLeft: 'auto' }}>
-                      <FolderOpen size={12} style={{ color: 'var(--color-gold, #cda250)' }} />
-                      <span>Album: <strong>{upload.folderName || selectedFolder.name || 'Guest Uploads'}</strong></span>
-                      {upload.folderId && (
-                        <a
-                          href={`https://drive.google.com/drive/folders/${upload.folderId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center' }}
-                          title="Open album in Google Drive"
-                        >
-                          <ExternalLink size={11} />
-                        </a>
-                      )}
+                    {/* Uploaded Files Links & Target Google Drive Folder */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      flexWrap: 'wrap',
+                      paddingTop: '0.65rem',
+                      borderTop: '1px dashed var(--color-muted)',
+                      marginTop: 'auto',
+                    }}>
+                      {/* File Pills */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', minWidth: 0 }}>
+                        {(upload.files || []).slice(0, 4).map((file, fIdx) => (
+                          <a
+                            key={file.id || fIdx}
+                            href={file.webViewLink || (upload.folderId ? `https://drive.google.com/drive/folders/${upload.folderId}` : '#')}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.28rem',
+                              padding: '0.2rem 0.5rem',
+                              backgroundColor: 'var(--color-bg)',
+                              border: '1px solid var(--color-muted)',
+                              borderRadius: 'var(--border-radius-sm)',
+                              fontSize: '0.72rem',
+                              fontFamily: 'var(--font-mono)',
+                              color: 'var(--color-text)',
+                              textDecoration: 'none',
+                              transition: 'var(--transition-smooth)',
+                            }}
+                            title={file.name || 'View photo in Google Drive'}
+                          >
+                            <ImageIcon size={11} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                            <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {file.name || `Photo ${fIdx + 1}`}
+                            </span>
+                            <ExternalLink size={10} style={{ color: 'var(--color-muted)', flexShrink: 0 }} />
+                          </a>
+                        ))}
+                        {(upload.files || []).length > 4 && (
+                          <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+                            +{upload.files.length - 4} more
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Target Folder Tag */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', marginLeft: 'auto' }}>
+                        <FolderOpen size={11} style={{ color: 'var(--color-primary)' }} />
+                        <span>Album: {upload.folderName || selectedFolder.name || 'Guest Uploads'}</span>
+                        {upload.folderId && (
+                          <a
+                            href={`https://drive.google.com/drive/folders/${upload.folderId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center' }}
+                            title="Open album in Google Drive"
+                          >
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          ) : (
+            /* Table / List View */
+            <div style={styles.tableWrapper}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>GUEST</th>
+                    <th style={styles.th}>DATE & TIME</th>
+                    <th style={styles.th}>MESSAGE / WISHES</th>
+                    <th style={styles.th}>PHOTOS & FILES</th>
+                    <th style={styles.th}>ALBUM</th>
+                    <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredGuestUploads.map((upload) => {
+                    const initials = (upload.uploaderName || 'Guest')
+                      .trim()
+                      .split(/\s+/)
+                      .map(n => n[0])
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase();
+
+                    const hasCaption = Boolean(upload.caption && upload.caption.trim());
+
+                    return (
+                      <tr key={upload.id} style={styles.tr}>
+                        <td style={styles.td}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              background: hasCaption ? 'linear-gradient(135deg, var(--color-gold, #cda250), #b38636)' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                              color: '#ffffff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontFamily: 'var(--font-serif)',
+                              fontSize: '0.85rem',
+                              flexShrink: 0,
+                            }}>
+                              {initials || 'G'}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--color-text)', fontSize: '0.88rem' }}>
+                                {upload.uploaderName || 'Anonymous Guest'}
+                              </div>
+                              {hasCaption && (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.2rem',
+                                  color: 'var(--color-gold, #cda250)',
+                                  fontSize: '0.65rem',
+                                  fontFamily: 'var(--font-mono)',
+                                  fontWeight: 700,
+                                  marginTop: '2px',
+                                }}>
+                                  <Heart size={9} fill="currentColor" /> Guest Note
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td style={{ ...styles.td, whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-muted)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>
+                            <Clock size={12} style={{ flexShrink: 0 }} />
+                            <span>{formatUploadTime(upload.uploadedAt) || '-'}</span>
+                          </div>
+                        </td>
+
+                        <td style={{ ...styles.td, maxWidth: '320px' }}>
+                          {hasCaption ? (
+                            <div style={{
+                              fontSize: '0.85rem',
+                              fontStyle: 'italic',
+                              color: 'var(--color-text)',
+                              lineHeight: 1.45,
+                              whiteSpace: 'pre-wrap',
+                              wordBreak: 'break-word',
+                            }}>
+                              &ldquo;{upload.caption.trim()}&rdquo;
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                              (No note)
+                            </span>
+                          )}
+                        </td>
+
+                        <td style={styles.td}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            {(upload.files || []).slice(0, 3).map((file, fIdx) => (
+                              <a
+                                key={file.id || fIdx}
+                                href={file.webViewLink || (upload.folderId ? `https://drive.google.com/drive/folders/${upload.folderId}` : '#')}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  padding: '0.15rem 0.45rem',
+                                  backgroundColor: 'var(--color-bg)',
+                                  border: '1px solid var(--color-muted)',
+                                  borderRadius: 'var(--border-radius-sm)',
+                                  fontSize: '0.7rem',
+                                  fontFamily: 'var(--font-mono)',
+                                  color: 'var(--color-text)',
+                                  textDecoration: 'none',
+                                }}
+                                title={file.name || 'View photo in Google Drive'}
+                              >
+                                <ImageIcon size={10} style={{ color: 'var(--color-primary)' }} />
+                                <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {file.name || `Photo ${fIdx + 1}`}
+                                </span>
+                                <ExternalLink size={9} style={{ color: 'var(--color-muted)' }} />
+                              </a>
+                            ))}
+                            {(upload.files || []).length > 3 && (
+                              <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+                                +{upload.files.length - 3}
+                              </span>
+                            )}
+                            {(!upload.files || upload.files.length === 0) && (
+                              <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+                                {upload.fileCount || 1} file(s)
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td style={{ ...styles.td, whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+                            <FolderOpen size={12} style={{ color: 'var(--color-primary)' }} />
+                            <span>{upload.folderName || selectedFolder.name || 'Guest Uploads'}</span>
+                            {upload.folderId && (
+                              <a
+                                href={`https://drive.google.com/drive/folders/${upload.folderId}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center' }}
+                                title="Open album in Google Drive"
+                              >
+                                <ExternalLink size={10} />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+
+                        <td style={{ ...styles.td, textAlign: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => setUploadToDelete(upload)}
+                            style={{
+                              ...styles.iconBtn,
+                              color: 'var(--color-muted)',
+                              padding: '0.35rem',
+                            }}
+                            title="Remove guestbook entry"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
             {/* Empty State */}
             {filteredGuestUploads.length === 0 && (
@@ -1507,7 +1812,6 @@ export default function PhotoShotListManager({
                 )}
               </div>
             )}
-          </div>
         </>
       )}
 
@@ -2592,5 +2896,38 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 'var(--border-radius-sm)',
     padding: '0.625rem 1.25rem',
     cursor: 'pointer',
+  },
+  tableWrapper: {
+    backgroundColor: 'var(--color-surface)',
+    borderRadius: 'var(--border-radius-md)',
+    boxShadow: 'var(--box-shadow-subtle)',
+    overflowX: 'auto',
+    border: '1.5px solid var(--color-muted)',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    minWidth: '760px',
+  },
+  th: {
+    textAlign: 'left',
+    padding: '0.85rem 1rem',
+    borderBottom: '2px solid var(--color-muted)',
+    fontSize: '0.72rem',
+    fontFamily: 'var(--font-mono)',
+    color: 'var(--color-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    backgroundColor: 'var(--color-bg)',
+  },
+  tr: {
+    borderBottom: '1px solid var(--color-muted)',
+    transition: 'background-color 0.15s ease',
+  },
+  td: {
+    padding: '0.85rem 1rem',
+    fontSize: '0.85rem',
+    color: 'var(--color-text)',
+    verticalAlign: 'middle',
   },
 };

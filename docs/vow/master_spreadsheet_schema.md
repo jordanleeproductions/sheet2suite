@@ -252,7 +252,7 @@ Stores guest comments, heartfelt wedding wishes, photo upload counts, direct Goo
 | Column Header | JSON Key | Data Type | Notes / Description |
 | :--- | :--- | :--- | :--- |
 | `Entry ID` | `entryId` | Text (Primary Key) | Unique submission ID (e.g. `GB101`, `GB739102`) |
-| `Date & Time` | `submittedAt` | Text / DateTime | Human-readable submission timestamp (e.g. `Sep 12, 2026, 4:30 PM`) |
+| `Date & Time` | `submittedAt` | Text / DateTime | Human-readable submission timestamp (e.g. `Sep 12, 2026, 4:30 PM`). Serial numeric dates from Google Sheets API `UNFORMATTED_VALUE` (e.g. `46283.057...`) are automatically normalized to readable localized timestamps and ISO strings. |
 | `Guest Name` | `guestName` | Text | Name provided by guest on upload form (defaults to `Anonymous Guest`) |
 | `Message / Wishes` | `message` | Text | Heartfelt note, congratulations, or photo caption |
 | `Photo Count` | `photoCount` | Integer | Total number of photo/video files uploaded in this submission |

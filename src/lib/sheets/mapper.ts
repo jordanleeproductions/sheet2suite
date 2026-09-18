@@ -663,9 +663,23 @@ export const guestbookMapper = {
   fromRow(headers: string[], row: any[]): GuestbookEntry {
     const obj = mapRowToObject<GuestbookEntry>(headers, row, GUESTBOOK_HEADERS);
     const photoCount = parseInt(String(obj.photoCount || '0'), 10) || 0;
+    // Normalize submittedAt if it is an Excel/Google Sheets serial date number
+    let submittedAt = String(obj.submittedAt || '').trim();
+    const num = Number(submittedAt);
+    if (!isNaN(num) && num >= 1000 && num <= 100000) {
+      try {
+        const d = new Date(Math.round((num - 25569) * 86400 * 1000));
+        if (!isNaN(d.getTime())) {
+          submittedAt = d.toISOString();
+        }
+      } catch {
+        // retain original string
+      }
+    }
+
     return {
       entryId: String(obj.entryId || '').trim(),
-      submittedAt: String(obj.submittedAt || '').trim(),
+      submittedAt,
       guestName: String(obj.guestName || 'Anonymous Guest').trim(),
       message: String(obj.message || '').trim(),
       photoCount,
