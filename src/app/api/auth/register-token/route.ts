@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing spreadsheetId or userEmail' }, { status: 400 });
     }
 
-    // Lookup existing refreshToken from userEmail or spreadsheetId
-    let existingRefreshToken: string | undefined;
-    if (userEmail) {
+    // Lookup existing refreshToken from cookie, userEmail, or spreadsheetId
+    let existingRefreshToken: string | undefined = req.cookies.get('s2s_refresh_token')?.value;
+    if (!existingRefreshToken && userEmail) {
       const userDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
       existingRefreshToken = userDoc?.refreshToken;
     }
@@ -48,12 +48,34 @@ export async function POST(req: NextRequest) {
       await LocalFirestore.setDocAsync('auth_tokens', userEmail, tokenData);
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       registeredSheet: spreadsheetId,
       registeredEmail: userEmail,
       hasRefreshToken: Boolean(existingRefreshToken),
     });
+
+    if (existingRefreshToken) {
+      response.cookies.set('s2s_refresh_token', existingRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 90, // 90 days
+        path: '/',
+      });
+    }
+
+    if (accessToken) {
+      response.cookies.set('s2s_access_token', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    }
+
+    return response;
   } catch (error: any) {
     console.error('[Register Token] Error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -92,11 +92,12 @@ export async function POST(req: NextRequest) {
     const userEmail = userInfo.data.email;
 
     // Persist refresh token to Firestore / Local storage
+    let effectiveRefreshToken = tokenData.refresh_token;
     if (userEmail) {
       try {
         const { LocalFirestore } = await import('@/lib/db/firestoreDb');
         const existingDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', userEmail);
-        const refreshTokenToSave = tokenData.refresh_token || existingDoc?.refreshToken;
+        effectiveRefreshToken = effectiveRefreshToken || existingDoc?.refreshToken;
 
         const recordData: any = {
           userEmail,
@@ -105,8 +106,8 @@ export async function POST(req: NextRequest) {
           expiryDate: tokenData.expiry_date,
           updatedAt: new Date().toISOString(),
         };
-        if (refreshTokenToSave) {
-          recordData.refreshToken = refreshTokenToSave;
+        if (effectiveRefreshToken) {
+          recordData.refreshToken = effectiveRefreshToken;
         }
 
         await LocalFirestore.setDocAsync('auth_tokens', userEmail, recordData);
@@ -136,6 +137,16 @@ export async function POST(req: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: '/',
+      });
+    }
+
+    if (effectiveRefreshToken) {
+      response.cookies.set('s2s_refresh_token', effectiveRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 90, // 90 days
         path: '/',
       });
     }

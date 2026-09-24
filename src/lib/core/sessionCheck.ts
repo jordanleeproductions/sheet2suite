@@ -34,7 +34,28 @@ export async function verifyActiveSession(): Promise<boolean> {
     });
 
     const data = await res.json();
+    if (data.accessToken) {
+      localStorage.setItem('s2v_google_token', data.accessToken);
+    }
+
     if (res.status === 401 || data.isAuthError === true) {
+      // Proactively attempt silent token refresh via /api/auth/refresh before showing modal!
+      try {
+        const refreshRes = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spreadsheetId }),
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success && refreshData.accessToken) {
+          localStorage.setItem('s2v_google_token', refreshData.accessToken);
+          lastVerifiedTimestamp = now;
+          return true;
+        }
+      } catch (rErr) {
+        console.warn('[SessionCheck] Silent refresh attempt failed:', rErr);
+      }
+
       // Invalidate cache
       lastVerifiedTimestamp = 0;
       // Dispatch global event so page.tsx reveals the re-authentication modal

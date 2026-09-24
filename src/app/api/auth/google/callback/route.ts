@@ -160,15 +160,16 @@ export async function GET(req: NextRequest) {
     }
 
     // Persist refresh token and token metadata in Firestore / Local storage for long-lived silent re-auth
+    let effectiveRefreshToken = tokens.refresh_token;
     try {
       if (userEmail) {
         const existingUserDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', userEmail);
-        const refreshTokenToSave = tokens.refresh_token || existingUserDoc?.refreshToken;
+        effectiveRefreshToken = effectiveRefreshToken || existingUserDoc?.refreshToken;
 
         await LocalFirestore.setDocAsync('auth_tokens', userEmail, {
           userEmail,
           spreadsheetId: effectiveSheetId || existingUserDoc?.spreadsheetId,
-          refreshToken: refreshTokenToSave,
+          refreshToken: effectiveRefreshToken,
           accessToken: tokens.access_token,
           expiryDate: tokens.expiry_date,
           updatedAt: new Date().toISOString(),
@@ -176,12 +177,12 @@ export async function GET(req: NextRequest) {
       }
       if (effectiveSheetId) {
         const existingSheetDoc = await LocalFirestore.getDocAsync<any>('auth_tokens', effectiveSheetId);
-        const refreshTokenToSave = tokens.refresh_token || existingSheetDoc?.refreshToken;
+        effectiveRefreshToken = effectiveRefreshToken || existingSheetDoc?.refreshToken;
 
         await LocalFirestore.setDocAsync('auth_tokens', effectiveSheetId, {
           userEmail,
           spreadsheetId: effectiveSheetId,
-          refreshToken: refreshTokenToSave,
+          refreshToken: effectiveRefreshToken,
           accessToken: tokens.access_token,
           expiryDate: tokens.expiry_date,
           updatedAt: new Date().toISOString(),
@@ -319,6 +320,16 @@ export async function GET(req: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 30,
+        path: '/',
+      });
+    }
+
+    if (effectiveRefreshToken) {
+      response.cookies.set('s2s_refresh_token', effectiveRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 90, // 90 days for seamless long-lived session
         path: '/',
       });
     }

@@ -8,72 +8,114 @@ export const DEFAULT_MASTER_SHEET_ID = '1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep
  * If not provided or expired, it looks up the stored refresh_token in Firestore / Local storage.
  * If not found, falls back to GOOGLE_ACCESS_TOKEN or service account.
  */
-export async function getGoogleAuthAsync(accessToken?: string, spreadsheetIdOrEmail?: string) {
+export async function getGoogleAuthAsync(
+  accessToken?: string, 
+  spreadsheetIdOrEmail?: string,
+  userEmail?: string,
+  refreshTokenParam?: string
+) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
 
+  let resolvedRefreshToken = refreshTokenParam;
+  let tokenDoc: any = null;
+
   // If a refresh token is stored in Firestore for this spreadsheet or user, configure credentials
-  if (spreadsheetIdOrEmail) {
+  if (spreadsheetIdOrEmail || userEmail) {
     try {
       const { LocalFirestore } = await import('@/lib/db/firestoreDb');
-      const tokenDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetIdOrEmail);
-      if (tokenDoc?.refreshToken) {
-        oauth2Client.setCredentials({
-          access_token: accessToken || tokenDoc.accessToken,
-          refresh_token: tokenDoc.refreshToken,
-          expiry_date: tokenDoc.expiryDate,
-        });
-
-        // Proactively refresh if accessToken is missing, expired, or expiring in < 5 minutes
-        const now = Date.now();
-        const isExpiring = !tokenDoc.accessToken || !tokenDoc.expiryDate || (tokenDoc.expiryDate - now < 5 * 60 * 1000);
-        if (isExpiring) {
-          try {
-            const tokenRes = await oauth2Client.getAccessToken();
-            const freshAccessToken = tokenRes?.token;
-            if (freshAccessToken) {
-              oauth2Client.setCredentials({
-                access_token: freshAccessToken,
-                refresh_token: tokenDoc.refreshToken,
-                expiry_date: now + 3500 * 1000,
-              });
-
-              // Persist refreshed accessToken back to Firestore asynchronously
-              const updatedDoc = {
-                ...tokenDoc,
-                accessToken: freshAccessToken,
-                expiryDate: now + 3500 * 1000,
-                updatedAt: new Date().toISOString(),
-              };
-
-              if (spreadsheetIdOrEmail) {
-                await LocalFirestore.setDocAsync('auth_tokens', spreadsheetIdOrEmail, updatedDoc);
-              }
-              if (tokenDoc.userEmail && tokenDoc.userEmail !== spreadsheetIdOrEmail) {
-                await LocalFirestore.setDocAsync('auth_tokens', tokenDoc.userEmail, updatedDoc);
-              }
-              if (tokenDoc.spreadsheetId && tokenDoc.spreadsheetId !== spreadsheetIdOrEmail) {
-                await LocalFirestore.setDocAsync('auth_tokens', tokenDoc.spreadsheetId, updatedDoc);
-              }
-            }
-          } catch (refreshErr) {
-            console.warn('[Google Auth] Proactive refresh error:', refreshErr);
-          }
-        }
-
-        return oauth2Client;
+      if (spreadsheetIdOrEmail) {
+        tokenDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetIdOrEmail);
       }
-      if (accessToken || tokenDoc?.accessToken) {
-        oauth2Client.setCredentials({
-          access_token: accessToken || tokenDoc?.accessToken,
-          expiry_date: tokenDoc?.expiryDate,
-        });
-        return oauth2Client;
+      if (!tokenDoc?.refreshToken && userEmail) {
+        tokenDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
+      }
+      if (tokenDoc?.refreshToken) {
+        resolvedRefreshToken = resolvedRefreshToken || tokenDoc.refreshToken;
       }
     } catch (e) {
       console.warn('[Google Auth] Could not lookup refresh token:', e);
     }
+  }
+
+  if (resolvedRefreshToken) {
+    oauth2Client.setCredentials({
+      access_token: accessToken || tokenDoc?.accessToken,
+      refresh_token: resolvedRefreshToken,
+      expiry_date: tokenDoc?.expiryDate,
+    });
+
+    // Auto-persist new tokens whenever Google refreshes them
+    oauth2Client.on('tokens', (tokens) => {
+      if (tokens.refresh_token) {
+        resolvedRefreshToken = tokens.refresh_token;
+      }
+      const updatedDoc: any = {
+        ...(tokenDoc || {}),
+        accessToken: tokens.access_token,
+        refreshToken: resolvedRefreshToken,
+        expiryDate: tokens.expiry_date || (Date.now() + 3500 * 1000),
+        updatedAt: new Date().toISOString(),
+      };
+      import('@/lib/db/firestoreDb').then(({ LocalFirestore }) => {
+        if (spreadsheetIdOrEmail) {
+          LocalFirestore.setDocAsync('auth_tokens', spreadsheetIdOrEmail, updatedDoc).catch(() => {});
+        }
+        if (userEmail && userEmail !== spreadsheetIdOrEmail) {
+          LocalFirestore.setDocAsync('auth_tokens', userEmail, updatedDoc).catch(() => {});
+        }
+      }).catch(() => {});
+    });
+
+    // Proactively refresh if accessToken is missing, expired, or expiring in < 5 minutes
+    const now = Date.now();
+    const isExpiring = !tokenDoc?.accessToken || !tokenDoc?.expiryDate || (tokenDoc.expiryDate - now < 5 * 60 * 1000);
+    if (isExpiring) {
+      try {
+        const tokenRes = await oauth2Client.getAccessToken();
+        const freshAccessToken = tokenRes?.token;
+        if (freshAccessToken) {
+          oauth2Client.setCredentials({
+            access_token: freshAccessToken,
+            refresh_token: resolvedRefreshToken,
+            expiry_date: now + 3500 * 1000,
+          });
+
+          // Persist refreshed accessToken back to Firestore asynchronously
+          const updatedDoc = {
+            ...(tokenDoc || {}),
+            accessToken: freshAccessToken,
+            refreshToken: resolvedRefreshToken,
+            expiryDate: now + 3500 * 1000,
+            updatedAt: new Date().toISOString(),
+          };
+
+          const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+          if (spreadsheetIdOrEmail) {
+            await LocalFirestore.setDocAsync('auth_tokens', spreadsheetIdOrEmail, updatedDoc);
+          }
+          if (userEmail && userEmail !== spreadsheetIdOrEmail) {
+            await LocalFirestore.setDocAsync('auth_tokens', userEmail, updatedDoc);
+          }
+          if (tokenDoc?.userEmail && tokenDoc.userEmail !== spreadsheetIdOrEmail && tokenDoc.userEmail !== userEmail) {
+            await LocalFirestore.setDocAsync('auth_tokens', tokenDoc.userEmail, updatedDoc);
+          }
+        }
+      } catch (refreshErr) {
+        console.warn('[Google Auth] Proactive refresh error:', refreshErr);
+      }
+    }
+
+    return oauth2Client;
+  }
+
+  if (accessToken || tokenDoc?.accessToken) {
+    oauth2Client.setCredentials({
+      access_token: accessToken || tokenDoc?.accessToken,
+      expiry_date: tokenDoc?.expiryDate,
+    });
+    return oauth2Client;
   }
 
   const token = accessToken || process.env.GOOGLE_ACCESS_TOKEN;

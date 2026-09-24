@@ -191,6 +191,32 @@ export default function Sheet2VowDashboard() {
     setIsReauthenticating(true);
     try {
       const targetSheet = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+
+      // Step 1: Attempt silent token refresh first without opening popup
+      try {
+        const refreshRes = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spreadsheetId: targetSheet }),
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success && refreshData.accessToken) {
+          setGoogleToken(refreshData.accessToken);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('s2v_google_token', refreshData.accessToken);
+          }
+          invalidateSessionCheckCache();
+          setIsReauthenticating(false);
+          setShowSessionExpiredModal(false);
+          addToast('Session Restored Silently!', 'success');
+          fetchWeddingData(refreshData.accessToken);
+          return;
+        }
+      } catch (silentErr) {
+        console.warn('[Reauth] Silent refresh failed, falling back to popup:', silentErr);
+      }
+
+      // Step 2: Fall back to OAuth popup if silent refresh was not possible
       const sheetParam = targetSheet ? `&spreadsheetId=${encodeURIComponent(targetSheet)}` : '';
       const res = await fetch(`/api/auth/google?prompt=consent${sheetParam}`);
       const data = await res.json();
@@ -343,6 +369,44 @@ export default function Sheet2VowDashboard() {
       return () => window.removeEventListener('s2v:session-expired', handleSessionExpiredEvent);
     }
   }, []);
+
+  // Proactive background silent refresh & window visibility handler
+  useEffect(() => {
+    if (isMockMode || !spreadsheetId) return;
+
+    const performSilentRefresh = async () => {
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spreadsheetId }),
+        });
+        const data = await res.json();
+        if (data.success && data.accessToken) {
+          setGoogleToken(data.accessToken);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('s2v_google_token', data.accessToken);
+          }
+        }
+      } catch (_) {}
+    };
+
+    // Silently refresh when user tabs back into the app
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        performSilentRefresh();
+      }
+    };
+
+    // Every 25 minutes, proactively refresh to ensure token never expires
+    const refreshInterval = setInterval(performSilentRefresh, 25 * 60 * 1000);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      clearInterval(refreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isMockMode, spreadsheetId]);
 
   // Onboarding Demo Mode & Preset States [ONBOARD-1, ONBOARD-3, ONBOARD-4, ONBOARD-6]
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
@@ -789,15 +853,50 @@ export default function Sheet2VowDashboard() {
         return;
       }
 
-      const response = await fetch(`/api/sync?spreadsheetId=${targetSheetId}`, {
+      let response = await fetch(`/api/sync?spreadsheetId=${targetSheetId}`, {
         method: 'GET',
         headers
       });
 
-      const res = await response.json();
+      let res = await response.json();
+
+      // If 401, attempt silent background refresh before giving up
+      if (response.status === 401 || res.isAuthError) {
+        try {
+          const refreshRes = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ spreadsheetId: targetSheetId }),
+          });
+          const refreshData = await refreshRes.json();
+          if (refreshData.success && refreshData.accessToken) {
+            setGoogleToken(refreshData.accessToken);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('s2v_google_token', refreshData.accessToken);
+            }
+            headers['Authorization'] = `Bearer ${refreshData.accessToken}`;
+            response = await fetch(`/api/sync?spreadsheetId=${targetSheetId}`, {
+              method: 'GET',
+              headers
+            });
+            res = await response.json();
+          }
+        } catch (rErr) {
+          console.warn('[Session] Silent refresh error in fetchWeddingData:', rErr);
+        }
+      }
+
       if (response.status === 401 || res.isAuthError) {
         setShowSessionExpiredModal(true);
         return;
+      }
+
+      // If backend returned a refreshed access token, update client state
+      if (res.freshAccessToken) {
+        setGoogleToken(res.freshAccessToken);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('s2v_google_token', res.freshAccessToken);
+        }
       }
       if (res.success) {
         setWeddingData(res.data);
@@ -946,7 +1045,7 @@ export default function Sheet2VowDashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/sync', {
+      let response = await fetch('/api/sync', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -956,10 +1055,49 @@ export default function Sheet2VowDashboard() {
         })
       });
 
-      const res = await response.json();
+      let res = await response.json();
+
+      // If 401, attempt silent background refresh before showing modal
+      if (response.status === 401 || res.isAuthError) {
+        try {
+          const refreshRes = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ spreadsheetId }),
+          });
+          const refreshData = await refreshRes.json();
+          if (refreshData.success && refreshData.accessToken) {
+            setGoogleToken(refreshData.accessToken);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('s2v_google_token', refreshData.accessToken);
+            }
+            headers['Authorization'] = `Bearer ${refreshData.accessToken}`;
+            response = await fetch('/api/sync', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                spreadsheetId,
+                sheetType,
+                data: updatedData
+              })
+            });
+            res = await response.json();
+          }
+        } catch (rErr) {
+          console.warn('[Sync] Silent refresh error in pushToDatabase:', rErr);
+        }
+      }
+
       if (response.status === 401 || res.isAuthError) {
         setShowSessionExpiredModal(true);
         return;
+      }
+
+      if (res.freshAccessToken) {
+        setGoogleToken(res.freshAccessToken);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('s2v_google_token', res.freshAccessToken);
+        }
       }
       if (!res.success) {
         throw new Error(res.error || `Failed to sync ${sheetType}`);

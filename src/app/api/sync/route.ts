@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSheetsClient } from '@/lib/sheets/client';
 import { 
   guestMapper, 
@@ -37,20 +37,26 @@ const HEADERS_MAP = {
   guestbook: ['Entry ID', 'Date & Time', 'Guest Name', 'Message / Wishes', 'Photo Count', 'Photo Links', 'Drive Folder'],
 };
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const spreadsheetId = searchParams.get('spreadsheetId');
     
     const authHeader = req.headers.get('Authorization');
     const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    const cookieToken = req.cookies.get('s2s_access_token')?.value;
+    const cookieEmail = req.cookies.get('s2s_user_email')?.value;
+    const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
+
+    const effectiveToken = (accessToken && accessToken !== 'mock-token') ? accessToken : cookieToken;
+    const hasAuth = Boolean(effectiveToken || cookieRefreshToken);
 
     if (!spreadsheetId) {
       return NextResponse.json({ success: false, error: 'spreadsheetId is required' }, { status: 400 });
     }
 
     // Mock Mode
-    if (!accessToken || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
+    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
       // Dynamically calculate metrics for consistency in mock mode
       const estimatedCost = mockDatabase.budget.reduce((sum, item) => sum + item.estimatedCost, 0);
       const actualCost = mockDatabase.budget.reduce((sum, item) => sum + item.actualCost, 0);
@@ -71,11 +77,44 @@ export async function GET(req: Request) {
       });
     }
 
-    const auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(accessToken, spreadsheetId);
-    const sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
+    let auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
+      effectiveToken, 
+      spreadsheetId, 
+      cookieEmail, 
+      cookieRefreshToken
+    );
+    let sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
+    let freshAccessToken: string | undefined;
+
+    const runWithAuthRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
+      try {
+        return await fn();
+      } catch (err: any) {
+        const isAuthError = err?.code === 401 || err?.status === 401 || String(err?.message).toLowerCase().includes('invalid authentication credentials');
+        if (isAuthError && (auth as any).getAccessToken) {
+          try {
+            const tokenRes = await (auth as any).getAccessToken();
+            if (tokenRes?.token) {
+              freshAccessToken = tokenRes.token;
+              auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
+                freshAccessToken,
+                spreadsheetId,
+                cookieEmail,
+                cookieRefreshToken
+              );
+              sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
+              return await fn();
+            }
+          } catch (rErr) {
+            console.warn('[Sync GET] Token refresh retry failed:', rErr);
+          }
+        }
+        throw err;
+      }
+    };
 
     // Step 1: Fetch spreadsheet metadata to get exact available sheet titles
-    const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+    const metaRes = await runWithAuthRetry(() => sheetsClient.spreadsheets.get({ spreadsheetId }));
     const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
 
     const findTitle = (candidates: string[]): string | null => {
@@ -151,11 +190,11 @@ export async function GET(req: Request) {
     // Fetch all present spreadsheet tabs in a single atomic batch get
     let valueRanges: any[] = [];
     if (ranges.length > 0) {
-      const batchGetResponse = await sheetsClient.spreadsheets.values.batchGet({
+      const batchGetResponse = await runWithAuthRetry(() => sheetsClient.spreadsheets.values.batchGet({
         spreadsheetId,
         ranges,
         valueRenderOption: 'UNFORMATTED_VALUE',
-      });
+      }));
       valueRanges = batchGetResponse.data.valueRanges || [];
     }
 
@@ -327,12 +366,25 @@ export async function GET(req: Request) {
       guestbook,
     };
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data,
       weddingName,
-      isMock: false
+      isMock: false,
+      freshAccessToken: freshAccessToken || undefined,
     });
+
+    if (freshAccessToken) {
+      response.cookies.set('s2s_access_token', freshAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    }
+
+    return response;
 
   } catch (error: any) {
     console.error('Error fetching sheet data in /api/sync:', error);
@@ -348,13 +400,19 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('Authorization');
     const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    const cookieToken = req.cookies.get('s2s_access_token')?.value;
+    const cookieEmail = req.cookies.get('s2s_user_email')?.value;
+    const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
     const body = await req.json();
     const { spreadsheetId, sheetType, data } = body;
+
+    const effectiveToken = (accessToken && accessToken !== 'mock-token') ? accessToken : cookieToken;
+    const hasAuth = Boolean(effectiveToken || cookieRefreshToken);
 
     if (!spreadsheetId) {
       return NextResponse.json({ success: false, error: 'spreadsheetId is required' }, { status: 400 });
@@ -364,7 +422,7 @@ export async function POST(req: Request) {
     }
 
     // Mock Mode Update
-    if (!accessToken || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
+    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
       if (sheetType === 'dashboard') {
         const newBudgetVal = data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : mockDatabase.dashboard.totalBudget);
         mockDatabase.dashboard.totalBudget = isNaN(newBudgetVal) ? mockDatabase.dashboard.totalBudget : newBudgetVal;
@@ -417,8 +475,41 @@ export async function POST(req: Request) {
       });
     }
 
-    const auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(accessToken, spreadsheetId);
-    const sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
+    let auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
+      effectiveToken, 
+      spreadsheetId, 
+      cookieEmail, 
+      cookieRefreshToken
+    );
+    let sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
+    let freshAccessToken: string | undefined;
+
+    const runWithAuthRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
+      try {
+        return await fn();
+      } catch (err: any) {
+        const isAuthError = err?.code === 401 || err?.status === 401 || String(err?.message).toLowerCase().includes('invalid authentication credentials');
+        if (isAuthError && (auth as any).getAccessToken) {
+          try {
+            const tokenRes = await (auth as any).getAccessToken();
+            if (tokenRes?.token) {
+              freshAccessToken = tokenRes.token;
+              auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
+                freshAccessToken,
+                spreadsheetId,
+                cookieEmail,
+                cookieRefreshToken
+              );
+              sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
+              return await fn();
+            }
+          } catch (rErr) {
+            console.warn('[Sync POST] Token refresh retry failed:', rErr);
+          }
+        }
+        throw err;
+      }
+    };
 
     if (sheetType === 'repair_dropdowns') {
       const res = await applyDropdownValidations(sheetsClient, spreadsheetId);
@@ -431,7 +522,7 @@ export async function POST(req: Request) {
 
     if (sheetType === 'dashboard') {
       // Fetch spreadsheet metadata to check available sheet titles safely
-      const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+      const metaRes = await runWithAuthRetry(() => sheetsClient.spreadsheets.get({ spreadsheetId }));
       const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
 
       const findTitle = (candidates: string[]) => {
@@ -509,7 +600,7 @@ export async function POST(req: Request) {
     } else {
       // Overwrite the sheet rows
       // Fetch spreadsheet metadata to get exact available sheet titles
-      const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
+      const metaRes = await runWithAuthRetry(() => sheetsClient.spreadsheets.get({ spreadsheetId }));
       const availableTitles = (metaRes.data.sheets || []).map(s => s.properties?.title || '').filter(Boolean);
 
       const findTitle = (candidates: string[]) => {
@@ -747,10 +838,23 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: `Successfully synchronized ${sheetType} to Google Sheets.`
+      message: `Successfully synchronized ${sheetType} to Google Sheets.`,
+      freshAccessToken: freshAccessToken || undefined,
     });
+
+    if (freshAccessToken) {
+      response.cookies.set('s2s_access_token', freshAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    }
+
+    return response;
 
   } catch (error: any) {
     console.error('Error synchronizing sheet data in /api/sync:', error);
