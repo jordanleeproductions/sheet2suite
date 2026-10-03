@@ -700,7 +700,6 @@ export default function ThankYouManager({
 
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={styles.idBadge}>{gift.giftId}</span>
                       <span style={styles.categoryBadge}>{gift.category}</span>
                     </div>
                     <h3 style={{ ...styles.cardTitle, textDecoration: gift.thankYouSent ? 'line-through' : 'none' }}>

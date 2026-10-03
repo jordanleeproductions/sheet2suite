@@ -550,6 +550,7 @@
   - **Category / Store Combobox Dropdown**: Replaced static text input with `GiftCategoryCombobox` displaying all previously written categories extracted from existing gifts alongside standard wedding registry categories, supporting auto-complete, keyboard navigation, and custom store/category entry.
   - **Dedicated Total Estimated Value KPI Card**: Split the combined total gifts count card into two separate, dedicated KPI cards: `TOTAL GIFTS RECEIVED` (gift count) and `TOTAL ESTIMATED VALUE` (formatted total currency value) in a responsive 5-card grid.
   - **Category Filtering & Value Search**: Added a category filter dropdown in the filter bar displaying gift counts and combined total value per category (e.g. `Kitchen & Dining (4 • $450.00)`), enhanced search query matching across categories, descriptions, notes, and numeric/dollar amounts, and displayed a dynamic filtered total value summary banner.
+  - **Gift ID Label Hidden from Cards**: Cleaned up the gift card header by hiding the technical gift ID badge, leaving the Category badge cleanly positioned above the gift description.
 
 ---
 
