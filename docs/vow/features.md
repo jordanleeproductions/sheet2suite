@@ -545,6 +545,11 @@
   - Updated Guest Attendance Cards and tracking metrics to strictly exclude the Bride & Groom / Couple parties from the thank-you tracking card roster.
   - Implemented `isCoupleOrBrideGroomParty()` checking party group names (`Bride & Groom`, `Couple`, `Newlyweds`, `Wedding Couple`), table assignments (Sweetheart table, Head table), and dynamic matching against the couple's first names parsed from `weddingName` prop (e.g. "Alex & Sam").
   - Preserves 100% accurate count and card presentation focused strictly on wedding guests requiring thank you notes.
+- [x] **[THANK-YOU-TRACKER-UX-ENHANCEMENTS] Category Selector, Filter & Value Search, Dedicated Value KPI, and Amount Zero Cleanup (`ThankYouManager.tsx`):**
+  - **Zero-Clearing Amount Input**: Initialized amount state cleanly and implemented dynamic leading-zero cleanup (`val.replace(/^0+(?=\d)/, '')`) and focus auto-clear so typing dollar values (e.g. `$100`) doesn't retain leading zeroes (`$0100`).
+  - **Category / Store Combobox Dropdown**: Replaced static text input with `GiftCategoryCombobox` displaying all previously written categories extracted from existing gifts alongside standard wedding registry categories, supporting auto-complete, keyboard navigation, and custom store/category entry.
+  - **Dedicated Total Estimated Value KPI Card**: Split the combined total gifts count card into two separate, dedicated KPI cards: `TOTAL GIFTS RECEIVED` (gift count) and `TOTAL ESTIMATED VALUE` (formatted total currency value) in a responsive 5-card grid.
+  - **Category Filtering & Value Search**: Added a category filter dropdown in the filter bar displaying gift counts and combined total value per category (e.g. `Kitchen & Dining (4 • $450.00)`), enhanced search query matching across categories, descriptions, notes, and numeric/dollar amounts, and displayed a dynamic filtered total value summary banner.
 
 ---
 

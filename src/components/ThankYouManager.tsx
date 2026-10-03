@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { GiftItem, Guest } from '@/lib/sheets/types';
 import { 
   Heart, 
@@ -19,10 +19,193 @@ import {
   AlertCircle,
   Sparkles,
   Check,
-  UserCheck
+  UserCheck,
+  ChevronDown,
+  Tag
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
+
+const DEFAULT_GIFT_CATEGORIES = [
+  'Kitchen & Dining',
+  'Cash & Honeymoon Fund',
+  'Home & Decor',
+  'Electronics & Appliances',
+  'Bed & Bath',
+  'Bar & Glassware',
+  'Experiences & Travel',
+  'Charity Donation',
+  'Gift Card & Retail',
+  'General',
+];
+
+interface GiftCategoryComboboxProps {
+  value: string;
+  onChange: (val: string) => void;
+  categories: string[];
+  inputStyle?: React.CSSProperties;
+}
+
+function GiftCategoryCombobox({
+  value,
+  onChange,
+  categories,
+  inputStyle,
+}: GiftCategoryComboboxProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(value || '');
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSearchTerm(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    const handlePointerDownOutside = (e: MouseEvent | TouchEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDownOutside);
+    document.addEventListener('touchstart', handlePointerDownOutside);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside);
+      document.removeEventListener('touchstart', handlePointerDownOutside);
+    };
+  }, []);
+
+  const filteredCategories = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return categories;
+    return categories.filter(c => c.toLowerCase().includes(term));
+  }, [categories, searchTerm]);
+
+  const hasExactMatch = categories.some(
+    c => c.toLowerCase() === searchTerm.trim().toLowerCase()
+  );
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'relative', width: '100%' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          style={{
+            ...inputStyle,
+            paddingRight: '2.2rem',
+            width: '100%',
+          }}
+          value={searchTerm}
+          onChange={(e) => {
+            const nextVal = e.target.value;
+            setSearchTerm(nextVal);
+            onChange(nextVal);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder="Select category or enter store..."
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setIsOpen(prev => !prev)}
+          title="Toggle categories"
+          style={{
+            position: 'absolute',
+            right: '0.6rem',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-muted)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+          }}
+        >
+          <ChevronDown size={16} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            maxHeight: '210px',
+            overflowY: 'auto',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-muted)',
+            borderRadius: 'var(--border-radius-sm, 6px)',
+            boxShadow: 'var(--box-shadow-heavy, 0 8px 24px rgba(0, 0, 0, 0.2))',
+            padding: '4px',
+          }}
+        >
+          {filteredCategories.map((cat) => {
+            const isSelected = cat.toLowerCase() === (value || '').toLowerCase();
+            return (
+              <div
+                key={cat}
+                onClick={() => {
+                  onChange(cat);
+                  setSearchTerm(cat);
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: '0.45rem 0.65rem',
+                  fontSize: '0.8rem',
+                  fontFamily: 'var(--font-mono)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: isSelected ? 'var(--color-primary-light, rgba(226, 149, 120, 0.15))' : 'transparent',
+                  color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+                  fontWeight: isSelected ? 700 : 400,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--color-primary-light, rgba(226, 149, 120, 0.1))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isSelected ? 'var(--color-primary-light, rgba(226, 149, 120, 0.15))' : 'transparent';
+                }}
+              >
+                <span>{cat}</span>
+                {isSelected && <Check size={14} />}
+              </div>
+            );
+          })}
+
+          {searchTerm.trim() && !hasExactMatch && (
+            <div
+              onClick={() => {
+                onChange(searchTerm.trim());
+                setIsOpen(false);
+              }}
+              style={{
+                padding: '0.45rem 0.65rem',
+                fontSize: '0.8rem',
+                fontFamily: 'var(--font-mono)',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                borderTop: filteredCategories.length > 0 ? '1px dashed var(--color-muted)' : 'none',
+                marginTop: filteredCategories.length > 0 ? '4px' : 0,
+                color: 'var(--color-primary)',
+                fontWeight: 600,
+              }}
+            >
+              + Use custom: &quot;{searchTerm.trim()}&quot;
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ThankYouManagerProps {
   gifts: GiftItem[];
@@ -48,9 +231,23 @@ export default function ThankYouManager({
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('All');
 
   const currencySymbol = getCurrencySymbol(currency);
   const [thankedFilter, setThankedFilter] = useState<'All' | 'Thanked' | 'Pending'>('All');
+
+  // Distinct Categories from gifts and defaults
+  const allCategories = useMemo(() => {
+    const cats = new Set<string>();
+    // First include any previously written categories from existing gifts
+    gifts.forEach(g => {
+      const c = (g.category || '').trim();
+      if (c) cats.add(c);
+    });
+    // Then include default wedding categories
+    DEFAULT_GIFT_CATEGORIES.forEach(c => cats.add(c));
+    return Array.from(cats);
+  }, [gifts]);
 
   // Modals State for Gifts
   const [isAddingGift, setIsAddingGift] = useState(false);
@@ -58,11 +255,11 @@ export default function ThankYouManager({
   const [giftToDelete, setShotToDelete] = useState<GiftItem | null>(null);
 
   // Form State for Add / Edit Gift
-  const [formData, setFormData] = useState<Partial<GiftItem>>({
+  const [formData, setFormData] = useState<Omit<Partial<GiftItem>, 'amount'> & { amount?: number | string }>({
     description: '',
     giverName: '',
     category: 'Kitchen & Dining',
-    amount: 0,
+    amount: '',
     thankYouSent: false,
     notes: '',
   });
@@ -171,17 +368,26 @@ export default function ThankYouManager({
 
   // Filtered Gifts
   const filteredGifts = gifts.filter(gift => {
+    const cleanSearch = searchTerm.trim().toLowerCase().replace(/^\$/, '');
     const matchesSearch = 
       (gift.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (gift.giverName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (gift.category || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (gift.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (cleanSearch !== '' && (
+        String(gift.amount || 0).includes(cleanSearch) ||
+        (gift.notes || '').toLowerCase().includes(searchTerm.toLowerCase())
+      ));
     
+    const matchesCategory = 
+      categoryFilter === 'All' ? true :
+      (gift.category || 'General').toLowerCase() === categoryFilter.toLowerCase();
+
     const matchesThanked = 
       thankedFilter === 'All' ? true :
       thankedFilter === 'Thanked' ? gift.thankYouSent :
       !gift.thankYouSent;
 
-    return matchesSearch && matchesThanked;
+    return matchesSearch && matchesCategory && matchesThanked;
   });
 
   // Filtered Attending Parties for Attendance Thank Yous
@@ -224,8 +430,8 @@ export default function ThankYouManager({
     setFormData({
       description: '',
       giverName: '',
-      category: 'Kitchen & Dining',
-      amount: 0,
+      category: allCategories[0] || 'Kitchen & Dining',
+      amount: '',
       thankYouSent: false,
       notes: '',
     });
@@ -235,7 +441,10 @@ export default function ThankYouManager({
 
   // Open Edit Gift Modal
   const startEditGift = (gift: GiftItem) => {
-    setFormData(gift);
+    setFormData({
+      ...gift,
+      amount: gift.amount === 0 ? '' : gift.amount,
+    });
     setEditingGift(gift);
     setIsAddingGift(false);
   };
@@ -248,6 +457,12 @@ export default function ThankYouManager({
       return;
     }
 
+    const rawAmount = formData.amount;
+    const parsedAmount = (rawAmount === '' || rawAmount === undefined || rawAmount === null) 
+      ? 0 
+      : Number(rawAmount);
+    const validAmount = isNaN(parsedAmount) ? 0 : parsedAmount;
+
     let updated: GiftItem[];
     if (isAddingGift) {
       const newGift: GiftItem = {
@@ -255,14 +470,14 @@ export default function ThankYouManager({
         description: formData.description || 'New Gift',
         giverName: formData.giverName || 'Anonymous Giver',
         category: formData.category || 'General',
-        amount: Number(formData.amount) || 0,
+        amount: validAmount,
         thankYouSent: Boolean(formData.thankYouSent),
         notes: formData.notes || '',
       };
       updated = [...gifts, newGift];
     } else if (editingGift) {
       updated = gifts.map(g => 
-        g.giftId === editingGift.giftId ? { ...g, ...formData, amount: Number(formData.amount) || 0 } as GiftItem : g
+        g.giftId === editingGift.giftId ? { ...g, ...formData, amount: validAmount } as GiftItem : g
       );
     } else {
       return;
@@ -275,7 +490,7 @@ export default function ThankYouManager({
         description: '',
         giverName: '',
         category: formData.category || 'General',
-        amount: 0,
+        amount: '',
         thankYouSent: false,
         notes: '',
       });
@@ -325,7 +540,13 @@ export default function ThankYouManager({
         <div style={styles.kpiItem}>
           <span style={styles.kpiLabel}>TOTAL GIFTS RECEIVED</span>
           <span style={styles.kpiValue}>
-            {totalGifts} <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontWeight: 400 }}>({formatCurrency(totalGiftValue, currency)})</span>
+            {totalGifts} <span style={{ fontSize: '0.8rem', color: 'var(--color-muted)', fontWeight: 400 }}>Gifts</span>
+          </span>
+        </div>
+        <div style={styles.kpiItem}>
+          <span style={styles.kpiLabel}>TOTAL ESTIMATED VALUE</span>
+          <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
+            {formatCurrency(totalGiftValue, currency)}
           </span>
         </div>
         <div style={styles.kpiItem}>
@@ -381,7 +602,7 @@ export default function ThankYouManager({
           <Search size={16} style={styles.searchIcon} />
           <input
             type="text"
-            placeholder={subTab === 'gifts' ? "Search gift description, giver name, or category..." : "Search attending guest or party name..."}
+            placeholder={subTab === 'gifts' ? "Search gift description, giver, category, or amount..." : "Search attending guest or party name..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -389,18 +610,68 @@ export default function ThankYouManager({
         </div>
 
         <div style={styles.filterGroup}>
+          {subTab === 'gifts' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Tag size={16} style={{ color: 'var(--color-muted)' }} />
+              <select 
+                value={categoryFilter} 
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                style={styles.filterSelect}
+              >
+                <option value="All">All Categories ({totalGifts})</option>
+                {allCategories.map(cat => {
+                  const count = gifts.filter(g => (g.category || 'General').toLowerCase() === cat.toLowerCase()).length;
+                  const catVal = gifts
+                    .filter(g => (g.category || 'General').toLowerCase() === cat.toLowerCase())
+                    .reduce((sum, g) => sum + (g.amount || 0), 0);
+                  return (
+                    <option key={cat} value={cat}>
+                      {cat} ({count} • {formatCurrency(catVal, currency)})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
           <Filter size={16} style={{ color: 'var(--color-muted)' }} />
           <select 
             value={thankedFilter} 
             onChange={(e) => setThankedFilter(e.target.value as any)}
             style={styles.filterSelect}
           >
-            <option value="All">All Thank You Statuses</option>
+            <option value="All">All Statuses</option>
             <option value="Thanked">Thanked Only (Sent)</option>
             <option value="Pending">Pending Only (Unsent)</option>
           </select>
         </div>
       </div>
+
+      {subTab === 'gifts' && (categoryFilter !== 'All' || searchTerm.trim() !== '' || thankedFilter !== 'All') && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0.55rem 0.85rem',
+          backgroundColor: 'var(--color-surface)',
+          border: '1px solid var(--color-muted)',
+          borderRadius: 'var(--border-radius-sm)',
+          fontSize: '0.8rem',
+          color: 'var(--color-text)',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          marginTop: '-0.35rem',
+        }}>
+          <span>
+            Showing <strong>{filteredGifts.length}</strong> of {totalGifts} gifts
+            {categoryFilter !== 'All' && <span> in category <strong>&quot;{categoryFilter}&quot;</strong></span>}
+            {searchTerm.trim() && <span> matching <strong>&quot;{searchTerm}&quot;</strong></span>}
+          </span>
+          <span>
+            Category / Filtered Total Value: <strong style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>{formatCurrency(filteredGifts.reduce((s, g) => s + (g.amount || 0), 0), currency)}</strong>
+          </span>
+        </div>
+      )}
 
       {/* SUB-TAB 1: GIFTS REGISTRY TRACKER */}
       {subTab === 'gifts' && (
@@ -605,12 +876,11 @@ export default function ThankYouManager({
 
                   <div style={styles.formGroup}>
                     <label style={styles.fieldLabel}>CATEGORY / STORE</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Kitchen & Dining, Honeyfund, Target"
+                    <GiftCategoryCombobox
                       value={formData.category || ''}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      style={styles.inputField}
+                      onChange={(cat) => setFormData({ ...formData, category: cat })}
+                      categories={allCategories}
+                      inputStyle={styles.inputField}
                     />
                   </div>
                 </div>
@@ -635,8 +905,23 @@ export default function ThankYouManager({
                         min="0"
                         step="0.01"
                         placeholder="0.00"
-                        value={formData.amount !== undefined && formData.amount !== null ? formData.amount : ''}
-                        onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                        value={formData.amount !== undefined && formData.amount !== null && formData.amount !== '' ? formData.amount : ''}
+                        onFocus={() => {
+                          if (formData.amount === 0 || formData.amount === '0') {
+                            setFormData(prev => ({ ...prev, amount: '' }));
+                          }
+                        }}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setFormData(prev => ({ ...prev, amount: '' }));
+                            return;
+                          }
+                          // Remove leading zero when followed by non-decimal digits, e.g. "0100" -> 100
+                          const clean = val.replace(/^0+(?=\d)/, '');
+                          const num = Number(clean);
+                          setFormData(prev => ({ ...prev, amount: isNaN(num) ? clean : num }));
+                        }}
                         style={{ ...styles.inputField, paddingLeft: '1.75rem' }}
                       />
                     </div>
@@ -789,7 +1074,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   kpiBar: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
     gap: '0.875rem',
   },
   kpiItem: {

@@ -192,6 +192,11 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 ### 2.14 Thank You Tracker & Gift Log (`ThankYouManager.tsx`)
 - Received gifts and thank you card status tracking (`Gift ID`, `Sender/Guest Name`, `Gift Description`, `Value`, `Thank You Note Sent Status`).
 - **Couple / Bride & Groom Attendance Exclusion (`[THANKS-COUPLE-ATTENDANCE-EXCLUSION]`):** Attendance cards and pending/sent thank-you metrics strictly filter out the Bride & Groom / Couple party records (identifying party names, Sweetheart/Head table assignments, or couple first names from `weddingName`), keeping the thank-you checklist 100% focused on guests.
+- **Enhanced Gift Management & Category Value Search (`[THANK-YOU-TRACKER-UX-ENHANCEMENTS]`):**
+  - **Category / Store Combobox (`GiftCategoryCombobox`):** Autocomplete dropdown pre-populated with previously entered gift categories and default registry categories, with full support for custom store entry.
+  - **Zero-Clearing Currency Input:** Auto-clears placeholder zero on focus and strips typed leading zeroes (e.g. preventing `$0100`).
+  - **Dedicated Total Estimated Value KPI Card:** Displays total value in its own standalone KPI card alongside Total Gifts Received.
+  - **Category Filtering & Value Aggregations:** Filter gifts by category with inline counts and category sums in the dropdown selector, plus dynamic filtered value summary banner.
 
 ---
 
