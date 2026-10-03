@@ -526,6 +526,35 @@ export default function ThankYouManager({
             .thankyou-add-btn {
               display: none !important;
             }
+            .thankyou-filter-bar {
+              flex-direction: column !important;
+              align-items: stretch !important;
+              gap: 0.65rem !important;
+              width: 100% !important;
+            }
+            .thankyou-search-wrapper {
+              width: 100% !important;
+              flex: 1 1 100% !important;
+            }
+            .thankyou-filter-group {
+              width: 100% !important;
+              flex-direction: column !important;
+              align-items: stretch !important;
+              gap: 0.5rem !important;
+            }
+            .thankyou-filter-item {
+              width: 100% !important;
+              display: flex !important;
+              align-items: center !important;
+              gap: 0.4rem !important;
+            }
+            .thankyou-filter-select {
+              width: 100% !important;
+              flex: 1 1 auto !important;
+              min-width: 0 !important;
+              max-width: 100% !important;
+              text-overflow: ellipsis !important;
+            }
           }
         `}</style>
         {subTab === 'gifts' && (
@@ -597,8 +626,8 @@ export default function ThankYouManager({
       </div>
 
       {/* Search & Filter Section */}
-      <div style={styles.filterBar}>
-        <div style={styles.searchWrapper}>
+      <div style={styles.filterBar} className="thankyou-filter-bar">
+        <div style={styles.searchWrapper} className="thankyou-search-wrapper">
           <Search size={16} style={styles.searchIcon} />
           <input
             type="text"
@@ -609,14 +638,15 @@ export default function ThankYouManager({
           />
         </div>
 
-        <div style={styles.filterGroup}>
+        <div style={styles.filterGroup} className="thankyou-filter-group">
           {subTab === 'gifts' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Tag size={16} style={{ color: 'var(--color-muted)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }} className="thankyou-filter-item">
+              <Tag size={16} style={{ color: 'var(--color-muted)', flexShrink: 0 }} />
               <select 
                 value={categoryFilter} 
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 style={styles.filterSelect}
+                className="thankyou-filter-select"
               >
                 <option value="All">All Categories ({totalGifts})</option>
                 {allCategories.map(cat => {
@@ -634,16 +664,19 @@ export default function ThankYouManager({
             </div>
           )}
 
-          <Filter size={16} style={{ color: 'var(--color-muted)' }} />
-          <select 
-            value={thankedFilter} 
-            onChange={(e) => setThankedFilter(e.target.value as any)}
-            style={styles.filterSelect}
-          >
-            <option value="All">All Statuses</option>
-            <option value="Thanked">Thanked Only (Sent)</option>
-            <option value="Pending">Pending Only (Unsent)</option>
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }} className="thankyou-filter-item">
+            <Filter size={16} style={{ color: 'var(--color-muted)', flexShrink: 0 }} />
+            <select 
+              value={thankedFilter} 
+              onChange={(e) => setThankedFilter(e.target.value as any)}
+              style={styles.filterSelect}
+              className="thankyou-filter-select"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Thanked">Thanked Only (Sent)</option>
+              <option value="Pending">Pending Only (Unsent)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1119,12 +1152,16 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '1rem',
+    gap: '0.75rem',
     flexWrap: 'wrap',
+    width: '100%',
+    maxWidth: '100%',
   },
   searchWrapper: {
     position: 'relative',
     flex: '1 1 240px',
+    minWidth: 0,
+    maxWidth: '100%',
   },
   searchIcon: {
     position: 'absolute',
@@ -1141,11 +1178,14 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-muted)',
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
+    boxSizing: 'border-box',
   },
   filterGroup: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
+    flexWrap: 'wrap',
+    maxWidth: '100%',
   },
   filterSelect: {
     fontFamily: 'var(--font-mono)',
@@ -1156,6 +1196,10 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 'var(--border-radius-sm)',
     color: 'var(--color-text)',
     cursor: 'pointer',
+    maxWidth: '100%',
+    minWidth: 0,
+    textOverflow: 'ellipsis',
+    boxSizing: 'border-box',
   },
   gridContainer: {
     display: 'grid',
