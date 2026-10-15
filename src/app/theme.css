@@ -11,103 +11,124 @@
   --style-name: 'editorial';
 
   /* Canvas & Base Tokens */
-  --color-bg: #f7f7f7;
-  --color-surface: #ffffff;
-  --color-input-bg: #ffffff;
-  --color-primary: #0d1b2a;
-  --color-on-primary: #ffffff;
-  --color-text: #2f3e46;
-  --color-muted: #708090;
-  --color-highlight: #FFC72C;
-  --color-gold-dark: #cda250;
-  --color-white: #ffffff;
+  --color-bg: #FFFFFF; /* Crisp paper white */
+  --color-bg-pane: #F8FAFC; /* Structured off-white pane */
+  --color-surface: #FFFFFF;
+  --color-input-bg: #FFFFFF;
+  --color-primary: #0F172A; /* Deep slate / near-black ink */
+  --color-on-primary: #FFFFFF;
+  --color-text: #0F172A; /* Primary ink */
+  --color-muted: #64748B;
+  --color-white: #FFFFFF;
 
   /* Standard Accent & Status Tokens */
-  --color-green: #10b981;
-  --color-green-muted: #ecfdf5;
-  --color-gold: #FFC72C;
-  --color-gold-muted: #fef3c7;
-  --color-red: #ef4444;
-  --color-red-muted: #fee2e2;
-  --color-amber: #f59e0b;
-  --color-amber-muted: #fffbeb;
-  --color-amber-dark: #92400e;
-  --color-purple: #8b5cf6;
-  --color-purple-muted: #f5f3ff;
-  --color-sweetheart: #000000;
+  --color-green: #059669; /* Muted emerald green strictly for reconciled positive ledger balances */
+  --color-green-muted: #ECFDF5;
+  --color-gold: #D4AF37; /* Champagne/gold restricted to designated ceremonial milestones */
+  --color-gold-muted: #FEF9C3;
+  --color-gold-dark: #A16207;
+  --color-highlight: #D4AF37;
+  --color-red: #DC2626;
+  --color-red-muted: #FEF2F2;
+  --color-amber: #D97706;
+  --color-amber-muted: #FFFBEB;
+  --color-amber-dark: #92400E;
+  --color-purple: #7C3AED;
+  --color-purple-muted: #F5F3FF;
+  --color-sweetheart: #0F172A;
 
   /* Extended Text & Surface Tokens */
-  --color-text-secondary: #374151;
-  --color-text-tertiary: #6b7280;
-  --color-bg-subtle: #f9fafb;
-  --color-bg-hover: #f1f5f9;
-  --color-border: #e5e7eb;
-  --color-on-dark: #ffffff;
-  --color-on-light: #000000;
+  --color-text-secondary: #334155;
+  --color-text-tertiary: #64748B;
+  --color-bg-subtle: #F8FAFC;
+  --color-bg-hover: #F1F5F9;
+  --color-border: #E2E8F0; /* Hairline crisp slate */
+  --color-border-hairline: #CBD5E1;
+  --color-on-dark: #FFFFFF;
+  --color-on-light: #0F172A;
 
   /* Interactive Button & Header Tokens */
-  --color-btn-selected-bg: #0d1b2a;
-  --color-btn-selected-text: #ffffff;
+  --color-btn-selected-bg: #0F172A;
+  --color-btn-selected-text: #FFFFFF;
 
   /* Fonts */
-  --font-geist-mono: var(--font-geist-mono-google), "Geist Mono", "Geist Mono Fallback", monospace;
-  --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-serif-google), 'Playfair Display', 'Lora', 'Georgia', serif;
-  --font-sans: var(--font-sans-google), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-header: var(--font-serif);
+  --font-editorial-serif: var(--font-newsreader-google, var(--font-serif-google)), 'Newsreader', 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
+  --font-technical-mono: var(--font-jetbrains-google, var(--font-geist-mono-google)), 'JetBrains Mono', 'Geist Mono', 'Roboto Mono', monospace;
+  --font-interface-sans: var(--font-sans-google), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: var(--font-editorial-serif);
+  --font-mono: var(--font-technical-mono);
+  --font-sans: var(--font-interface-sans);
+  --font-header: var(--font-editorial-serif);
 
-  /* UI Styling Defaults */
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
+  /* UI Styling Defaults - Editorial Utility Precision */
+  --border-radius-xs: 2px;
+  --border-radius-sm: 2px;
+  --border-radius-md: 3px;
+  --border-radius-lg: 4px;
+  --border-radius-xl: 4px;
+  --border-radius-2xl: 4px;
+  --border-radius-full: 4px;
   --border-width: 1px;
-  --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --box-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  --box-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+  --border-hairline: 1px solid var(--color-border);
+  --transition-smooth: all 0.15s ease-out;
+  --box-shadow-subtle: none;
+  --box-shadow-hover: none;
 }
 
 /* Editorial Minimalist (Dark) */
 [data-style='editorial'][data-theme='dark'] {
-  --color-bg: #121212;
-  --color-surface: #1e1e1e;
-  --color-input-bg: #1e1e1e;
-  --color-primary: #f8fafc;
-  --color-on-primary: #0f172a;
-  --color-text: #e2e8f0;
-  --color-muted: #94a3b8;
-  --color-highlight: #FFC72C;
-  --color-gold-dark: #ffb74d;
-  --color-white: #ffffff;
+  --color-bg: #090D16;
+  --color-bg-pane: #0F172A;
+  --color-surface: #0F172A;
+  --color-input-bg: #0F172A;
+  --color-primary: #F8FAFC;
+  --color-on-primary: #0F172A;
+  --color-text: #F1F5F9;
+  --color-muted: #94A3B8;
+  --color-white: #FFFFFF;
 
   /* Standard Accent & Status Tokens */
-  --color-green: #00ED64;
-  --color-green-muted: rgba(0, 237, 100, 0.15);
-  --color-gold: #FFC72C;
-  --color-gold-muted: rgba(255, 199, 44, 0.15);
-  --color-red: #f87171;
+  --color-green: #10B981;
+  --color-green-muted: rgba(16, 185, 129, 0.15);
+  --color-gold: #EAB308;
+  --color-gold-muted: rgba(234, 179, 8, 0.15);
+  --color-gold-dark: #FACC15;
+  --color-highlight: #EAB308;
+  --color-red: #F87171;
   --color-red-muted: rgba(248, 113, 113, 0.15);
-  --color-amber: #fbbf24;
+  --color-amber: #FBBF24;
   --color-amber-muted: rgba(251, 191, 36, 0.15);
-  --color-amber-dark: #fbbf24;
-  --color-purple: #a78bfa;
+  --color-amber-dark: #FBBF24;
+  --color-purple: #A78BFA;
   --color-purple-muted: rgba(167, 139, 250, 0.15);
-  --color-sweetheart: #ffffff;
+  --color-sweetheart: #FFFFFF;
 
   /* Extended Text & Surface Tokens */
-  --color-text-secondary: #cbd5e1;
-  --color-text-tertiary: #94a3b8;
-  --color-bg-subtle: #1e293b;
-  --color-bg-hover: #334155;
+  --color-text-secondary: #CBD5E1;
+  --color-text-tertiary: #94A3B8;
+  --color-bg-subtle: #1E293B;
+  --color-bg-hover: #1E293B;
   --color-border: #334155;
-  --color-on-dark: #ffffff;
+  --color-border-hairline: #475569;
+  --color-on-dark: #FFFFFF;
   --color-on-light: #000000;
 
   /* Interactive Button & Header Tokens */
-  --color-btn-selected-bg: #f8fafc;
-  --color-btn-selected-text: #0f172a;
+  --color-btn-selected-bg: #F8FAFC;
+  --color-btn-selected-text: #0F172A;
 
-  --box-shadow-subtle: 0 1px 3px rgba(255, 255, 255, 0.05), 0 1px 2px rgba(255, 255, 255, 0.1);
-  --box-shadow-hover: 0 4px 6px -1px rgba(255, 255, 255, 0.05), 0 2px 4px -1px rgba(255, 255, 255, 0.05);
+  /* UI Styling Defaults */
+  --border-radius-xs: 2px;
+  --border-radius-sm: 2px;
+  --border-radius-md: 3px;
+  --border-radius-lg: 4px;
+  --border-radius-xl: 4px;
+  --border-radius-2xl: 4px;
+  --border-radius-full: 4px;
+  --border-width: 1px;
+  --border-hairline: 1px solid var(--color-border);
+  --box-shadow-subtle: none;
+  --box-shadow-hover: none;
 }
 
 /* ------------------------------------------

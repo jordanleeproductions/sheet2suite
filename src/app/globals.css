@@ -1,4 +1,30 @@
+@import "tailwindcss";
 @import "./theme.css";
+
+@theme {
+  --font-serif: var(--font-editorial-serif, var(--font-newsreader-google, var(--font-serif-google))), 'Newsreader', 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
+  --font-mono: var(--font-technical-mono, var(--font-jetbrains-google, var(--font-geist-mono-google))), 'JetBrains Mono', 'Geist Mono', 'Roboto Mono', monospace;
+  --font-sans: var(--font-interface-sans, var(--font-sans-google)), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+  --radius-3xl: 4px;
+  --radius-full: 4px;
+
+  --color-paper: #FFFFFF;
+  --color-pane: #F8FAFC;
+  --color-ink: #0F172A;
+  --color-hairline: #E2E8F0;
+  --color-hairline-dark: #CBD5E1;
+  --color-ledger-emerald: #059669;
+  --color-ledger-emerald-muted: #ECFDF5;
+  --color-ceremonial-gold: #D4AF37;
+  --color-ceremonial-gold-muted: #FEF9C3;
+}
 
 /* Global Resets */
 * {
@@ -15,7 +41,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 /* Custom Scrollbars */
@@ -27,33 +53,242 @@ body {
   background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-muted);
-  border-radius: var(--border-radius-sm);
+  background: var(--color-border-hairline, #CBD5E1);
+  border-radius: var(--border-radius-xs, 2px);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: var(--color-muted);
 }
 
-/* Base Typography rules */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-header, var(--font-sans));
+/* ========================================================
+   Editorial Utility Typography Rules
+   ======================================================== */
+
+/* 1. Display/Editorial Serif: Module titles, mastheads, table identifiers, and major section headings */
+h1, h2, h3, h4, h5, h6,
+.font-editorial,
+.font-serif,
+.masthead-title,
+.module-title,
+.table-identifier,
+.section-title,
+.tab-title,
+.card-title,
+th,
+[class*="tableHeader"],
+[class*="tableTitle"],
+[class*="moduleTitle"],
+[class*="sectionTitle"],
+[class*="pageTitle"],
+[class*="mastheadTitle"] {
+  font-family: var(--font-header, var(--font-serif));
   color: var(--color-primary);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+h1 {
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
-[data-style='neo-brutalism'] h1,
-[data-style='neo-brutalism'] h2,
-[data-style='neo-brutalism'] h3,
-[data-style='neo-brutalism'] h4,
-[data-style='neo-brutalism'] h5,
-[data-style='neo-brutalism'] h6 {
-  font-weight: 800;
-  letter-spacing: -0.03em;
+h2, h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
-code, pre, .font-mono {
-  font-family: var(--font-mono);
+/* 2. Technical Monospace: Numerical metrics, currency amounts, cell coordinates, dates, and timestamps */
+code,
+pre,
+.font-mono,
+.metric-value,
+.currency-value,
+.mono-stat,
+.cell-coord,
+.date-value,
+.timestamp-value,
+[data-metric],
+[class*="metricValue"],
+[class*="statValue"],
+[class*="kpiValue"],
+[class*="currency"],
+[class*="coordinate"],
+[class*="timestamp"],
+[class*="dateValue"],
+[class*="cellCoord"],
+[class*="cell-coord"],
+[class*="price"],
+[class*="amount"] {
+  font-family: var(--font-technical-mono, var(--font-mono)) !important;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-variant-numeric: tabular-nums slashed-zero;
+  letter-spacing: -0.01em;
+}
+
+/* 3. Interface Sans: UI controls, inputs, selects, textareas, buttons, labels, and body text */
+body,
+button,
+input,
+select,
+textarea,
+label,
+p,
+.font-sans,
+[class*="control"],
+[class*="label"],
+[class*="buttonText"] {
+  font-family: var(--font-interface-sans, var(--font-sans));
+}
+
+/* Technical inputs retain monospace font */
+input[type="number"],
+input[data-mono="true"],
+input[class*="mono"],
+input[placeholder*="ID"],
+input[placeholder*="Spreadsheet ID"] {
+  font-family: var(--font-technical-mono, var(--font-mono)) !important;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* ========================================================
+   Editorial Utility Borders & Radii Rules
+   ======================================================== */
+
+/* Standard border radius across cards, containers, inputs, and buttons restricted to 2px–4px */
+button,
+input,
+select,
+textarea,
+article,
+section,
+table,
+th,
+td,
+.rounded,
+.rounded-sm,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl,
+.rounded-full,
+[class*="card"],
+[class*="Card"],
+[class*="panel"],
+[class*="Panel"],
+[class*="box"],
+[class*="Box"],
+[class*="badge"],
+[class*="Badge"],
+[class*="chip"],
+[class*="Chip"],
+[class*="tag"],
+[class*="Tag"],
+[class*="pill"],
+[class*="Pill"],
+[class*="modal"],
+[class*="Modal"],
+[class*="rounded-sm"],
+[class*="rounded-md"],
+[class*="rounded-lg"],
+[class*="rounded-xl"],
+[class*="rounded-2xl"],
+[class*="rounded-3xl"],
+[class*="rounded-full"]:not(.avatar-circle):not(.rounded-circle) {
+  border-radius: var(--border-radius-md, 3px) !important;
+}
+
+.rounded-xs,
+.rounded-sm,
+[class*="rounded-sm"] {
+  border-radius: var(--border-radius-sm, 2px) !important;
+}
+
+/* Circular icon/avatar exceptions */
+.avatar-circle,
+.rounded-circle,
+[data-circle="true"] {
+  border-radius: 9999px !important;
+}
+
+/* Drop Shadows Elimination: Replace drop shadows with crisp hairline 1px borders */
+.shadow-none,
+.shadow-2xs,
+.shadow-xs,
+.shadow-sm,
+.shadow,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl,
+[class*="shadow-sm"],
+[class*="shadow-md"],
+[class*="shadow-lg"],
+[class*="shadow-xl"],
+[class*="shadow-2xl"] {
+  box-shadow: none !important;
+}
+
+/* Hairline 1px border standard across cards and panels */
+.hairline-card,
+.editorial-card,
+[class*="card"]:not([style*="border: none"]):not([style*="border:none"]):not([class*="no-border"]),
+[class*="Card"]:not([style*="border: none"]):not([style*="border:none"]):not([class*="no-border"]),
+[class*="panel"]:not([style*="border: none"]):not([style*="border:none"]):not([class*="no-border"]),
+[class*="Panel"]:not([style*="border: none"]):not([style*="border:none"]):not([class*="no-border"]) {
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border, #E2E8F0);
+  box-shadow: none !important;
+}
+
+/* ========================================================
+   Editorial Utility Color Restraint & Semantic Utilities
+   ======================================================== */
+
+/* Paper white canvas and structured off-white panes */
+.bg-paper,
+.paper-surface {
+  background-color: var(--color-surface, #FFFFFF) !important;
+}
+
+.bg-pane,
+.pane-surface,
+.pane-bg {
+  background-color: var(--color-bg-pane, #F8FAFC) !important;
+}
+
+/* Ink text */
+.text-ink {
+  color: var(--color-text, #0F172A) !important;
+}
+
+/* Reconciled positive ledger balances: strictly muted emerald green */
+.ledger-positive,
+.balance-positive,
+.reconciled-positive,
+.badge-ledger-reconciled,
+.badge-green.badge-green,
+[class*="badge-green"] {
+  background-color: var(--color-green-muted, #ECFDF5) !important;
+  color: var(--color-green, #059669) !important;
+  border: 1px solid rgba(5, 150, 105, 0.25) !important;
+  border-radius: var(--border-radius-xs, 2px) !important;
+  font-family: var(--font-technical-mono, var(--font-mono)) !important;
+  font-weight: 700;
+}
+
+/* Ceremonial milestones: strictly restrained champagne/gold */
+.ceremonial-milestone,
+.ceremonial-gold,
+.badge-ceremonial,
+.badge-gold.badge-gold,
+[class*="badge-gold"] {
+  background-color: var(--color-gold-muted, #FEF9C3) !important;
+  color: var(--color-gold-dark, #A16207) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  border-radius: var(--border-radius-xs, 2px) !important;
+  font-weight: 700;
 }
 
 [data-style='neo-brutalism'] code,
@@ -348,13 +583,14 @@ button[type="submit"] {
   color: #000000;
 }
 
-/* Settings Dropdown — clean token inheritance for light & dark modes */
+/* Settings Dropdown — hairline border, crisp background, zero heavy drop shadow */
 .settingsDropdown,
 [class*="settingsDropdown"] {
   background-color: var(--color-surface, #ffffff);
-  color: var(--color-text, #121824);
-  border: var(--border-width, 1px) solid var(--color-border, #e5e7eb);
-  box-shadow: var(--box-shadow-hover, 0 10px 25px -5px rgba(0, 0, 0, 0.1));
+  color: var(--color-text, #0F172A);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--border-radius-md, 3px);
+  box-shadow: none !important;
 }
 
 .settingsDropdown label,
@@ -397,19 +633,21 @@ button[type="submit"] {
 
 /* Input Fields, Search Bars, and Dropdowns Theme Rules */
 input, select, textarea {
-  font-family: var(--font-mono);
+  font-family: var(--font-interface-sans, var(--font-sans));
   font-size: 0.875rem;
   padding: 0.75rem;
-  border: 1px solid var(--color-muted);
-  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--border-radius-sm, 2px);
   background-color: var(--color-input-bg, #ffffff);
   color: var(--color-text);
+  box-shadow: none !important;
   transition: var(--transition-smooth);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary, #0F172A);
+  box-shadow: 0 0 0 1px var(--color-primary, #0F172A) !important;
 }
 
 /* =========================================================
@@ -438,9 +676,10 @@ input:focus, select:focus, textarea:focus {
 [data-theme='light'] [class*="filtersGroup"] select,
 [data-theme='light'] .kanban-category-select {
   background-color: #ffffff !important;
-  color: var(--color-text, #121824) !important;
-  border-color: var(--color-muted, #708090);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: var(--color-text, #0F172A) !important;
+  border-color: var(--color-border, #E2E8F0);
+  border-radius: var(--border-radius-sm, 2px);
+  box-shadow: none !important;
 }
 
 :root:not([data-theme='dark']) input:hover,

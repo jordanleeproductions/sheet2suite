@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Roboto_Mono, JetBrains_Mono, Geist_Mono, Inter, Cormorant_Garamond, Nunito, Bodoni_Moda, Montserrat } from "next/font/google";
+import { Newsreader, Playfair_Display, Roboto_Mono, JetBrains_Mono, Geist_Mono, Inter, Cormorant_Garamond, Nunito, Bodoni_Moda, Montserrat } from "next/font/google";
 import { Sheet2ThemeProvider } from "@/lib/core/theme/ThemeProvider";
 import "./globals.css";
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader-google",
+});
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -63,7 +69,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${robotoMono.variable} ${jetbrainsMono.variable} ${geistMono.variable} ${cormorant.variable} ${nunito.variable} ${bodoni.variable} ${montserrat.variable}`}
+      className={`${inter.variable} ${newsreader.variable} ${playfair.variable} ${robotoMono.variable} ${jetbrainsMono.variable} ${geistMono.variable} ${cormorant.variable} ${nunito.variable} ${bodoni.variable} ${montserrat.variable}`}
     >
       <body>
         <Sheet2ThemeProvider>

@@ -591,6 +591,26 @@
   - **Asynchronous Queries & Deletions**: Upgraded `GET /api/admin/db` to query Cloud Firestore via `getAllWorkspacesAsync` and `getAllLicensesAsync`, and upgraded `DELETE` to await `deleteWorkspaceAsync` and `deleteLicenseAsync`.
 
 ---
+
+## 🏛️ 20. Editorial Utility Design System & Token Architecture (`tailwind.config.ts`, `globals.css`, `theme.css`, `layout.tsx`, `themePresets.ts`)
+- [x] **[EDITORIAL-UTILITY-DESIGN-SYSTEM] Editorial Utility Design Language & Token Refactor:**
+  - **Refactor from Generic SaaS to Spreadsheet Precision**: Discarded generic SaaS conventions (bento grids, pill badges, heavy shadows, exaggerated border-radii) in favor of an "Editorial Utility" aesthetic characterized by high-contrast typography, hairline borders, dense layouts, and spreadsheet precision.
+  - **Typography Architecture**:
+    - **Display/Editorial Serif**: Configured `Newsreader` (via `next/font/google` variable `--font-newsreader-google`) alongside `Playfair Display` and Georgia fallbacks, targeted specifically for module titles, mastheads, table identifiers, section titles, card titles, and table headers (`h1`–`h6`, `.masthead-title`, `.module-title`, `.table-identifier`).
+    - **Technical Monospace with Tabular Figures**: Configured `JetBrains Mono` and `Geist Mono` with `font-feature-settings: "tnum" 1, "zero" 1;` (`font-variant-numeric: tabular-nums slashed-zero;`) for all numerical metrics, currency amounts, cell coordinates, dates, timestamps, code, and statistic badges (`.font-mono`, `[data-metric]`, `.metric-value`, `.currency-value`, `.cell-coord`, `.date-value`, `.timestamp-value`).
+    - **Interface Sans**: Retained neutral, crisp `Inter` and system UI sans-serif for UI controls, inputs, selects, textareas, labels, and body text.
+  - **Borders & Radii Clamp (2px–4px)**:
+    - Standardized micro border radius across all cards, containers, inputs, dialogs, badges, chips, and buttons restricted to 2px–4px (`rounded-sm` / `rounded-[3px]`, `--border-radius-xs: 2px`, `--border-radius-sm: 2px`, `--border-radius-md: 3px`, `--border-radius-lg: 4px`).
+    - Overrode and eliminated `rounded-xl`, `rounded-2xl`, `rounded-3xl`, and `rounded-full` pill containers across the application (strictly preserving genuine circular avatar nodes via `.avatar-circle` / `.rounded-circle`).
+    - Replaced all drop shadows (`shadow-sm`, `shadow-md`, `shadow-lg`, `shadow-xl`, `shadow-2xl`) with crisp hairline 1px borders (`#E2E8F0` / `#CBD5E1`).
+  - **Color Restraint Discipline**:
+    - **Canvas & Panes**: Pure paper white (`#FFFFFF`) canvas and structured off-white panes (`#F8FAFC`).
+    - **Primary Ink**: Deep slate / near-black (`#0F172A`) for primary text, structural lines, and active button selections.
+    - **Positive Ledger Balance**: Strict muted emerald green (`#059669` text, `#ECFDF5` background, `rgba(5, 150, 105, 0.25)` border) used exclusively for reconciled positive ledger balances.
+    - **Ceremonial Milestones**: Restrained champagne gold (`#D4AF37` / `#A16207` text, `#FEF9C3` background) designated strictly for ceremonial milestones (e.g. countdown badges, VIP milestones).
+  - **Tailwind v4 Configuration (`tailwind.config.ts`)**: Built full static Tailwind token configuration mapping `paper`, `pane`, `ink`, `hairline`, `ledger`, `ceremonial`, micro border radii, and hairline box-shadow utilities.
+
+---
 ---
 
 

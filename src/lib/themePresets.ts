@@ -10,16 +10,16 @@ export type ColorMode = 'light' | 'dark';
 export const COLOR_PRESETS: Record<StyleTheme, Record<ColorMode, ColorPreset[]>> = {
   editorial: {
     light: [
-      { name: 'Royal Navy', hex: '#0D1B2A', desc: 'Midnight Luxury Navy' },
-      { name: 'Forest Green', hex: '#11552D', desc: 'Classic Deep Emerald' },
+      { name: 'Deep Slate Ink', hex: '#0F172A', desc: 'High-Contrast Editorial Slate' },
+      { name: 'Ledger Emerald', hex: '#059669', desc: 'Reconciled Positive Ledger Green' },
+      { name: 'Ceremonial Gold', hex: '#D4AF37', desc: 'Refined Ceremonial Milestone Gold' },
       { name: 'Burgundy Rose', hex: '#881337', desc: 'Rich Bordeaux Rose' },
-      { name: 'Warm Amber', hex: '#b45309', desc: 'Golden Ochre Tone' },
     ],
     dark: [
-      { name: 'Sage Leaf', hex: '#4ade80', desc: 'Soft Luminous Sage' },
-      { name: 'Celestial Gold', hex: '#fbbf24', desc: 'Warm Starlight Gold' },
-      { name: 'Rose Petal', hex: '#fb7185', desc: 'Soft Vintage Blush' },
-      { name: 'Lavender Mist', hex: '#c084fc', desc: 'Subtle Lilac Glow' },
+      { name: 'Paper White Ink', hex: '#F8FAFC', desc: 'High-Contrast Technical White' },
+      { name: 'Sage Leaf', hex: '#10B981', desc: 'Reconciled Luminous Sage' },
+      { name: 'Ceremonial Gold', hex: '#EAB308', desc: 'Warm Milestone Gold' },
+      { name: 'Rose Petal', hex: '#FB7185', desc: 'Soft Vintage Blush' },
     ],
   },
   'neo-brutalism': {

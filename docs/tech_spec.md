@@ -486,6 +486,24 @@ src/
 - **Asynchronous Cloud Firestore Persistence (`PUT /api/admin/db` & `src/lib/db/licensingDb.ts`):** Supports `PUT` requests that directly invoke `LocalLicensingDb.saveWorkspaceAsync()` and `LocalLicensingDb.saveLicenseAsync()`, ensuring writes are fully awaited on Cloud Firestore and persisted across serverless container scale-downs.
 - **Asynchronous Admin Queries & Deletions:** `GET /api/admin/db` resolves all active records across Cloud Firestore via `getAllWorkspacesAsync()` and `getAllLicensesAsync()`, and `DELETE /api/admin/db` utilizes `deleteWorkspaceAsync()` and `deleteLicenseAsync()`.
 
+### 3.10 Editorial Utility Design Language & Token Architecture (`tailwind.config.ts`, `globals.css`, `theme.css`, `layout.tsx`)
+- **Design Philosophy Shift**: Migration away from generic SaaS tropes (bento grids, candy-colored pill badges, heavy drop shadows, high border-radius containers) to an **"Editorial Utility"** aesthetic defined by high-contrast typography, hairline borders, dense layouts, and spreadsheet precision.
+- **Three Core Pillars**:
+  1. **Typography Hierarchy**:
+     - **Display / Editorial Serif**: Uses `Newsreader` (`next/font/google` variable `--font-newsreader-google`) with `Playfair Display` and Georgia fallbacks for module titles, mastheads, table identifiers, and major section headings (`h1`–`h6`, `.masthead-title`, `.module-title`, `.table-identifier`).
+     - **Technical Monospace**: `JetBrains Mono` and `Geist Mono` with tabular numerals (`font-feature-settings: "tnum" 1, "zero" 1; font-variant-numeric: tabular-nums slashed-zero;`) for numerical metrics, currency amounts, cell coordinates, dates, and timestamps (`.font-mono`, `[data-metric]`, `.metric-value`, `.currency-value`, `.date-value`, `.timestamp-value`).
+     - **Interface Sans**: Retains `Inter` and system UI sans-serif for interactive UI controls, inputs, selects, textareas, and body copy.
+  2. **Borders & Radii Discipline**:
+     - Strict 2px–4px radius clamp across cards, containers, inputs, dialogs, badges, and buttons (`rounded-sm` / `rounded-[3px]`, `--border-radius-xs: 2px`, `--border-radius-sm: 2px`, `--border-radius-md: 3px`, `--border-radius-lg: 4px`).
+     - Global elimination of `rounded-xl`, `rounded-2xl`, and `rounded-full` pill containers (preserving circular avatar nodes via `.avatar-circle` / `.rounded-circle`).
+     - Drop shadows eliminated (`box-shadow: none !important`) and replaced with crisp 1px hairline borders (`#E2E8F0` / `#CBD5E1`).
+  3. **Color Restraint Palette**:
+     - **Primary Background**: Crisp paper white (`#FFFFFF`) canvas and structured off-white panes (`#F8FAFC`).
+     - **Ink**: Deep slate/near-black (`#0F172A`) for primary text, structural lines, and active buttons.
+     - **Reconciled Positive Ledger Balances**: Strictly muted emerald green (`#059669` text, `#ECFDF5` background).
+     - **Ceremonial Milestones**: Strictly restrained champagne gold (`#D4AF37` / `#A16207` text, `#FEF9C3` background).
+- **Tailwind v4 Token Mapping**: Custom Tailwind configuration (`tailwind.config.ts`) declaring tokens for `paper`, `pane`, `ink`, `hairline`, `ledger`, and `ceremonial`, micro border-radii, and hairline outline shadows.
+
 ---
 
 ## 4. Data Storage & Schema Mapping
