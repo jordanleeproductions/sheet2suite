@@ -161,21 +161,32 @@ export const LocalLicensingDb = {
   },
 
   // 2b. Async save awaiting Cloud Firestore sync (critical for serverless Cloud Run / Firebase App Hosting)
-  async saveWorkspaceAsync(record: Omit<WorkspaceRecord, 'workspaceId' | 'activatedAt' | 'lastActiveAt'> & { workspaceId?: string }): Promise<WorkspaceRecord> {
+  async saveWorkspaceAsync(record: Partial<WorkspaceRecord> & { workspaceId?: string; spreadsheetId?: string }): Promise<WorkspaceRecord> {
     const now = new Date().toISOString();
     let existingWorkspace: WorkspaceRecord | null = null;
 
-    if (record.spreadsheetId) {
+    if (record.workspaceId) {
+      existingWorkspace = await LocalFirestore.getDocAsync<WorkspaceRecord>('workspaces', record.workspaceId);
+    }
+    if (!existingWorkspace && record.spreadsheetId) {
       existingWorkspace = await this.getWorkspaceBySpreadsheetIdAsync(record.spreadsheetId);
     }
 
-    const workspaceId = existingWorkspace?.workspaceId || record.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const workspaceId = record.workspaceId || existingWorkspace?.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const workspaceRecord: WorkspaceRecord = {
       workspaceId,
-      activatedAt: existingWorkspace?.activatedAt || now,
+      userEmail: record.userEmail !== undefined ? record.userEmail : (existingWorkspace?.userEmail || ''),
+      partnerEmail: record.partnerEmail !== undefined ? record.partnerEmail : existingWorkspace?.partnerEmail,
+      coPlanners: record.coPlanners !== undefined ? record.coPlanners : (existingWorkspace?.coPlanners || []),
+      spreadsheetId: record.spreadsheetId !== undefined ? record.spreadsheetId : (existingWorkspace?.spreadsheetId || ''),
+      spreadsheetName: record.spreadsheetName !== undefined ? record.spreadsheetName : (existingWorkspace?.spreadsheetName || 'Wedding Planning Master Suite'),
+      driveFolderPath: record.driveFolderPath !== undefined ? record.driveFolderPath : (existingWorkspace?.driveFolderPath || 'Google Drive / Sheet2Vow'),
+      webViewLink: record.webViewLink !== undefined ? record.webViewLink : (existingWorkspace?.webViewLink || (record.spreadsheetId ? `https://docs.google.com/spreadsheets/d/${record.spreadsheetId}/edit` : '')),
+      productName: (record.productName || existingWorkspace?.productName || 'Sheet2Vow') as any,
+      orderId: record.orderId !== undefined ? record.orderId : existingWorkspace?.orderId,
+      orderVerified: record.orderVerified !== undefined ? record.orderVerified : (existingWorkspace?.orderVerified ?? true),
+      activatedAt: existingWorkspace?.activatedAt || record.activatedAt || now,
       lastActiveAt: now,
-      ...existingWorkspace,
-      ...record,
     };
 
     // Await write to Cloud Firestore and local storage
@@ -205,7 +216,7 @@ export const LocalLicensingDb = {
     };
   },
 
-  // 4. Register new license
+  // 4. Register new license (sync)
   saveLicense(license: Sheet2SuiteLicense): Sheet2SuiteLicense {
     const doc: LicenseDocument = {
       id: license.licenseKey,
@@ -226,9 +237,70 @@ export const LocalLicensingDb = {
     return license;
   },
 
+  // 4b. Register or update license async awaiting Cloud Firestore sync
+  async saveLicenseAsync(license: Partial<LicenseDocument> & { licenseKey: string }): Promise<LicenseDocument> {
+    const key = license.licenseKey.trim();
+    const existing = await LocalFirestore.getDocAsync<LicenseDocument>('licenses', key);
+    const now = new Date().toISOString();
+
+    const sku = license.sku || existing?.sku || 'sheet2vow';
+    const isBundle = sku.includes('MASTER') || sku.includes('BUNDLE') || sku === 'sheet2suite_bundle';
+
+    const doc: LicenseDocument = {
+      id: key,
+      licenseKey: key,
+      orderId: license.orderId !== undefined ? license.orderId : (existing?.orderId || ''),
+      purchaserEmail: license.purchaserEmail !== undefined ? license.purchaserEmail : (existing?.purchaserEmail || ''),
+      sku,
+      status: (license.status || existing?.status || 'active') as any,
+      licenseTier: license.licenseTier || existing?.licenseTier || (isBundle ? 'pro' : 'standard'),
+      entitledProducts: license.entitledProducts || existing?.entitledProducts || (isBundle ? ['SHEET2VOW', 'SHEET2FINANCE', 'SHEET2HOME'] : ['SHEET2VOW']),
+      maxWorkspaces: license.maxWorkspaces !== undefined ? Number(license.maxWorkspaces) : (existing?.maxWorkspaces ?? 2),
+      createdAt: existing?.createdAt || license.createdAt || now,
+      updatedAt: now,
+    };
+
+    await LocalFirestore.setDocAsync('licenses', key, doc);
+    return doc;
+  },
+
   // 5. Admin methods: list all workspaces & licenses
   getAllWorkspaces(): WorkspaceRecord[] {
     return LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
+  },
+
+  async getAllWorkspacesAsync(): Promise<WorkspaceRecord[]> {
+    const cloudDb = getCloudFirestore();
+    const workspaces: WorkspaceRecord[] = [];
+    const seen = new Set<string>();
+
+    if (cloudDb) {
+      try {
+        const snap = await cloudDb.collection('workspaces').get();
+        snap.forEach((doc: any) => {
+          const data = doc.data() as WorkspaceRecord;
+          const id = data.workspaceId || doc.id;
+          if (id && !seen.has(id.toLowerCase().trim())) {
+            seen.add(id.toLowerCase().trim());
+            workspaces.push({ ...data, workspaceId: id });
+          }
+        });
+      } catch (err: any) {
+        console.warn('[LicensingDb] Error fetching Cloud Firestore workspaces:', err?.message);
+      }
+    }
+
+    // Include local workspaces (merged without duplicates)
+    const localAll = LocalFirestore.getDocs<WorkspaceRecord>('workspaces');
+    for (const ws of localAll) {
+      const id = ws.workspaceId || ws.spreadsheetId;
+      if (id && !seen.has(id.toLowerCase().trim())) {
+        seen.add(id.toLowerCase().trim());
+        workspaces.push(ws);
+      }
+    }
+
+    return workspaces;
   },
 
   getAllLicenses(): Sheet2SuiteLicense[] {
@@ -252,8 +324,46 @@ export const LocalLicensingDb = {
     });
   },
 
+  async getAllLicensesAsync(): Promise<LicenseDocument[]> {
+    const cloudDb = getCloudFirestore();
+    const licenses: LicenseDocument[] = [];
+    const seen = new Set<string>();
+
+    if (cloudDb) {
+      try {
+        const snap = await cloudDb.collection('licenses').get();
+        snap.forEach((doc: any) => {
+          const data = doc.data() as LicenseDocument;
+          const key = data.licenseKey || doc.id;
+          if (key && !seen.has(key.toLowerCase().trim())) {
+            seen.add(key.toLowerCase().trim());
+            licenses.push({ ...data, licenseKey: key });
+          }
+        });
+      } catch (err: any) {
+        console.warn('[LicensingDb] Error fetching Cloud Firestore licenses:', err?.message);
+      }
+    }
+
+    // Include local licenses
+    const localAll = LocalFirestore.getDocs<LicenseDocument>('licenses');
+    for (const lic of localAll) {
+      const key = lic.licenseKey || lic.id || lic.orderId;
+      if (key && !seen.has(key.toLowerCase().trim())) {
+        seen.add(key.toLowerCase().trim());
+        licenses.push(lic);
+      }
+    }
+
+    return licenses;
+  },
+
   deleteWorkspace(targetId: string): boolean {
     return LocalFirestore.deleteDoc('workspaces', targetId);
+  },
+
+  async deleteWorkspaceAsync(targetId: string): Promise<boolean> {
+    return LocalFirestore.deleteDocAsync('workspaces', targetId);
   },
 
   deleteAllWorkspaces(): void {
@@ -265,6 +375,10 @@ export const LocalLicensingDb = {
 
   deleteLicense(licenseKey: string): boolean {
     return LocalFirestore.deleteDoc('licenses', licenseKey);
+  },
+
+  async deleteLicenseAsync(licenseKey: string): Promise<boolean> {
+    return LocalFirestore.deleteDocAsync('licenses', licenseKey);
   },
 
   deleteAllLicenses(): void {

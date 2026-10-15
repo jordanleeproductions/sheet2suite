@@ -476,6 +476,16 @@ src/
 - **Clean Off-Screen Transitions:** Slide-up entry translates from `translateY(calc(100% + 120px))` to `translateY(0)` with smooth cubic-bezier easing.
 - **Z-Index Layering:** Backdrop at `z-index: 110`, bottom sheet at `z-index: 140`, and bottom nav bar at `z-index: 150` ensure seamless tap targets and no visual clipping.
 
+### 3.9 Admin Database Inspector & Firebase Record Editor (`[ADMIN-FIREBASE-RECORD-EDITOR]`)
+- **Direct Database Record Editing (`src/app/admin/page.tsx`):** Provides a comprehensive database inspector and editor for Sheet2Suite administrators at `/admin`. Table rows for both Active Spreadsheet Workspaces and Registered Entitlement Licenses include inline `"✏️ EDIT"` buttons alongside `"👁️ JSON"` view and `"Delete"` actions.
+- **Dual-Mode Interactive Editor Modal:**
+  - **Structured Form Mode:** Dedicated input controls for editing critical properties:
+    - *Workspaces*: `spreadsheetName`, `spreadsheetId` (modifies Google Sheet linkage), `userEmail`, `partnerEmail`, `coPlanners` (comma-separated collaboration list), `orderId`, `orderVerified` (verified / unverified toggle), `driveFolderPath`, `webViewLink`, `productName`.
+    - *Licenses*: `licenseKey`, `orderId`, `purchaserEmail`, `sku`, `status` (`active`, `revoked`, `expired`), `licenseTier` (`standard`, `pro`, `unlimited`), `maxWorkspaces`, `entitledProducts`.
+  - **Raw JSON Editor Mode:** Full-fidelity direct document JSON editor with real-time JSON syntax error validation, allowing administrators to modify arbitrary custom fields or metadata attributes with instant validation before submission.
+- **Asynchronous Cloud Firestore Persistence (`PUT /api/admin/db` & `src/lib/db/licensingDb.ts`):** Supports `PUT` requests that directly invoke `LocalLicensingDb.saveWorkspaceAsync()` and `LocalLicensingDb.saveLicenseAsync()`, ensuring writes are fully awaited on Cloud Firestore and persisted across serverless container scale-downs.
+- **Asynchronous Admin Queries & Deletions:** `GET /api/admin/db` resolves all active records across Cloud Firestore via `getAllWorkspacesAsync()` and `getAllLicensesAsync()`, and `DELETE /api/admin/db` utilizes `deleteWorkspaceAsync()` and `deleteLicenseAsync()`.
+
 ---
 
 ## 4. Data Storage & Schema Mapping

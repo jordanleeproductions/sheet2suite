@@ -529,6 +529,37 @@ export const LocalFirestore = {
   },
 
   /**
+   * Async document deletion for Cloud Firestore with local storage deletion
+   */
+  async deleteDocAsync(collectionName: string, docId: string): Promise<boolean> {
+    const targetNorm = docId.toLowerCase().trim();
+    let hasDeleted = false;
+
+    const cloudDb = getCloudFirestore();
+    if (cloudDb) {
+      try {
+        await cloudDb.collection(collectionName).doc(targetNorm).delete();
+        hasDeleted = true;
+
+        if (collectionName === 'workspaces') {
+          const qSheet = await cloudDb.collection('workspaces').where('spreadsheetId', '==', docId.trim()).get();
+          if (!qSheet.empty) {
+            const batch = cloudDb.batch();
+            qSheet.forEach((d) => batch.delete(d.ref));
+            await batch.commit();
+            hasDeleted = true;
+          }
+        }
+      } catch (err: any) {
+        console.warn(`[Cloud Firestore] Error deleting ${collectionName}/${docId}:`, err?.message);
+      }
+    }
+
+    const localDeleted = this.deleteDoc(collectionName, docId);
+    return hasDeleted || localDeleted;
+  },
+
+  /**
    * Retrieves all documents in a collection (Firestore getDocs())
    */
   getDocs<T = any>(collectionName: string): T[] {

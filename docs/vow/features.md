@@ -581,6 +581,16 @@
   - **Self-Healing "Requested Entity Not Found" Recovery**: When a device holds a stale, moved, or deleted `spreadsheetId` that triggers Google Sheets 404 `"Requested entity was not found."`, both `/api/sync` and `fetchWeddingData` automatically detect the error, query `/api/workspaces` for the active spreadsheet in Cloud Firestore or Drive, hot-swap the valid ID into `localStorage` and browser history, and reload data seamlessly without user intervention.
 
 ---
+
+## 🛠️ 19. Admin Inspector & Firebase Record Editor (`src/app/admin/page.tsx`, `src/app/api/admin/db/route.ts`, `src/lib/db/licensingDb.ts`, `src/lib/db/firestoreDb.ts`)
+- [x] **[ADMIN-FIREBASE-RECORD-EDITOR] Live Cloud Firestore & Local Record Editing with Dual Modes:**
+  - **Dual-Mode Interactive Editor Modal**: Adds an inline `"✏️ EDIT"` action button on every table row for Active Spreadsheet Workspaces and Registered Entitlement Licenses in the Admin Inspector (`/admin`). Admins can toggle between a structured **Structured Form** and a direct **Raw JSON Editor** with real-time JSON syntax error validation.
+  - **Spreadsheet & Workspace Updates**: Modifies live records in Firebase (`spreadsheetName`, `spreadsheetId`, `userEmail`, `partnerEmail`, `coPlanners`, `orderId`, `orderVerified`, `driveFolderPath`, `webViewLink`, `productName`), supporting instant spreadsheet redirection and partner email synchronization.
+  - **License Management**: Modifies live entitlement license records in Firebase (`licenseKey`, `orderId`, `purchaserEmail`, `sku`, `status` [active / revoked / expired], `licenseTier` [standard / pro / unlimited], `maxWorkspaces`, and `entitledProducts`).
+  - **Asynchronous Cloud Firestore Endpoints (`PUT /api/admin/db`)**: Adds a `PUT` endpoint in `src/app/api/admin/db/route.ts` that awaits writes directly to Cloud Firestore via `LocalLicensingDb.saveWorkspaceAsync` and `LocalLicensingDb.saveLicenseAsync`, guaranteeing immediate persistence in serverless environments.
+  - **Asynchronous Queries & Deletions**: Upgraded `GET /api/admin/db` to query Cloud Firestore via `getAllWorkspacesAsync` and `getAllLicensesAsync`, and upgraded `DELETE` to await `deleteWorkspaceAsync` and `deleteLicenseAsync`.
+
+---
 ---
 
 
