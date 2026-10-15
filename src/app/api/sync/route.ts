@@ -389,13 +389,40 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching sheet data in /api/sync:', error);
     const isAuthError = error?.code === 401 || error?.status === 401 || String(error?.message).toLowerCase().includes('invalid authentication credentials');
+    const isNotFoundError = error?.code === 404 || error?.status === 404 || String(error?.message).toLowerCase().includes('requested entity was not found');
+    let replacementSpreadsheetId: string | undefined;
+
+    const catchSpreadsheetId = req.nextUrl?.searchParams?.get('spreadsheetId') || undefined;
+    const catchCookieEmail = req.cookies.get('s2s_user_email')?.value;
+    const catchCookieToken = req.cookies.get('s2s_access_token')?.value;
+    const catchRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
+
+    if (isNotFoundError && (catchCookieEmail || catchCookieToken || catchRefreshToken)) {
+      try {
+        const { LocalLicensingDb } = await import('@/lib/db/licensingDb');
+        if (catchCookieEmail) {
+          const records = await LocalLicensingDb.getWorkspacesByEmailAsync(catchCookieEmail);
+          const valid = records.find(r => r.spreadsheetId && r.spreadsheetId !== catchSpreadsheetId);
+          if (valid) {
+            replacementSpreadsheetId = valid.spreadsheetId;
+          }
+        }
+      } catch (_) {}
+    }
+
     return NextResponse.json(
       {
         success: false,
         isAuthError: Boolean(isAuthError),
-        error: isAuthError ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' : (error.message || 'Sync load failed')
+        isNotFoundError: Boolean(isNotFoundError),
+        replacementSpreadsheetId,
+        error: isAuthError 
+          ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' 
+          : isNotFoundError 
+          ? 'Requested entity was not found. The spreadsheet ID may be stale, moved, or deleted.' 
+          : (error.message || 'Sync load failed')
       },
-      { status: isAuthError ? 401 : 500 }
+      { status: isAuthError ? 401 : (isNotFoundError ? 404 : 500) }
     );
   }
 }
@@ -859,13 +886,19 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error synchronizing sheet data in /api/sync:', error);
     const isAuthError = error?.code === 401 || error?.status === 401 || String(error?.message).toLowerCase().includes('invalid authentication credentials');
+    const isNotFoundError = error?.code === 404 || error?.status === 404 || String(error?.message).toLowerCase().includes('requested entity was not found');
     return NextResponse.json(
       {
         success: false,
         isAuthError: Boolean(isAuthError),
-        error: isAuthError ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' : (error.message || 'Sync save failed')
+        isNotFoundError: Boolean(isNotFoundError),
+        error: isAuthError 
+          ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' 
+          : isNotFoundError
+          ? 'Requested entity was not found. The spreadsheet ID may be stale, moved, or deleted.'
+          : (error.message || 'Sync save failed')
       },
-      { status: isAuthError ? 401 : 500 }
+      { status: isAuthError ? 401 : (isNotFoundError ? 404 : 500) }
     );
   }
 }

@@ -578,6 +578,7 @@
   - **Awaited Cloud Firestore Persistence (`saveWorkspaceAsync`)**: Upgraded workspace database writes from unawaited fire-and-forget calls to `LocalLicensingDb.saveWorkspaceAsync`, guaranteeing Cloud Firestore write completion in ephemeral serverless environments (Cloud Run / Firebase App Hosting).
   - **Silent Mount Auto-Discovery**: When navigating to `/vow` on Desktop with no cached `localStorage` sheet ID, the dashboard automatically invokes `/api/workspaces` to detect existing active sessions and hydrates the workspace without forcing manual login or URL parameter inputs.
   - **Client-Side Auth Safety Net**: `handleDirectGoogleAuth` performs a secondary verification against `/api/workspaces` with the newly minted access token before falling back to `/activate`.
+  - **Self-Healing "Requested Entity Not Found" Recovery**: When a device holds a stale, moved, or deleted `spreadsheetId` that triggers Google Sheets 404 `"Requested entity was not found."`, both `/api/sync` and `fetchWeddingData` automatically detect the error, query `/api/workspaces` for the active spreadsheet in Cloud Firestore or Drive, hot-swap the valid ID into `localStorage` and browser history, and reload data seamlessly without user intervention.
 
 ---
 ---

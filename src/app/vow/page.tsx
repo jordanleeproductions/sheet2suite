@@ -968,6 +968,52 @@ export default function Sheet2VowDashboard() {
         return;
       }
 
+      // Self-Healing Fallback: If 404 / "Requested entity was not found", stored spreadsheet ID is stale, moved, or deleted.
+      // Automatically query /api/workspaces (Cloud Firestore & Google Drive) to recover the active workspace.
+      const errorMsg = String(res?.error || '').toLowerCase();
+      const isNotFound = response.status === 404 || res?.isNotFoundError || errorMsg.includes('requested entity was not found');
+
+      if (!res.success && isNotFound && !isMockMode) {
+        console.warn(`[Sync Self-Healing] Stale or missing spreadsheet ID detected: "${targetSheetId}". Recovering active workspace...`);
+        try {
+          let replacementId = res?.replacementSpreadsheetId;
+
+          if (!replacementId) {
+            const userEmail = googleUserEmail || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_email') || '' : '');
+            const emailQuery = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
+            const wsRes = await fetch(`/api/workspaces${emailQuery}`, {
+              headers: activeToken ? { 'Authorization': `Bearer ${activeToken}` } : undefined,
+            });
+            const wsData = await wsRes.json();
+            if (wsData.success && Array.isArray(wsData.workspaces) && wsData.workspaces.length > 0) {
+              const activeWs = wsData.workspaces.find((w: any) => w.spreadsheetId && w.spreadsheetId !== targetSheetId) || wsData.workspaces[0];
+              if (activeWs?.spreadsheetId && activeWs.spreadsheetId !== targetSheetId) {
+                replacementId = activeWs.spreadsheetId;
+              }
+            }
+          }
+
+          if (replacementId && replacementId !== targetSheetId) {
+            console.log(`[Sync Self-Healing] Recovered active workspace ID: ${replacementId}`);
+            setSpreadsheetId(replacementId);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('s2v_spreadsheet_id', replacementId);
+              try {
+                const currentUrl = new URL(window.location.href);
+                if (currentUrl.searchParams.get('spreadsheetId') !== replacementId) {
+                  currentUrl.searchParams.set('spreadsheetId', replacementId);
+                  window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+                }
+              } catch (_) {}
+            }
+            addToast('Stale spreadsheet link detected — automatically reconnected to your active workspace!', 'info');
+            return fetchWeddingData(activeToken, replacementId);
+          }
+        } catch (healErr) {
+          console.warn('[Sync Self-Healing] Error recovering active workspace:', healErr);
+        }
+      }
+
       // If backend returned a refreshed access token, update client state
       if (res.freshAccessToken) {
         setGoogleToken(res.freshAccessToken);
@@ -1176,6 +1222,14 @@ export default function Sheet2VowDashboard() {
           localStorage.setItem('s2v_google_token', res.freshAccessToken);
         }
       }
+      const postErrorMsg = String(res?.error || '').toLowerCase();
+      const isPostNotFound = response.status === 404 || res?.isNotFoundError || postErrorMsg.includes('requested entity was not found');
+      if (!res.success && isPostNotFound && !isMockMode) {
+        addToast('Active spreadsheet not found. Refreshing workspace connection...', 'warning');
+        await fetchWeddingData();
+        return;
+      }
+
       if (!res.success) {
         throw new Error(res.error || `Failed to sync ${sheetType}`);
       }
