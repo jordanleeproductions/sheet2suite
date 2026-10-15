@@ -1,8 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { DashboardSummary, Guest, Task, Song, PhotoShot } from '@/lib/sheets/types';
-import { Edit2, LayoutGrid, PieChart, BarChart2 } from 'lucide-react';
+import { 
+  AlertCircle, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  ArrowUpRight, 
+  Users, 
+  DollarSign, 
+  Calendar, 
+  ListTodo, 
+  Music, 
+  Camera, 
+  Armchair,
+  Sliders,
+  ExternalLink,
+  ChevronRight,
+  Sparkles
+} from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import WelcomeGuideCard from '@/components/WelcomeGuideCard';
 import { StyleTheme, ColorTheme } from '@/lib/core/theme/ThemeProvider';
@@ -33,7 +50,6 @@ interface DashboardMetricsProps {
   currency?: string;
   onNavigateTab?: (tab: string, filter?: string) => void;
   onOpenModuleSettings?: () => void;
-  // First-Time User Welcome & Education Guide Card
   showWelcomeGuide?: boolean;
   onDismissWelcomeGuide?: () => void;
   weddingName?: string;
@@ -46,235 +62,12 @@ interface DashboardMetricsProps {
   onToggleTopNav?: () => void;
 }
 
-function DonutChart({
-  slices,
-  centerLabel,
-  centerValue,
-  onSliceClick
-}: {
-  slices: { label: string; count: number; color: string; filterKey?: string }[];
-  centerLabel: string;
-  centerValue: string | number;
-  onSliceClick?: (filterKey?: string) => void;
-}) {
-  const total = slices.reduce((sum, s) => sum + s.count, 0);
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius; // ~251.327
-
-  let accumulatedDash = 0;
-
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      flexWrap: 'wrap',
-      gap: '1.5rem',
-      backgroundColor: 'var(--color-surface, #ffffff)',
-      border: '1px solid var(--color-muted)',
-      borderRadius: 'var(--border-radius-sm)',
-      padding: '1.25rem 1.5rem',
-    }}>
-      {/* SVG Donut */}
-      <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
-        <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-          {total === 0 ? (
-            <circle cx="50" cy="50" r={radius} fill="transparent" stroke="var(--color-muted)" strokeWidth="16" opacity="0.3" />
-          ) : (
-            slices.map((slice, index) => {
-              const slicePercent = slice.count / total;
-              const strokeDash = slicePercent * circumference;
-              const gap = circumference - strokeDash;
-              const strokeOffset = -accumulatedDash;
-              accumulatedDash += strokeDash;
-
-              return (
-                <circle
-                  key={index}
-                  cx="50"
-                  cy="50"
-                  r={radius}
-                  fill="transparent"
-                  stroke={slice.color}
-                  strokeWidth="16"
-                  strokeDasharray={`${strokeDash} ${gap}`}
-                  strokeDashoffset={strokeOffset}
-                  style={{
-                    cursor: onSliceClick ? 'pointer' : 'default',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onClick={() => onSliceClick && onSliceClick(slice.filterKey)}
-                >
-                  <title>{`${slice.label}: ${slice.count} (${Math.round(slicePercent * 100)}%)`}</title>
-                </circle>
-              );
-            })
-          )}
-        </svg>
-        <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-        }}>
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--color-text)', lineHeight: 1 }}>
-            {centerValue}
-          </span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--color-muted)', marginTop: '2px', textTransform: 'uppercase' }}>
-            {centerLabel}
-          </span>
-        </div>
-      </div>
-
-      {/* Legend List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: '1 1 200px' }}>
-        {slices.map((slice, index) => {
-          const percent = total > 0 ? Math.round((slice.count / total) * 100) : 0;
-          return (
-            <div
-              key={index}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.4rem 0.65rem',
-                backgroundColor: 'var(--color-bg)',
-                borderRadius: 'var(--border-radius-sm)',
-                border: '1px solid var(--color-muted)',
-                cursor: onSliceClick ? 'pointer' : 'default',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={() => onSliceClick && onSliceClick(slice.filterKey)}
-              title={onSliceClick ? `Filter view by ${slice.label}` : ''}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: slice.color, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                  {slice.label}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                  {slice.count}
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-muted)', minWidth: '35px', textAlign: 'right' }}>
-                  ({percent}%)
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function LabeledProgressBar({
-  items,
-  total,
-  onItemClick
-}: {
-  items: { label: string; count: number; color: string; filterKey?: string }[];
-  total: number;
-  onItemClick?: (filterKey?: string) => void;
-}) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.875rem',
-      backgroundColor: 'var(--color-surface, #ffffff)',
-      border: '1px solid var(--color-muted)',
-      borderRadius: 'var(--border-radius-sm)',
-      padding: '1.25rem 1.5rem',
-    }}>
-      {/* Multi-Segmented Stacked Bar */}
-      <div style={{
-        display: 'flex',
-        height: '18px',
-        borderRadius: 'var(--border-radius-sm)',
-        overflow: 'hidden',
-        backgroundColor: 'var(--color-bg)',
-        border: '1px solid var(--color-muted)',
-      }}>
-        {total === 0 ? (
-          <div style={{ width: '100%', backgroundColor: 'var(--color-muted)', opacity: 0.3 }} />
-        ) : (
-          items.map((item, index) => {
-            const pct = (item.count / total) * 100;
-            if (pct === 0) return null;
-            return (
-              <div
-                key={index}
-                style={{
-                  width: `${pct}%`,
-                  backgroundColor: item.color,
-                  transition: 'width 0.3s ease',
-                  cursor: onItemClick ? 'pointer' : 'default',
-                }}
-                onClick={() => onItemClick && onItemClick(item.filterKey)}
-                title={`${item.label}: ${item.count} (${Math.round(pct)}%)`}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* Labeled Item Cards Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-        gap: '0.75rem',
-      }}>
-        {items.map((item, index) => {
-          const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
-          return (
-            <div
-              key={index}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.2rem',
-                padding: '0.625rem 0.875rem',
-                backgroundColor: 'var(--color-bg)',
-                border: '1px solid var(--color-muted)',
-                borderRadius: 'var(--border-radius-sm)',
-                cursor: onItemClick ? 'pointer' : 'default',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={() => onItemClick && onItemClick(item.filterKey)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: item.color, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)' }}>
-                  {item.label}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '0.1rem' }}>
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-text)' }}>
-                  {item.count}
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 600, color: item.color }}>
-                  {pct}%
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function DashboardMetrics({ 
   metrics, 
-  guests, 
-  tasks, 
-  music, 
-  photos, 
+  guests = [], 
+  tasks = [], 
+  music = [], 
+  photos = [], 
   enabledModules, 
   currency = 'USD', 
   onNavigateTab, 
@@ -292,14 +85,6 @@ export default function DashboardMetrics({
 }: DashboardMetricsProps) {
   const { totalBudget, estimatedCost, actualCost } = metrics;
 
-  // Section View Modes (Cards | Pie Chart | Labeled Progress Bar)
-  const [guestViewMode, setGuestViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
-  const [taskViewMode, setTaskViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
-  const [musicViewMode, setMusicViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
-  const [tableViewMode, setTableViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
-  const [photoViewMode, setPhotoViewMode] = useState<'cards' | 'pie' | 'progress'>('cards');
-
-  // Default all to true if enabledModules is not supplied
   const modules = enabledModules || {
     metrics: true,
     guests: true,
@@ -311,26 +96,27 @@ export default function DashboardMetrics({
     tables: true,
   };
 
-  // Financial Calculations (Hybrid Model: Master Cap or Dynamic Category Sum)
+  // Financial Calculations
   const effectiveTotalBudget = totalBudget > 0 ? totalBudget : (estimatedCost > 0 ? estimatedCost : 0);
   const remainingBudget = effectiveTotalBudget - actualCost;
   const actualPercent = effectiveTotalBudget > 0 ? Math.min(Math.round((actualCost / effectiveTotalBudget) * 100), 100) : 0;
-  const estimatedPercent = effectiveTotalBudget > 0 ? Math.min(Math.round((estimatedCost / effectiveTotalBudget) * 100), 100) : 0;
+  const isOverBudget = remainingBudget < 0;
 
-  // Guest RSVP Calculations
+  // Guest Calculations
   const allGuests = guests || [];
   const totalGuestsInvited = allGuests.length;
   const attendingCount = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending').length;
   const declinedCount = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'declined').length;
   const pendingCount = allGuests.filter(g => !(g.rsvpStatus) || (g.rsvpStatus || '').toLowerCase() === 'no response' || (g.rsvpStatus || '').toLowerCase() === 'pending').length;
+  const confirmedPercent = totalGuestsInvited > 0 ? Math.round((attendingCount / totalGuestsInvited) * 100) : 0;
 
-  // Reception Table Seating Calculations
-  const assignedAttendingGuests = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending' && g.tableAssignment && g.tableAssignment !== 'Unassigned');
-  const unassignedAttendingGuestsCount = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending' && (!g.tableAssignment || g.tableAssignment === 'Unassigned')).length;
-  const totalTablesSet = Array.from(new Set(allGuests.map(g => (g.tableAssignment || '').trim()).filter(t => t && t !== 'Unassigned'))).length;
-  const seatedPercent = attendingCount > 0 ? Math.round((assignedAttendingGuests.length / attendingCount) * 100) : 0;
+  // Seating Calculations
+  const assignedAttending = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending' && g.tableAssignment && g.tableAssignment !== 'Unassigned');
+  const unassignedAttending = allGuests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending' && (!g.tableAssignment || g.tableAssignment === 'Unassigned')).length;
+  const seatedPercent = attendingCount > 0 ? Math.round((assignedAttending.length / attendingCount) * 100) : 0;
+  const totalTables = Array.from(new Set(allGuests.map(g => (g.tableAssignment || '').trim()).filter(t => t && t !== 'Unassigned'))).length;
 
-  // Kanban Calculations
+  // Kanban Tasks Calculations
   const allTasks = tasks || [];
   const toDoCount = allTasks.filter(t => t.kanbanStage === 'To Do').length;
   const inProgressCount = allTasks.filter(t => t.kanbanStage === 'In Progress').length;
@@ -340,22 +126,20 @@ export default function DashboardMetrics({
 
   // Music Calculations
   const allMusic = music || [];
-  const adminAddedCount = allMusic.filter(s => (!s.requestedBy || s.requestedBy === 'Admin') && !s.songId.startsWith('req-')).length;
-  const guestRequestedCount = allMusic.filter(s => (s.requestedBy && s.requestedBy !== 'Admin') || s.songId.startsWith('req-') || s.approvalStatus === 'Pending Approval').length;
   const pendingRequestsCount = allMusic.filter(s => s.approvalStatus === 'Pending Approval').length;
-  const totalSongsCount = allMusic.length;
+  const approvedSongsCount = allMusic.filter(s => s.approvalStatus === 'Approved' || (!s.approvalStatus && (!s.requestedBy || s.requestedBy === 'Admin'))).length;
 
-  // Photography Calculations (DASH-6)
+  // Photography Calculations
   const allPhotos = photos || [];
-  const totalRequiredShots = allPhotos.length;
-  const capturedShotsCount = allPhotos.filter(p => p.status === 'Captured').length;
-  const pendingShotsCount = allPhotos.filter(p => p.status === 'Pending' || !p.status).length;
-  const skippedShotsCount = allPhotos.filter(p => p.status === 'Skipped').length;
-  const photoPercentComplete = totalRequiredShots > 0 ? Math.round((capturedShotsCount / totalRequiredShots) * 100) : 0;
+  const capturedPhotosCount = allPhotos.filter(p => p.status === 'Captured').length;
+  const pendingPhotosCount = allPhotos.filter(p => p.status === 'Pending' || !p.status).length;
+
+  // Planning Status Health Indicator
+  const hasExceptions = isOverBudget || pendingCount > 0 || toDoCount > 5 || unassignedAttending > 0 || pendingRequestsCount > 0;
 
   return (
-    <div className="metrics-container" style={styles.container}>
-      {/* First-Time User Welcome & Quick-Start Guide Card */}
+    <div className="editorial-overview-briefing" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* Onboarding Guide Banner (Cleanly Dismissible) */}
       {showWelcomeGuide && onDismissWelcomeGuide && (
         <WelcomeGuideCard
           weddingName={weddingName}
@@ -371,981 +155,667 @@ export default function DashboardMetrics({
         />
       )}
 
-      {/* Financial KPI Cards Grid */}
-      {modules.budget && (
-        <div style={styles.sectionWrapper}>
-          <h3 style={{ ...styles.panelTitle, margin: 0 }}>Financial Overview</h3>
-          <div className="kpi-grid" style={styles.kpiGrid}>
-            <div
-              className="kpi-card"
-              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-              onClick={() => onNavigateTab && onNavigateTab('budget')}
-              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
+      {/* Top Single-Line "Planning Status" Summary Strip */}
+      <div
+        className="planning-status-strip"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.6rem 1.25rem',
+          padding: '0.55rem 0.85rem',
+          backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '2px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: hasExceptions ? 'var(--color-amber, #F59E0B)' : 'var(--color-green, #10B981)',
+                display: 'inline-block',
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                color: 'var(--color-primary, #0F172A)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+              }}
             >
-              <div style={styles.kpiLabel}>TOTAL BUDGET</div>
-              <div style={styles.kpiValue}>
-                {formatCurrency(effectiveTotalBudget, currency)}
-              </div>
-              <div style={styles.kpiSub}>
-                {totalBudget > 0 ? 'Master Target Cap' : 'Dynamic Sum of Categories'}
-              </div>
-            </div>
+              PLANNING STATUS:
+            </span>
+          </div>
 
-            <div
-              className="kpi-card"
-              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-              onClick={() => onNavigateTab && onNavigateTab('budget')}
-              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-            >
-              <div style={styles.kpiLabel}>ESTIMATED COST</div>
-              <div style={styles.kpiValue}>
-                {formatCurrency(estimatedCost, currency)}
-              </div>
-              <div style={styles.kpiSub}>Total Category Targets</div>
-            </div>
-
-            <div
-              className="kpi-card"
-              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-              onClick={() => onNavigateTab && onNavigateTab('budget')}
-              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-            >
-              <div style={styles.kpiLabel}>ACTUAL COST</div>
-              <div style={styles.kpiValue}>
-                {formatCurrency(actualCost, currency)}
-              </div>
-              <div style={styles.kpiSub}>Logged Purchases</div>
-            </div>
-
-            <div
-              className="kpi-card"
-              style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-              onClick={() => onNavigateTab && onNavigateTab('budget')}
-              title={onNavigateTab ? 'Click to open Budget Manager' : ''}
-            >
-              <div style={styles.kpiLabel}>REMAINING BUDGET</div>
-              <div style={{ ...styles.kpiValue, color: remainingBudget < 0 ? 'var(--color-red)' : 'var(--color-green)' }}>
-                {formatCurrency(remainingBudget, currency)}
-              </div>
-              <div style={styles.kpiSub}>Budget Minus Spent</div>
-            </div>
+          <div
+            style={{
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.72rem',
+              color: 'var(--color-text, #0F172A)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span>
+              <strong>{attendingCount}</strong> OF <strong>{totalGuestsInvited}</strong> GUESTS CONFIRMED ({confirmedPercent}%)
+            </span>
+            <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
+            <span>
+              <strong>{taskPercentComplete}%</strong> OF TASKS COMPLETED ({doneCount}/{totalTasksCount})
+            </span>
+            <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
+            <span>
+              <strong style={{ color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
+                {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
+              </strong>{' '}
+              {isOverBudget ? 'OVER TARGET CAP' : 'BUDGET CUSHION'}
+            </span>
+            {attendingCount > 0 && (
+              <>
+                <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
+                <span>
+                  <strong>{seatedPercent}%</strong> SEATED ({assignedAttending.length}/{attendingCount})
+                </span>
+              </>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Progress Bar & Ledger Balance Panel */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.62rem',
+              color: 'var(--color-muted, #64748B)',
+              letterSpacing: '0.04em',
+            }}
+          >
+            LIVE SYNC: 100% SPREADSHEET FIDELITY
+          </span>
+        </div>
+      </div>
+
+      {/* Primary Wide Attention Panel: Actionable Deltas & Exceptions */}
+      <div
+        className="primary-attention-panel"
+        style={{
+          backgroundColor: 'var(--color-surface, #FFFFFF)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '3px',
+          padding: '0.85rem 1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--color-primary, #0F172A)',
+              }}
+            >
+              EXECUTIVE BRIEFING // ACTIONABLE DELTAS & EXCEPTIONS
+            </span>
+          </div>
+
+          <span
+            style={{
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.6rem',
+              color: 'var(--color-muted, #64748B)',
+              textTransform: 'uppercase',
+            }}
+          >
+            SELECT ANY DELTA TO OPEN DRILL-DOWN LEDGER
+          </span>
+        </div>
+
+        {/* Actionable Deltas Horizontal Row / Grid (Condenses to 2-column on mobile) */}
+        <div
+          className="attention-deltas-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+            gap: '0.65rem',
+          }}
+        >
+          {/* Delta 1: Pending RSVPs */}
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('guests', 'Pending')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.35rem',
+              padding: '0.6rem 0.75rem',
+              backgroundColor: pendingCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
+              border: `1px solid ${pendingCount > 0 ? 'var(--color-border, #E2E8F0)' : 'var(--color-border, #E2E8F0)'}`,
+              borderRadius: '2px',
+              cursor: onNavigateTab ? 'pointer' : 'default',
+              textAlign: 'left',
+              transition: 'all 0.1s ease',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                PENDING RSVPS
+              </span>
+              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: pendingCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
+                {pendingCount}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                awaiting reply
+              </span>
+            </div>
+          </button>
+
+          {/* Delta 2: Declined RSVPs */}
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('guests', 'Declined')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.35rem',
+              padding: '0.6rem 0.75rem',
+              backgroundColor: 'transparent',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '2px',
+              cursor: onNavigateTab ? 'pointer' : 'default',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                DECLINED RSVPS
+              </span>
+              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: declinedCount > 0 ? 'var(--color-muted, #64748B)' : 'var(--color-primary, #0F172A)' }}>
+                {declinedCount}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                invitations declined
+              </span>
+            </div>
+          </button>
+
+          {/* Delta 3: Pending Tasks */}
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('tasks', 'To Do')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.35rem',
+              padding: '0.6rem 0.75rem',
+              backgroundColor: toDoCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '2px',
+              cursor: onNavigateTab ? 'pointer' : 'default',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                OPEN TASKS
+              </span>
+              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: toDoCount > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)' }}>
+                {toDoCount}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                to do ({inProgressCount} active)
+              </span>
+            </div>
+          </button>
+
+          {/* Delta 4: Budget Variance / Remaining Balance */}
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('budget')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.35rem',
+              padding: '0.6rem 0.75rem',
+              backgroundColor: isOverBudget ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
+              border: `1px solid ${isOverBudget ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
+              borderRadius: '2px',
+              cursor: onNavigateTab ? 'pointer' : 'default',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                BUDGET VARIANCE
+              </span>
+              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
+                {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-muted, #64748B)' }}>
+                {isOverBudget ? 'over cap' : 'cushion'}
+              </span>
+            </div>
+          </button>
+
+          {/* Delta 5: Unseated Attending Guests */}
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('tables')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.35rem',
+              padding: '0.6rem 0.75rem',
+              backgroundColor: unassignedAttending > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '2px',
+              cursor: onNavigateTab ? 'pointer' : 'default',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                UNSEATED GUESTS
+              </span>
+              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: unassignedAttending > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
+                {unassignedAttending}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                need tables
+              </span>
+            </div>
+          </button>
+
+          {/* Delta 6: Pending Song Requests */}
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('music', 'Pending')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.35rem',
+              padding: '0.6rem 0.75rem',
+              backgroundColor: pendingRequestsCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '2px',
+              cursor: onNavigateTab ? 'pointer' : 'default',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                SONG REQUESTS
+              </span>
+              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: pendingRequestsCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
+                {pendingRequestsCount}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                to review
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Horizontal Financial Allocation Strip (No Ring/Pie Charts) */}
       {modules.budget && (
         <div
-          className="budget-bar-panel"
-          style={{ ...styles.barPanel, cursor: onNavigateTab ? 'pointer' : 'default' }}
-          onClick={() => onNavigateTab && onNavigateTab('budget')}
-          title={onNavigateTab ? 'Click to open Budget Manager' : ''}
+          className="financial-allocation-strip"
+          style={{
+            backgroundColor: 'var(--color-surface, #FFFFFF)',
+            border: '1px solid var(--color-border, #E2E8F0)',
+            borderRadius: '3px',
+            padding: '0.85rem 1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}
         >
-          <h3 style={styles.panelTitle}>Budget Allocation Progress</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <DollarSign size={14} style={{ color: 'var(--color-primary, #0F172A)' }} />
+              <span
+                style={{
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-primary, #0F172A)',
+                }}
+              >
+                FINANCIAL ALLOCATION STRIP // CELL SETTINGS!B2:B3
+              </span>
+            </div>
 
-          <div style={styles.progressHeader}>
-            <span style={styles.progressLabel}>
-              Actual Spent: <strong>{actualPercent}%</strong> ({formatCurrency(actualCost, currency)})
-            </span>
-            <span style={styles.progressLabel}>
-              Estimated Total: <strong>{estimatedPercent}%</strong> ({formatCurrency(estimatedCost, currency)})
-            </span>
+            <button
+              type="button"
+              onClick={() => onNavigateTab && onNavigateTab('budget')}
+              style={{
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                color: 'var(--color-primary, #0F172A)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                textDecoration: 'underline',
+              }}
+            >
+              <span>OPEN FULL FINANCIAL LEDGER</span>
+              <ArrowUpRight size={11} />
+            </button>
           </div>
 
-          {/* Double-layered progress bar: estimated vs actual */}
-          <div style={styles.progressTrack}>
-            {/* Estimated bar */}
-            <div style={{ ...styles.progressBarEstimated, width: `${estimatedPercent}%` }} />
-            {/* Actual spent bar (layered on top) */}
-            <div style={{ ...styles.progressBarActual, width: `${actualPercent}%` }} />
-          </div>
+          {/* Metric Summary Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem 1.5rem',
+              padding: '0.5rem 0.75rem',
+              backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '2px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
+                TARGET CAP:
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
+                {formatCurrency(effectiveTotalBudget, currency)}
+              </span>
+            </div>
 
-          <div style={styles.progressFooter}>
-            <div style={styles.footerItem}>
-              <div style={{ ...styles.colorDot, backgroundColor: 'var(--color-primary)' }} />
-              <span>Actual Cost ({formatCurrency(actualCost, currency)})</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
+                ACTUAL OUTLAY:
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+                {formatCurrency(actualCost, currency)}
+              </span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                ({actualPercent}%)
+              </span>
             </div>
-            <div style={styles.footerItem}>
-              <div style={{ ...styles.colorDot, backgroundColor: 'var(--color-gold)', border: '1px solid var(--color-muted)' }} />
-              <span>Estimated Outlay ({formatCurrency(estimatedCost, currency)})</span>
-            </div>
-            <div style={styles.footerItem}>
-              <span style={{ ...styles.monoText, fontWeight: 600 }}>
-                Remaining: {formatCurrency(remainingBudget, currency)}
+
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
+                REMAINING CUSHION:
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.88rem',
+                fontWeight: 800,
+                color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)'
+              }}>
+                {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
               </span>
             </div>
           </div>
+
+          {/* Structured Hairline Allocation Bar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <div
+              style={{
+                position: 'relative',
+                height: '10px',
+                backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                borderRadius: '2px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${actualPercent}%`,
+                  backgroundColor: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)',
+                  transition: 'width 0.3s ease-out',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100% TARGET</span>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Guest Registry & RSVP Summary Row */}
-      {modules.guests && (
-        <div style={styles.sectionWrapper}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Guest Registry & RSVP Summary</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
+      {/* Structured Operational Briefings: Guests & Tasks (Side-by-side or stacked) */}
+      <div
+        className="operational-briefings-container"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '1.25rem',
+        }}
+      >
+        {/* Guest Registry Briefing Strip */}
+        {modules.guests && (
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Users size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+                <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+                  GUEST REGISTRY & RSVP BREAKDOWN
+                </span>
+              </div>
               <button
                 type="button"
-                onClick={() => setGuestViewMode('cards')}
+                onClick={() => onNavigateTab && onNavigateTab('guests')}
                 style={{
-                  background: guestViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: guestViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.62rem',
+                  color: 'var(--color-muted, #64748B)',
+                  background: 'none',
                   border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
+                  textDecoration: 'underline',
                 }}
-                title="View as KPI Cards"
               >
-                <LayoutGrid size={15} />
+                VIEW LIST
               </button>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => setGuestViewMode('pie')}
-                style={{
-                  background: guestViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: guestViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Pie / Donut Chart"
-              >
-                <PieChart size={15} />
-              </button>
+            {/* Structured Metric Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+              gap: '0.35rem',
+              backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              padding: '0.5rem 0.4rem',
+              borderRadius: '2px',
+              textAlign: 'center',
+            }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>INVITED</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>{totalGuestsInvited}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>ACCEPTED</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{attendingCount}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-amber, #D97706)', textTransform: 'uppercase' }}>PENDING</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-amber, #D97706)' }}>{pendingCount}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>DECLINED</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-muted, #64748B)' }}>{declinedCount}</div>
+              </div>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => setGuestViewMode('progress')}
-                style={{
-                  background: guestViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: guestViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Labeled Progress Bar"
-              >
-                <BarChart2 size={15} />
-              </button>
+            {/* Ratio rule */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <div style={{ height: '4px', display: 'flex', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+                <div style={{ width: `${totalGuestsInvited > 0 ? (attendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-green, #10B981)' }} />
+                <div style={{ width: `${totalGuestsInvited > 0 ? (pendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-amber, #F59E0B)' }} />
+                <div style={{ width: `${totalGuestsInvited > 0 ? (declinedCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-muted, #94A3B8)' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+                <span>CONFIRMED: {confirmedPercent}%</span>
+                <span>TABLES: {totalTables} ACTIVE</span>
+              </div>
             </div>
           </div>
+        )}
 
-          {guestViewMode === 'cards' && (
-            <div className="kpi-grid" style={styles.kpiGrid}>
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('guests', 'All')}
-                title={onNavigateTab ? 'Click to open Guest Registry' : ''}
-              >
-                <div style={styles.kpiLabel}>TOTAL INVITED</div>
-                <div style={styles.kpiValue}>{totalGuestsInvited}</div>
-                <div style={styles.kpiSub}>Guest Invites Total</div>
+        {/* Tasks Checklist Briefing Strip */}
+        {modules.tasks && (
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ListTodo size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+                <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+                  PLANNING MILESTONES & KANBAN
+                </span>
               </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('guests', 'Attending')}
-                title={onNavigateTab ? 'Click to view Attending guests' : ''}
-              >
-                <div style={styles.kpiLabel}>ACCEPTED</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{attendingCount}</div>
-                <div style={styles.kpiSub}>RSVP Attending</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('guests', 'Pending')}
-                title={onNavigateTab ? 'Click to view Pending guests' : ''}
-              >
-                <div style={styles.kpiLabel}>PENDING</div>
-                <div style={{ ...styles.kpiValue, color: pendingCount > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>{pendingCount}</div>
-                <div style={styles.kpiSub}>Awaiting Response</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('guests', 'Declined')}
-                title={onNavigateTab ? 'Click to view Declined guests' : ''}
-              >
-                <div style={styles.kpiLabel}>DECLINED</div>
-                <div style={{ ...styles.kpiValue, color: declinedCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>{declinedCount}</div>
-                <div style={styles.kpiSub}>Unable to Attend</div>
-              </div>
-            </div>
-          )}
-
-          {guestViewMode === 'pie' && (
-            <DonutChart
-              slices={[
-                { label: 'Accepted (Attending)', count: attendingCount, color: 'var(--color-green)', filterKey: 'Attending' },
-                { label: 'Pending (No Response)', count: pendingCount, color: 'var(--color-amber)', filterKey: 'Pending' },
-                { label: 'Declined (Unable to Attend)', count: declinedCount, color: 'var(--color-red)', filterKey: 'Declined' },
-              ]}
-              centerLabel="Invited"
-              centerValue={totalGuestsInvited}
-              onSliceClick={(filterKey) => onNavigateTab && onNavigateTab('guests', filterKey || 'All')}
-            />
-          )}
-
-          {guestViewMode === 'progress' && (
-            <LabeledProgressBar
-              items={[
-                { label: 'Accepted', count: attendingCount, color: 'var(--color-green)', filterKey: 'Attending' },
-                { label: 'Pending', count: pendingCount, color: 'var(--color-amber)', filterKey: 'Pending' },
-                { label: 'Declined', count: declinedCount, color: 'var(--color-red)', filterKey: 'Declined' },
-              ]}
-              total={totalGuestsInvited}
-              onItemClick={(filterKey) => onNavigateTab && onNavigateTab('guests', filterKey || 'All')}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Kanban Checklist Progress Row */}
-      {modules.tasks && (
-        <div style={styles.sectionWrapper}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Task List (Kanban)</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
               <button
                 type="button"
-                onClick={() => setTaskViewMode('cards')}
-                style={{
-                  background: taskViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: taskViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as KPI Cards"
-              >
-                <LayoutGrid size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTaskViewMode('pie')}
-                style={{
-                  background: taskViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: taskViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Pie / Donut Chart"
-              >
-                <PieChart size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTaskViewMode('progress')}
-                style={{
-                  background: taskViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: taskViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Labeled Progress Bar"
-              >
-                <BarChart2 size={15} />
-              </button>
-            </div>
-          </div>
-
-          {taskViewMode === 'cards' && (
-            <div className="kpi-grid" style={styles.kpiGrid}>
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tasks', 'To Do')}
-                title={onNavigateTab ? 'Click to view To Do tasks' : ''}
-              >
-                <div style={styles.kpiLabel}>TO DO</div>
-                <div style={{ ...styles.kpiValue, color: toDoCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>{toDoCount}</div>
-                <div style={styles.kpiSub}>Pending Tasks</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tasks', 'In Progress')}
-                title={onNavigateTab ? 'Click to view In Progress tasks' : ''}
-              >
-                <div style={styles.kpiLabel}>IN PROGRESS</div>
-                <div style={{ ...styles.kpiValue, color: inProgressCount > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>{inProgressCount}</div>
-                <div style={styles.kpiSub}>Active Tasks</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tasks', 'Done')}
-                title={onNavigateTab ? 'Click to view Completed tasks' : ''}
-              >
-                <div style={styles.kpiLabel}>COMPLETED</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{doneCount}</div>
-                <div style={styles.kpiSub}>Done ({doneCount}/{totalTasksCount})</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
                 onClick={() => onNavigateTab && onNavigateTab('tasks')}
-                title={onNavigateTab ? 'Click to open Kanban Checklist' : ''}
+                style={{
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.62rem',
+                  color: 'var(--color-muted, #64748B)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
               >
-                <div style={styles.kpiLabel}>% COMPLETE</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{taskPercentComplete}%</div>
-                <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
-                  <div style={{ ...styles.progressBarActual, width: `${taskPercentComplete}%` }} />
-                </div>
-                <div style={styles.kpiSub}>Task Completion Ratio</div>
+                VIEW KANBAN
+              </button>
+            </div>
+
+            {/* Structured Metric Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '0.35rem',
+              backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              padding: '0.5rem 0.4rem',
+              borderRadius: '2px',
+              textAlign: 'center',
+            }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-red, #EF4444)', textTransform: 'uppercase' }}>TO DO</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-red, #EF4444)' }}>{toDoCount}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-amber, #D97706)', textTransform: 'uppercase' }}>IN PROGRESS</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-amber, #D97706)' }}>{inProgressCount}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>COMPLETED</div>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{doneCount}</div>
               </div>
             </div>
-          )}
 
-          {taskViewMode === 'pie' && (
-            <DonutChart
-              slices={[
-                { label: 'Completed (Done)', count: doneCount, color: 'var(--color-green)', filterKey: 'Done' },
-                { label: 'In Progress', count: inProgressCount, color: 'var(--color-amber)', filterKey: 'In Progress' },
-                { label: 'To Do (Pending)', count: toDoCount, color: 'var(--color-red)', filterKey: 'To Do' },
-              ]}
-              centerLabel="Complete"
-              centerValue={`${taskPercentComplete}%`}
-              onSliceClick={(filterKey) => onNavigateTab && onNavigateTab('tasks', filterKey)}
-            />
-          )}
-
-          {taskViewMode === 'progress' && (
-            <LabeledProgressBar
-              items={[
-                { label: 'Completed', count: doneCount, color: 'var(--color-green)', filterKey: 'Done' },
-                { label: 'In Progress', count: inProgressCount, color: 'var(--color-amber)', filterKey: 'In Progress' },
-                { label: 'To Do', count: toDoCount, color: 'var(--color-red)', filterKey: 'To Do' },
-              ]}
-              total={totalTasksCount}
-              onItemClick={(filterKey) => onNavigateTab && onNavigateTab('tasks', filterKey)}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Music Playlist Summary Row */}
-      {modules.music && (
-        <div style={styles.sectionWrapper}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Music Playlist</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
-              <button
-                type="button"
-                onClick={() => setMusicViewMode('cards')}
-                style={{
-                  background: musicViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: musicViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as KPI Cards"
-              >
-                <LayoutGrid size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMusicViewMode('pie')}
-                style={{
-                  background: musicViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: musicViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Pie / Donut Chart"
-              >
-                <PieChart size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMusicViewMode('progress')}
-                style={{
-                  background: musicViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: musicViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Labeled Progress Bar"
-              >
-                <BarChart2 size={15} />
-              </button>
+            {/* Progress rule */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+                <div style={{ height: '100%', width: `${taskPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+                <span>PROGRESS: {taskPercentComplete}%</span>
+                <span>{doneCount} OF {totalTasksCount} COMPLETE</span>
+              </div>
             </div>
           </div>
+        )}
+      </div>
 
-          {musicViewMode === 'cards' && (
-            <div className="kpi-grid" style={styles.kpiGrid}>
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('music', 'ALL')}
-                title={onNavigateTab ? 'Click to view Admin songs' : ''}
-              >
-                <div style={styles.kpiLabel}>YOUR SONGS</div>
-                <div style={{ ...styles.kpiValue, color: adminAddedCount > 0 ? 'var(--color-red)' : 'var(--color-muted)' }}>{adminAddedCount}</div>
-                <div style={styles.kpiSub}>Your Curated Tracks</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('music', 'PENDING APPROVAL')}
-                title={onNavigateTab ? 'Click to view Guest song requests' : ''}
-              >
-                <div style={styles.kpiLabel}>GUEST REQUESTS</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{guestRequestedCount}</div>
-                <div style={styles.kpiSub}>Pending + Approved + Declined</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{
-                  ...styles.kpiCard,
-                  cursor: onNavigateTab ? 'pointer' : 'default',
-                  borderColor: pendingRequestsCount > 0 ? 'var(--color-amber)' : 'var(--color-muted)',
-                  backgroundColor: pendingRequestsCount > 0 ? 'var(--color-amber-muted)' : 'var(--color-surface, #ffffff)',
-                  transition: 'all 0.2s ease',
-                }}
-                onClick={() => onNavigateTab && onNavigateTab('music', 'PENDING APPROVAL')}
-                title={onNavigateTab ? 'Click to open Music Manager pending requests view' : ''}
-              >
-                <div style={{ ...styles.kpiLabel, color: pendingRequestsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-text)' }}>
-                  PENDING REQUESTS
-                </div>
-                <div style={{ ...styles.kpiValue, color: pendingRequestsCount > 0 ? 'var(--color-amber)' : 'var(--color-muted)' }}>
-                  {pendingRequestsCount}
-                </div>
-                <div style={{ ...styles.kpiSub, color: pendingRequestsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-muted)', fontWeight: pendingRequestsCount > 0 ? 600 : 400 }}>
-                  {pendingRequestsCount > 0 ? 'Click to Review & Approve ➔' : 'No Pending Requests'}
-                </div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('music', 'ALL')}
-                title={onNavigateTab ? 'Click to open Music Manager' : ''}
-              >
-                <div style={styles.kpiLabel}>TOTAL TRACKS</div>
-                <div style={styles.kpiValue}>{totalSongsCount}</div>
-                <div style={styles.kpiSub}>Full Catalog Total</div>
-              </div>
-            </div>
-          )}
-
-          {musicViewMode === 'pie' && (
-            <DonutChart
-              slices={[
-                { label: 'Admin Curated Tracks', count: adminAddedCount, color: 'var(--color-red)', filterKey: 'ALL' },
-                { label: 'Guest Requests (Approved)', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: 'var(--color-green)', filterKey: 'ALL' },
-                { label: 'Pending Approval Requests', count: pendingRequestsCount, color: 'var(--color-amber)', filterKey: 'PENDING APPROVAL' },
-              ]}
-              centerLabel="Tracks"
-              centerValue={totalSongsCount}
-              onSliceClick={(filterKey) => onNavigateTab && onNavigateTab('music', filterKey || 'ALL')}
-            />
-          )}
-
-          {musicViewMode === 'progress' && (
-            <LabeledProgressBar
-              items={[
-                { label: 'Admin Curated', count: adminAddedCount, color: 'var(--color-red)', filterKey: 'ALL' },
-                { label: 'Guest Requests', count: Math.max(0, guestRequestedCount - pendingRequestsCount), color: 'var(--color-green)', filterKey: 'ALL' },
-                { label: 'Pending Requests', count: pendingRequestsCount, color: 'var(--color-amber)', filterKey: 'PENDING APPROVAL' },
-              ]}
-              total={totalSongsCount}
-              onItemClick={(filterKey) => onNavigateTab && onNavigateTab('music', filterKey || 'ALL')}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Reception Table Seating Summary Row (DASH-4) */}
-      {modules.tables && (
-        <div style={styles.sectionWrapper}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Reception Table Seating</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
-              <button
-                type="button"
-                onClick={() => setTableViewMode('cards')}
-                style={{
-                  background: tableViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: tableViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as KPI Cards"
-              >
-                <LayoutGrid size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTableViewMode('pie')}
-                style={{
-                  background: tableViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: tableViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Pie / Donut Chart"
-              >
-                <PieChart size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTableViewMode('progress')}
-                style={{
-                  background: tableViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: tableViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Labeled Progress Bar"
-              >
-                <BarChart2 size={15} />
-              </button>
-            </div>
-          </div>
-
-          {tableViewMode === 'cards' && (
-            <div style={styles.kpiGrid}>
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tables')}
-                title={onNavigateTab ? 'Click to open Seating Chart' : ''}
-              >
-                <div style={styles.kpiLabel}>TOTAL TABLES</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{totalTablesSet}</div>
-                <div style={styles.kpiSub}>Active Tables Configured</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tables')}
-                title={onNavigateTab ? 'Click to view Seated Guests' : ''}
-              >
-                <div style={styles.kpiLabel}>SEATED GUESTS</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{assignedAttendingGuests.length}</div>
-                <div style={styles.kpiSub}>Assigned to Seats</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tables')}
-                title={onNavigateTab ? 'Click to view Unseated Guests' : ''}
-              >
-                <div style={styles.kpiLabel}>NEEDS A TABLE</div>
-                <div style={{ ...styles.kpiValue, color: unassignedAttendingGuestsCount > 0 ? 'var(--color-gold-dark)' : 'var(--color-muted)' }}>
-                  {unassignedAttendingGuestsCount}
-                </div>
-                <div style={styles.kpiSub}>Without Table Assignment</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('tables')}
-                title={onNavigateTab ? 'Click to open Seating Chart' : ''}
-              >
-                <div style={styles.kpiLabel}>% CAPACITY FILLED</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{seatedPercent}%</div>
-                <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
-                  <div style={{ ...styles.progressBarActual, width: `${seatedPercent}%` }} />
-                </div>
-                <div style={styles.kpiSub}>Seating Ratio ({assignedAttendingGuests.length}/{attendingCount})</div>
-              </div>
-            </div>
-          )}
-
-          {tableViewMode === 'pie' && (
-            <DonutChart
-              slices={[
-                { label: 'Seated Guests', count: assignedAttendingGuests.length, color: 'var(--color-green)' },
-                { label: 'Unseated Guests', count: unassignedAttendingGuestsCount, color: 'var(--color-amber)' },
-              ]}
-              centerLabel="Seated"
-              centerValue={`${seatedPercent}%`}
-              onSliceClick={() => onNavigateTab && onNavigateTab('tables')}
-            />
-          )}
-
-          {tableViewMode === 'progress' && (
-            <LabeledProgressBar
-              items={[
-                { label: 'Seated Guests', count: assignedAttendingGuests.length, color: 'var(--color-green)' },
-                { label: 'Unseated Guests', count: unassignedAttendingGuestsCount, color: 'var(--color-amber)' },
-              ]}
-              total={attendingCount}
-              onItemClick={() => onNavigateTab && onNavigateTab('tables')}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Photography Shot List Summary Row (DASH-6) */}
-      {modules.photos && (
-        <div style={styles.sectionWrapper}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h3 style={{ ...styles.panelTitle, margin: 0 }}>Photo Shot List & Photography Progress</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--color-bg)', padding: '0.2rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-muted)' }}>
-              <button
-                type="button"
-                onClick={() => setPhotoViewMode('cards')}
-                style={{
-                  background: photoViewMode === 'cards' ? 'var(--color-primary)' : 'transparent',
-                  color: photoViewMode === 'cards' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as KPI Cards"
-              >
-                <LayoutGrid size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPhotoViewMode('pie')}
-                style={{
-                  background: photoViewMode === 'pie' ? 'var(--color-primary)' : 'transparent',
-                  color: photoViewMode === 'pie' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Pie / Donut Chart"
-              >
-                <PieChart size={15} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPhotoViewMode('progress')}
-                style={{
-                  background: photoViewMode === 'progress' ? 'var(--color-primary)' : 'transparent',
-                  color: photoViewMode === 'progress' ? 'var(--color-on-dark)' : 'var(--color-muted)',
-                  border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
-                  padding: '0.25rem 0.45rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title="View as Labeled Progress Bar"
-              >
-                <BarChart2 size={15} />
-              </button>
-            </div>
-          </div>
-
-          {photoViewMode === 'cards' && (
-            <div style={styles.kpiGrid}>
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('photos')}
-                title={onNavigateTab ? 'Click to view Required Shot List' : ''}
-              >
-                <div style={styles.kpiLabel}>REQUIRED SHOTS</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{totalRequiredShots}</div>
-                <div style={styles.kpiSub}>Total Planned Shots</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('photos')}
-                title={onNavigateTab ? 'Click to view Captured Shots' : ''}
-              >
-                <div style={styles.kpiLabel}>CAPTURED SHOTS</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>{capturedShotsCount}</div>
-                <div style={styles.kpiSub}>Photos Captured</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('photos')}
-                title={onNavigateTab ? 'Click to view Pending Shots' : ''}
-              >
-                <div style={styles.kpiLabel}>PENDING SHOTS</div>
-                <div style={{ ...styles.kpiValue, color: pendingShotsCount > 0 ? 'var(--color-amber-dark)' : 'var(--color-muted)' }}>{pendingShotsCount}</div>
-                <div style={styles.kpiSub}>Awaiting Capture</div>
-              </div>
-
-              <div
-                className="kpi-card"
-                style={{ ...styles.kpiCard, cursor: onNavigateTab ? 'pointer' : 'default' }}
-                onClick={() => onNavigateTab && onNavigateTab('photos')}
-                title={onNavigateTab ? 'Click to open Photography Shot List' : ''}
-              >
-                <div style={styles.kpiLabel}>% COMPLETE</div>
-                <div style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{photoPercentComplete}%</div>
-                <div style={{ ...styles.progressTrack, height: '6px', marginTop: '0.25rem', marginBottom: '0.25rem' }}>
-                  <div style={{ ...styles.progressBarActual, width: `${photoPercentComplete}%` }} />
-                </div>
-                <div style={styles.kpiSub}>Captured Ratio ({capturedShotsCount}/{totalRequiredShots})</div>
-              </div>
-            </div>
-          )}
-
-          {photoViewMode === 'pie' && (
-            <DonutChart
-              slices={[
-                { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
-                { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
-                { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
-              ]}
-              centerLabel="Captured"
-              centerValue={`${photoPercentComplete}%`}
-              onSliceClick={() => onNavigateTab && onNavigateTab('photos')}
-            />
-          )}
-
-          {photoViewMode === 'progress' && (
-            <LabeledProgressBar
-              items={[
-                { label: 'Captured Shots', count: capturedShotsCount, color: 'var(--color-green)' },
-                { label: 'Pending Shots', count: pendingShotsCount, color: 'var(--color-amber)' },
-                { label: 'Skipped Shots', count: skippedShotsCount, color: 'var(--color-red)' },
-              ]}
-              total={totalRequiredShots}
-              onItemClick={() => onNavigateTab && onNavigateTab('photos')}
-            />
-          )}
-        </div>
-      )}
+      {/* Scoped CSS for Mobile Responsive Adaptations */}
+      <style>{`
+        @media (max-width: 640px) {
+          .planning-status-strip {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.4rem !important;
+          }
+          .attention-deltas-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.5rem !important;
+          }
+          .attention-deltas-grid button {
+            padding: 0.5rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-    marginBottom: '2rem',
-  },
-  sectionWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  kpiGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
-  },
-  kpiCard: {
-    backgroundColor: 'var(--color-surface, #ffffff)',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-md)',
-    padding: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    transition: 'var(--transition-smooth)',
-    boxShadow: 'var(--box-shadow-subtle)',
-  },
-  kpiHeaderRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '0.5rem',
-  },
-  infoBtn: {
-    padding: '0.2rem 0.35rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid var(--color-muted)',
-    transition: 'all 0.2s ease',
-  },
-  kpiLabel: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    letterSpacing: '0.1em',
-    color: 'var(--color-muted)',
-  },
-  kpiValue: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '1.75rem',
-    fontWeight: 700,
-    color: 'var(--color-text)',
-    lineHeight: '1.2',
-  },
-  kpiSub: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    color: 'var(--color-muted)',
-    marginTop: '0.5rem',
-    letterSpacing: '0.02em',
-  },
-  formulaBox: {
-    marginTop: '0.5rem',
-    padding: '0.4rem 0.6rem',
-    backgroundColor: 'var(--color-surface)',
-    color: 'var(--color-highlight)',
-    borderRadius: '4px',
-    border: '1px solid var(--color-muted)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.15rem',
-  },
-  formulaTag: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.55rem',
-    color: 'var(--color-text-tertiary)',
-    letterSpacing: '0.05em',
-  },
-  formulaCode: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 600,
-    color: 'var(--color-highlight)',
-    wordBreak: 'break-all',
-  },
-  barPanel: {
-    backgroundColor: 'var(--color-surface, #ffffff)',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-md)',
-    padding: '1.5rem',
-    boxShadow: 'var(--box-shadow-subtle)',
-  },
-  panelTitle: {
-    fontFamily: 'var(--font-serif)',
-    fontSize: '1.25rem',
-    marginBottom: '1rem',
-    color: 'var(--color-primary)',
-  },
-  progressHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '0.75rem',
-    fontFamily: 'var(--font-mono)',
-    color: 'var(--color-text)',
-    marginBottom: '0.5rem',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-  },
-  progressLabel: {
-    fontSize: '0.75rem',
-  },
-  progressTrack: {
-    position: 'relative',
-    height: '14px',
-    backgroundColor: 'var(--color-bg-hover)',
-    borderRadius: '7px',
-    overflow: 'hidden',
-    marginBottom: '1rem',
-  },
-  progressBarEstimated: {
-    position: 'absolute',
-    height: '100%',
-    backgroundColor: 'var(--color-highlight)',
-    borderRadius: '7px 0 0 7px',
-    transition: 'width 0.4s ease',
-  },
-  progressBarActual: {
-    position: 'absolute',
-    height: '100%',
-    backgroundColor: 'var(--color-primary)',
-    borderRadius: '7px 0 0 7px',
-    transition: 'width 0.4s ease',
-    zIndex: 2,
-  },
-  progressFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1rem',
-    fontSize: '0.75rem',
-    fontFamily: 'var(--font-mono)',
-    color: 'var(--color-muted)',
-  },
-  footerItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  colorDot: {
-    width: '10px',
-    height: '10px',
-    borderRadius: '50%',
-  },
-  monoText: {
-    fontFamily: 'var(--font-mono)',
-  }
-};

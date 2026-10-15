@@ -2,9 +2,29 @@
 
 import React, { useState, useEffect } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
-import { Plus, Edit2, Check, X, Trash2, HelpCircle, AlertTriangle, TrendingUp, PieChart, AlertCircle, DollarSign, Calendar, CreditCard, ShoppingBag, Tag, ChevronRight, Search, RefreshCw, ArrowUpDown } from 'lucide-react';
+import { 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  AlertTriangle, 
+  RefreshCw, 
+  Search, 
+  Calendar, 
+  DollarSign, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle,
+  FileSpreadsheet,
+  ArrowUpDown,
+  Filter,
+  Check,
+  X,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight
+} from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
-import { formatCurrency, formatDateConsistent, getCurrencySymbol } from '@/lib/currency';
+import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 interface BudgetLedgerManagerProps {
@@ -19,7 +39,6 @@ interface BudgetLedgerManagerProps {
   currency?: string;
 }
 
-// Standard Wedding Budget Categories from Master Schema / SETTINGS
 const STANDARD_BUDGET_CATEGORIES = [
   'Venue & Catering',
   'Venue',
@@ -52,26 +71,7 @@ export default function BudgetLedgerManager({
 }: BudgetLedgerManagerProps) {
   const currencySymbol = getCurrencySymbol(currency);
 
-  // Budget Utilization Visualization Mode: 'bar' | 'donut'
-  const [meterMode, setMeterMode] = useState<'bar' | 'donut'>('bar');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedMode = localStorage.getItem('s2v_budget_meter_mode');
-      if (savedMode === 'bar' || savedMode === 'donut') {
-        setMeterMode(savedMode);
-      }
-    }
-  }, []);
-
-  const handleMeterModeChange = (mode: 'bar' | 'donut') => {
-    setMeterMode(mode);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('s2v_budget_meter_mode', mode);
-    }
-  };
-
-  // Hybrid Target Mode: 'dynamic' (auto-sum of categories) | 'fixed_cap' (explicit master cap ceiling) | 'unset' (no hard limit)
+  // Hybrid Target Mode: 'dynamic' (sum of categories) | 'fixed_cap' (explicit ceiling) | 'unset' (no hard limit)
   type BudgetTargetMode = 'dynamic' | 'fixed_cap' | 'unset';
 
   const [targetMode, setTargetMode] = useState<BudgetTargetMode>(() => {
@@ -84,7 +84,6 @@ export default function BudgetLedgerManager({
     return budgetTarget > 0 ? 'fixed_cap' : 'dynamic';
   });
 
-  // Inline Editable Budget Target State
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [customTargetInput, setCustomTargetInput] = useState<string>(budgetTarget > 0 ? budgetTarget.toString() : '');
 
@@ -99,304 +98,107 @@ export default function BudgetLedgerManager({
     if (budgetTarget > 0) {
       setCustomTargetInput(budgetTarget.toString());
       const savedMode = typeof window !== 'undefined' ? (localStorage.getItem('s2v_budget_target_mode') as BudgetTargetMode) : null;
-      if (savedMode === 'dynamic') {
-        setTargetMode('dynamic');
-      } else if (savedMode === 'unset') {
-        setTargetMode('unset');
-      } else {
-        setTargetMode('fixed_cap');
-      }
+      if (savedMode === 'dynamic') setTargetMode('dynamic');
+      else if (savedMode === 'unset') setTargetMode('unset');
+      else setTargetMode('fixed_cap');
     } else {
       setCustomTargetInput('');
       const savedMode = typeof window !== 'undefined' ? (localStorage.getItem('s2v_budget_target_mode') as BudgetTargetMode) : null;
-      if (savedMode === 'unset') {
-        setTargetMode('unset');
-      } else {
-        setTargetMode('dynamic');
-      }
+      if (savedMode === 'unset') setTargetMode('unset');
+      else setTargetMode('dynamic');
     }
   }, [budgetTarget]);
 
-  // Budget Item Modal state
+  // Modals state
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<BudgetItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formState, setFormState] = useState<Partial<BudgetItem>>({});
 
-  // Expense Item Modal state
   const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<ExpenseItem | null>(null);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [expenseFormState, setExpenseFormState] = useState<Partial<ExpenseItem>>({});
 
-  // Budget Search & Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Pending'>('All');
-
-  // Expenses Search & Filter state
-  const [expenseSearchTerm, setExpenseSearchTerm] = useState('');
-  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
-
-  // Desktop Master-Detail State
-  type MasterCategorySort =
-    | 'alphabetical-asc'
-    | 'alphabetical-desc'
-    | 'budget-desc'
-    | 'budget-asc'
-    | 'spent-desc'
-    | 'spent-asc'
-    | 'remaining-desc'
-    | 'remaining-asc'
-    | 'alphabetical'
-    | 'budget'
-    | 'spent'
-    | 'remaining';
-
+  // Ledger Filter & Selection State
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
-  const [masterCategorySearch, setMasterCategorySearch] = useState<string>('');
-  const [masterCategorySort, setMasterCategorySort] = useState<MasterCategorySort>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('s2v_budget_master_sort') as MasterCategorySort;
-      if (saved === 'alphabetical' || saved === 'alphabetical-asc') return 'alphabetical-asc';
-      if (saved === 'alphabetical-desc') return 'alphabetical-desc';
-      if (saved === 'budget' || saved === 'budget-desc') return 'budget-desc';
-      if (saved === 'budget-asc') return 'budget-asc';
-      if (saved === 'spent' || saved === 'spent-desc') return 'spent-desc';
-      if (saved === 'spent-asc') return 'spent-asc';
-      if (saved === 'remaining' || saved === 'remaining-desc') return 'remaining-desc';
-      if (saved === 'remaining-asc') return 'remaining-asc';
-    }
-    return 'alphabetical-asc';
-  });
-  const [detailExpenseSearch, setDetailExpenseSearch] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Overdue' | 'Pending' | 'Paid' | 'OverBudget'>('All');
+  const [sortField, setSortField] = useState<'category' | 'projected' | 'actual' | 'variance' | 'dueDate'>('category');
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
 
-  // Mobile Bottom Sheet Drill-Down State (< lg)
-  const [activeBottomSheetCategory, setActiveBottomSheetCategory] = useState<string | null>(null);
-  const [isSheetAnimating, setIsSheetAnimating] = useState<boolean>(false);
-  const [mobileCategorySearch, setMobileCategorySearch] = useState<string>('');
-  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'active' | 'alerts'>('all');
-  const [mobileExpenseSearch, setMobileExpenseSearch] = useState<string>('');
-
-  const openBottomSheet = (categoryName: string) => {
-    setActiveBottomSheetCategory(categoryName);
-    setMobileExpenseSearch('');
-    requestAnimationFrame(() => {
-      setIsSheetAnimating(true);
-    });
-  };
-
-  const closeBottomSheet = () => {
-    setIsSheetAnimating(false);
-    setTimeout(() => {
-      setActiveBottomSheetCategory(null);
-    }, 280);
-  };
-
-  React.useEffect(() => {
+  // Keyboard Escape listener
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isAddingExpense || editingExpense) {
-          closeExpenseModal();
-        } else if (isAdding || editingItem) {
-          closeModal();
-        } else if (itemToDelete) {
-          setItemToDelete(null);
-        } else if (expenseToDelete) {
-          setExpenseToDelete(null);
-        } else if (activeBottomSheetCategory) {
-          closeBottomSheet();
-        }
+        if (isAddingExpense || editingExpense) closeExpenseModal();
+        else if (isAdding || editingItem) closeModal();
+        else if (itemToDelete) setItemToDelete(null);
+        else if (expenseToDelete) setExpenseToDelete(null);
+        else if (selectedCategoryId) setSelectedCategoryId('');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeBottomSheetCategory, isAdding, editingItem, isAddingExpense, editingExpense, itemToDelete, expenseToDelete]);
+  }, [isAdding, editingItem, isAddingExpense, editingExpense, itemToDelete, expenseToDelete, selectedCategoryId]);
 
-  const hasAnyModalOrSheetOpen = Boolean(
-    isAdding || editingItem || isAddingExpense || editingExpense || itemToDelete || expenseToDelete || activeBottomSheetCategory
-  );
+  // Prevent background scroll when modal open
+  const isAnyModalOpen = Boolean(isAdding || editingItem || isAddingExpense || editingExpense || itemToDelete || expenseToDelete);
+  useEffect(() => {
+    if (isAnyModalOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isAnyModalOpen]);
 
-  React.useEffect(() => {
-    if (hasAnyModalOrSheetOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [hasAnyModalOrSheetOpen]);
-
-  // Unique categories for summaries & dropdowns
+  // Unique categories
   const budgetCategories = Array.from(new Set(budget.map(item => item.category).filter(Boolean)));
   const expenseCategories = Array.from(new Set(expenses.map(item => item.category).filter(Boolean)));
   const allCategories = Array.from(new Set([...STANDARD_BUDGET_CATEGORIES, ...budgetCategories, ...expenseCategories])).filter(Boolean);
 
-  const toggleCategoryFilter = (cat: string) => {
-    setSelectedCategories(prev => {
-      const isAlreadySelected = prev.includes(cat);
-      const updated = isAlreadySelected ? prev.filter(c => c !== cat) : [...prev, cat];
-      if (updated.length === 1) {
-        setCategoryFilter(updated[0]);
-      } else {
-        setCategoryFilter('All');
-      }
-      return updated;
-    });
-  };
-
-  const clearCategoryFilters = () => {
-    setSelectedCategories([]);
-    setCategoryFilter('All');
-  };
-
-  // Dynamic Expenses calculations per Line Item / Vendor (matching description or category)
-  const getLineItemExpenseTotals = (item: BudgetItem) => {
-    const itemVendor = (item.vendorName || '').toLowerCase().trim();
-    const itemCat = (item.category || '').toLowerCase().trim();
-
-    // 1. Direct match: Expense description matches Budget Line Item / Vendor Name
-    const directMatches = expenses.filter(e => {
-      const expDesc = (e.description || '').toLowerCase().trim();
-      const expCat = (e.category || '').toLowerCase().trim();
-      return expDesc === itemVendor || (itemVendor.length > 2 && expDesc.includes(itemVendor)) || (expDesc.length > 2 && itemVendor.includes(expDesc));
-    });
-
-    if (directMatches.length > 0) {
-      const actualCost = directMatches.reduce((sum, e) => sum + (e.actualCost || 0), 0);
-      const amountPaid = directMatches.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
-      return {
-        count: directMatches.length,
-        actualCost,
-        amountPaid,
-        hasMatched: true,
-      };
-    }
-
-    // 2. Fallback: If only 1 budget item exists for this category, or if vendorName is generic overview
-    const sameCatBudgetItems = budget.filter(b => (b.category || '').toLowerCase().trim() === itemCat);
-    if (sameCatBudgetItems.length === 1 || itemVendor.includes('overview') || itemVendor === itemCat) {
-      const catExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === itemCat);
-      if (catExpenses.length > 0) {
-        const actualCost = catExpenses.reduce((sum, e) => sum + (e.actualCost || 0), 0);
-        const amountPaid = catExpenses.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
-        return {
-          count: catExpenses.length,
-          actualCost,
-          amountPaid,
-          hasMatched: true,
-        };
-      }
-    }
-
-    return {
-      count: 0,
-      actualCost: item.actualCost,
-      amountPaid: item.amountPaid,
-      hasMatched: false,
-    };
-  };
-
+  // Category expense calculations
   const getCategoryExpenseTotals = (category: string) => {
     const catExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === (category || '').toLowerCase().trim());
-    const actualCost = catExpenses.reduce((sum, e) => sum + (e.actualCost || 0), 0);
-    const amountPaid = catExpenses.reduce((sum, e) => sum + (e.amountPaid || 0), 0);
-    return {
-      count: catExpenses.length,
-      actualCost,
-      amountPaid,
-    };
+    const actualCost = catExpenses.reduce((sum, e) => sum + (e.actualCost ?? e.amount ?? 0), 0);
+    const amountPaid = catExpenses.reduce((sum, e) => sum + (e.amountPaid ?? e.amount ?? 0), 0);
+    return { count: catExpenses.length, actualCost, amountPaid, items: catExpenses };
   };
 
-  // Filtered Budget items
-  const filteredBudget = budget.filter(item => {
-    const matchesSearch =
-      (item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.vendorName || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory = selectedCategories.length > 0
-      ? selectedCategories.some(c => c.toLowerCase() === (item.category || '').toLowerCase())
-      : (categoryFilter === 'All' || (item.category || '').toLowerCase() === categoryFilter.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'All' ? true :
-        statusFilter === 'Paid' ? (item.paymentStatus || '').toLowerCase() === 'paid' :
-          (item.paymentStatus || '').toLowerCase() !== 'paid';
-
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
-
-  // Filtered Expense items
-  const filteredExpenses = expenses.filter(item => {
-    const matchesSearch =
-      (item.description || '').toLowerCase().includes(expenseSearchTerm.toLowerCase()) ||
-      (item.category || '').toLowerCase().includes(expenseSearchTerm.toLowerCase()) ||
-      (item.notes || '').toLowerCase().includes(expenseSearchTerm.toLowerCase());
-
-    const matchesCategory = expenseCategoryFilter === 'All' || (item.category || '').toLowerCase() === expenseCategoryFilter.toLowerCase();
-
-    return matchesSearch && matchesCategory;
-  });
-
-  // Dynamic Budget Totals (integrating Expenses)
-  const totalEstimate = budget.reduce((sum, item) => sum + item.estimatedCost, 0);
-
-  // Compute total actual outlay across all budget items (using line item expense matches or logged expenses)
-  const totalLoggedExpensesActual = expenses.reduce((sum, e) => sum + e.actualCost, 0);
-  const totalLoggedExpensesPaid = expenses.reduce((sum, e) => sum + e.amountPaid, 0);
+  // Grand Totals
+  const totalEstimate = budget.reduce((sum, item) => sum + (item.estimatedCost || 0), 0);
+  const totalLoggedExpensesActual = expenses.reduce((sum, e) => sum + (e.actualCost ?? e.amount ?? 0), 0);
+  const totalLoggedExpensesPaid = expenses.reduce((sum, e) => sum + (e.amountPaid ?? e.amount ?? 0), 0);
 
   const budgetActualSum = budget.reduce((sum, item) => {
-    const stats = getLineItemExpenseTotals(item);
-    return sum + (stats.hasMatched ? stats.actualCost : item.actualCost);
+    const expStats = getCategoryExpenseTotals(item.category);
+    return sum + (expStats.count > 0 ? expStats.actualCost : (item.actualCost || 0));
   }, 0);
 
   const budgetPaidSum = budget.reduce((sum, item) => {
-    const stats = getLineItemExpenseTotals(item);
-    return sum + (stats.hasMatched ? stats.amountPaid : item.amountPaid);
+    const expStats = getCategoryExpenseTotals(item.category);
+    return sum + (expStats.count > 0 ? expStats.amountPaid : (item.amountPaid || 0));
   }, 0);
 
-  const totalActual = expenses.length > 0
-    ? Math.max(budgetActualSum, totalLoggedExpensesActual)
-    : budget.reduce((sum, item) => sum + item.actualCost, 0);
+  const totalActual = expenses.length > 0 ? Math.max(budgetActualSum, totalLoggedExpensesActual) : budget.reduce((sum, i) => sum + (i.actualCost || 0), 0);
+  const totalPaid = expenses.length > 0 ? Math.max(budgetPaidSum, totalLoggedExpensesPaid) : budget.reduce((sum, i) => sum + (i.amountPaid || 0), 0);
 
-  const totalPaid = expenses.length > 0
-    ? Math.max(budgetPaidSum, totalLoggedExpensesPaid)
-    : budget.reduce((sum, item) => sum + item.amountPaid, 0);
-
-  const totalBalance = totalActual - totalPaid;
-
-  // Effective Budget Target Baseline (Hybrid Model: Dynamic Category Sum + Optional Master Cap)
+  // Target Mode Resolution
   const isUnsetMode = targetMode === 'unset';
   const isDynamicMode = targetMode === 'dynamic';
   const isFixedCapMode = targetMode === 'fixed_cap';
+  const effectiveTarget = isUnsetMode ? 0 : isDynamicMode ? totalEstimate : (Number(customTargetInput) > 0 ? Number(customTargetInput) : totalEstimate);
+  const percentUtilized = effectiveTarget > 0 ? Math.round((totalActual / effectiveTarget) * 100) : 0;
+  const isOverallOverBudget = effectiveTarget > 0 && totalActual > effectiveTarget;
+  const overallHeadroom = effectiveTarget - totalActual;
 
-  const effectiveTarget = isUnsetMode
-    ? 0
-    : isDynamicMode
-      ? totalEstimate
-      : (Number(customTargetInput) > 0 ? Number(customTargetInput) : totalEstimate);
-
-  // Allocation Cushion (Master Cap vs Sum of Categories)
-  const allocationDifference = effectiveTarget - totalEstimate;
-  const isOverAllocated = isFixedCapMode && allocationDifference < 0;
-  const unallocatedCushion = isFixedCapMode && allocationDifference > 0 ? allocationDifference : 0;
-
-  // Actions for Target Mode Transitions
   const handleSaveCustomTarget = async (val: number) => {
     setIsEditingTarget(false);
     if (!isNaN(val) && val > 0) {
       setCustomTargetInput(val.toString());
       handleSetTargetMode('fixed_cap');
-      if (onUpdateBudgetTarget) {
-        await onUpdateBudgetTarget(val);
-      }
+      if (onUpdateBudgetTarget) await onUpdateBudgetTarget(val);
     } else if (val === 0) {
       handleSetTargetMode('unset');
-      if (onUpdateBudgetTarget) {
-        await onUpdateBudgetTarget(0);
-      }
+      if (onUpdateBudgetTarget) await onUpdateBudgetTarget(0);
     }
   };
 
@@ -404,199 +206,104 @@ export default function BudgetLedgerManager({
     setIsEditingTarget(false);
     handleSetTargetMode('dynamic');
     setCustomTargetInput(totalEstimate.toString());
-    if (onUpdateBudgetTarget) {
-      await onUpdateBudgetTarget(totalEstimate);
-    }
+    if (onUpdateBudgetTarget) await onUpdateBudgetTarget(totalEstimate);
   };
 
-  // Utilization & Health Meters
-  const percentUtilized = effectiveTarget > 0 ? Math.round((totalActual / effectiveTarget) * 100) : 0;
-  const isOverallOverBudget = effectiveTarget > 0 && totalActual > effectiveTarget;
-  const overallHeadroom = effectiveTarget - totalActual;
+  // Date helpers for overdue exceptions
+  const todayStr = new Date().toISOString().split('T')[0];
 
-  const meterBarColor = isUnsetMode
-    ? 'var(--color-primary)'
-    : (percentUtilized > 100 ? 'var(--color-red)' : percentUtilized > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)');
-
-  // Category Health Breakdown
-  const categoryStats = allCategories.map(cat => {
+  // Category Ledger Rows Calculation
+  const categoryLedgerRows = allCategories.map((cat, idx) => {
     const catBudgetItems = budget.filter(item => (item.category || '').toLowerCase() === cat.toLowerCase());
-    const catEstimate = catBudgetItems.reduce((sum, i) => sum + i.estimatedCost, 0);
-
+    const catEstimate = catBudgetItems.reduce((sum, i) => sum + (i.estimatedCost || 0), 0);
     const expStats = getCategoryExpenseTotals(cat);
-    const catActual = expStats.count > 0 ? expStats.actualCost : catBudgetItems.reduce((sum, i) => sum + i.actualCost, 0);
-    const catPaid = expStats.count > 0 ? expStats.amountPaid : catBudgetItems.reduce((sum, i) => sum + i.amountPaid, 0);
-    const catPercent = catEstimate > 0 ? Math.min(Math.round((catActual / catEstimate) * 100), 150) : (catActual > 0 ? 100 : 0);
-    const isOver = catActual > catEstimate;
-    const overAmount = catActual - catEstimate;
+    const catActual = expStats.count > 0 ? expStats.actualCost : catBudgetItems.reduce((sum, i) => sum + (i.actualCost || 0), 0);
+    const catPaid = expStats.count > 0 ? expStats.amountPaid : catBudgetItems.reduce((sum, i) => sum + (i.amountPaid || 0), 0);
+    const variance = catEstimate - catActual;
+    const isOver = catActual > catEstimate && catEstimate > 0;
+    const isPending = catEstimate > 0 && catActual < catEstimate;
+    
+    // Earliest due date across budget items in this category
+    const dueDates = catBudgetItems.map(i => i.dueDate).filter(Boolean).sort() as string[];
+    const primaryDueDate = dueDates[0] || '';
+    const isOverdue = Boolean(primaryDueDate && primaryDueDate < todayStr && catPaid < catActual);
+
+    // Status label
+    let statusLabel = 'On Track';
+    if (isOver) statusLabel = 'Over Budget';
+    else if (isOverdue) statusLabel = 'Overdue';
+    else if (catActual > 0 && catPaid >= catActual) statusLabel = 'Paid in Full';
+    else if (catActual > 0) statusLabel = 'Partial Paid';
+    else if (catEstimate > 0) statusLabel = 'Budgeted';
+
+    // Cell coordinate in Budget tab
+    const cellRef = `Budget!B${idx + 2}:F${idx + 2}`;
 
     return {
       category: cat,
-      estimated: catEstimate,
+      projected: catEstimate,
       actual: catActual,
       paid: catPaid,
-      percent: catPercent,
+      variance,
+      dueDate: primaryDueDate,
+      status: statusLabel,
       isOver,
-      overAmount,
+      isOverdue,
       expenseCount: expStats.count,
       budgetItemCount: catBudgetItems.length,
-      budgetItems: catBudgetItems,
+      cellRef,
+      rawBudgetItems: catBudgetItems,
     };
   });
 
-  // Active Categories with an allocated budget (> $0) or active expenses (Hides zero-dollar budgets from UI)
-  const activeOrAlertStats = categoryStats.filter(
-    stat => stat.estimated > 0 || stat.actual > 0 || stat.expenseCount > 0
-  );
-
-  // Resolved active category selection for Desktop Master-Detail split-view
-  const effectiveSelectedCategoryId = selectedCategoryId && activeOrAlertStats.some(s => s.category.toLowerCase() === selectedCategoryId.toLowerCase())
-    ? selectedCategoryId
-    : (activeOrAlertStats[0]?.category || '');
-
-  const selectedCatStat = categoryStats.find(c => c.category.toLowerCase() === effectiveSelectedCategoryId.toLowerCase()) || {
-    category: effectiveSelectedCategoryId,
-    estimated: 0,
-    actual: 0,
-    paid: 0,
-    percent: 0,
-    isOver: false,
-    overAmount: 0,
-    expenseCount: 0,
-    budgetItemCount: 0,
-    budgetItems: [],
-  };
-
-  const selectedCatBudgetItems = budget.filter(i => (i.category || '').toLowerCase() === effectiveSelectedCategoryId.toLowerCase());
-  const selectedCatExpenses = expenses.filter(e => (e.category || '').toLowerCase().trim() === effectiveSelectedCategoryId.toLowerCase().trim());
-  const selectedCatExpensesTotal = selectedCatExpenses.reduce((sum, e) => sum + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0);
-  const remainingCushion = selectedCatStat.estimated - selectedCatExpensesTotal;
-
-  // Master Category List: Filtered strictly to budgeted or active categories (hides zero dollar budgets from UI)
-  const displayedMasterStats = (() => {
-    let list = categoryStats.filter(c => c.estimated > 0 || c.actual > 0 || c.expenseCount > 0);
-    if (masterCategorySearch.trim()) {
-      list = list.filter(c => c.category.toLowerCase().includes(masterCategorySearch.toLowerCase().trim()));
+  // Filtered rows (Hiding $0 rows unless searched)
+  const activeCategoryRows = categoryLedgerRows.filter(row => {
+    if (searchTerm.trim()) {
+      return row.category.toLowerCase().includes(searchTerm.toLowerCase().trim());
     }
-    return [...list].sort((a, b) => {
-      if (masterCategorySort === 'budget-desc' || masterCategorySort === 'budget') {
-        if (b.estimated !== a.estimated) {
-          return b.estimated - a.estimated;
-        }
-        return a.category.localeCompare(b.category);
-      }
-      if (masterCategorySort === 'budget-asc') {
-        if (a.estimated !== b.estimated) {
-          return a.estimated - b.estimated;
-        }
-        return a.category.localeCompare(b.category);
-      }
-      if (masterCategorySort === 'spent-desc' || masterCategorySort === 'spent') {
-        if (b.actual !== a.actual) {
-          return b.actual - a.actual;
-        }
-        return a.category.localeCompare(b.category);
-      }
-      if (masterCategorySort === 'spent-asc') {
-        if (a.actual !== b.actual) {
-          return a.actual - b.actual;
-        }
-        return a.category.localeCompare(b.category);
-      }
-      if (masterCategorySort === 'remaining-desc' || masterCategorySort === 'remaining') {
-        const remA = a.estimated - a.actual;
-        const remB = b.estimated - b.actual;
-        if (remB !== remA) {
-          return remB - remA;
-        }
-        return a.category.localeCompare(b.category);
-      }
-      if (masterCategorySort === 'remaining-asc') {
-        const remA = a.estimated - a.actual;
-        const remB = b.estimated - b.actual;
-        if (remA !== remB) {
-          return remA - remB;
-        }
-        return a.category.localeCompare(b.category);
-      }
-      if (masterCategorySort === 'alphabetical-desc') {
-        return b.category.localeCompare(a.category);
-      }
-      // Default: 'alphabetical-asc' / 'alphabetical'
-      return a.category.localeCompare(b.category);
-    });
-  })();
-
-  // Detail Expenses filtered by search within selected category
-  const displayedDetailExpenses = selectedCatExpenses.filter(exp => {
-    if (!detailExpenseSearch.trim()) return true;
-    const term = detailExpenseSearch.toLowerCase().trim();
-    return (
-      (exp.description || '').toLowerCase().includes(term) ||
-      (exp.notes || '').toLowerCase().includes(term)
-    );
+    return row.projected > 0 || row.actual > 0 || row.expenseCount > 0;
   });
 
-  // Mobile (< lg) Category List: Filtered strictly to budgeted or active categories (hides zero dollar budgets from UI)
-  const displayedMobileStats = (() => {
-    let list = categoryStats.filter(stat => stat.estimated > 0 || stat.actual > 0 || stat.expenseCount > 0);
+  const filteredCategoryRows = activeCategoryRows.filter(row => {
+    if (statusFilter === 'Overdue') return row.isOverdue;
+    if (statusFilter === 'Pending') return row.status === 'Partial Paid' || row.status === 'Budgeted';
+    if (statusFilter === 'Paid') return row.status === 'Paid in Full';
+    if (statusFilter === 'OverBudget') return row.isOver;
+    return true;
+  }).sort((a, b) => {
+    if (sortField === 'projected') return sortAsc ? a.projected - b.projected : b.projected - a.projected;
+    if (sortField === 'actual') return sortAsc ? a.actual - b.actual : b.actual - a.actual;
+    if (sortField === 'variance') return sortAsc ? a.variance - b.variance : b.variance - a.variance;
+    if (sortField === 'dueDate') return sortAsc ? (a.dueDate || '9999').localeCompare(b.dueDate || '9999') : (b.dueDate || '').localeCompare(a.dueDate || '');
+    return sortAsc ? a.category.localeCompare(b.category) : b.category.localeCompare(a.category);
+  });
 
-    if (mobileFilterTab === 'active') {
-      list = list.filter(stat => stat.actual > 0 || stat.expenseCount > 0);
-    } else if (mobileFilterTab === 'alerts') {
-      list = list.filter(stat => stat.isOver);
-    }
+  // Exception Strip Metrics (Overdue, Pending, Over-budget categories)
+  const overdueRows = categoryLedgerRows.filter(r => r.isOverdue);
+  const overdueTotal = overdueRows.reduce((sum, r) => sum + (r.actual - r.paid), 0);
+  const pendingRows = categoryLedgerRows.filter(r => r.actual > r.paid);
+  const pendingTotal = pendingRows.reduce((sum, r) => sum + (r.actual - r.paid), 0);
+  const overBudgetRows = categoryLedgerRows.filter(r => r.isOver);
 
-    if (mobileCategorySearch.trim()) {
-      const q = mobileCategorySearch.toLowerCase().trim();
-      list = list.filter(stat => stat.category.toLowerCase().includes(q));
-    }
+  const upcomingDueRows = categoryLedgerRows
+    .filter(r => r.dueDate && r.dueDate >= todayStr && r.paid < r.actual)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const nextUpcomingDue = upcomingDueRows[0];
 
-    return [...list].sort((a, b) => {
-      if (a.isOver && !b.isOver) return -1;
-      if (!a.isOver && b.isOver) return 1;
-      const aHasOutlay = a.actual > 0;
-      const bHasOutlay = b.actual > 0;
-      if (aHasOutlay && !bHasOutlay) return -1;
-      if (!aHasOutlay && bHasOutlay) return 1;
-      return a.category.localeCompare(b.category);
-    });
-  })();
-
-  // Mobile Bottom Sheet Active Category Data
-  const bottomSheetStat = activeBottomSheetCategory
-    ? (categoryStats.find(c => c.category.toLowerCase() === activeBottomSheetCategory.toLowerCase()) || {
-      category: activeBottomSheetCategory,
-      estimated: 0,
-      actual: 0,
-      paid: 0,
-      percent: 0,
-      isOver: false,
-      overAmount: 0,
-      expenseCount: 0,
-      budgetItemCount: 0,
-      budgetItems: [],
-    })
+  // Selected Category Detail Expenses
+  const selectedCatData = selectedCategoryId 
+    ? categoryLedgerRows.find(r => r.category.toLowerCase() === selectedCategoryId.toLowerCase())
     : null;
 
-  const bottomSheetExpenses = activeBottomSheetCategory
-    ? expenses.filter(e => (e.category || '').toLowerCase().trim() === activeBottomSheetCategory.toLowerCase().trim())
-    : [];
+  const itemizedExpensesForSelected = selectedCategoryId
+    ? expenses.filter(e => (e.category || '').toLowerCase().trim() === selectedCategoryId.toLowerCase().trim())
+    : expenses;
 
-  const bottomSheetExpensesTotal = bottomSheetExpenses.reduce((sum, e) => sum + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0);
-  const bottomSheetCushion = bottomSheetStat ? bottomSheetStat.estimated - bottomSheetExpensesTotal : 0;
-
-  const filteredBottomSheetExpenses = bottomSheetExpenses.filter(e => {
-    if (!mobileExpenseSearch.trim()) return true;
-    const q = mobileExpenseSearch.toLowerCase().trim();
-    return (e.description || '').toLowerCase().includes(q) || (e.notes || '').toLowerCase().includes(q);
-  });
-
-  // Budget Item Actions (Simple Category Addition)
+  // Modal Handlers
   const startAddBudget = async (presetCategory?: string) => {
     if (!(await verifyActiveSession())) return;
     setFormState({
-      category: presetCategory || '',
+      category: presetCategory || selectedCategoryId || allCategories[0] || 'Venue',
       vendorName: '',
       estimatedCost: '' as any,
       actualCost: 0,
@@ -606,50 +313,22 @@ export default function BudgetLedgerManager({
     });
     setIsAdding(true);
     setEditingItem(null);
-    setIsAddingExpense(false);
-    setEditingExpense(null);
-    setItemToDelete(null);
-    setExpenseToDelete(null);
   };
 
   const startEditBudget = async (item: BudgetItem) => {
     if (!(await verifyActiveSession())) return;
     setFormState({
       ...item,
-      estimatedCost: (item.estimatedCost !== undefined && item.estimatedCost !== null && item.estimatedCost > 0) ? item.estimatedCost : ('' as any),
+      estimatedCost: (item.estimatedCost && item.estimatedCost > 0) ? item.estimatedCost : ('' as any),
     });
     setEditingItem(item);
     setIsAdding(false);
-    setIsAddingExpense(false);
-    setEditingExpense(null);
-    setItemToDelete(null);
-    setExpenseToDelete(null);
-  };
-
-  const promptDeleteItem = async (item: BudgetItem | null) => {
-    if (!item) return;
-    if (!(await verifyActiveSession())) return;
-    setItemToDelete(item);
-    setExpenseToDelete(null);
-    setIsAdding(false);
-    setEditingItem(null);
-    setIsAddingExpense(false);
-    setEditingExpense(null);
   };
 
   const closeModal = () => {
     setIsAdding(false);
     setEditingItem(null);
     setFormState({});
-  };
-
-  const handleFormChange = (field: keyof BudgetItem, value: any) => {
-    setFormState(prev => ({
-      ...prev,
-      [field]: field === 'estimatedCost' || field === 'actualCost' || field === 'amountPaid'
-        ? (value === '' ? '' : (isNaN(Number(value)) ? value : Number(value)))
-        : value
-    }));
   };
 
   const saveBudget = async (e?: React.FormEvent, continueAdding = false) => {
@@ -670,31 +349,32 @@ export default function BudgetLedgerManager({
     }
 
     let updatedBudget: BudgetItem[];
-
     if (editingItem) {
       updatedBudget = budget.map(i => i.itemId === editingItem.itemId ? {
         ...i,
         category: categoryName,
-        vendorName: i.vendorName || `${categoryName} Budget`,
+        vendorName: formState.vendorName || `${categoryName} Budget`,
         estimatedCost: budgetAmount,
+        dueDate: formState.dueDate || '',
+        paymentStatus: formState.paymentStatus || 'Pending',
       } as BudgetItem : i);
     } else {
-      // If a budget item for this category already exists, update its budget allocation
       const existingItem = budget.find(i => (i.category || '').toLowerCase().trim() === categoryName.toLowerCase());
       if (existingItem) {
         updatedBudget = budget.map(i => i.itemId === existingItem.itemId ? {
           ...i,
           estimatedCost: budgetAmount,
+          dueDate: formState.dueDate || i.dueDate || '',
         } : i);
       } else {
         const newItem: BudgetItem = {
           itemId: `item-${Date.now()}`,
           category: categoryName,
-          vendorName: `${categoryName} Budget`,
+          vendorName: formState.vendorName || `${categoryName} Budget`,
           estimatedCost: budgetAmount,
           actualCost: 0,
           amountPaid: 0,
-          dueDate: '',
+          dueDate: formState.dueDate || '',
           paymentStatus: 'Pending',
         };
         updatedBudget = [newItem, ...budget];
@@ -717,8 +397,7 @@ export default function BudgetLedgerManager({
       setIsAdding(true);
       setEditingItem(null);
     } else {
-      setEditingItem(null);
-      setIsAdding(false);
+      closeModal();
     }
   };
 
@@ -728,12 +407,11 @@ export default function BudgetLedgerManager({
     setItemToDelete(null);
   };
 
-  // Expense Item Actions
   const startAddExpense = async (presetCategory?: string) => {
     if (!(await verifyActiveSession())) return;
     setExpenseFormState({
       description: '',
-      category: presetCategory || effectiveSelectedCategoryId || activeOrAlertStats[0]?.category || allCategories[0] || 'General',
+      category: presetCategory || selectedCategoryId || allCategories[0] || 'Venue',
       amount: '' as any,
       actualCost: 0,
       amountPaid: 0,
@@ -742,10 +420,6 @@ export default function BudgetLedgerManager({
     });
     setIsAddingExpense(true);
     setEditingExpense(null);
-    setIsAdding(false);
-    setEditingItem(null);
-    setItemToDelete(null);
-    setExpenseToDelete(null);
   };
 
   const startEditExpense = async (item: ExpenseItem) => {
@@ -754,34 +428,12 @@ export default function BudgetLedgerManager({
     setExpenseFormState({ ...item, amount: amt > 0 ? amt : ('' as any) });
     setEditingExpense(item);
     setIsAddingExpense(false);
-    setIsAdding(false);
-    setEditingItem(null);
-    setItemToDelete(null);
-    setExpenseToDelete(null);
-  };
-
-  const promptDeleteExpense = async (item: ExpenseItem | null) => {
-    if (!item) return;
-    if (!(await verifyActiveSession())) return;
-    setExpenseToDelete(item);
-    setItemToDelete(null);
-    setIsAdding(false);
-    setEditingItem(null);
-    setIsAddingExpense(false);
-    setEditingExpense(null);
   };
 
   const closeExpenseModal = () => {
     setIsAddingExpense(false);
     setEditingExpense(null);
     setExpenseFormState({});
-  };
-
-  const handleExpenseFormChange = (field: keyof ExpenseItem, value: any) => {
-    setExpenseFormState(prev => ({
-      ...prev,
-      [field]: field === 'amount' || field === 'actualCost' || field === 'amountPaid' ? Number(value) || 0 : value
-    }));
   };
 
   const saveExpense = async (e?: React.FormEvent, continueAdding = false) => {
@@ -797,7 +449,6 @@ export default function BudgetLedgerManager({
     }
 
     let updatedExpenses: ExpenseItem[];
-
     if (editingExpense) {
       updatedExpenses = expenses.map(i => i.itemId === editingExpense.itemId ? {
         ...i,
@@ -835,8 +486,7 @@ export default function BudgetLedgerManager({
       });
       setIsAddingExpense(true);
     } else {
-      setEditingExpense(null);
-      setIsAddingExpense(false);
+      closeExpenseModal();
     }
   };
 
@@ -848,2773 +498,800 @@ export default function BudgetLedgerManager({
   };
 
   return (
-    <div className={`budget-manager-container ${activeBottomSheetCategory ? 'has-bottom-sheet-open' : ''}`} style={styles.container}>
-      {/* Scoped CSS for Header, Responsive View Toggle & Mobile Bottom Sheet */}
-      <style>{`
-        .budget-header-container {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 1px solid var(--color-muted);
-          padding-bottom: 0.75rem;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        .section-header-banner {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 2rem;
-          margin-bottom: 1rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 2px solid var(--color-border);
-          flex-wrap: wrap;
-          gap: 0.75rem;
-        }
-        @media (max-width: 640px) {
-          .budget-header-container {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.5rem !important;
-          }
-        }
-        @media (max-width: 768px) {
-          .budget-add-btn {
-            display: none !important;
-          }
-        }
-
-        /* Responsive Master-Detail Split-View for Desktop (>= lg / 1024px) */
-        @media (min-width: 1024px) {
-          .budget-mobile-stacked-view {
-            display: none !important;
-          }
-          .budget-desktop-split-view {
-            display: grid !important;
-            grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-            gap: 1.5rem !important;
-            align-items: start !important;
-          }
-          .budget-master-rail {
-            grid-column: span 5 / span 5 !important;
-            max-height: calc(100vh - 220px) !important;
-            display: flex !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-            padding-right: 0 !important;
-          }
-          .budget-master-rail-fixed-header {
-            flex-shrink: 0 !important;
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 10 !important;
-            background-color: var(--color-bg) !important;
-            padding-bottom: 0.75rem !important;
-            padding-right: 0.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0.75rem !important;
-          }
-          .budget-master-rail-list {
-            flex: 1 1 auto !important;
-            min-height: 0 !important;
-            overflow-y: auto !important;
-            padding-right: 0.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0.625rem !important;
-          }
-          .budget-detail-ledger {
-            grid-column: span 7 / span 7 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 1.25rem !important;
-          }
-          .budget-desktop-pills-bar {
-            display: flex !important;
-          }
-          .budget-desktop-category-card {
-            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-          .budget-desktop-category-card:hover {
-            transform: translateY(-2px);
-          }
-          .budget-detail-table-add-btn {
-            transition: all 0.15s ease !important;
-          }
-          .budget-detail-table-add-btn:hover {
-            opacity: 0.9 !important;
-            transform: translateY(-1px) !important;
-          }
-          .budget-mobile-chips-container {
-            display: none !important;
-          }
-        }
-
-        /* Interactive Drill-Down Mobile View (< lg / 1023px) */
-        @media (max-width: 1023px) {
-          .budget-desktop-split-view {
-            display: none !important;
-          }
-          .budget-mobile-stacked-view {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 1rem !important;
-          }
-          .budget-desktop-pills-bar {
-            display: none !important;
-          }
-          .budget-mobile-chips-container {
-            display: none !important;
-          }
-          .budget-meter-card {
-            position: sticky !important;
-            top: 0.5rem !important;
-            z-index: 30 !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-            background-color: var(--color-surface) !important;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
-            padding: 0.85rem 1rem !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-            max-width: 100% !important;
-          }
-          .budget-donut-container {
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            gap: 0.65rem !important;
-            padding: 0.25rem 0 !important;
-            justify-content: center !important;
-          }
-          .budget-donut-chart-wrapper {
-            width: 110px !important;
-            height: 110px !important;
-          }
-          .donut-center-percent {
-            font-size: 1.15rem !important;
-          }
-          .budget-donut-stats-grid {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-            gap: 0.35rem !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            flex: 1 1 100% !important;
-          }
-          .budget-donut-tile {
-            min-width: 0 !important;
-            padding: 0.45rem 0.35rem !important;
-            box-sizing: border-box !important;
-            text-align: center !important;
-            align-items: center !important;
-            overflow: hidden !important;
-          }
-          .budget-donut-tile .snapshot-tile-label {
-            font-size: 0.575rem !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            width: 100% !important;
-            display: block !important;
-          }
-          .budget-donut-tile .snapshot-tile-value {
-            font-size: 0.85rem !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            width: 100% !important;
-            display: block !important;
-          }
-          .budget-donut-tile .snapshot-tile-sub {
-            font-size: 0.575rem !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            width: 100% !important;
-            display: block !important;
-          }
-        }
-
-        /* Custom Scrollbar for Master Rail */
-        .budget-master-rail::-webkit-scrollbar {
-          width: 5px;
-        }
-        .budget-master-rail::-webkit-scrollbar-track {
-          background: var(--color-bg-subtle, #f8fafc);
-          border-radius: 4px;
-        }
-        .budget-master-rail::-webkit-scrollbar-thumb {
-          background: var(--color-border, #cbd5e1);
-          border-radius: 4px;
-        }
-        .budget-master-rail::-webkit-scrollbar-thumb:hover {
-          background: var(--color-muted, #94a3b8);
-        }
-
-        /* Mobile Bottom Sheet & Category Cards */
-        .mobile-bottom-sheet-backdrop {
-          position: fixed;
-          inset: 0;
-          background-color: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-          z-index: 110;
-          transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .mobile-bottom-sheet-container {
-          position: fixed;
-          bottom: 62px;
-          bottom: calc(62px + env(safe-area-inset-bottom, 0px));
-          left: 0;
-          right: 0;
-          z-index: 140;
-          background-color: var(--color-surface);
-          border-top-left-radius: 1.5rem;
-          border-top-right-radius: 1.5rem;
-          box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
-          border-top: 1px solid var(--color-border);
-          border-bottom: 1px solid var(--color-border);
-          max-height: calc(88vh - 62px);
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-          will-change: transform;
-        }
-        .mobile-bottom-sheet-handle {
-          width: 44px;
-          height: 5px;
-          background-color: var(--color-border);
-          border-radius: 999px;
-          margin: 0.65rem auto 0.35rem;
-          flex-shrink: 0;
-          cursor: pointer;
-        }
-        .mobile-category-card {
-          transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .mobile-category-card:active {
-          transform: scale(0.985);
-          background-color: rgba(13, 27, 42, 0.04);
-        }
-        .has-bottom-sheet-open .mobile-fab-container {
-          display: none !important;
-        }
-      `}</style>
-
-      {/* Main Header */}
-      <div className="budget-header-container">
-        <div>
-          <h2 style={styles.title}>Wedding Financials</h2>
-          <p style={styles.subtitle}>Track category budgets, log individual purchases & monitor real-time payments</p>
-        </div>
-      </div>
-
-      {/* Budget Progress & Health Banner */}
-      <div className={`budget-meter-card ${isOverallOverBudget || isOverAllocated ? 'is-over-budget' : ''}`} style={styles.meterCard}>
-        <div style={styles.meterHeader}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
-              <span style={styles.meterSubtext}>BUDGET UTILIZED</span>
-
-              {/* Mode Badge & Switching Controls */}
-              {isDynamicMode && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    color: 'var(--color-primary)',
-                    backgroundColor: 'rgba(26, 127, 75, 0.1)',
-                    border: '1px solid var(--color-primary)',
-                    borderRadius: '12px',
-                    padding: '0.15rem 0.55rem',
-                    letterSpacing: '0.04em'
-                  }}>
-                    DYNAMIC SUM (FROM CATEGORIES)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditingTarget(true);
-                      if (!customTargetInput) setCustomTargetInput(totalEstimate.toString());
-                    }}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-muted)',
-                      backgroundColor: 'transparent',
-                      border: '1px dashed var(--color-border)',
-                      borderRadius: '12px',
-                      padding: '0.15rem 0.5rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                    title="Define a fixed Master Target Cap ceiling"
-                  >
-                    SET MASTER CAP
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSetTargetMode('unset');
-                      if (onUpdateBudgetTarget) onUpdateBudgetTarget(0);
-                    }}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-muted)',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
-                    }}
-                    title="Track expenses without any target limit"
-                  >
-                    Unset Limit
-                  </button>
-                </div>
-              )}
-
-              {isFixedCapMode && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    color: '#7c3aed',
-                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                    border: '1px solid rgba(124, 58, 237, 0.3)',
-                    borderRadius: '12px',
-                    padding: '0.15rem 0.55rem',
-                    letterSpacing: '0.04em'
-                  }}>
-                    MASTER CAP ACTIVE
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSyncToCategories}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-primary)',
-                      backgroundColor: 'rgba(26, 127, 75, 0.08)',
-                      border: '1px solid var(--color-primary)',
-                      borderRadius: '12px',
-                      padding: '0.15rem 0.5rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                    title={`Snap Master Cap to current category sum (${formatCurrency(totalEstimate, currency)}) and switch to Dynamic Auto-Sum`}
-                  >
-                    <RefreshCw size={10} />
-                    <span>SYNC TO CATEGORIES ({formatCurrency(totalEstimate, currency)})</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSetTargetMode('unset');
-                      if (onUpdateBudgetTarget) onUpdateBudgetTarget(0);
-                    }}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-muted)',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
-                    }}
-                    title="Track expenses without any target limit"
-                  >
-                    Unset Limit
-                  </button>
-                </div>
-              )}
-
-              {isUnsetMode && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
-                    color: 'var(--color-muted)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '12px',
-                    padding: '0.15rem 0.55rem',
-                  }}>
-                    NO HARD LIMIT (UNSET MODE)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSetTargetMode('dynamic');
-                      if (onUpdateBudgetTarget) onUpdateBudgetTarget(totalEstimate);
-                    }}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-primary)',
-                      backgroundColor: 'transparent',
-                      border: '1px solid var(--color-primary)',
-                      borderRadius: '12px',
-                      padding: '0.15rem 0.5rem',
-                      cursor: 'pointer',
-                    }}
-                    title="Auto-calculate budget dynamically from category targets"
-                  >
-                    USE DYNAMIC SUM
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditingTarget(true);
-                      if (!customTargetInput) setCustomTargetInput(totalEstimate > 0 ? totalEstimate.toString() : '35000');
-                    }}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-muted)',
-                      backgroundColor: 'transparent',
-                      border: '1px dashed var(--color-border)',
-                      borderRadius: '12px',
-                      padding: '0.15rem 0.5rem',
-                      cursor: 'pointer',
-                    }}
-                    title="Enter an explicit master ceiling cap"
-                  >
-                    SET MASTER CAP
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <h3 style={styles.meterTitle}>
-                {formatCurrency(totalActual, currency)}{' '}
-                <span style={{ fontSize: '0.9rem', color: 'var(--color-muted)', fontWeight: 500 }}>
-                  of{' '}
-                  {isUnsetMode ? (
-                    'No Hard Limit'
-                  ) : (
-                    <>
-                      {isEditingTarget ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                            <span style={{
-                              position: 'absolute',
-                              left: '0.45rem',
-                              color: 'var(--color-primary)',
-                              fontSize: '0.85rem',
-                              fontWeight: 700,
-                              pointerEvents: 'none',
-                              userSelect: 'none',
-                            }}>
-                              {currencySymbol}
-                            </span>
-                            <input
-                              type="number"
-                              value={customTargetInput}
-                              onChange={(e) => setCustomTargetInput(e.target.value)}
-                              style={{
-                                width: '115px',
-                                padding: '0.2rem 0.4rem 0.2rem 1.4rem',
-                                fontSize: '0.85rem',
-                                fontFamily: 'var(--font-mono)',
-                                border: '1px solid var(--color-primary)',
-                                borderRadius: '4px',
-                              }}
-                              placeholder="Amount"
-                              autoFocus
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleSaveCustomTarget(Number(customTargetInput))}
-                            style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.4rem', cursor: 'pointer' }}
-                            title="Save Master Cap"
-                          >
-                            <Check size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsEditingTarget(false)}
-                            style={{ background: 'transparent', color: 'var(--color-muted)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '0.2rem 0.4rem', cursor: 'pointer' }}
-                            title="Cancel"
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ) : (
-                        <span
-                          onClick={() => setIsEditingTarget(true)}
-                          style={{
-                            fontWeight: 700,
-                            color: isFixedCapMode ? '#7c3aed' : 'var(--color-primary)',
-                            cursor: 'pointer',
-                            borderBottom: '1px dashed currentColor'
-                          }}
-                          title={isFixedCapMode ? "Click to edit Master Target Cap" : "Click to set a fixed Master Target Cap"}
-                        >
-                          {formatCurrency(effectiveTarget, currency)} {isFixedCapMode ? 'Master Cap' : 'Dynamic Target'} <Edit2 size={12} style={{ display: 'inline', marginLeft: '2px' }} />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </span>
-              </h3>
-
-              {/* Allocation Cushion Pill (Shown in Fixed Cap Mode) */}
-              {isFixedCapMode && !isEditingTarget && (
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.725rem',
-                  fontWeight: 700,
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '16px',
-                  backgroundColor: isOverAllocated ? 'rgba(220, 38, 38, 0.1)' : unallocatedCushion > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(0, 0, 0, 0.05)',
-                  color: isOverAllocated ? 'var(--color-red, #dc2626)' : unallocatedCushion > 0 ? 'var(--color-green, #10b981)' : 'var(--color-muted)',
-                  border: `1px solid ${isOverAllocated ? 'rgba(220, 38, 38, 0.3)' : unallocatedCushion > 0 ? 'rgba(16, 185, 129, 0.3)' : 'var(--color-border)'}`,
-                }}>
-                  {isOverAllocated ? (
-                    <>
-                      <AlertTriangle size={12} />
-                      <span>Over-Allocated by {formatCurrency(Math.abs(allocationDifference), currency)}</span>
-                    </>
-                  ) : unallocatedCushion > 0 ? (
-                    <>
-                      <span style={{ fontSize: '0.8rem' }}>✨</span>
-                      <span>+{formatCurrency(unallocatedCushion, currency)} Unallocated Cushion</span>
-                    </>
-                  ) : (
-                    <span>✓ 100% of Cap Allocated</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* View Mode Switcher: Bar vs Donut */}
-            <div style={{
-              display: 'inline-flex',
-              backgroundColor: 'var(--color-bg-subtle, rgba(0,0,0,0.04))',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--border-radius-sm, 6px)',
-              padding: '2px',
-              gap: '2px',
-            }}>
-              <button
-                type="button"
-                onClick={() => handleMeterModeChange('bar')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  padding: '0.25rem 0.5rem',
-                  fontSize: '0.675rem',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: meterMode === 'bar' ? 'var(--color-primary)' : 'transparent',
-                  color: meterMode === 'bar' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-                title="Linear Bar Progress View"
-              >
-                <TrendingUp size={12} />
-                <span>BAR</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMeterModeChange('donut')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  padding: '0.25rem 0.5rem',
-                  fontSize: '0.675rem',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: meterMode === 'donut' ? 'var(--color-primary)' : 'transparent',
-                  color: meterMode === 'donut' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-                title="Donut Chart Utilization View"
-              >
-                <PieChart size={12} />
-                <span>DONUT</span>
-              </button>
-            </div>
-
-            {meterMode === 'bar' && (
-              <div style={styles.percentDisplay}>
-                {isUnsetMode ? (
-                  <span style={{ ...styles.percentValue, color: 'var(--color-primary)', fontSize: '0.9rem' }}>Unset</span>
-                ) : (
-                  <span style={{ ...styles.percentValue, color: meterBarColor }}>{percentUtilized}%</span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Progress Track / Donut Chart View */}
-        {meterMode === 'donut' ? (
-          <div className="budget-donut-container" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-around',
-            flexWrap: 'wrap',
-            gap: '1.25rem',
-            padding: '0.75rem 0.5rem',
-          }}>
-            {/* SVG Donut Chart */}
-            <div className="budget-donut-chart-wrapper" style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
-              <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-                {/* Background Ring Track */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="transparent"
-                  stroke="var(--color-bg-subtle, #e2e8f0)"
-                  strokeWidth="10"
-                />
-                {/* Progress Ring Arc */}
-                {!isUnsetMode && (
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke={meterBarColor}
-                    strokeWidth="10"
-                    strokeDasharray={2 * Math.PI * 40}
-                    strokeDashoffset={(2 * Math.PI * 40) * (1 - Math.min(percentUtilized, 100) / 100)}
-                    strokeLinecap="round"
-                    style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                  />
-                )}
-              </svg>
-              {/* Donut Center Label */}
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                pointerEvents: 'none',
-              }}>
-                <span className="donut-center-percent" style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: isUnsetMode ? '0.85rem' : '1.3rem',
-                  fontWeight: 800,
-                  color: meterBarColor,
-                  lineHeight: 1.1,
-                }}>
-                  {isUnsetMode ? 'N/A' : `${percentUtilized}%`}
-                </span>
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.625rem',
-                  color: 'var(--color-muted)',
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                }}>
-                  {isOverallOverBudget ? 'OVER BUDGET' : (isUnsetMode ? 'UNSET' : 'UTILIZED')}
-                </span>
-              </div>
-            </div>
-
-            {/* Donut Side Stats Grid */}
-            <div className="budget-donut-stats-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-              gap: '0.75rem',
-              flex: '1 1 300px',
-              minWidth: 0,
-            }}>
-              <div className="budget-donut-tile" style={styles.snapshotTile} title={isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}>
-                <span className="snapshot-tile-label" style={styles.snapshotTileLabel}>TOTAL BUDGET</span>
-                <span className="snapshot-tile-value" style={styles.snapshotTileValue}>
-                  {isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}
-                </span>
-                <span className="snapshot-tile-sub" style={styles.snapshotTileSub}>
-                  {isUnsetMode ? 'No Hard Limit' : isFixedCapMode ? 'Fixed Master Cap' : 'Dynamic Category Sum'}
-                </span>
-              </div>
-              <div className="budget-donut-tile" style={styles.snapshotTile} title={formatCurrency(totalActual, currency)}>
-                <span className="snapshot-tile-label" style={styles.snapshotTileLabel}>TOTAL SPENT</span>
-                <span className="snapshot-tile-value" style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>
-                  {formatCurrency(totalActual, currency)}
-                </span>
-                <span className="snapshot-tile-sub" style={styles.snapshotTileSub}>{expenses.length} purchase{expenses.length === 1 ? '' : 's'}</span>
-              </div>
-              <div className="budget-donut-tile" style={styles.snapshotTile} title={isUnsetMode ? 'Open' : formatCurrency(Math.abs(overallHeadroom), currency)}>
-                <span className="snapshot-tile-label" style={styles.snapshotTileLabel}>REMAINING</span>
-                <span className="snapshot-tile-value" style={{
-                  ...styles.snapshotTileValue,
-                  color: isOverallOverBudget ? 'var(--color-red)' : 'var(--color-green, #10b981)'
-                }}>
-                  {isUnsetMode ? 'Open' : formatCurrency(Math.abs(overallHeadroom), currency)}
-                </span>
-                <span className="snapshot-tile-sub" style={{
-                  ...styles.snapshotTileSub,
-                  color: isOverallOverBudget ? '#b91c1c' : '#15803d',
-                  fontWeight: 700
-                }}>
-                  {isUnsetMode ? 'Tracking expenses' : isOverallOverBudget ? 'Over Budget' : 'Remaining Available'}
-                </span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Linear Progress Track */
-          <div style={styles.progressTrack}>
-            <div style={{
-              ...styles.progressFill,
-              width: `${Math.min(percentUtilized, 100)}%`,
-              backgroundColor: meterBarColor
-            }} />
-          </div>
-        )}
-
-        {/* Status Row Directly Under the Progress Bar */}
-        {!isUnsetMode && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            marginTop: meterMode === 'donut' ? '0.35rem' : '0.5rem',
-            paddingTop: '0.35rem',
-            borderTop: '1px dotted var(--color-border)',
-            fontSize: '0.75rem',
-            fontFamily: 'var(--font-mono)',
-          }}>
-            {isOverallOverBudget ? (
-              <span style={{ color: 'var(--color-red, #dc2626)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                <AlertTriangle size={13} /> {formatCurrency(totalActual - effectiveTarget, currency)} OVER BUDGET
+    <div className="budget-ledger-editorial-view" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      
+      {/* 1. Immediate Top Exception Strip (Pending, Overdue, Alerts, Last-Sync) */}
+      <div
+        className="budget-exception-strip"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.6rem 1.25rem',
+          padding: '0.55rem 0.85rem',
+          backgroundColor: overdueTotal > 0 ? 'rgba(239, 68, 68, 0.05)' : 'var(--color-bg-pane, #F8FAFC)',
+          border: `1px solid ${overdueTotal > 0 ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
+          borderRadius: '2px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {/* Overdue Alert */}
+          {overdueTotal > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#B91C1C' }}>
+              <AlertTriangle size={13} />
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800 }}>
+                OVERDUE: {formatCurrency(overdueTotal, currency)} ({overdueRows.length} CATEGORY)
               </span>
-            ) : (
-              <span style={{ color: 'var(--color-green, #10b981)', fontWeight: 800 }}>
-                {formatCurrency(overallHeadroom, currency)} REMAINING AVAILABLE
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Category Breakdown: Responsive Desktop Pills vs Mobile Chips */}
-        {activeOrAlertStats.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-            {/* Desktop View: Compact Horizontal Pill/Chip List of Active or Alert Categories */}
-            <div className="budget-desktop-pills-bar" style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.06em' }}>
-                  ACTIVE & ALERT CATEGORIES (SELECT TO VIEW DETAIL LEDGER)
-                </span>
-                {selectedCategoryId && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategoryId('')}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      backgroundColor: 'transparent',
-                      color: 'var(--color-primary)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
-                    }}
-                  >
-                    RESET SELECTION
-                  </button>
-                )}
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-                gap: '0.5rem',
-                alignItems: 'stretch',
-              }}>
-                {activeOrAlertStats.length === 0 ? (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)', fontStyle: 'italic', fontFamily: 'var(--font-mono)' }}>
-                    No active category budgets or expenses recorded yet. Select any category below to begin logging.
-                  </span>
-                ) : (
-                  activeOrAlertStats.map(stat => {
-                    const isSelected = effectiveSelectedCategoryId.toLowerCase() === stat.category.toLowerCase();
-                    return (
-                      <button
-                        key={stat.category}
-                        type="button"
-                        className="budget-desktop-category-card"
-                        onClick={() => setSelectedCategoryId(isSelected && selectedCategoryId ? '' : stat.category)}
-                        title={`${stat.category} — ${stat.percent}% utilized (${formatCurrency(stat.actual, currency)} spent of ${formatCurrency(stat.estimated, currency)} target)`}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          gap: '0.35rem',
-                          padding: '0.55rem 0.65rem',
-                          borderRadius: '8px',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          border: isSelected
-                            ? '1.5px solid var(--color-primary)'
-                            : `1px solid ${stat.isOver ? '#fca5a5' : 'var(--color-border)'}`,
-                          backgroundColor: isSelected
-                            ? 'var(--color-primary)'
-                            : (stat.isOver ? '#fff5f5' : 'var(--color-surface)'),
-                          boxShadow: isSelected
-                            ? '0 3px 10px rgba(15, 23, 42, 0.16)'
-                            : (stat.isOver ? '0 1px 3px rgba(239, 68, 68, 0.08)' : '0 1px 3px rgba(0,0,0,0.03)'),
-                        }}
-                      >
-                        {/* Top Line: Category Name & Alert Badge */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0, gap: '0.25rem' }}>
-                          <span style={{
-                            fontSize: '0.725rem',
-                            fontWeight: 700,
-                            color: isSelected
-                              ? 'var(--color-on-primary, #ffffff)'
-                              : (stat.isOver ? '#991b1b' : 'var(--color-text)'),
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            lineHeight: 1.2,
-                          }}>
-                            {stat.category}
-                          </span>
-                          {stat.isOver ? (
-                            <span
-                              title={`Over budget by ${formatCurrency(stat.overAmount, currency)}`}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                flexShrink: 0,
-                                color: isSelected ? '#fecaca' : '#dc2626',
-                              }}
-                            >
-                              <AlertTriangle size={12} />
-                            </span>
-                          ) : isSelected ? (
-                            <span style={{
-                              fontSize: '0.55rem',
-                              fontFamily: 'var(--font-mono)',
-                              fontWeight: 800,
-                              color: '#93c5fd',
-                              letterSpacing: '0.04em',
-                              flexShrink: 0,
-                            }}>
-                              ACTIVE
-                            </span>
-                          ) : null}
-                        </div>
-
-                        {/* Middle Line: Prominent Percentage & Amount */}
-                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', width: '100%', gap: '0.25rem' }}>
-                          <span style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '1.2rem',
-                            fontWeight: 800,
-                            lineHeight: 1,
-                            letterSpacing: '-0.02em',
-                            color: isSelected
-                              ? 'var(--color-on-primary, #ffffff)'
-                              : (stat.isOver
-                                ? '#dc2626'
-                                : (stat.percent >= 90 ? 'var(--color-gold-dark, #d97706)' : 'var(--color-text)')),
-                            fontVariantNumeric: 'tabular-nums',
-                          }}>
-                            {stat.percent}%
-                          </span>
-                          <span style={{
-                            fontSize: '0.65rem',
-                            fontFamily: 'var(--font-mono)',
-                            fontWeight: 600,
-                            color: isSelected
-                              ? 'rgba(255, 255, 255, 0.75)'
-                              : (stat.isOver ? '#b91c1c' : 'var(--color-muted)'),
-                            fontVariantNumeric: 'tabular-nums',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}>
-                            {stat.isOver
-                              ? `+${formatCurrency(stat.overAmount, currency, true)}`
-                              : formatCurrency(stat.actual, currency, true)}
-                          </span>
-                        </div>
-
-                        {/* Bottom Line: Micro Progress Bar */}
-                        <div style={{
-                          width: '100%',
-                          height: '3px',
-                          borderRadius: '2px',
-                          backgroundColor: isSelected
-                            ? 'rgba(255, 255, 255, 0.2)'
-                            : 'var(--color-bg-subtle, #e2e8f0)',
-                          overflow: 'hidden',
-                          marginTop: '0.1rem',
-                        }}>
-                          <div style={{
-                            height: '100%',
-                            width: `${Math.min(stat.percent, 100)}%`,
-                            borderRadius: '2px',
-                            backgroundColor: isSelected
-                              ? (stat.isOver ? '#f87171' : (stat.percent >= 90 ? '#fcd34d' : '#60a5fa'))
-                              : (stat.isOver ? '#ef4444' : (stat.percent >= 90 ? '#f59e0b' : '#10b981')),
-                            transition: 'width 0.3s ease',
-                          }} />
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* Mobile View: Category Filter Chip Cloud */}
-            <div className="budget-mobile-chips-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-muted)' }}>
-                  CATEGORY QUICK FILTERS (CLICK TO TOGGLE MULTIPLE)
-                </span>
-                {selectedCategories.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearCategoryFilters}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      backgroundColor: 'transparent',
-                      color: 'var(--color-primary)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
-                    }}
-                  >
-                    CLEAR FILTERS ({selectedCategories.length})
-                  </button>
-                )}
-              </div>
-
-              <div style={styles.categoryChipsGrid}>
-                {activeOrAlertStats.map(stat => {
-                  const isSelected = selectedCategories.some(c => c.toLowerCase() === stat.category.toLowerCase());
-                  return (
-                    <div
-                      key={stat.category}
-                      onClick={() => toggleCategoryFilter(stat.category)}
-                      style={{
-                        ...styles.categoryChip,
-                        borderColor: isSelected ? 'var(--color-primary)' : stat.isOver ? 'var(--color-red)' : 'var(--color-border)',
-                        backgroundColor: isSelected ? 'rgba(26, 127, 75, 0.08)' : 'var(--color-surface)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <div style={styles.categoryChipHeader}>
-                        <span style={styles.categoryChipName}>{stat.category}</span>
-                        {stat.isOver ? (
-                          <span style={styles.overBadgeMini}>+{formatCurrency(stat.overAmount, currency)}</span>
-                        ) : (
-                          <span style={styles.categoryChipPercent}>{stat.percent}%</span>
-                        )}
-                      </div>
-                      <div style={styles.miniTrack}>
-                        <div style={{
-                          ...styles.miniFill,
-                          width: `${Math.min(stat.percent, 100)}%`,
-                          backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)'
-                        }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ============================================================ */}
-      {/* DESKTOP SPLIT VIEW: MASTER RAIL (LEFT ~5 COLS) & DETAIL (RIGHT ~7 COLS) */}
-      {/* ============================================================ */}
-      <div className="budget-desktop-split-view lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start">
-        {/* Left Column: Master Rail */}
-        <div className="budget-master-rail lg:col-span-5">
-          {/* Fixed Rail Header & Filter Search Container */}
-          <div className="budget-master-rail-fixed-header">
-            {/* Rail Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px solid var(--color-border)' }}>
-              <div>
-                <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
-                  📊 CATEGORY BUDGETS
-                </h3>
-                <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {displayedMasterStats.length} budget categor{displayedMasterStats.length === 1 ? 'y' : 'ies'}
-                </span>
-              </div>
-              <button
-                type="button"
-                style={{ ...styles.addButton, fontSize: '0.7rem', padding: '0.35rem 0.65rem' }}
-                onClick={() => startAddBudget()}
-                disabled={isSyncing}
-                title="Add New Budget Category"
-              >
-                <Plus size={13} style={{ marginRight: '0.2rem' }} /> NEW CATEGORY
-              </button>
-            </div>
-
-            {/* Master Category Search & Sort Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', alignItems: 'center' }}>
-              <div style={{ position: 'relative', width: '100%' }}>
-                <input
-                  type="text"
-                  placeholder="FILTER CATEGORIES..."
-                  value={masterCategorySearch}
-                  onChange={(e) => setMasterCategorySearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.45rem 0.65rem',
-                    paddingRight: masterCategorySearch ? '1.5rem' : '0.65rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.75rem',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    backgroundColor: 'var(--color-surface)',
-                    color: 'var(--color-text)',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {masterCategorySearch && (
-                  <button
-                    type="button"
-                    onClick={() => setMasterCategorySearch('')}
-                    style={{
-                      position: 'absolute',
-                      right: '0.35rem',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--color-muted)',
-                      cursor: 'pointer',
-                      padding: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                    title="Clear filter"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
-
-              <div style={{ position: 'relative', width: '100%' }}>
-                <select
-                  value={
-                    masterCategorySort === 'budget' ? 'budget-desc' :
-                    masterCategorySort === 'spent' ? 'spent-desc' :
-                    masterCategorySort === 'remaining' ? 'remaining-desc' :
-                    masterCategorySort === 'alphabetical' ? 'alphabetical-asc' :
-                    masterCategorySort
-                  }
-                  onChange={(e) => {
-                    const val = e.target.value as MasterCategorySort;
-                    setMasterCategorySort(val);
-                    if (typeof window !== 'undefined') {
-                      localStorage.setItem('s2v_budget_master_sort', val);
-                    }
-                  }}
-                  aria-label="Sort categories"
-                  style={{
-                    width: '100%',
-                    padding: '0.45rem 1.75rem 0.45rem 0.65rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.75rem',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    backgroundColor: 'var(--color-surface)',
-                    color: 'var(--color-text)',
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none',
-                    cursor: 'pointer',
-                    boxSizing: 'border-box',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <option value="alphabetical-asc">Alphabetical (A → Z)</option>
-                  <option value="alphabetical-desc">Alphabetical (Z → A)</option>
-                  <option value="budget-desc">Budget: High to Low</option>
-                  <option value="budget-asc">Budget: Low to High</option>
-                  <option value="spent-desc">Spent: High to Low</option>
-                  <option value="spent-asc">Spent: Low to High</option>
-                  <option value="remaining-desc">Remaining: High to Low</option>
-                  <option value="remaining-asc">Remaining: Low to High</option>
-                </select>
-                <div style={{
-                  position: 'absolute',
-                  right: '0.5rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  pointerEvents: 'none',
-                  color: 'var(--color-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}>
-                  <ArrowUpDown size={12} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Scrollable Master Category List */}
-          <div className="budget-master-rail-list">
-              {displayedMasterStats.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '2.5rem 1rem',
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  border: '1px dashed var(--color-border)',
-                  borderRadius: 'var(--border-radius-md)',
-                  color: 'var(--color-muted)',
-                  fontSize: '0.8rem',
-                  fontFamily: 'var(--font-mono)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <ShoppingBag size={28} style={{ opacity: 0.4, color: 'var(--color-primary)' }} />
-                  <span>{masterCategorySearch.trim() ? `No categories found matching "${masterCategorySearch}"` : 'No budget categories created yet.'}</span>
-                  {!masterCategorySearch.trim() && (
-                    <button
-                      type="button"
-                      onClick={() => startAddBudget()}
-                      style={{ ...styles.addButton, fontSize: '0.725rem', padding: '0.35rem 0.65rem' }}
-                    >
-                      <Plus size={13} style={{ marginRight: '0.2rem' }} /> CREATE FIRST BUDGET
-                    </button>
-                  )}
-                </div>
-              ) : (
-                displayedMasterStats.map(stat => {
-                  const isSelected = effectiveSelectedCategoryId.toLowerCase() === stat.category.toLowerCase();
-                  const cushion = stat.estimated - stat.actual;
-
-                  return (
-                    <div
-                      key={stat.category}
-                      onClick={() => setSelectedCategoryId(stat.category)}
-                      style={{
-                        backgroundColor: isSelected ? 'rgba(13, 27, 42, 0.04)' : 'var(--color-surface)',
-                        border: isSelected
-                          ? '2px solid var(--color-primary)'
-                          : (stat.isOver ? '1px solid var(--color-red)' : '1px solid var(--color-border)'),
-                        boxShadow: isSelected ? '0 0 0 2px rgba(13, 27, 42, 0.12), var(--box-shadow-subtle)' : 'var(--box-shadow-subtle)',
-                        borderRadius: 'var(--border-radius-md)',
-                        padding: '0.85rem 1rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.4rem',
-                      }}
-                    >
-                      {/* Card Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{
-                          fontFamily: 'var(--font-serif)',
-                          fontSize: '1.05rem',
-                          fontWeight: 700,
-                          color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
-                        }}>
-                          {stat.category}
-                        </span>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          {stat.isOver && (
-                            <span style={styles.overBadgeCard}>
-                              <AlertTriangle size={11} style={{ marginRight: '2px' }} /> +{formatCurrency(stat.overAmount, currency)}
-                            </span>
-                          )}
-                          {/* Inline Edit and Delete Budget Category Controls */}
-                          {stat.budgetItems.length > 0 ? (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }} onClick={(e) => e.stopPropagation()}>
-                              <button
-                                type="button"
-                                onClick={() => startEditBudget(stat.budgetItems[0])}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: 'var(--color-muted)',
-                                  cursor: 'pointer',
-                                  padding: '2px 4px',
-                                  borderRadius: '3px',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                }}
-                                title={`Edit ${stat.category} Budget`}
-                                aria-label={`Edit ${stat.category} Budget`}
-                              >
-                                <Edit2 size={12} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => promptDeleteItem(stat.budgetItems[0])}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: 'var(--color-red, #ef4444)',
-                                  cursor: 'pointer',
-                                  padding: '2px 4px',
-                                  borderRadius: '3px',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                }}
-                                title={`Delete ${stat.category} Budget`}
-                                aria-label={`Delete ${stat.category} Budget`}
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startAddBudget(stat.category);
-                              }}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--color-primary)',
-                                cursor: 'pointer',
-                                fontSize: '0.625rem',
-                                fontFamily: 'var(--font-mono)',
-                                fontWeight: 700,
-                                textDecoration: 'underline',
-                                padding: '2px 4px',
-                              }}
-                              title={`Set Budget for ${stat.category}`}
-                            >
-                              Set Budget
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Mini Track */}
-                      <div style={{
-                        height: '4px',
-                        width: '100%',
-                        backgroundColor: 'var(--color-bg-subtle)',
-                        borderRadius: '999px',
-                        overflow: 'hidden',
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${Math.min(stat.percent, 100)}%`,
-                          backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)'
-                        }} />
-                      </div>
-
-                      {/* Numbers Grid */}
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '0.35rem',
-                        marginTop: '0.2rem',
-                        fontSize: '0.725rem',
-                        fontFamily: 'var(--font-mono)',
-                      }}>
-                        <div>
-                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>BUDGET</span>
-                          <span style={{ fontWeight: 700, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stat.estimated, currency)}</span>
-                        </div>
-                        <div>
-                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>SPENT</span>
-                          <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stat.actual, currency)}</span>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.625rem', fontWeight: 700 }}>REMAINING</span>
-                          <span style={{
-                            fontWeight: 700,
-                            color: cushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)',
-                            fontVariantNumeric: 'tabular-nums'
-                          }}>
-                            {formatCurrency(cushion, currency)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Card Sub-details */}
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        fontSize: '0.675rem',
-                        color: 'var(--color-muted)',
-                        fontFamily: 'var(--font-mono)',
-                        borderTop: '1px dotted var(--color-border)',
-                        paddingTop: '0.35rem',
-                        marginTop: '0.15rem',
-                      }}>
-                        <span>{stat.expenseCount} logged expense{stat.expenseCount === 1 ? '' : 's'}</span>
-                        <span>{stat.percent}% utilized</span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-        {/* Right Column: Detail Ledger */}
-        <div className="budget-detail-ledger lg:col-span-7">
-          {!effectiveSelectedCategoryId ? (
-            <div style={{
-              backgroundColor: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--border-radius-lg, 1rem)',
-              padding: '3rem 2rem',
-              textAlign: 'center',
-              boxShadow: 'var(--box-shadow-subtle)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem',
-              color: 'var(--color-muted)',
-            }}>
-              <DollarSign size={40} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', margin: 0, color: 'var(--color-text)' }}>
-                No Budget Categories Yet
-              </h3>
-              <p style={{ fontSize: '0.85rem', maxWidth: '420px', margin: 0 }}>
-                Create your first budget category (e.g. Venue, Catering, Photography) to establish target allocations. Itemized receipts and expenses will line up under each category.
-              </p>
-              <button
-                type="button"
-                onClick={() => startAddBudget()}
-                style={styles.addButton}
-              >
-                <Plus size={14} style={{ marginRight: '0.25rem' }} /> NEW BUDGET CATEGORY
-              </button>
             </div>
           ) : (
-            <>
-              {/* 1. Dynamic Category Snapshot Header */}
-              <div style={{
-                backgroundColor: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--border-radius-lg, 1rem)',
-                padding: '1.25rem 1.5rem',
-                boxShadow: 'var(--box-shadow-subtle)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.85rem',
-              }}>
-                {/* Snapshot Top Bar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.08em' }}>
-                        CATEGORY SNAPSHOT
-                      </span>
-                      {selectedCatStat.isOver && (
-                        <span style={styles.overBadgeMini}>
-                          OVER BUDGET (+{formatCurrency(selectedCatStat.overAmount, currency)})
-                        </span>
-                      )}
-                    </div>
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', fontWeight: 700, color: 'var(--color-primary)', margin: '0.1rem 0 0' }}>
-                      {effectiveSelectedCategoryId}
-                    </h3>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => startAddExpense(effectiveSelectedCategoryId)}
-                      style={{ ...styles.addButton, color: 'var(--color-on-dark)' }}
-                      disabled={isSyncing}
-                    >
-                      <Plus size={14} style={{ marginRight: '0.25rem' }} /> ADD EXPENSE
-                    </button>
-                  </div>
-                </div>
-
-                {/* Snapshot 3-Metric Tiles */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                  <div style={styles.snapshotTile}>
-                    <span style={styles.snapshotTileLabel}>CATEGORY BUDGET</span>
-                    <span style={styles.snapshotTileValue}>{formatCurrency(selectedCatStat.estimated, currency)}</span>
-                    <span style={styles.snapshotTileSub}>
-                      {selectedCatBudgetItems.length > 0 ? 'Allocated Target' : 'No Budget Set'}
-                    </span>
-                  </div>
-
-                  <div style={styles.snapshotTile}>
-                    <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
-                    <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>{formatCurrency(selectedCatExpensesTotal, currency, true)}</span>
-                    <span style={styles.snapshotTileSub}>{selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'} recorded</span>
-                  </div>
-
-                  <div style={styles.snapshotTile}>
-                    <span style={styles.snapshotTileLabel}>REMAINING</span>
-                    <span style={{
-                      ...styles.snapshotTileValue,
-                      color: remainingCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
-                    }}>
-                      {formatCurrency(remainingCushion, currency)}
-                    </span>
-                    <span style={{
-                      ...styles.snapshotTileSub,
-                      color: remainingCushion < 0 ? '#b91c1c' : '#15803d',
-                      fontWeight: 700
-                    }}>
-                      {remainingCushion < 0 ? `Over Budget by ${formatCurrency(Math.abs(remainingCushion), currency)}` : 'Remaining Available'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Target Budget Breakdown Line Items if present */}
-                {selectedCatBudgetItems.length > 0 ? (
-                  <div style={{
-                    borderTop: '1px dashed var(--color-border)',
-                    paddingTop: '0.65rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.35rem'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
-                        CATEGORY BUDGET ALLOCATION
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => startEditBudget(selectedCatBudgetItems[0])}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--color-primary)',
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.65rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          textDecoration: 'underline'
-                        }}
-                      >
-                        EDIT BUDGET
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                      {selectedCatBudgetItems.map(item => (
-                        <div
-                          key={item.itemId}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            backgroundColor: 'var(--color-bg-subtle)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: 'var(--border-radius-sm)',
-                            padding: '0.35rem 0.65rem',
-                            fontSize: '0.725rem',
-                            fontFamily: 'var(--font-mono)',
-                          }}
-                        >
-                          <span style={{ fontWeight: 600 }}>Budget:</span>
-                          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{formatCurrency(item.estimatedCost, currency)}</span>
-                          <button
-                            type="button"
-                            onClick={() => startEditBudget(item)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.2rem',
-                              background: 'var(--color-surface)',
-                              border: '1px solid var(--color-border)',
-                              borderRadius: '3px',
-                              cursor: 'pointer',
-                              color: 'var(--color-primary)',
-                              padding: '2px 5px',
-                              fontSize: '0.675rem',
-                              fontWeight: 700,
-                            }}
-                            title="Edit Category Budget"
-                          >
-                            <Edit2 size={11} /> Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => promptDeleteItem(item)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.2rem',
-                              background: 'rgba(239, 68, 68, 0.08)',
-                              border: '1px solid rgba(239, 68, 68, 0.25)',
-                              borderRadius: '3px',
-                              cursor: 'pointer',
-                              color: 'var(--color-red, #ef4444)',
-                              padding: '2px 5px',
-                              fontSize: '0.675rem',
-                              fontWeight: 700,
-                            }}
-                            title="Delete Budget Category"
-                          >
-                            <Trash2 size={11} /> Delete
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{
-                    borderTop: '1px dashed var(--color-border)',
-                    paddingTop: '0.65rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)' }}>
-                      No budget allocated to this category yet.
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => startAddBudget(effectiveSelectedCategoryId)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-primary)',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.675rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        textDecoration: 'underline'
-                      }}
-                    >
-                      <Plus size={12} /> SET BUDGET
-                    </button>
-                  </div>
-                )}
-              </div>
-
-          {/* 2. Itemized Expenses Detail Table */}
-          <div style={{
-            backgroundColor: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--border-radius-lg, 1rem)',
-            padding: '1.25rem',
-            boxShadow: 'var(--box-shadow-subtle)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div>
-                <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
-                  ITEMIZED EXPENSES FOR {effectiveSelectedCategoryId.toUpperCase()}
-                </h4>
-                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {displayedDetailExpenses.length} of {selectedCatExpenses.length} purchase{selectedCatExpenses.length === 1 ? '' : 's'}
-                </span>
-              </div>
-
-              {selectedCatExpenses.length > 0 && (
-                <input
-                  type="text"
-                  placeholder="SEARCH THIS CATEGORY..."
-                  value={detailExpenseSearch}
-                  onChange={(e) => setDetailExpenseSearch(e.target.value)}
-                  style={{
-                    padding: '0.35rem 0.6rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.725rem',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    backgroundColor: 'var(--color-bg)',
-                    color: 'var(--color-text)',
-                    width: '200px',
-                  }}
-                />
-              )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-green, #10B981)' }}>
+              <CheckCircle2 size={13} />
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 700 }}>
+                NO OVERDUE BALANCES
+              </span>
             </div>
+          )}
 
-            {/* Table or Empty State */}
-            {displayedDetailExpenses.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '3rem 1.5rem',
-                backgroundColor: 'var(--color-bg-subtle)',
-                border: '1px dashed var(--color-border)',
-                borderRadius: 'var(--border-radius-md)',
-                color: 'var(--color-muted)',
-              }}>
-                <ShoppingBag size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.4, color: 'var(--color-primary)' }} />
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', margin: '0 0 0.35rem', color: 'var(--color-text)' }}>
-                  No itemized expenses logged for {effectiveSelectedCategoryId}
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: '0 0 1.25rem', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
-                  Record receipts, deposits, vendor retainers, and day-of purchases to monitor your actual costs against this category budget.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => startAddExpense(effectiveSelectedCategoryId)}
-                  style={{ ...styles.addButton, margin: '0 auto', color: 'var(--color-on-dark)' }}
-                >
-                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> LOG FIRST EXPENSE
-                </button>
-              </div>
-            ) : (
-              <>
-                <div style={styles.tableWrapper}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>DESCRIPTION</th>
-                        <th style={{ ...styles.th, textAlign: 'right' }}>AMOUNT</th>
-                        <th style={styles.th}>PURCHASE DATE</th>
-                        <th style={styles.th}>NOTES</th>
-                        <th style={{ ...styles.th, textAlign: 'center' }}>ACTIONS</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayedDetailExpenses.map(exp => {
-                        const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
-                        return (
-                          <tr key={exp.itemId} style={styles.tr}>
-                            <td style={styles.td}>
-                              <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{exp.description}</span>
-                            </td>
-                            <td style={{ ...styles.td, textAlign: 'right' }}>
-                              <span style={{ ...styles.monoText, color: 'var(--color-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                                {formatCurrency(amt, currency, true)}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ ...styles.monoText, fontVariantNumeric: 'tabular-nums' }}>{formatDateConsistent(exp.purchaseDate)}</span>
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>{exp.notes || '-'}</span>
-                            </td>
-                            <td style={{ ...styles.td, textAlign: 'center' }}>
-                              <div style={styles.actionsCell}>
-                                <button style={styles.actionBtn} onClick={() => startEditExpense(exp)} title="Edit Expense">
-                                  <Edit2 size={12} />
-                                </button>
-                                {onUpdateExpenses && (
-                                  <button
-                                    style={{ ...styles.actionBtn, color: 'var(--color-red)' }}
-                                    onClick={() => promptDeleteExpense(exp)}
-                                    disabled={isSyncing}
-                                    title="Delete Expense"
-                                  >
-                                    <Trash2 size={12} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+          <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
 
-                      {/* Footer Row */}
-                      <tr style={styles.footerTr}>
-                        <td style={{ ...styles.td, fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                          TOTAL FOR {effectiveSelectedCategoryId.toUpperCase()}
-                        </td>
-                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)' }}>
-                          <span style={{ ...styles.monoText, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
-                            {formatCurrency(displayedDetailExpenses.reduce((s, e) => s + (e.amount ?? e.actualCost ?? e.amountPaid ?? 0), 0), currency, true)}
-                          </span>
-                        </td>
-                        <td colSpan={3} style={styles.td}></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Bottom Quick-Add Action for Detail Expenses Table */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingTop: '0.75rem',
-                  borderTop: '1px solid var(--color-border)',
-                  marginTop: '0.25rem',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                }}>
-                  <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {displayedDetailExpenses.length} expense{displayedDetailExpenses.length === 1 ? '' : 's'} recorded for {effectiveSelectedCategoryId}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => startAddExpense(effectiveSelectedCategoryId)}
-                    disabled={isSyncing}
-                    className="budget-detail-table-add-btn"
-                    style={{
-                      ...styles.addButton,
-                      padding: '0.45rem 0.85rem',
-                      fontSize: '0.725rem',
-                      gap: '0.35rem',
-                      color: 'var(--color-on-primary, #ffffff)',
-                    }}
-                    title={`Add new expense to ${effectiveSelectedCategoryId}`}
-                  >
-                    <Plus size={14} strokeWidth={2.5} /> ADD EXPENSE
-                  </button>
-                </div>
-              </>
-            )}
+          {/* Pending Balances */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Clock size={13} style={{ color: 'var(--color-muted, #64748B)' }} />
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-text, #0F172A)' }}>
+              UNPAID BALANCE: <strong>{formatCurrency(pendingTotal, currency)}</strong>
+            </span>
           </div>
+
+          {/* Over-budget categories */}
+          {overBudgetRows.length > 0 && (
+            <>
+              <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: '#B91C1C', fontWeight: 700 }}>
+                ⚠️ {overBudgetRows.length} CATEGORIES OVER TARGET
+              </span>
+            </>
+          )}
+
+          {/* Next Due Date */}
+          {nextUpcomingDue && (
+            <>
+              <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                NEXT DUE: <strong>{nextUpcomingDue.dueDate}</strong> ({nextUpcomingDue.category})
+              </span>
             </>
           )}
         </div>
-      </div>
 
-      {/* ============================================================ */}
-      {/* MOBILE INTERACTIVE CATEGORY LIST (< lg)                      */}
-      {/* ============================================================ */}
-      <div className="budget-mobile-stacked-view">
-        {/* Mobile Category Explorer Header */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '0.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--color-text)', margin: 0 }}>
-                📂 CATEGORY EXPENSES
-              </h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0.1rem 0 0' }}>
-                Tap any category to view receipts, budgets & log expenses
-              </p>
-            </div>            <button
-              type="button"
-              onClick={() => startAddBudget(effectiveSelectedCategoryId)}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.675rem',
-                fontWeight: 700,
-                padding: '0.35rem 0.65rem',
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-primary)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--border-radius-sm)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                cursor: 'pointer'
-              }}
-              title="Add New Budget Category"
-            >
-              <Plus size={12} /> ADD BUDGET
-            </button>
-          </div>
-
-          {/* Search and Quick Filters */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-            <div style={{ position: 'relative', width: '100%' }}>
-              <Search size={14} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-muted)' }} />
-              <input
-                type="text"
-                placeholder="SEARCH CATEGORIES..."
-                value={mobileCategorySearch}
-                onChange={(e) => setMobileCategorySearch(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.45rem 0.65rem 0.45rem 2rem',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  backgroundColor: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
-              <button
-                type="button"
-                onClick={() => setMobileFilterTab('all')}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  padding: '0.25rem 0.55rem',
-                  borderRadius: '12px',
-                  border: mobileFilterTab === 'all' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  backgroundColor: mobileFilterTab === 'all' ? 'var(--color-primary)' : 'var(--color-surface)',
-                  color: mobileFilterTab === 'all' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                ALL ({categoryStats.filter(s => s.estimated > 0 || s.actual > 0 || s.expenseCount > 0).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setMobileFilterTab('active')}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  padding: '0.25rem 0.55rem',
-                  borderRadius: '12px',
-                  border: mobileFilterTab === 'active' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  backgroundColor: mobileFilterTab === 'active' ? 'var(--color-primary)' : 'var(--color-surface)',
-                  color: mobileFilterTab === 'active' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                ACTIVE ({categoryStats.filter(s => s.actual > 0 || s.expenseCount > 0).length})
-              </button>
-              {categoryStats.some(s => s.isOver) && (
-                <button
-                  type="button"
-                  onClick={() => setMobileFilterTab('alerts')}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    padding: '0.25rem 0.55rem',
-                    borderRadius: '12px',
-                    border: '1px solid var(--color-red)',
-                    backgroundColor: mobileFilterTab === 'alerts' ? 'var(--color-red)' : 'rgba(239, 68, 68, 0.1)',
-                    color: mobileFilterTab === 'alerts' ? '#ffffff' : 'var(--color-red)',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  ⚠️ OVER BUDGET ({categoryStats.filter(s => s.isOver).length})
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Vertical 1-Column List of Category Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '0.15rem' }}>
-          {displayedMobileStats.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '2.5rem 1rem',
-              backgroundColor: 'var(--color-bg-subtle)',
-              border: '1px dashed var(--color-border)',
-              borderRadius: 'var(--border-radius-md)',
-              color: 'var(--color-muted)',
-              fontSize: '0.8rem',
-              fontFamily: 'var(--font-mono)'
-            }}>
-              {mobileCategorySearch.trim()
-                ? `No categories found matching "${mobileCategorySearch}"`
-                : 'No budget categories created yet. Tap "ADD BUDGET" above to create your first budget category.'}
-            </div>
-          ) : (
-            displayedMobileStats.map(stat => {
-              const cushion = stat.estimated - stat.actual;
-              return (
-                <div
-                  key={stat.category}
-                  onClick={() => openBottomSheet(stat.category)}
-                  className="mobile-category-card"
-                  role="button"
-                  tabIndex={0}
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    border: stat.isOver ? '1px solid var(--color-red)' : '1px solid var(--color-border)',
-                    borderRadius: 'var(--border-radius-lg, 1rem)',
-                    padding: '0.85rem 1rem',
-                    boxShadow: 'var(--box-shadow-subtle)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.45rem',
-                  }}
-                >
-                  {/* Card Top Row: Category Title & Over/Percent Badge */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{
-                      fontFamily: 'var(--font-serif)',
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      color: stat.isOver ? 'var(--color-red)' : 'var(--color-text)',
-                    }}>
-                      {stat.category}
-                    </span>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      {stat.isOver ? (
-                        <span style={styles.overBadgeMini}>
-                          <AlertTriangle size={11} style={{ marginRight: '2px' }} /> +{formatCurrency(stat.overAmount, currency)}
-                        </span>
-                      ) : stat.estimated > 0 ? (
-                        <span style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.65rem',
-                          fontWeight: 700,
-                          backgroundColor: 'var(--color-bg-subtle)',
-                          color: stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-muted)',
-                          padding: '0.15rem 0.4rem',
-                          borderRadius: '4px',
-                        }}>
-                          {stat.percent}%
-                        </span>
-                      ) : (
-                        <span style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.65rem',
-                          color: 'var(--color-muted)',
-                        }}>
-                          No budget
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Mini Progress Bar */}
-                  <div style={{
-                    height: '4px',
-                    width: '100%',
-                    backgroundColor: 'var(--color-bg-subtle)',
-                    borderRadius: '999px',
-                    overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${Math.min(stat.percent, 100)}%`,
-                      backgroundColor: stat.isOver ? 'var(--color-red)' : stat.percent > 90 ? 'var(--color-gold-dark)' : 'var(--color-green)',
-                      transition: 'width 0.3s ease',
-                    }} />
-                  </div>
-
-                  {/* Tabular 3-Metric Numbers Grid */}
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.35rem',
-                    fontSize: '0.725rem',
-                    fontFamily: 'var(--font-mono)',
-                  }}>
-                    <div>
-                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>BUDGET</span>
-                      <span style={{ fontWeight: 700, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>
-                        {formatCurrency(stat.estimated, currency)}
-                      </span>
-                    </div>
-                    <div>
-                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>SPENT</span>
-                      <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>
-                        {formatCurrency(stat.actual, currency)}
-                      </span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ display: 'block', color: 'var(--color-muted)', fontSize: '0.6rem', fontWeight: 700 }}>REMAINING</span>
-                      <span style={{
-                        fontWeight: 700,
-                        color: cushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)',
-                        fontVariantNumeric: 'tabular-nums'
-                      }}>
-                        {formatCurrency(cushion, currency)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card Footer: Count of logged expenses & Chevron indicator */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderTop: '1px dotted var(--color-border)',
-                    paddingTop: '0.35rem',
-                    marginTop: '0.1rem',
-                    fontSize: '0.7rem',
-                    color: 'var(--color-muted)',
-                    fontFamily: 'var(--font-mono)',
-                  }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <ShoppingBag size={12} style={{ opacity: 0.6 }} />
-                      {stat.expenseCount} logged expense{stat.expenseCount === 1 ? '' : 's'}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: 'var(--color-primary)', fontWeight: 700 }}>
-                      View Details <ChevronRight size={13} />
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* MOBILE CATEGORY DETAIL BOTTOM SHEET                           */}
-      {/* ============================================================ */}
-      {activeBottomSheetCategory && bottomSheetStat && (
-        <>
-          {/* Backdrop Overlay */}
-          <div
-            className="mobile-bottom-sheet-backdrop"
-            onClick={closeBottomSheet}
+        {/* Right: Spreadsheet Metadata & Sync Indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
+          <span
+            title="Formula logic: Actual = SUM(Expenses!E:E); Variance = Projected - Actual"
             style={{
-              opacity: isSheetAnimating ? 1 : 0,
-            }}
-          />
-
-          {/* Drawer Sheet Content */}
-          <div
-            className="mobile-bottom-sheet-container"
-            style={{
-              transform: isSheetAnimating ? 'translateY(0)' : 'translateY(calc(100% + 120px))',
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.62rem',
+              color: 'var(--color-muted, #64748B)',
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              padding: '0.15rem 0.45rem',
+              borderRadius: '2px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.3rem',
             }}
           >
-            {/* Grab Handle */}
-            <div className="mobile-bottom-sheet-handle" onClick={closeBottomSheet} />
+            <FileSpreadsheet size={11} />
+            <span>CELL BUDGET!A2:I60</span>
+          </span>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+            DRIVE V4 SYNC ACTIVE
+          </span>
+        </div>
+      </div>
 
-            {/* Sheet Category Header */}
-            <div style={{
-              padding: '0.85rem 1.25rem 0.75rem',
-              borderBottom: '1px solid var(--color-border)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              backgroundColor: 'var(--color-surface)',
-            }}>
-              {/* Top Bar: Category Name, Badges & Close Button */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', fontWeight: 700, margin: 0, color: 'var(--color-primary)' }}>
-                    {bottomSheetStat.category}
-                  </h3>
-                  {bottomSheetStat.isOver && (
-                    <span style={styles.overBadgeMini}>
-                      OVER BUDGET (+{formatCurrency(bottomSheetStat.overAmount, currency)})
-                    </span>
-                  )}
-                </div>
+      {/* 2. Primary Financial Target & Allocation Strip (Mobile 2-column compact metric strip) */}
+      <div
+        className="budget-metric-strip"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+          gap: '0.65rem',
+          backgroundColor: 'var(--color-surface, #FFFFFF)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '3px',
+          padding: '0.75rem 1rem',
+        }}
+      >
+        {/* Metric 1: Total Target Budget */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+              TARGET BUDGET
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsEditingTarget(!isEditingTarget)}
+              title="Edit master target cap"
+              style={{ background: 'none', border: 'none', color: 'var(--color-muted, #64748B)', cursor: 'pointer', padding: 0 }}
+            >
+              <Edit2 size={11} />
+            </button>
+          </div>
+          {isEditingTarget ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.2rem' }}>
+              <input
+                type="number"
+                value={customTargetInput}
+                onChange={(e) => setCustomTargetInput(e.target.value)}
+                style={{
+                  width: '95px',
+                  padding: '0.2rem 0.35rem',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.85rem',
+                  border: '1px solid var(--color-primary, #0F172A)',
+                  borderRadius: '2px',
+                }}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => handleSaveCustomTarget(Number(customTargetInput))}
+                style={{
+                  backgroundColor: 'var(--color-primary, #0F172A)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '2px',
+                  padding: '0.2rem 0.45rem',
+                  fontSize: '0.65rem',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  cursor: 'pointer',
+                }}
+              >
+                SAVE
+              </button>
+            </div>
+          ) : (
+            <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>
+              {isUnsetMode ? 'No Limit' : formatCurrency(effectiveTarget, currency)}
+            </div>
+          )}
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+            {isFixedCapMode ? 'Master Ceiling Cap' : 'Dynamic Category Sum'}
+          </span>
+        </div>
 
-                <button
-                  type="button"
-                  onClick={closeBottomSheet}
-                  style={{
-                    background: 'var(--color-bg-subtle)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '50%',
-                    width: '30px',
-                    height: '30px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                >
-                  <X size={16} />
-                </button>
-              </div>
+        {/* Metric 2: Actual Outlay */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+            ACTUAL OUTLAY
+          </span>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+            {formatCurrency(totalActual, currency)}
+          </div>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+            {expenses.length} Logged Purchases
+          </span>
+        </div>
 
-              {/* 3-Metric Tiles Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                <div style={styles.snapshotTile}>
-                  <span style={styles.snapshotTileLabel}>BUDGET</span>
-                  <span style={styles.snapshotTileValue}>{formatCurrency(bottomSheetStat.estimated, currency)}</span>
-                  <span style={styles.snapshotTileSub}>{bottomSheetStat.budgetItemCount} allocation{bottomSheetStat.budgetItemCount === 1 ? '' : 's'}</span>
-                </div>
+        {/* Metric 3: Remaining Balance / Variance */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+            REMAINING CUSHION
+          </span>
+          <div style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
+          }}>
+            {isUnsetMode ? 'Open' : `${isOverallOverBudget ? '-' : '+'}${formatCurrency(Math.abs(overallHeadroom), currency)}`}
+          </div>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+            {isOverallOverBudget ? 'Exceeds target cap' : 'Available headroom'}
+          </span>
+        </div>
 
-                <div style={styles.snapshotTile}>
-                  <span style={styles.snapshotTileLabel}>TOTAL SPENT</span>
-                  <span style={{ ...styles.snapshotTileValue, color: 'var(--color-primary)' }}>
-                    {formatCurrency(bottomSheetExpensesTotal, currency, true)}
-                  </span>
-                  <span style={styles.snapshotTileSub}>{bottomSheetExpenses.length} purchase{bottomSheetExpenses.length === 1 ? '' : 's'}</span>
-                </div>
+        {/* Metric 4: Utilization Rate */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+            UTILIZATION
+          </span>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+            {isUnsetMode ? 'N/A' : `${percentUtilized}%`}
+          </div>
+          <div style={{ height: '4px', backgroundColor: 'var(--color-border, #E2E8F0)', borderRadius: '1px', overflow: 'hidden', marginTop: '2px' }}>
+            <div style={{ height: '100%', width: `${Math.min(percentUtilized, 100)}%`, backgroundColor: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)' }} />
+          </div>
+        </div>
+      </div>
 
-                <div style={styles.snapshotTile}>
-                  <span style={styles.snapshotTileLabel}>REMAINING</span>
-                  <span style={{
-                    ...styles.snapshotTileValue,
-                    color: bottomSheetCushion < 0 ? 'var(--color-red)' : 'var(--color-green, #10b981)'
-                  }}>
-                    {formatCurrency(bottomSheetCushion, currency)}
-                  </span>
-                  <span style={{
-                    ...styles.snapshotTileSub,
-                    color: bottomSheetCushion < 0 ? '#b91c1c' : '#15803d',
-                    fontWeight: 700
-                  }}>
-                    {bottomSheetCushion < 0 ? 'Over Budget' : 'Remaining Available'}
-                  </span>
-                </div>
-              </div>
+      {/* 3. Tabular Category Ledger Toolbar & Actions */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.65rem',
+          paddingTop: '0.25rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {/* Search Input */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search size={13} style={{ position: 'absolute', left: '0.55rem', color: 'var(--color-muted, #64748B)' }} />
+            <input
+              type="text"
+              placeholder="Search category ledger..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                padding: '0.35rem 0.55rem 0.35rem 1.65rem',
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.72rem',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                borderRadius: '2px',
+                backgroundColor: 'var(--color-surface, #FFFFFF)',
+                color: 'var(--color-text, #0F172A)',
+                minWidth: '200px',
+              }}
+            />
+          </div>
 
-              {/* Category Budget Allocation (with mobile Edit and Delete actions) */}
-              <div style={{
-                borderTop: '1px dashed var(--color-border)',
-                paddingTop: '0.65rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.4rem',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)' }}>
-                    CATEGORY BUDGET ALLOCATION
-                  </span>
-                  {bottomSheetStat.budgetItems.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => startEditBudget(bottomSheetStat.budgetItems[0])}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-primary)',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.675rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        padding: '2px 4px',
-                      }}
-                    >
-                      EDIT BUDGET
-                    </button>
-                  )}
-                </div>
+          {/* Status Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            {(['All', 'Overdue', 'Pending', 'Paid', 'OverBudget'] as const).map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setStatusFilter(st)}
+                style={{
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.62rem',
+                  fontWeight: statusFilter === st ? 700 : 500,
+                  padding: '0.25rem 0.5rem',
+                  backgroundColor: statusFilter === st ? 'var(--color-primary, #0F172A)' : 'transparent',
+                  color: statusFilter === st ? '#FFFFFF' : 'var(--color-muted, #64748B)',
+                  border: '1px solid var(--color-border, #E2E8F0)',
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {st === 'OverBudget' ? 'Over Budget' : st}
+              </button>
+            ))}
+          </div>
 
-                {bottomSheetStat.budgetItems.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    {bottomSheetStat.budgetItems.map(item => (
-                      <div
-                        key={item.itemId}
+          {selectedCategoryId && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategoryId('')}
+              style={{
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.62rem',
+                color: 'var(--color-primary, #0F172A)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              CLEAR CATEGORY SELECTION ({selectedCategoryId})
+            </button>
+          )}
+        </div>
+
+        {/* Primary Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <button
+            type="button"
+            onClick={() => startAddExpense(selectedCategoryId)}
+            className="budget-add-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.75rem',
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              backgroundColor: 'var(--color-primary, #0F172A)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '2px',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={13} />
+            <span>ADD EXPENSE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => startAddBudget()}
+            className="budget-add-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.75rem',
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              backgroundColor: 'transparent',
+              color: 'var(--color-text, #0F172A)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '2px',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={13} />
+            <span>BUDGET CATEGORY</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Structured Tabular Category Ledger (`Category | Projected | Actual | Variance | Due Date | Status`) */}
+      <div
+        className="category-ledger-table-wrapper"
+        style={{
+          width: '100%',
+          overflowX: 'auto',
+          backgroundColor: 'var(--color-surface, #FFFFFF)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '3px',
+        }}
+      >
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '0.75rem',
+            textAlign: 'left',
+          }}
+        >
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
+              <th style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '90px' }}>
+                CELL REF
+              </th>
+              <th
+                onClick={() => { setSortField('category'); setSortAsc(!sortAsc); }}
+                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', cursor: 'pointer' }}
+              >
+                CATEGORY {sortField === 'category' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th
+                onClick={() => { setSortField('projected'); setSortAsc(!sortAsc); }}
+                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', cursor: 'pointer' }}
+              >
+                PROJECTED (EST.) {sortField === 'projected' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th
+                onClick={() => { setSortField('actual'); setSortAsc(!sortAsc); }}
+                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', cursor: 'pointer' }}
+              >
+                ACTUAL OUTLAY {sortField === 'actual' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th
+                onClick={() => { setSortField('variance'); setSortAsc(!sortAsc); }}
+                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', cursor: 'pointer' }}
+              >
+                VARIANCE {sortField === 'variance' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th
+                onClick={() => { setSortField('dueDate'); setSortAsc(!sortAsc); }}
+                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', cursor: 'pointer', width: '100px' }}
+              >
+                DUE DATE {sortField === 'dueDate' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '105px' }}>
+                STATUS
+              </th>
+              <th style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textAlign: 'center', width: '75px' }}>
+                ACTIONS
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCategoryRows.length === 0 ? (
+              <tr>
+                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
+                  No category records match your filter criteria. Click &quot;BUDGET CATEGORY&quot; above to allocate your first budget line.
+                </td>
+              </tr>
+            ) : (
+              filteredCategoryRows.map((row) => {
+                const isSelected = selectedCategoryId.toLowerCase() === row.category.toLowerCase();
+                return (
+                  <tr
+                    key={row.category}
+                    onClick={() => setSelectedCategoryId(isSelected ? '' : row.category)}
+                    style={{
+                      borderBottom: '1px solid var(--color-border, #E2E8F0)',
+                      backgroundColor: isSelected ? 'rgba(15, 23, 42, 0.04)' : 'transparent',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.1s ease',
+                    }}
+                  >
+                    {/* Cell Reference */}
+                    <td style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                      {row.cellRef}
+                    </td>
+
+                    {/* Category Name */}
+                    <td style={{ padding: '0.55rem 0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span style={{ fontWeight: isSelected ? 800 : 600, color: 'var(--color-text, #0F172A)' }}>
+                          {row.category}
+                        </span>
+                        {row.expenseCount > 0 && (
+                          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)', padding: '0.1rem 0.35rem', borderRadius: '2px', border: '1px solid var(--color-border, #E2E8F0)' }}>
+                            {row.expenseCount} purchases
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Projected (Est.) - Right-Aligned Monospace */}
+                    <td style={{ padding: '0.55rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
+                      {formatCurrency(row.projected, currency)}
+                    </td>
+
+                    {/* Actual Outlay - Right-Aligned Monospace */}
+                    <td style={{ padding: '0.55rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>
+                      {formatCurrency(row.actual, currency)}
+                    </td>
+
+                    {/* Variance - Right-Aligned Monospace */}
+                    <td style={{
+                      padding: '0.55rem 0.75rem',
+                      textAlign: 'right',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: row.isOver ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
+                    }}>
+                      {row.isOver ? '-' : '+'}{formatCurrency(Math.abs(row.variance), currency)}
+                    </td>
+
+                    {/* Due Date */}
+                    <td style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: row.isOverdue ? '#B91C1C' : 'var(--color-muted, #64748B)', fontWeight: row.isOverdue ? 700 : 400 }}>
+                      {row.dueDate || '—'}
+                    </td>
+
+                    {/* Status Badge */}
+                    <td style={{ padding: '0.55rem 0.75rem' }}>
+                      <span
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          backgroundColor: 'var(--color-bg-subtle)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: 'var(--border-radius-sm)',
-                          padding: '0.4rem 0.65rem',
-                          fontSize: '0.75rem',
-                          fontFamily: 'var(--font-mono)',
+                          fontFamily: 'var(--font-technical-mono, monospace)',
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          padding: '0.15rem 0.45rem',
+                          borderRadius: '2px',
+                          display: 'inline-block',
+                          backgroundColor: row.isOver ? '#FEE2E2' : (row.isOverdue ? '#FEF3C7' : 'var(--color-bg-pane, #F8FAFC)'),
+                          color: row.isOver ? '#991B1B' : (row.isOverdue ? '#92400E' : 'var(--color-text, #0F172A)'),
+                          border: `1px solid ${row.isOver ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <span style={{ color: 'var(--color-muted)' }}>Target:</span>
-                          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>
-                            {formatCurrency(item.estimatedCost, currency)}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <button
-                            type="button"
-                            onClick={() => startEditBudget(item)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              background: 'var(--color-surface)',
-                              border: '1px solid var(--color-border)',
-                              borderRadius: '4px',
-                              padding: '0.25rem 0.5rem',
-                              fontSize: '0.675rem',
-                              fontFamily: 'var(--font-mono)',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              color: 'var(--color-text)',
-                            }}
-                            title="Edit Target Budget"
-                          >
-                            <Edit2 size={12} /> Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => promptDeleteItem(item)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              background: 'rgba(239, 68, 68, 0.08)',
-                              border: '1px solid rgba(239, 68, 68, 0.25)',
-                              borderRadius: '4px',
-                              padding: '0.25rem 0.5rem',
-                              fontSize: '0.675rem',
-                              fontFamily: 'var(--font-mono)',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              color: 'var(--color-red, #ef4444)',
-                            }}
-                            title="Delete Budget Category"
-                          >
-                            <Trash2 size={12} /> Delete
-                          </button>
-                        </div>
+                        {row.status}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td style={{ padding: '0.55rem 0.75rem', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetItem = row.rawBudgetItems[0];
+                            if (targetItem) startEditBudget(targetItem);
+                            else startAddBudget(row.category);
+                          }}
+                          title="Edit Category Target"
+                          style={{
+                            background: 'none',
+                            border: '1px solid var(--color-border, #E2E8F0)',
+                            borderRadius: '2px',
+                            padding: '0.2rem',
+                            cursor: 'pointer',
+                            color: 'var(--color-text, #0F172A)',
+                          }}
+                        >
+                          <Edit2 size={11} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => startAddExpense(row.category)}
+                          title="Add Purchase to Category"
+                          style={{
+                            background: 'none',
+                            border: '1px solid var(--color-border, #E2E8F0)',
+                            borderRadius: '2px',
+                            padding: '0.2rem',
+                            cursor: 'pointer',
+                            color: 'var(--color-text, #0F172A)',
+                          }}
+                        >
+                          <Plus size={11} />
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backgroundColor: 'var(--color-bg-subtle)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.5rem 0.65rem',
-                  }}>
-                    <span style={{ fontSize: '0.725rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                      No budget allocated to {bottomSheetStat.category} yet.
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => startAddBudget(bottomSheetStat.category)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        backgroundColor: 'var(--color-primary)',
-                        color: 'var(--color-on-primary, #ffffff)',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '0.3rem 0.6rem',
-                        fontSize: '0.675rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <Plus size={12} /> SET BUDGET
-                    </button>
-                  </div>
-                )}
-              </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+
+          {/* Ledger Totals Footer Row */}
+          <tfoot>
+            <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderTop: '2px solid var(--color-border, #E2E8F0)' }}>
+              <td style={{ padding: '0.65rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                TOTALS
+              </td>
+              <td style={{ padding: '0.65rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.72rem', fontWeight: 800 }}>
+                {activeCategoryRows.length} ACTIVE CATEGORIES
+              </td>
+              <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>
+                {formatCurrency(totalEstimate, currency)}
+              </td>
+              <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+                {formatCurrency(totalActual, currency)}
+              </td>
+              <td style={{
+                padding: '0.65rem 0.75rem',
+                textAlign: 'right',
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                color: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
+              }}>
+                {isOverallOverBudget ? '-' : '+'}{formatCurrency(Math.abs(overallHeadroom), currency)}
+              </td>
+              <td colSpan={3} />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* 5. Detail Itemized Purchases Ledger (Filtered by Selected Category) */}
+      <div
+        className="itemized-expenses-section"
+        style={{
+          backgroundColor: 'var(--color-surface, #FFFFFF)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '3px',
+          padding: '0.85rem 1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+              ITEMIZED PURCHASES & EXPENSES {selectedCategoryId ? `// ${selectedCategoryId.toUpperCase()}` : '// ALL LOGGED PURCHASES'}
+            </span>
+            <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+              {itemizedExpensesForSelected.length} logged purchase items • Sheet tab: Expenses!A2:G{itemizedExpensesForSelected.length + 2}
             </div>
+          </div>
 
-            {/* Scrollable Itemized Expense List */}
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '0.85rem 1.25rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.625rem',
-            }}>
-              {/* Optional Search if > 3 expenses */}
-              {bottomSheetExpenses.length > 3 && (
-                <div style={{ position: 'relative', width: '100%', marginBottom: '0.25rem' }}>
-                  <Search size={13} style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-muted)' }} />
-                  <input
-                    type="text"
-                    placeholder={`SEARCH ${bottomSheetStat.category.toUpperCase()} EXPENSES...`}
-                    value={mobileExpenseSearch}
-                    onChange={(e) => setMobileExpenseSearch(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.35rem 0.6rem 0.35rem 1.8rem',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.725rem',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--border-radius-sm)',
-                      backgroundColor: 'var(--color-bg)',
-                      color: 'var(--color-text)',
-                    }}
-                  />
-                </div>
-              )}
+          <button
+            type="button"
+            onClick={() => startAddExpense(selectedCategoryId)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.3rem 0.65rem',
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              backgroundColor: 'var(--color-primary, #0F172A)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '2px',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={12} />
+            <span>RECORD PURCHASE</span>
+          </button>
+        </div>
 
-              {/* Expense Items or Empty State */}
-              {filteredBottomSheetExpenses.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '2.5rem 1rem',
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  border: '1px dashed var(--color-border)',
-                  borderRadius: 'var(--border-radius-md)',
-                  color: 'var(--color-muted)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  margin: 'auto 0',
-                }}>
-                  <ShoppingBag size={32} style={{ opacity: 0.35, color: 'var(--color-primary)' }} />
-                  <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', margin: 0, color: 'var(--color-text)' }}>
-                    No expenses logged for {bottomSheetStat.category}
-                  </h4>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: 0, maxWidth: '280px' }}>
-                    Record vendor deposits, retainers, and receipts to monitor actual costs against this budget.
-                  </p>
-                </div>
+        {/* Itemized Table */}
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
+                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '85px' }}>DATE</th>
+                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>DESCRIPTION</th>
+                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>CATEGORY</th>
+                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '110px' }}>AMOUNT PAID</th>
+                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '110px' }}>TOTAL COST</th>
+                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textAlign: 'center', width: '65px' }}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {itemizedExpensesForSelected.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: '1.5rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
+                    No purchase items logged yet for this selection. Click &quot;RECORD PURCHASE&quot; to log vendor receipts.
+                  </td>
+                </tr>
               ) : (
-                filteredBottomSheetExpenses.map(exp => {
-                  const amt = exp.amount ?? exp.actualCost ?? exp.amountPaid ?? 0;
-                  const isPaid = exp.amountPaid >= (amt > 0 ? amt : 1);
-                  const isPartial = exp.amountPaid > 0 && exp.amountPaid < amt;
-                  const status = (exp as any).paymentStatus || (isPaid ? 'Paid' : isPartial ? 'Partial' : 'Pending');
-
+                itemizedExpensesForSelected.map((exp, idx) => {
+                  const amt = exp.actualCost ?? exp.amount ?? exp.amountPaid ?? 0;
+                  const paid = exp.amountPaid ?? amt;
                   return (
-                    <div
-                      key={exp.itemId}
-                      style={{
-                        backgroundColor: 'var(--color-surface)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--border-radius-md)',
-                        padding: '0.75rem 0.85rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.35rem',
-                        boxShadow: 'var(--box-shadow-subtle)',
-                      }}
-                    >
-                      {/* Line 1: Expense title/vendor (left, bold) and Amount (right, tabular bold) */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {exp.description}
-                        </span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-                          {formatCurrency(amt, currency, true)}
-                        </span>
-                      </div>
-
-                      {/* Line 2: Date (left) and Status badge (right) */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.725rem', fontFamily: 'var(--font-mono)' }}>
-                        <span style={{ color: 'var(--color-muted)' }}>
-                          {formatDateConsistent(exp.purchaseDate)}
-                        </span>
-                        <span className={
-                          status === 'Paid' ? 'badge-green' :
-                            status === 'Overdue' ? 'badge-red' :
-                              'badge-gold'
-                        } style={{ ...styles.statusTag, fontSize: '0.625rem', padding: '0.15rem 0.45rem' }}>
-                          {status.toUpperCase()}
-                        </span>
-                      </div>
-
-                      {/* Line 3: Notes & Action Buttons */}
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        borderTop: '1px dotted var(--color-border)',
-                        paddingTop: '0.3rem',
-                        marginTop: '0.1rem',
-                        fontSize: '0.7rem',
-                      }}>
-                        <span style={{ color: 'var(--color-muted)', fontStyle: exp.notes ? 'italic' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
-                          {exp.notes ? `📝 ${exp.notes}` : `Logged to ${bottomSheetStat.category}`}
-                        </span>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <tr key={exp.itemId || idx} style={{ borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
+                      <td style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                        {exp.purchaseDate || '—'}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.65rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
+                        {exp.description}
+                        {exp.notes && (
+                          <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)', fontWeight: 400 }}>
+                            {exp.notes}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                        {exp.category}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
+                        {formatCurrency(paid, currency)}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>
+                        {formatCurrency(amt, currency)}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.65rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                           <button
                             type="button"
                             onClick={() => startEditExpense(exp)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--color-primary)',
-                              cursor: 'pointer',
-                              padding: '0.2rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                            }}
-                            title="Edit Expense"
+                            title="Edit purchase"
+                            style={{ background: 'none', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', padding: '0.2rem', cursor: 'pointer', color: 'var(--color-text, #0F172A)' }}
                           >
-                            <Edit2 size={13} />
+                            <Edit2 size={11} />
                           </button>
-                          {onUpdateExpenses && (
-                            <button
-                              type="button"
-                              onClick={() => promptDeleteExpense(exp)}
-                              disabled={isSyncing}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--color-red)',
-                                cursor: 'pointer',
-                                padding: '0.2rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
-                              title="Delete Expense"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => setExpenseToDelete(exp)}
+                            title="Delete purchase"
+                            style={{ background: 'none', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', padding: '0.2rem', cursor: 'pointer', color: '#B91C1C' }}
+                          >
+                            <Trash2 size={11} />
+                          </button>
                         </div>
-                      </div>
-                    </div>
+                      </td>
+                    </tr>
                   );
                 })
               )}
-            </div>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-            {/* Persistent Bottom Action Footer */}
-            <div style={{
-              padding: '0.75rem 1.25rem 0.85rem',
-              borderTop: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-surface)',
-              flexShrink: 0,
-            }}>
-              <button
-                type="button"
-                onClick={() => startAddExpense(bottomSheetStat.category)}
-                disabled={isSyncing}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--border-radius-md)',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  fontSize: '0.825rem',
-                  backgroundColor: 'var(--color-primary)',
-                  color: 'var(--color-on-primary, #ffffff)',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  cursor: isSyncing ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                }}
-              >
-                <Plus size={16} strokeWidth={2.5} /> Log Expense to {bottomSheetStat.category}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Mobile Floating Action Button (FAB) */}
+      <MobileFAB
+        label="Add Financial Item"
+        icon={Plus}
+        subActions={[
+          {
+            label: 'Record Purchase',
+            icon: Plus,
+            onClick: () => startAddExpense(selectedCategoryId),
+          },
+          {
+            label: 'Budget Category',
+            icon: FileSpreadsheet,
+            onClick: () => startAddBudget(),
+          },
+        ]}
+      />
 
-      {/* ============================================================ */}
-      {/* BUDGET ITEM ADD/EDIT MODAL                                    */}
-      {/* ============================================================ */}
+      {/* Add / Edit Budget Category Modal */}
       {(isAdding || editingItem) && (
         <div
-          style={styles.modalOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isSyncing) {
-              closeModal();
-            }
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
           }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
         >
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {editingItem ? 'EDIT BUDGET CATEGORY' : 'ADD BUDGET CATEGORY'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeModal}>
-                <X size={18} />
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              maxWidth: '460px',
+              width: '100%',
+              boxShadow: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', borderBottom: '1px solid var(--color-border, #E2E8F0)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)' }}>
+                {editingItem ? 'EDIT BUDGET ALLOCATION' : 'ADD BUDGET CATEGORY'}
+              </span>
+              <button type="button" onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted, #64748B)' }}>
+                <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={(e) => saveBudget(e, false)} style={styles.form}>
-              <div style={styles.formBody}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>BUDGET CATEGORY</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <select
-                      value={allCategories.includes(formState.category || '') ? formState.category : '__custom__'}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === '__custom__') {
-                          handleFormChange('category', '');
-                        } else {
-                          handleFormChange('category', val);
-                        }
-                      }}
-                      style={styles.select}
-                      required
-                    >
-                      <option value="" disabled>-- Select Wedding Category --</option>
-                      {allCategories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                      <option value="__custom__">+ Custom Category / Type New...</option>
-                    </select>
-
-                    {(!allCategories.includes(formState.category || '') || formState.category === '') && (
-                      <input
-                        type="text"
-                        value={formState.category || ''}
-                        onChange={(e) => handleFormChange('category', e.target.value)}
-                        style={styles.input}
-                        placeholder="Type custom category name..."
-                        required
-                        autoFocus
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>TARGET BUDGET ALLOCATION</label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{
-                      position: 'absolute',
-                      left: '0.85rem',
-                      color: 'var(--color-primary)',
-                      fontSize: '1.15rem',
-                      fontWeight: 700,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    }}>
-                      {currencySymbol}
-                    </span>
-                    <input
-                      type="number"
-                      value={formState.estimatedCost !== undefined && formState.estimatedCost !== null ? formState.estimatedCost : ''}
-                      onChange={(e) => handleFormChange('estimatedCost', e.target.value)}
-                      style={{ ...styles.input, paddingLeft: '2.2rem', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-primary)' }}
-                      min="1"
-                      step="any"
-                      placeholder="5000"
-                      required
-                      autoFocus={!!formState.category}
-                    />
-                  </div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
-                    Set the target budget for this category. Expense receipts will line up under this category.
-                  </span>
-                </div>
-              </div>
-
-              <div style={styles.formActions}>
-                {editingItem && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.cancelBtn,
-                      backgroundColor: '#fee2e2',
-                      color: '#b91c1c',
-                      border: '1px solid #fca5a5',
-                      marginRight: 'auto',
-                    }}
-                    onClick={() => {
-                      const toDelete = editingItem;
-                      closeModal();
-                      promptDeleteItem(toDelete);
-                    }}
-                  >
-                    DELETE CATEGORY
-                  </button>
-                )}
-
-                <button type="button" style={styles.cancelBtn} onClick={closeModal}>
-                  CANCEL
-                </button>
-
-                {!editingItem && (
-                  <button
-                    type="button"
-                    style={{ ...styles.saveBtn, backgroundColor: 'transparent', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
-                    onClick={(e) => saveBudget(e, true)}
-                    disabled={isSyncing}
-                  >
-                    SAVE & ADD ANOTHER
-                  </button>
-                )}
-
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (editingItem ? 'UPDATE BUDGET' : 'SAVE BUDGET CATEGORY')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* EXPENSE ITEM ADD/EDIT MODAL                                   */}
-      {/* ============================================================ */}
-      {(isAddingExpense || editingExpense) && (
-        <div
-          style={styles.modalOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isSyncing) {
-              closeExpenseModal();
-            }
-          }}
-        >
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {editingExpense ? 'EDIT EXPENSE' : 'ADD EXPENSE'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeExpenseModal}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={(e) => saveExpense(e, false)} style={styles.form}>
-              <div style={styles.formBody}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>DESCRIPTION / ITEM NAME</label>
+            <form onSubmit={(e) => saveBudget(e, false)} style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                    CATEGORY NAME
+                  </label>
                   <input
                     type="text"
-                    value={expenseFormState.description || ''}
-                    onChange={(e) => handleExpenseFormChange('description', e.target.value)}
-                    style={styles.input}
-                    placeholder="e.g. Deposit for Grand Plaza Hall, Cake Tasting Fee"
+                    list="standard-categories"
+                    value={formState.category || ''}
+                    onChange={(e) => setFormState(prev => ({ ...prev, category: e.target.value }))}
+                    placeholder="e.g. Venue & Catering"
+                    style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
+                    required
+                  />
+                  <datalist id="standard-categories">
+                    {allCategories.map(c => <option key={c} value={c} />)}
+                  </datalist>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                    TARGET ALLOCATION ({currencySymbol})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formState.estimatedCost ?? ''}
+                    onChange={(e) => setFormState(prev => ({ ...prev, estimatedCost: e.target.value as any }))}
+                    placeholder="e.g. 15000"
+                    style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
                     required
                   />
                 </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>CATEGORY</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    <select
-                      value={
-                        allCategories.includes(expenseFormState.category || '')
-                          ? expenseFormState.category
-                          : (expenseFormState.category ? '__custom__' : (activeOrAlertStats[0]?.category || allCategories[0] || 'General'))
-                      }
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === '__custom__') {
-                          handleExpenseFormChange('category', '');
-                        } else {
-                          handleExpenseFormChange('category', val);
-                        }
-                      }}
-                      style={styles.select}
-                    >
-                      {activeOrAlertStats.length > 0 && (
-                        <optgroup label="Active Budget Categories">
-                          {activeOrAlertStats.map(s => (
-                            <option key={s.category} value={s.category}>
-                              {s.category} (${(s.estimated || 0).toLocaleString('en-US')} budgeted)
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      {allCategories.filter(cat => !activeOrAlertStats.some(s => s.category.toLowerCase() === cat.toLowerCase())).length > 0 && (
-                        <optgroup label="Other Categories (No Active Budget)">
-                          {allCategories
-                            .filter(cat => !activeOrAlertStats.some(s => s.category.toLowerCase() === cat.toLowerCase()))
-                            .map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                        </optgroup>
-                      )}
-                      <option value="__custom__">+ Add New / Custom Category...</option>
-                    </select>
-
-                    {(!allCategories.includes(expenseFormState.category || '') || expenseFormState.category === '') && (
-                      <input
-                        type="text"
-                        value={expenseFormState.category || ''}
-                        onChange={(e) => handleExpenseFormChange('category', e.target.value)}
-                        style={styles.input}
-                        placeholder="Type new category name..."
-                        required
-                        autoFocus
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>AMOUNT</label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{
-                      position: 'absolute',
-                      left: '0.75rem',
-                      color: 'var(--color-muted)',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    }}>
-                      {currencySymbol}
-                    </span>
-                    <input
-                      type="number"
-                      value={expenseFormState.amount !== undefined && expenseFormState.amount !== null ? expenseFormState.amount : ''}
-                      onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
-                      style={{ ...styles.input, paddingLeft: '1.75rem' }}
-                      min="0"
-                      step="any"
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>PURCHASE DATE</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                    DUE DATE (OPTIONAL)
+                  </label>
                   <input
                     type="date"
-                    value={expenseFormState.purchaseDate || ''}
-                    onChange={(e) => handleExpenseFormChange('purchaseDate', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>NOTES / DETAILS</label>
-                  <input
-                    type="text"
-                    value={expenseFormState.notes || ''}
-                    onChange={(e) => handleExpenseFormChange('notes', e.target.value)}
-                    style={styles.input}
-                    placeholder="e.g. Paid via credit card, 30% initial deposit"
+                    value={formState.dueDate || ''}
+                    onChange={(e) => setFormState(prev => ({ ...prev, dueDate: e.target.value }))}
+                    style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
                   />
                 </div>
               </div>
 
-              <div style={styles.formActions}>
-                <button type="button" style={styles.cancelBtn} onClick={closeExpenseModal}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '0.75rem 1rem', borderTop: '1px solid var(--color-border, #E2E8F0)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)' }}>
+                <button type="button" onClick={closeModal} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
                   CANCEL
                 </button>
-
-                {!editingExpense && (
-                  <button
-                    type="button"
-                    style={{ ...styles.saveBtn, backgroundColor: 'transparent', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
-                    onClick={(e) => saveExpense(e, true)}
-                    disabled={isSyncing}
-                  >
-                    SAVE & ADD ANOTHER
-                  </button>
-                )}
-
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : 'SAVE EXPENSE'}
+                <button type="button" onClick={(e) => saveBudget(e, true)} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
+                  SAVE & ADD ANOTHER
+                </button>
+                <button type="submit" style={{ padding: '0.35rem 0.85rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--color-primary, #0F172A)', color: '#FFFFFF', border: 'none', borderRadius: '2px', cursor: 'pointer' }}>
+                  SAVE ALLOCATION
                 </button>
               </div>
             </form>
@@ -3622,608 +1299,201 @@ export default function BudgetLedgerManager({
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* DELETE CONFIRMATION MODALS                                    */}
-      {/* ============================================================ */}
-      {itemToDelete && (
+      {/* Add / Edit Expense Item Modal */}
+      {(isAddingExpense || editingExpense) && (
         <div
-          style={styles.modalOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isSyncing) {
-              setItemToDelete(null);
-            }
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
           }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeExpenseModal(); }}
         >
-          <div style={{ ...styles.modalContent, maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-red)' }}>DELETE BUDGET ITEM</h3>
-              <button style={styles.closeBtn} onClick={() => setItemToDelete(null)}>
-                <X size={18} />
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              maxWidth: '460px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', borderBottom: '1px solid var(--color-border, #E2E8F0)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)' }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)' }}>
+                {editingExpense ? 'EDIT PURCHASE ENTRY' : 'RECORD PURCHASE / RECEIPT'}
+              </span>
+              <button type="button" onClick={closeExpenseModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted, #64748B)' }}>
+                <X size={15} />
               </button>
             </div>
-            <div style={{ padding: '1.25rem', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', color: 'var(--color-text)' }}>
-              Are you sure you want to delete budget item <strong>{itemToDelete.vendorName}</strong> ({itemToDelete.category})?
-            </div>
-            <div style={styles.formActions}>
-              <button style={styles.cancelBtn} onClick={() => setItemToDelete(null)}>
+
+            <form onSubmit={(e) => saveExpense(e, false)} style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                    DESCRIPTION / VENDOR
+                  </label>
+                  <input
+                    type="text"
+                    value={expenseFormState.description || ''}
+                    onChange={(e) => setExpenseFormState(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="e.g. Caterer Deposit"
+                    style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                    CATEGORY
+                  </label>
+                  <select
+                    value={expenseFormState.category || selectedCategoryId || allCategories[0] || ''}
+                    onChange={(e) => setExpenseFormState(prev => ({ ...prev, category: e.target.value }))}
+                    style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
+                    required
+                  >
+                    {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                      AMOUNT ({currencySymbol})
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={expenseFormState.amount ?? ''}
+                      onChange={(e) => setExpenseFormState(prev => ({ ...prev, amount: e.target.value as any, actualCost: Number(e.target.value), amountPaid: Number(e.target.value) }))}
+                      placeholder="e.g. 3500"
+                      style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                      PURCHASE DATE
+                    </label>
+                    <input
+                      type="date"
+                      value={expenseFormState.purchaseDate || ''}
+                      onChange={(e) => setExpenseFormState(prev => ({ ...prev, purchaseDate: e.target.value }))}
+                      style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                    NOTES (OPTIONAL)
+                  </label>
+                  <input
+                    type="text"
+                    value={expenseFormState.notes || ''}
+                    onChange={(e) => setExpenseFormState(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="e.g. Receipt #1049, paid via Visa"
+                    style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '0.75rem 1rem', borderTop: '1px solid var(--color-border, #E2E8F0)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)' }}>
+                <button type="button" onClick={closeExpenseModal} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
+                  CANCEL
+                </button>
+                <button type="button" onClick={(e) => saveExpense(e, true)} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
+                  SAVE & ADD ANOTHER
+                </button>
+                <button type="submit" style={{ padding: '0.35rem 0.85rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--color-primary, #0F172A)', color: '#FFFFFF', border: 'none', borderRadius: '2px', cursor: 'pointer' }}>
+                  RECORD PURCHASE
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {(itemToDelete || expenseToDelete) && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              maxWidth: '380px',
+              width: '100%',
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+            }}
+          >
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.8rem', fontWeight: 800, color: '#B91C1C' }}>
+              CONFIRM DELETION
+            </span>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-muted, #64748B)', lineHeight: 1.4 }}>
+              Are you sure you want to delete {itemToDelete ? `the budget allocation for ${itemToDelete.category}` : `the purchase record "${expenseToDelete?.description}"`}? This action will synchronize directly to your Google Spreadsheet.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => { setItemToDelete(null); setExpenseToDelete(null); }}
+                style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}
+              >
                 CANCEL
               </button>
               <button
-                style={{ ...styles.saveBtn, backgroundColor: 'var(--color-red)' }}
-                onClick={() => deleteBudget(itemToDelete.itemId)}
-                disabled={isSyncing}
+                type="button"
+                onClick={() => {
+                  if (itemToDelete) deleteBudget(itemToDelete.itemId);
+                  if (expenseToDelete) deleteExpense(expenseToDelete.itemId);
+                }}
+                style={{ padding: '0.35rem 0.85rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', fontWeight: 700, backgroundColor: '#B91C1C', color: '#FFFFFF', border: 'none', borderRadius: '2px', cursor: 'pointer' }}
               >
-                DELETE
+                CONFIRM DELETE
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {expenseToDelete && (
-        <div
-          style={styles.modalOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isSyncing) {
-              setExpenseToDelete(null);
-            }
-          }}
-        >
-          <div style={{ ...styles.modalContent, maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-red)' }}>DELETE EXPENSE</h3>
-              <button style={styles.closeBtn} onClick={() => setExpenseToDelete(null)}>
-                <X size={18} />
-              </button>
-            </div>
-            <div style={{ padding: '1.25rem', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', color: 'var(--color-text)' }}>
-              Are you sure you want to delete expense <strong>{expenseToDelete.description}</strong> (${(expenseToDelete.actualCost || 0).toLocaleString()})?
-            </div>
-            <div style={styles.formActions}>
-              <button style={styles.cancelBtn} onClick={() => setExpenseToDelete(null)}>
-                CANCEL
-              </button>
-              <button
-                style={{ ...styles.saveBtn, backgroundColor: 'var(--color-red)' }}
-                onClick={() => deleteExpense(expenseToDelete.itemId)}
-                disabled={isSyncing}
-              >
-                DELETE
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Floating Action Button (FAB) with Speed-Dial */}
-      <MobileFAB
-        label="Add Financial Record"
-        onClick={startAddExpense}
-        subActions={[
-          {
-            label: 'New Expense',
-            onClick: startAddExpense,
-            icon: ShoppingBag,
-            color: 'var(--color-primary, #0f172a)',
-          },
-          {
-            label: 'New Budget Category',
-            onClick: startAddBudget,
-            icon: Plus,
-            color: 'var(--color-surface, #ffffff)',
-          },
-        ]}
-        disabled={isSyncing}
-      />
+      {/* Scoped Responsive CSS */}
+      <style>{`
+        @media (max-width: 768px) {
+          .budget-metric-strip {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.5rem !important;
+          }
+          .budget-add-btn {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.25rem',
-  },
-  title: {
-    fontFamily: 'var(--font-serif)',
-    fontSize: '1.5rem',
-    color: 'var(--color-primary)',
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: '0.8rem',
-    color: 'var(--color-muted)',
-    margin: '0.2rem 0 0 0',
-  },
-  addButton: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    padding: '0.45rem 0.85rem',
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
-    border: 'none',
-    borderRadius: 'var(--border-radius-sm)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  meterCard: {
-    backgroundColor: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-lg, 1rem)',
-    padding: '1.25rem 1.5rem',
-    boxShadow: 'var(--box-shadow-subtle)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.85rem',
-  },
-  meterHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-  },
-  meterSubtext: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 700,
-    color: 'var(--color-muted)',
-    letterSpacing: '0.08em',
-  },
-  meterTitle: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '1.35rem',
-    fontWeight: 800,
-    color: 'var(--color-text)',
-    margin: 0,
-  },
-  percentDisplay: {
-    textAlign: 'right',
-  },
-  percentValue: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '1.5rem',
-    fontWeight: 800,
-  },
-  overBadgeMain: {
-    fontSize: '0.675rem',
-    fontFamily: 'var(--font-mono)',
-    fontWeight: 800,
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    border: '1px solid #fca5a5',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '12px',
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  headroomBadge: {
-    fontSize: '0.675rem',
-    fontFamily: 'var(--font-mono)',
-    fontWeight: 800,
-    backgroundColor: 'rgba(26, 127, 75, 0.12)',
-    color: 'var(--color-primary)',
-    border: '1px solid rgba(26, 127, 75, 0.3)',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '12px',
-  },
-  progressTrack: {
-    width: '100%',
-    height: '8px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    borderRadius: '999px',
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: '999px',
-    transition: 'width 0.4s ease',
-  },
-  categoryChipsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-    gap: '0.5rem',
-    marginTop: '0.25rem',
-  },
-  categoryChip: {
-    padding: '0.5rem 0.65rem',
-    borderRadius: 'var(--border-radius-sm)',
-    border: '1px solid var(--color-border)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  categoryChipHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  categoryChipName: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 700,
-    color: 'var(--color-text)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    maxWidth: '100px',
-  },
-  categoryChipPercent: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 700,
-    color: 'var(--color-muted)',
-  },
-  overBadgeMini: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    fontWeight: 800,
-    color: '#b91c1c',
-  },
-  miniTrack: {
-    width: '100%',
-    height: '4px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    borderRadius: '999px',
-    overflow: 'hidden',
-  },
-  miniFill: {
-    height: '100%',
-    borderRadius: '999px',
-  },
-  filterBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '0.75rem',
-    flexWrap: 'wrap',
-  },
-  searchInput: {
-    flex: '1 1 240px',
-    padding: '0.5rem 0.75rem',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-input-bg, #ffffff)',
-    color: 'var(--color-text)',
-  },
-  filtersGroup: {
-    display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  filterSelect: {
-    padding: '0.5rem 0.75rem',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-input-bg, #ffffff)',
-    color: 'var(--color-text)',
-  },
-  tableWrapper: {
-    width: '100%',
-    overflowX: 'auto',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-md)',
-    backgroundColor: 'var(--color-surface)',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.85rem',
-  },
-  th: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 800,
-    letterSpacing: '0.06em',
-    color: 'var(--color-muted)',
-    backgroundColor: 'var(--color-bg-subtle)',
-    padding: '0.65rem 0.85rem',
-    borderBottom: '1px solid var(--color-border)',
-    textAlign: 'left',
-    whiteSpace: 'nowrap',
-  },
-  tr: {
-    borderBottom: '1px solid var(--color-border)',
-  },
-  footerTr: {
-    backgroundColor: 'var(--color-bg-subtle)',
-    borderTop: '2px solid var(--color-border)',
-  },
-  td: {
-    padding: '0.65rem 0.85rem',
-    verticalAlign: 'middle',
-    color: 'var(--color-text)',
-  },
-  categoryCell: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    color: 'var(--color-primary)',
-  },
-  monoText: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.8rem',
-  },
-  statusTag: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 800,
-    padding: '0.2rem 0.5rem',
-    borderRadius: '12px',
-    display: 'inline-block',
-  },
-  overBadgeTable: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    color: '#b91c1c',
-    fontWeight: 800,
-    display: 'inline-flex',
-    alignItems: 'center',
-    marginTop: '1px',
-  },
-  actionsCell: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '0.35rem',
-  },
-  actionBtn: {
-    padding: '0.3rem 0.45rem',
-    backgroundColor: 'transparent',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-sm)',
-    color: 'var(--color-muted)',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    inset: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    backdropFilter: 'blur(4px)',
-    WebkitBackdropFilter: 'blur(4px)',
-    zIndex: 1100,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '1rem',
-    pointerEvents: 'auto',
-  },
-  modalContent: {
-    backgroundColor: 'var(--color-surface)',
-    border: '2px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-lg, 1rem)',
-    maxWidth: '520px',
-    width: '100%',
-    boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
-    display: 'flex',
-    flexDirection: 'column',
-    maxHeight: '90vh',
-    overflow: 'hidden',
-    pointerEvents: 'auto',
-    cursor: 'default',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1.25rem 1.5rem',
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary, #ffffff)',
-    flexShrink: 0,
-  },
-  modalTitle: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.95rem',
-    fontWeight: 700,
-    letterSpacing: '0.05em',
-    margin: 0,
-    color: 'var(--color-on-primary, #ffffff)',
-  },
-  closeBtn: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--color-on-primary, #ffffff)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    overflowY: 'auto',
-  },
-  formBody: {
-    padding: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.85rem',
-  },
-  formRow: {
-    display: 'flex',
-    gap: '0.75rem',
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.3rem',
-    flex: 1,
-  },
-  label: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.675rem',
-    fontWeight: 800,
-    letterSpacing: '0.05em',
-    color: 'var(--color-muted)',
-  },
-  input: {
-    padding: '0.5rem 0.65rem',
-    fontFamily: 'var(--font-sans)',
-    fontSize: '0.85rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-input-bg, #ffffff)',
-    color: 'var(--color-text)',
-  },
-  select: {
-    padding: '0.5rem 0.65rem',
-    fontFamily: 'var(--font-sans)',
-    fontSize: '0.85rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    backgroundColor: 'var(--color-input-bg, #ffffff)',
-    color: 'var(--color-text)',
-  },
-  formActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-    padding: '0.85rem 1.25rem',
-    borderTop: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-subtle)',
-  },
-  cancelBtn: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    padding: '0.5rem 0.85rem',
-    backgroundColor: 'transparent',
-    color: 'var(--color-muted)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-sm)',
-    cursor: 'pointer',
-  },
-  saveBtn: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    fontWeight: 800,
-    padding: '0.5rem 1rem',
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
-    border: 'none',
-    borderRadius: 'var(--border-radius-sm)',
-    cursor: 'pointer',
-  },
-  cardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '1rem',
-  },
-  card: {
-    backgroundColor: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-md)',
-    padding: '1rem',
-    boxShadow: 'var(--box-shadow-subtle)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  totalCard: {
-    backgroundColor: 'var(--color-primary)',
-    borderColor: 'var(--color-primary)',
-    color: 'var(--color-on-primary)',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardMeta: {
-    display: 'flex',
-  },
-  cardActions: {
-    display: 'flex',
-    gap: '0.25rem',
-  },
-  cardTitle: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.9rem',
-    fontWeight: 700,
-    color: 'var(--color-muted)',
-  },
-  cardBody: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.85rem',
-    color: 'var(--color-text)',
-  },
-  cardRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardLabel: {
-    color: 'var(--color-muted)',
-    fontSize: '0.7rem',
-    fontWeight: 700,
-  },
-  cardValue: {
-    fontWeight: 700,
-  },
-  cardFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTop: '1px dotted var(--color-border)',
-    marginTop: '0.5rem',
-    paddingTop: '0.5rem',
-    fontSize: '0.75rem',
-    fontFamily: 'var(--font-mono)',
-    color: 'var(--color-muted)',
-  },
-  overBadgeCard: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.65rem',
-    fontWeight: 800,
-    color: '#b91c1c',
-    backgroundColor: '#fee2e2',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '4px',
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  snapshotTile: {
-    backgroundColor: 'var(--color-bg-subtle)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--border-radius-sm)',
-    padding: '0.75rem 1rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.2rem',
-  },
-  snapshotTileLabel: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.625rem',
-    fontWeight: 800,
-    color: 'var(--color-muted)',
-    letterSpacing: '0.06em',
-  },
-  snapshotTileValue: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '1.25rem',
-    fontWeight: 800,
-    color: 'var(--color-text)',
-    fontVariantNumeric: 'tabular-nums',
-  },
-  snapshotTileSub: {
-    fontSize: '0.7rem',
-    color: 'var(--color-muted)',
-    fontFamily: 'var(--font-mono)',
-  },
-};
