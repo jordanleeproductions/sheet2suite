@@ -22,6 +22,9 @@ import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import AppVersionBadge from '@/components/AppVersionBadge';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
+import VowSidebar from '@/components/vow/VowSidebar';
+import VowMasthead from '@/components/vow/VowMasthead';
+import VowMobileNav from '@/components/vow/VowMobileNav';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import Link from 'next/link';
 import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
@@ -1306,8 +1309,106 @@ export default function Sheet2VowDashboard() {
     return diffDays === 1 ? "1 DAY UNTIL THE WEDDING!" : `${diffDays} DAYS UNTIL THE WEDDING!`;
   };
 
+  // Editorial Utility: 1-Click CSV Exporter for Active View
+  const handleExportActiveCSV = () => {
+    if (!weddingData) {
+      addToast('No data available to export', 'warning');
+      return;
+    }
+
+    let csvContent = '';
+    let filename = `sheet2vow_${activeTab}_export.csv`;
+
+    if (activeTab === 'guests' || activeTab === 'home' || activeTab === 'metrics') {
+      const headers = ['First Name', 'Last Name', 'Party Group', 'RSVP Status', 'Meal Choice', 'Dietary Restrictions', 'Table ID', 'Email', 'Phone'];
+      const rows = (weddingData.guests || []).map(g => [
+        `"${g.firstName || ''}"`,
+        `"${g.lastName || ''}"`,
+        `"${g.partyGroup || ''}"`,
+        `"${g.rsvpStatus || ''}"`,
+        `"${g.mealChoice || ''}"`,
+        `"${g.dietaryRestrictions || ''}"`,
+        `"${g.tableAssignment || ''}"`,
+        `"${g.emailAddress || ''}"`,
+        `"${g.phoneNumber || ''}"`
+      ]);
+      csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      filename = `sheet2vow_guests_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
+    } else if (activeTab === 'budget') {
+      const headers = ['Category', 'Description', 'Actual Cost', 'Paid', 'Purchase Date', 'Notes'];
+      const rows = (weddingData.expenses || []).map(e => [
+        `"${e.category || ''}"`,
+        `"${e.description || ''}"`,
+        `"${e.actualCost || 0}"`,
+        `"${e.amountPaid || 0}"`,
+        `"${e.purchaseDate || ''}"`,
+        `"${e.notes || ''}"`
+      ]);
+      csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      filename = `sheet2vow_budget_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
+    } else if (activeTab === 'schedule') {
+      const headers = ['Start Time', 'End Time', 'Moment', 'Location', 'Responsibility', 'Notes'];
+      const rows = (weddingData.schedule || []).map(s => [
+        `"${s.startTime || ''}"`,
+        `"${s.endTime || ''}"`,
+        `"${s.eventMoment || ''}"`,
+        `"${s.location || ''}"`,
+        `"${s.responsibility || ''}"`,
+        `"${s.notes || ''}"`
+      ]);
+      csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      filename = `sheet2vow_timeline_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
+    } else if (activeTab === 'vendors') {
+      const headers = ['Vendor Name', 'Category', 'Contact', 'Email', 'Phone', 'Contract Value', 'Paid', 'Balance'];
+      const rows = (weddingData.vendors || []).map(v => [
+        `"${v.vendorName || ''}"`,
+        `"${v.category || ''}"`,
+        `"${v.contactName || ''}"`,
+        `"${v.emailAddress || ''}"`,
+        `"${v.phoneNumber || ''}"`,
+        `"${v.totalContractValue || 0}"`,
+        `"${v.depositPaid || 0}"`,
+        `"${v.balanceOwing || 0}"`
+      ]);
+      csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      filename = `sheet2vow_vendors_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
+    } else if (activeTab === 'tasks') {
+      const headers = ['Task Name', 'Stage', 'Priority', 'Assigned To', 'Due Date'];
+      const rows = (weddingData.tasks || []).map(t => [
+        `"${t.taskName || ''}"`,
+        `"${t.kanbanStage || ''}"`,
+        `"${t.priority || ''}"`,
+        `"${t.assignedTo || ''}"`,
+        `"${t.dueDate || ''}"`
+      ]);
+      csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      filename = `sheet2vow_tasks_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
+    } else {
+      const headers = ['First Name', 'Last Name', 'Party Group', 'RSVP Status', 'Meal Choice', 'Table ID'];
+      const rows = (weddingData.guests || []).map(g => [
+        `"${g.firstName || ''}"`,
+        `"${g.lastName || ''}"`,
+        `"${g.partyGroup || ''}"`,
+        `"${g.rsvpStatus || ''}"`,
+        `"${g.mealChoice || ''}"`,
+        `"${g.tableAssignment || ''}"`
+      ]);
+      csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      filename = `sheet2vow_data_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast(`Exported ${filename}`, 'info');
+  };
+
   const isDesktopSidebarActive = !isMobile && isOnboarded;
-  const sidebarWidthPx = isSidebarCollapsed ? 64 : 220;
+  const sidebarWidthPx = isSidebarCollapsed ? 60 : 210;
 
   return (
     <div
@@ -1318,472 +1419,28 @@ export default function Sheet2VowDashboard() {
         marginRight: isDesktopSidebarActive ? '0' : 'auto',
         width: isDesktopSidebarActive ? `calc(100% - ${sidebarWidthPx}px)` : '100%',
         maxWidth: isDesktopSidebarActive ? '100%' : '1680px',
-        transition: 'margin-left 0.2s ease, width 0.2s ease'
+        transition: 'margin-left 0.15s ease-out, width 0.15s ease-out'
       }}
     >
-      {/* Mobile Ergonomic Bottom Sheet Drawer [NAV-MOBILE-THUMB] */}
-      {isMobile && isMobileDrawerOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 200,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-          onClick={() => setIsMobileDrawerOpen(false)}
-        >
-          <div
-            className="mobile-bottom-sheet-content"
-            style={{
-              width: '100%',
-              backgroundColor: 'var(--color-surface, #fff)',
-              borderTopLeftRadius: '1.25rem',
-              borderTopRightRadius: '1.25rem',
-              maxHeight: '85vh',
-              padding: '0.75rem 1rem 1.75rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              boxShadow: '0 -10px 25px rgba(0,0,0,0.2)',
-              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-              overflowY: 'auto'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top Drag Handle Indicator */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '0.25rem 0' }}>
-              <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--color-muted)', borderRadius: '999px', opacity: 0.5 }} />
-            </div>
 
-            {/* Bottom Sheet Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FileSpreadsheet size={20} style={{ color: 'var(--color-primary)' }} />
-                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary)' }}>Sheet2Vow Modules</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsMobileDrawerOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--color-text)', cursor: 'pointer', padding: '0.25rem' }}
-                title="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            {/* Categorized Module Groups */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', marginTop: '0.25rem' }}>
-              {/* Group 1: Guests & Reception */}
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
-                  👥 GUESTS & HOSPITALITY
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
-                  {[
-                    { id: 'guests', label: 'Guest Registry', icon: Users },
-                    { id: 'menu', label: 'Catering Menu', icon: Utensils },
-                    { id: 'tables', label: 'Seating Chart', icon: Armchair },
-                    { id: 'thanks', label: 'Thank You Gifts', icon: Heart },
-                  ]
-                    .filter(tab => (enabledModules as any)[tab.id] ?? true)
-                    .map((tab) => {
-                      const IconComp = tab.icon;
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            switchTab(tab.id as any);
-                            setIsMobileDrawerOpen(false);
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.55rem 0.65rem',
-                            borderRadius: 'var(--border-radius-sm)',
-                            backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f8f9fa)',
-                            color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
-                            border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            cursor: 'pointer',
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.72rem',
-                            fontWeight: isActive ? 800 : 600,
-                            textAlign: 'left'
-                          }}
-                        >
-                          <IconComp size={15} style={{ flexShrink: 0 }} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Group 2: Logistics & Budget */}
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
-                  💼 LOGISTICS & BUDGET
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
-                  {[
-                    { id: 'home', label: 'Wedding Plan Summary', icon: LayoutDashboard },
-                    { id: 'budget', label: 'Financials', icon: DollarSign },
-                    { id: 'schedule', label: 'Day-Of Timeline', icon: Calendar },
-                    { id: 'vendors', label: 'Vendor Directory', icon: Briefcase },
-                  ]
-                    .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
-                    .map((tab) => {
-                      const IconComp = tab.icon;
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            switchTab(tab.id as any);
-                            setIsMobileDrawerOpen(false);
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.55rem 0.65rem',
-                            borderRadius: 'var(--border-radius-sm)',
-                            backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f8f9fa)',
-                            color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
-                            border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            cursor: 'pointer',
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.72rem',
-                            fontWeight: isActive ? 800 : 600,
-                            textAlign: 'left'
-                          }}
-                        >
-                          <IconComp size={15} style={{ flexShrink: 0 }} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Group 3: Day-Of Media & Tasks */}
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>
-                  🎨 DAY-OF MEDIA & TASKS
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-                  {[
-                    { id: 'tasks', label: 'Tasks', icon: ListTodo },
-                    { id: 'music', label: 'Music & DJ', icon: Music },
-                    { id: 'photos', label: 'Photos', icon: Camera },
-                  ]
-                    .filter(tab => (enabledModules as any)[tab.id] ?? true)
-                    .map((tab) => {
-                      const IconComp = tab.icon;
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            switchTab(tab.id as any);
-                            setIsMobileDrawerOpen(false);
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            padding: '0.55rem 0.5rem',
-                            borderRadius: 'var(--border-radius-sm)',
-                            backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-bg-subtle, #f8f9fa)',
-                            color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
-                            border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            cursor: 'pointer',
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.72rem',
-                            fontWeight: isActive ? 800 : 600,
-                            textAlign: 'left'
-                          }}
-                        >
-                          <IconComp size={14} style={{ flexShrink: 0 }} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Quick Tools (Print Studio, Share Link & Settings) */}
-            <div style={{ marginTop: '0.35rem', paddingTop: '0.65rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.4rem' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileDrawerOpen(false);
-                  setShowPrintModal(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.35rem',
-                  padding: '0.55rem 0.4rem',
-                  borderRadius: 'var(--border-radius-sm)',
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  color: 'var(--color-text)',
-                  border: '1px solid var(--color-border)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.68rem',
-                  fontWeight: 700
-                }}
-              >
-                <Printer size={14} style={{ color: 'var(--color-primary)' }} />
-                <span>PRINT</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileDrawerOpen(false);
-                  setShowShareModal(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.35rem',
-                  padding: '0.55rem 0.4rem',
-                  borderRadius: 'var(--border-radius-sm)',
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  color: 'var(--color-text)',
-                  border: '1px solid var(--color-border)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.68rem',
-                  fontWeight: 700
-                }}
-              >
-                <Share2 size={14} style={{ color: 'var(--color-primary)' }} />
-                <span>SHARE</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileDrawerOpen(false);
-                  setShowAdvancedSettings(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.35rem',
-                  padding: '0.55rem 0.4rem',
-                  borderRadius: 'var(--border-radius-sm)',
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  color: 'var(--color-text)',
-                  border: '1px solid var(--color-border)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.68rem',
-                  fontWeight: 700
-                }}
-              >
-                <Settings size={14} style={{ color: 'var(--color-primary)' }} />
-                <span>SETTINGS</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Sticky Collapsible Left Sidebar [NAV-ENFORCE] */}
+      {/* Desktop Sticky Compact Left Sidebar [Editorial Utility Rail] */}
       {!isMobile && isOnboarded && (
-        <aside
-          className="app-sidebar"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: isSidebarCollapsed ? '64px' : '220px',
-            backgroundColor: 'var(--color-surface, #fff)',
-            borderRight: '2px solid var(--color-border)',
-            padding: '1rem 0.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            transition: 'width 0.2s ease',
-            zIndex: 90,
-            boxShadow: 'var(--box-shadow-hover)'
+        <VowSidebar
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          activeTab={activeTab}
+          onSwitchTab={switchTab}
+          enabledModules={enabledModules}
+          onOpenPrintStudio={() => {
+            setPrintModalInitialTemplate('place_cards');
+            setShowPrintModal(true);
           }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', padding: '0 0.25rem' }}>
-              {!isSidebarCollapsed && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <FileSpreadsheet size={20} style={{ color: 'var(--color-primary)' }} />
-                  <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-primary)' }}>Sheet2Vow</span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-                style={{
-                  background: 'none',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  cursor: 'pointer',
-                  padding: '0.3rem',
-                  color: 'var(--color-text)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
-              {[
-                { id: 'home', label: 'Summary', icon: LayoutDashboard },
-                { id: 'guests', label: 'Guest List', icon: Users },
-                { id: 'menu', label: 'Catering', icon: Utensils },
-                { id: 'tables', label: 'Seating', icon: Armchair },
-                { id: 'budget', label: 'Financials', icon: DollarSign },
-                { id: 'schedule', label: 'Timeline', icon: Calendar },
-                { id: 'vendors', label: 'Vendors', icon: Briefcase },
-                { id: 'tasks', label: 'Tasks', icon: ListTodo },
-                { id: 'music', label: 'Music', icon: Music },
-                { id: 'photos', label: 'Photos', icon: Camera },
-                { id: 'thanks', label: 'Thanks', icon: Heart },
-              ]
-                .filter(tab => (enabledModules as any)[tab.id] ?? (tab.id === 'home' ? enabledModules.metrics : true))
-                .map((tab) => {
-                  const IconComp = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => switchTab(tab.id as any)}
-                      title={tab.label}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.625rem',
-                        padding: '0.55rem 0.65rem',
-                        borderRadius: 'var(--border-radius-sm)',
-                        backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
-                        color: isActive ? 'var(--color-on-primary)' : 'var(--color-text)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.725rem',
-                        fontWeight: isActive ? 700 : 500,
-                        justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
-                        transition: 'var(--transition-smooth)'
-                      }}
-                    >
-                      <IconComp size={16} style={{ flexShrink: 0 }} />
-                      {!isSidebarCollapsed && <span>{tab.label.toUpperCase()}</span>}
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Desktop Bottom Action Tools (Print, Share & Settings) */}
-          <div style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setPrintModalInitialTemplate('place_cards');
-                setShowPrintModal(true);
-              }}
-              title="Print Studio & Canva Exporter"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.625rem',
-                padding: '0.5rem 0.65rem',
-                borderRadius: 'var(--border-radius-sm)',
-                backgroundColor: 'transparent',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-border)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.7rem',
-                fontWeight: 600,
-                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start'
-              }}
-            >
-              <Printer size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-              {!isSidebarCollapsed && <span>PRINT & EXPORT</span>}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowShareModal(true)}
-              title="Share View-Only Vendor Link"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.625rem',
-                padding: '0.5rem 0.65rem',
-                borderRadius: 'var(--border-radius-sm)',
-                backgroundColor: 'transparent',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-border)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.7rem',
-                fontWeight: 600,
-                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start'
-              }}
-            >
-              <Share2 size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-              {!isSidebarCollapsed && <span>SHARE</span>}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowAdvancedSettings(true)}
-              title="Advanced Settings"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.625rem',
-                padding: '0.5rem 0.65rem',
-                borderRadius: 'var(--border-radius-sm)',
-                backgroundColor: 'transparent',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-border)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.7rem',
-                fontWeight: 600,
-                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start'
-              }}
-            >
-              <Settings size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-              {!isSidebarCollapsed && <span>SETTINGS</span>}
-            </button>
-          </div>
-
-          {/* App Version & Deployment Timestamp */}
-          <AppVersionBadge collapsed={isSidebarCollapsed} variant="sidebar" />
-        </aside>
+          onOpenShareModal={() => setShowShareModal(true)}
+          onOpenSettings={() => setShowAdvancedSettings(true)}
+          onExportCSV={handleExportActiveCSV}
+          theme={theme}
+        />
       )}
 
       {/* Brand Header */}
@@ -1797,26 +1454,24 @@ export default function Sheet2VowDashboard() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          backgroundColor: 'var(--color-bg)',
-          paddingTop: '0.75rem',
-          paddingBottom: '0.75rem',
-          marginTop: isMobile ? '-0.5rem' : 0,
-          marginLeft: isMobile ? '-1.5rem' : undefined,
-          marginRight: isMobile ? '-1.5rem' : undefined,
-          paddingLeft: isMobile ? '1.25rem' : undefined,
-          paddingRight: isMobile ? '1.25rem' : undefined,
-          width: isMobile ? 'calc(100% + 3rem)' : '100%',
+          backgroundColor: 'var(--color-surface, #FFFFFF)',
+          paddingTop: isMobile ? '0.35rem' : '0.5rem',
+          paddingBottom: isMobile ? '0.35rem' : '0.5rem',
+          marginTop: 0,
+          marginLeft: 0,
+          marginRight: 0,
+          paddingLeft: isMobile ? '0.75rem' : '1.25rem',
+          paddingRight: isMobile ? '0.75rem' : '1.25rem',
+          width: '100%',
           boxSizing: 'border-box',
           border: 'none',
-          borderLeft: 'none',
-          borderRight: 'none',
-          borderTop: 'none',
-          borderBottom: '2px solid var(--color-primary)',
+          borderBottom: '1px solid var(--color-border, #E2E8F0)',
           boxShadow: 'none',
           outline: 'none',
+          marginBottom: isMobile ? '0.5rem' : '1rem',
         }}
       >
-        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {isMobile && isOnboarded ? (
             <button
               type="button"
@@ -1824,26 +1479,65 @@ export default function Sheet2VowDashboard() {
               title="Open Navigation Menu"
               style={{
                 backgroundColor: 'transparent',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--border-radius-sm)',
-                padding: '0.4rem',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                borderRadius: '2px',
+                padding: '0.3rem',
                 cursor: 'pointer',
-                color: 'var(--color-text)',
+                color: 'var(--color-text, #0F172A)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '0.35rem'
+                marginRight: '0.2rem',
               }}
             >
-              <Menu size={22} style={{ color: 'var(--color-primary)' }} />
+              <Menu size={18} style={{ color: 'var(--color-primary)' }} />
             </button>
-          ) : (
-            <FileSpreadsheet size={38} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', flexShrink: 0, alignSelf: 'center' }} />
-          )}
+          ) : !isDesktopSidebarActive ? (
+            <div
+              style={{
+                width: '26px',
+                height: '26px',
+                backgroundColor: 'var(--color-primary, #0F172A)',
+                color: 'var(--color-on-primary, #FFFFFF)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '2px',
+                flexShrink: 0,
+              }}
+            >
+              <FileSpreadsheet size={15} strokeWidth={2.2} />
+            </div>
+          ) : null}
 
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignSelf: 'center' }}>
-            <h1 style={{ ...styles.brandName, fontSize: isMobile ? '1.35rem' : styles.brandName.fontSize, margin: 0, lineHeight: '1.1' }}>Sheet2Vow</h1>
-            {!isMobile && <p style={{ ...styles.brandSubtitle, margin: 0, marginTop: '2px', lineHeight: '1.2' }}>Clean digital canvas for spreadsheet purists.</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <h1
+              style={{
+                fontFamily: 'var(--font-editorial-serif, serif)',
+                fontSize: isMobile ? '1.15rem' : (isDesktopSidebarActive ? '1.2rem' : '1.45rem'),
+                margin: 0,
+                lineHeight: '1.1',
+                fontWeight: 700,
+                color: 'var(--color-primary, #0F172A)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Sheet2Vow
+            </h1>
+            {!isMobile && !isDesktopSidebarActive && (
+              <p
+                style={{
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.62rem',
+                  color: 'var(--color-muted, #64748B)',
+                  margin: 0,
+                  marginTop: '1px',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Clean digital canvas for spreadsheet purists.
+              </p>
+            )}
           </div>
         </div>
 
@@ -2842,11 +2536,15 @@ export default function Sheet2VowDashboard() {
             </div>
           )}
 
-          {/* Target Wedding Milestone Header */}
-          <div style={styles.weddingTitleHeader}>
-            <h2 className="wedding-title" style={styles.weddingNameText}>{weddingName.toUpperCase()}</h2>
-            <div style={styles.weddingMilestoneDate}>{getCountdown()}</div>
-          </div>
+          {/* Persistent Wedding Masthead (Editorial Serif with compressed mode on data-dense views) */}
+          <VowMasthead
+            weddingName={weddingName}
+            weddingDate={weddingDate}
+            locationDetails={locationDetails || weddingData?.dashboard?.location || ''}
+            countdown={getCountdown()}
+            activeTab={activeTab}
+            isMobile={isMobile}
+          />
 
           {/* Demo Workspace Header Banner (Only shown in offline Mock/Demo Mode) */}
           {isMockMode && (
@@ -3191,542 +2889,27 @@ export default function Sheet2VowDashboard() {
         </div>
       )}
 
-      {/* Mobile Ergonomic Bottom Tab Navigation Bar [NAV-MOBILE-THUMB, NAV-SWIPE] */}
+      {/* Mobile Ergonomic Bottom Tab Navigation Bar & Categorized Drawer */}
       {isMobile && isOnboarded && (
-        <nav
-          className="mobile-bottom-nav-bar"
+        <VowMobileNav
+          activeTab={activeTab}
+          onSwitchTab={switchTab}
+          isMobileDrawerOpen={isMobileDrawerOpen}
+          onToggleDrawer={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+          onCloseDrawer={() => setIsMobileDrawerOpen(false)}
+          enabledModules={enabledModules}
+          onOpenPrintStudio={() => {
+            setPrintModalInitialTemplate('place_cards');
+            setShowPrintModal(true);
+          }}
+          onOpenShareModal={() => setShowShareModal(true)}
+          onOpenSettings={() => setShowAdvancedSettings(true)}
           onTouchStart={handleBottomNavTouchStart}
           onTouchEnd={handleBottomNavTouchEnd}
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '62px',
-            backgroundColor: 'var(--color-surface, #ffffff)',
-            borderTop: '1px solid var(--color-border)',
-            boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-around',
-            zIndex: 150,
-            padding: '0 0.5rem',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          {[
-            { id: 'home', label: 'Home', icon: LayoutDashboard },
-            { id: 'guests', label: 'Guests', icon: Users },
-            { id: 'budget', label: 'Budget', icon: DollarSign },
-            { id: 'schedule', label: 'Schedule', icon: Calendar },
-          ].map((tab) => {
-            const IconComp = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => {
-                  triggerHaptic(10);
-                  switchTab(tab.id as any);
-                  setIsMobileDrawerOpen(false);
-                }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'none',
-                  border: 'none',
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  padding: '0.35rem 0.5rem',
-                  gap: '0.15rem',
-                  flex: 1,
-                  transition: 'var(--transition-smooth)',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: 'var(--border-radius-sm, 12px)',
-                    backgroundColor: isActive ? 'var(--color-bg-subtle, rgba(0,0,0,0.05))' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <IconComp size={20} style={{ strokeWidth: isActive ? 2.5 : 1.8 }} />
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: isActive ? 800 : 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-
-          {/* "More" Trigger Button */}
-          {(() => {
-            const isSecondaryTabActive = !['home', 'guests', 'budget', 'schedule'].includes(activeTab);
-            return (
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic(12);
-                  setIsMobileDrawerOpen(!isMobileDrawerOpen);
-                }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'none',
-                  border: 'none',
-                  color: (isSecondaryTabActive || isMobileDrawerOpen) ? 'var(--color-primary)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  padding: '0.35rem 0.5rem',
-                  gap: '0.15rem',
-                  flex: 1,
-                  position: 'relative',
-                  transition: 'var(--transition-smooth)',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: 'var(--border-radius-sm, 12px)',
-                    backgroundColor: (isSecondaryTabActive || isMobileDrawerOpen) ? 'var(--color-bg-subtle, rgba(0,0,0,0.05))' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                  }}
-                >
-                  <Menu size={20} style={{ strokeWidth: (isSecondaryTabActive || isMobileDrawerOpen) ? 2.5 : 1.8 }} />
-                  {isSecondaryTabActive && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '1px',
-                        right: '4px',
-                        width: '7px',
-                        height: '7px',
-                        borderRadius: '50%',
-                        backgroundColor: 'var(--color-primary)',
-                      }}
-                    />
-                  )}
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: (isSecondaryTabActive || isMobileDrawerOpen) ? 800 : 500 }}>
-                  MORE
-                </span>
-              </button>
-            );
-          })()}
-        </nav>
+          triggerHaptic={triggerHaptic}
+        />
       )}
 
-      {/* Categorized Mobile Module & Tools Drawer [NAV-MOBILE-DRAWER, NAV-SWIPE] */}
-      {isMobile && isOnboarded && isMobileDrawerOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 200,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            backdropFilter: 'blur(4px)',
-            animation: 'fadeIn 0.2s ease',
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              triggerHaptic(8);
-              setIsMobileDrawerOpen(false);
-            }
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface, #ffffff)',
-              borderTopLeftRadius: '20px',
-              borderTopRightRadius: '20px',
-              borderTop: '2px solid var(--color-border)',
-              boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.2)',
-              maxHeight: '85vh',
-              display: 'flex',
-              flexDirection: 'column',
-              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-              overflow: 'hidden',
-            }}
-            onTouchStart={handleDrawerTouchStart}
-            onTouchEnd={handleDrawerTouchEnd}
-          >
-            {/* Drawer Drag Handle Bar */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                paddingTop: '0.75rem',
-                paddingBottom: '0.25rem',
-                cursor: 'grab',
-              }}
-            >
-              <div
-                style={{
-                  width: '40px',
-                  height: '4px',
-                  borderRadius: '2px',
-                  backgroundColor: 'var(--color-muted)',
-                  opacity: 0.5,
-                }}
-              />
-            </div>
-
-            {/* Drawer Header */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.5rem 1.25rem 0.75rem 1.25rem',
-                borderBottom: '1px solid var(--color-border)',
-              }}
-            >
-              <div>
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.85rem',
-                    fontWeight: 800,
-                    margin: 0,
-                    color: 'var(--color-primary)',
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  All Planning Modules & Tools
-                </h3>
-                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
-                  Swipe down or tap a module to navigate
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic(8);
-                  setIsMobileDrawerOpen(false);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-muted)',
-                  cursor: 'pointer',
-                  padding: '0.35rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Drawer Body — Categorized Grid */}
-            <div
-              style={{
-                padding: '1rem 1.25rem 2rem 1.25rem',
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1.25rem',
-              }}
-            >
-              {/* Category: Core Event Planning */}
-              <div>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    color: 'var(--color-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  Core Planning
-                </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-                  {[
-                    { id: 'home', label: 'Summary', sub: 'KPI Dashboard', icon: LayoutDashboard, color: '#3b82f6' },
-                    { id: 'guests', label: 'Guests & RSVP', sub: 'Registry & Invites', icon: Users, color: '#10b981' },
-                    { id: 'budget', label: 'Financials', sub: 'Ledger & Deposits', icon: DollarSign, color: '#f59e0b' },
-                    { id: 'schedule', label: 'Day Timeline', sub: 'Run of Show', icon: Calendar, color: '#8b5cf6' },
-                    { id: 'menu', label: 'Catering', sub: 'Dishes & Allergens', icon: Utensils, color: '#ec4899' },
-                    { id: 'tables', label: 'Seating Chart', sub: 'Floor & Head Table', icon: Armchair, color: '#06b6d4' },
-                    { id: 'tasks', label: 'Checklist', sub: 'Kanban Stages', icon: ListTodo, color: '#f97316' },
-                    { id: 'vendors', label: 'Vendors', sub: 'Contracts & Contacts', icon: Briefcase, color: '#6366f1' },
-                  ]
-                    .filter(m => (enabledModules as any)[m.id] ?? (m.id === 'home' ? enabledModules.metrics : true))
-                    .map(m => {
-                      const IconC = m.icon;
-                      const isActive = activeTab === m.id;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            triggerHaptic(12);
-                            switchTab(m.id as any);
-                            setIsMobileDrawerOpen(false);
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.65rem',
-                            padding: '0.65rem 0.75rem',
-                            backgroundColor: isActive ? 'var(--color-bg-hover, #f1f5f9)' : 'var(--color-bg-subtle, #f8fafc)',
-                            border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            borderRadius: 'var(--border-radius-md, 8px)',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            transition: 'var(--transition-smooth)',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '8px',
-                              backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
-                              color: isActive ? 'var(--color-on-primary)' : m.color,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                            }}
-                          >
-                            <IconC size={16} />
-                          </div>
-                          <div style={{ overflow: 'hidden' }}>
-                            <div
-                              style={{
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: '0.725rem',
-                                fontWeight: isActive ? 800 : 700,
-                                color: 'var(--color-text)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {m.label}
-                            </div>
-                            <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {m.sub}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Category: Media & Experience */}
-              <div>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    color: 'var(--color-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  Media & Experience
-                </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-                  {[
-                    { id: 'music', label: 'Music & DJ', sub: 'Cue Sheet & Do-Not-Play', icon: Music, color: '#a855f7' },
-                    { id: 'photos', label: 'Photo Shot List', sub: 'Must-Have Groupings', icon: Camera, color: '#14b8a6' },
-                    { id: 'thanks', label: 'Thank-You Tracker', sub: 'Gifts & Notes', icon: Heart, color: '#ef4444' },
-                  ]
-                    .filter(m => (enabledModules as any)[m.id] ?? true)
-                    .map(m => {
-                      const IconC = m.icon;
-                      const isActive = activeTab === m.id;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            triggerHaptic(12);
-                            switchTab(m.id as any);
-                            setIsMobileDrawerOpen(false);
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.65rem',
-                            padding: '0.65rem 0.75rem',
-                            backgroundColor: isActive ? 'var(--color-bg-hover, #f1f5f9)' : 'var(--color-bg-subtle, #f8fafc)',
-                            border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            borderRadius: 'var(--border-radius-md, 8px)',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            transition: 'var(--transition-smooth)',
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '8px',
-                              backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
-                              color: isActive ? 'var(--color-on-primary)' : m.color,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                            }}
-                          >
-                            <IconC size={16} />
-                          </div>
-                          <div style={{ overflow: 'hidden' }}>
-                            <div
-                              style={{
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: '0.725rem',
-                                fontWeight: isActive ? 800 : 700,
-                                color: 'var(--color-text)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {m.label}
-                            </div>
-                            <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {m.sub}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Category: Collaboration & Quick Tools */}
-              <div>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    color: 'var(--color-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  Export & Quick Tools
-                </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic(12);
-                      setIsMobileDrawerOpen(false);
-                      setShowPrintModal(true);
-                    }}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.65rem 0.5rem',
-                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--border-radius-md, 8px)',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Printer size={18} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                      Print Studio
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic(12);
-                      setIsMobileDrawerOpen(false);
-                      setShowShareModal(true);
-                    }}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.65rem 0.5rem',
-                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--border-radius-md, 8px)',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Share2 size={18} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                      Vendor Links
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic(12);
-                      setIsMobileDrawerOpen(false);
-                      setShowAdvancedSettings(true);
-                    }}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      padding: '0.65rem 0.5rem',
-                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--border-radius-md, 8px)',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Sliders size={18} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                      Settings
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile Slide-Up Nav Version & Deployment Info */}
-              <AppVersionBadge variant="mobile-drawer" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast Notification Container [GEN-3] */}
       <ToastNotification toasts={toasts} onDismiss={dismissToast} />
