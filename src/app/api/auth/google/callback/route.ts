@@ -90,8 +90,71 @@ export async function GET(req: NextRequest) {
 
       // Check database for existing registered workspaces for this user email or co-planner status
       const existingDbWorkspaces = await LocalLicensingDb.getWorkspacesByEmailAsync(userEmail);
-      const spreadsheetId: string | undefined = existingDbWorkspaces[0]?.spreadsheetId;
-      const webViewLink: string | undefined = existingDbWorkspaces[0]?.webViewLink;
+      let spreadsheetId: string | undefined = existingDbWorkspaces[0]?.spreadsheetId;
+      let webViewLink: string | undefined = existingDbWorkspaces[0]?.webViewLink;
+
+      // Google Drive Fallback: If not registered in database, directly inspect user's Google Drive folders
+      if (!spreadsheetId) {
+        try {
+          let foundFile: any = null;
+
+          // Priority 1: Check inside the Sheet2Vow folder
+          if (vowFolderId) {
+            const vowFilesRes = await drive.files.list({
+              q: `'${vowFolderId}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
+              fields: 'files(id, name, webViewLink, modifiedTime)',
+              orderBy: 'modifiedTime desc',
+              pageSize: 5,
+            });
+            foundFile = vowFilesRes.data.files?.[0];
+          }
+
+          // Priority 2: Check inside the parent Sheet2Suite folder
+          if (!foundFile && rootFolderId) {
+            const rootFilesRes = await drive.files.list({
+              q: `'${rootFolderId}' in parents and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
+              fields: 'files(id, name, webViewLink, modifiedTime)',
+              orderBy: 'modifiedTime desc',
+              pageSize: 5,
+            });
+            foundFile = rootFilesRes.data.files?.[0];
+          }
+
+          // Priority 3: Search user's Drive for any spreadsheets containing "Wedding" or "Sheet2Vow"
+          if (!foundFile) {
+            const broadFilesRes = await drive.files.list({
+              q: "mimeType = 'application/vnd.google-apps.spreadsheet' and (name contains 'Sheet2Vow' or name contains 'Wedding') and trashed = false",
+              fields: 'files(id, name, webViewLink, modifiedTime)',
+              orderBy: 'modifiedTime desc',
+              pageSize: 5,
+            });
+            foundFile = broadFilesRes.data.files?.[0];
+          }
+
+          if (foundFile?.id) {
+            spreadsheetId = foundFile.id;
+            webViewLink = foundFile.webViewLink || `https://docs.google.com/spreadsheets/d/${foundFile.id}/edit`;
+            console.log(`[OAuth Callback] Auto-discovered existing Google Drive wedding spreadsheet: "${foundFile.name}" (${foundFile.id}) for ${userEmail}`);
+
+            // Automatically backfill workspace registration into Cloud Firestore
+            try {
+              await LocalLicensingDb.saveWorkspaceAsync({
+                userEmail,
+                spreadsheetId: foundFile.id,
+                spreadsheetName: foundFile.name || 'Wedding Database',
+                driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
+                webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${foundFile.id}/edit`,
+                productName: 'Sheet2Vow',
+                orderVerified: true,
+              });
+            } catch (backfillErr) {
+              console.warn('[OAuth Callback] Could not backfill auto-discovered workspace to database:', backfillErr);
+            }
+          }
+        } catch (driveErr) {
+          console.warn('[OAuth Callback] Error inspecting Google Drive for existing spreadsheet:', driveErr);
+        }
+      }
 
       if (spreadsheetId) {
         provisionData = {

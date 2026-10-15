@@ -160,6 +160,29 @@ export const LocalLicensingDb = {
     }
   },
 
+  // 2b. Async save awaiting Cloud Firestore sync (critical for serverless Cloud Run / Firebase App Hosting)
+  async saveWorkspaceAsync(record: Omit<WorkspaceRecord, 'workspaceId' | 'activatedAt' | 'lastActiveAt'> & { workspaceId?: string }): Promise<WorkspaceRecord> {
+    const now = new Date().toISOString();
+    let existingWorkspace: WorkspaceRecord | null = null;
+
+    if (record.spreadsheetId) {
+      existingWorkspace = await this.getWorkspaceBySpreadsheetIdAsync(record.spreadsheetId);
+    }
+
+    const workspaceId = existingWorkspace?.workspaceId || record.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const workspaceRecord: WorkspaceRecord = {
+      workspaceId,
+      activatedAt: existingWorkspace?.activatedAt || now,
+      lastActiveAt: now,
+      ...existingWorkspace,
+      ...record,
+    };
+
+    // Await write to Cloud Firestore and local storage
+    await LocalFirestore.setDocAsync('workspaces', workspaceId, workspaceRecord);
+    return workspaceRecord;
+  },
+
   // 3. License verification helper
   getLicenseByKey(licenseKey: string): Sheet2SuiteLicense | null {
     const doc = LocalFirestore.getDoc<LicenseDocument>('licenses', licenseKey);

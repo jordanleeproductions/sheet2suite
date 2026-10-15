@@ -17,7 +17,50 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const records = await LocalLicensingDb.getWorkspacesByEmailAsync(email);
+    let records = await LocalLicensingDb.getWorkspacesByEmailAsync(email);
+
+    // Auto-Discovery Fallback: If no records found in database, check Google Drive if session token exists
+    if (records.length === 0) {
+      try {
+        const token = req.headers.get('authorization')?.replace('Bearer ', '') || 
+                      req.cookies.get('s2s_access_token')?.value || 
+                      req.cookies.get('google_access_token')?.value;
+        const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
+
+        if (token || refreshToken) {
+          const { getGoogleAuthAsync } = await import('@/lib/sheets/client');
+          const { google } = await import('googleapis');
+          const auth = await getGoogleAuthAsync(token, undefined, email, refreshToken);
+          const drive = google.drive({ version: 'v3', auth });
+
+          const driveSearch = await drive.files.list({
+            q: "mimeType = 'application/vnd.google-apps.spreadsheet' and (name contains 'Sheet2Vow' or name contains 'Wedding') and trashed = false",
+            fields: 'files(id, name, webViewLink, modifiedTime)',
+            orderBy: 'modifiedTime desc',
+            pageSize: 5,
+          });
+
+          if (driveSearch.data.files && driveSearch.data.files.length > 0) {
+            for (const file of driveSearch.data.files) {
+              if (file.id) {
+                const autoRegistered = await LocalLicensingDb.saveWorkspaceAsync({
+                  userEmail: email,
+                  spreadsheetId: file.id,
+                  spreadsheetName: file.name || 'Wedding Database',
+                  driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
+                  webViewLink: file.webViewLink || `https://docs.google.com/spreadsheets/d/${file.id}/edit`,
+                  productName: 'Sheet2Vow',
+                  orderVerified: true,
+                });
+                records.push(autoRegistered);
+              }
+            }
+          }
+        }
+      } catch (driveErr) {
+        console.warn('[Workspaces GET] Could not perform Drive auto-discovery fallback:', driveErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -66,7 +109,7 @@ export async function POST(req: NextRequest) {
       ? [partnerEmail]
       : [];
 
-    const saved = LocalLicensingDb.saveWorkspace({
+    const saved = await LocalLicensingDb.saveWorkspaceAsync({
       userEmail,
       partnerEmail,
       coPlanners: resolvedCoPlanners,

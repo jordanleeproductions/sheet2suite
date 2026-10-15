@@ -563,6 +563,23 @@
   - **Header & Visual Polish**: Replaced raw emoji with Lucide `Lock` icon enclosed in an amber security glow badge, paired with a connected user identity card, backdrop blur click-to-dismiss, and clean fallback to workspace disconnection.
 
 ---
+
+## 💒 17. Target Wedding Milestone & Countdown (`src/app/vow/page.tsx`)
+- [x] **[COUNTDOWN-ELAPSED-DAYS] Post-Wedding Elapsed Days & Countdown Precision (`src/app/vow/page.tsx`):**
+  - **Dynamic Elapsed Day Counter**: If today's date is past the set Wedding Date, the top header milestone label dynamically transitions from the static "JUST MARRIED!" to `"MARRIED ## DAYS AGO!"` (and `"MARRIED 1 DAY AGO!"` when 1 day past).
+  - **Wedding Day Celebration**: Preserves `"JUST MARRIED!"` when today's calendar date matches the set wedding date (`diffDays === 0`).
+  - **Calendar-Day Midnight Normalization**: Normalizes both target event dates and current local dates to start-of-day local midnight, eliminating timezone discrepancies from ISO UTC strings and ensuring singular/plural grammar (`"1 DAY UNTIL THE WEDDING!"` vs `"## DAYS UNTIL THE WEDDING!"`).
+
+---
+
+## 🌐 18. Multi-Device Active Workspace Auto-Discovery & Cloud Sync (`src/app/api/auth/google/callback/route.ts`, `src/app/api/workspaces/route.ts`, `src/lib/db/licensingDb.ts`, `src/app/vow/page.tsx`)
+- [x] **[WORKSPACE-MULTI-DEVICE-DISCOVERY] Cross-Device Google Drive & Cloud Firestore Workspace Resolution:**
+  - **Google Drive Auto-Discovery Fallback**: When logging in on Desktop or any secondary device where `localStorage` is blank, `/api/auth/google/callback` inspects Google Drive (`Sheet2Vow` and `Sheet2Suite` folders) if database records are empty, automatically locating the active wedding spreadsheet and backfilling the registration into Cloud Firestore.
+  - **Awaited Cloud Firestore Persistence (`saveWorkspaceAsync`)**: Upgraded workspace database writes from unawaited fire-and-forget calls to `LocalLicensingDb.saveWorkspaceAsync`, guaranteeing Cloud Firestore write completion in ephemeral serverless environments (Cloud Run / Firebase App Hosting).
+  - **Silent Mount Auto-Discovery**: When navigating to `/vow` on Desktop with no cached `localStorage` sheet ID, the dashboard automatically invokes `/api/workspaces` to detect existing active sessions and hydrates the workspace without forcing manual login or URL parameter inputs.
+  - **Client-Side Auth Safety Net**: `handleDirectGoogleAuth` performs a secondary verification against `/api/workspaces` with the newly minted access token before falling back to `/activate`.
+
+---
 ---
 
 

@@ -145,13 +145,49 @@ export default function Sheet2VowDashboard() {
               // Fetch latest metadata (wedding date, location, budget) directly from Google Sheet SETTINGS
               fetchWeddingData(accessToken, targetSpreadsheetId);
             } else {
-              setSpreadsheetId('');
-              setIsMockMode(false);
-              setIsOnboarded(false);
-              addToast(`Authenticated as ${user.email}.`, 'info');
-              if (typeof window !== 'undefined') {
-                window.location.href = `/activate?email=${encodeURIComponent(user.email)}`;
-              }
+              // Double Safety Net: Query /api/workspaces with the user's fresh token before redirecting to /activate
+              fetch(`/api/workspaces?email=${encodeURIComponent(user?.email || '')}`, {
+                headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined,
+              })
+                .then((r) => r.json())
+                .then((wsData) => {
+                  if (wsData.success && Array.isArray(wsData.workspaces) && wsData.workspaces.length > 0 && wsData.workspaces[0]?.spreadsheetId) {
+                    const fallbackSheetId = wsData.workspaces[0].spreadsheetId;
+                    setSpreadsheetId(fallbackSheetId);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('s2v_spreadsheet_id', fallbackSheetId);
+                      localStorage.setItem('s2v_is_onboarded', 'true');
+                      try {
+                        const currentUrl = new URL(window.location.href);
+                        if (!currentUrl.searchParams.get('spreadsheetId')) {
+                          currentUrl.searchParams.set('spreadsheetId', fallbackSheetId);
+                          window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+                        }
+                      } catch (_) {}
+                    }
+                    setIsMockMode(false);
+                    setIsOnboarded(true);
+                    invalidateSessionCheckCache();
+                    addToast(`Welcome ${user?.name ? user.name : 'back'}! Connecting to workspace...`, 'success');
+                    fetchWeddingData(accessToken, fallbackSheetId);
+                  } else {
+                    setSpreadsheetId('');
+                    setIsMockMode(false);
+                    setIsOnboarded(false);
+                    addToast(`Authenticated as ${user?.email}.`, 'info');
+                    if (typeof window !== 'undefined') {
+                      window.location.href = `/activate?email=${encodeURIComponent(user?.email || '')}`;
+                    }
+                  }
+                })
+                .catch(() => {
+                  setSpreadsheetId('');
+                  setIsMockMode(false);
+                  setIsOnboarded(false);
+                  if (typeof window !== 'undefined') {
+                    window.location.href = `/activate?email=${encodeURIComponent(user?.email || '')}`;
+                  }
+                });
             }
           } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
             window.removeEventListener('message', handleAuthMessage);
@@ -677,6 +713,47 @@ export default function Sheet2VowDashboard() {
     const savedOnboarded = (savedToken && (urlSheetId || localStorage.getItem('s2v_is_onboarded') === 'true')) || (isOfflineMode && localStorage.getItem('s2v_is_onboarded') === 'true') ? 'true' : 'false';
     const savedName = localStorage.getItem('s2v_wedding_name');
     const savedDate = localStorage.getItem('s2v_wedding_date');
+
+    // Multi-Device Auto-Discovery: If no spreadsheetId is in localStorage or URL, attempt to discover workspaces via server session
+    if (!savedSheetId && !isOfflineMode) {
+      fetch('/api/workspaces')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
+            const primaryWorkspace = data.workspaces[0];
+            const discoveredSheetId = primaryWorkspace.spreadsheetId;
+            if (discoveredSheetId) {
+              setSpreadsheetId(discoveredSheetId);
+              setIsOnboarded(true);
+              if (data.userEmail) {
+                setGoogleUserEmail(data.userEmail);
+                if (typeof window !== 'undefined') localStorage.setItem('s2v_google_email', data.userEmail);
+              }
+              if (primaryWorkspace.spreadsheetName) {
+                const cleanName = primaryWorkspace.spreadsheetName.replace(/ Database$/i, '').replace(/ Workspace$/i, '');
+                setWeddingName(cleanName);
+                if (typeof window !== 'undefined') localStorage.setItem('s2v_wedding_name', cleanName);
+              }
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('s2v_spreadsheet_id', discoveredSheetId);
+                localStorage.setItem('s2v_is_onboarded', 'true');
+                try {
+                  const currentUrl = new URL(window.location.href);
+                  if (!currentUrl.searchParams.get('spreadsheetId')) {
+                    currentUrl.searchParams.set('spreadsheetId', discoveredSheetId);
+                    window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+                  }
+                } catch (_) {}
+              }
+              // Immediately hydrate wedding data from discovered workspace
+              fetchWeddingData(undefined, discoveredSheetId);
+            }
+          }
+        })
+        .catch((err) => {
+          console.warn('[Auto-Discovery] Could not auto-detect workspace:', err);
+        });
+    }
     const savedStyleTheme = localStorage.getItem('s2v_style_theme');
     const savedTheme = localStorage.getItem('s2v_theme');
     const savedColor = localStorage.getItem('s2v_primary_color');
@@ -1149,11 +1226,30 @@ export default function Sheet2VowDashboard() {
   const getCountdown = () => {
     if (!weddingDate) return "DATE NOT SET";
     const today = new Date();
-    const target = new Date(weddingDate);
+    today.setHours(0, 0, 0, 0);
+
+    let target: Date;
+    if (/^\d{4}-\d{2}-\d{2}/.test(weddingDate)) {
+      const [y, m, d] = weddingDate.split(/[T ]/)[0].split('-').map(Number);
+      target = new Date(y, m - 1, d);
+    } else {
+      target = new Date(weddingDate);
+    }
+
+    if (isNaN(target.getTime())) return "DATE NOT SET";
+    target.setHours(0, 0, 0, 0);
+
     const diffTime = target.getTime() - today.getTime();
-    if (diffTime < 0) return "JUST MARRIED!";
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return `${diffDays} DAYS UNTIL THE WEDDING!`;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      const daysAgo = Math.abs(diffDays);
+      return daysAgo === 1 ? "MARRIED 1 DAY AGO!" : `MARRIED ${daysAgo} DAYS AGO!`;
+    }
+    if (diffDays === 0) {
+      return "JUST MARRIED!";
+    }
+    return diffDays === 1 ? "1 DAY UNTIL THE WEDDING!" : `${diffDays} DAYS UNTIL THE WEDDING!`;
   };
 
   const isDesktopSidebarActive = !isMobile && isOnboarded;
