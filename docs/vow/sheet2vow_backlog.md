@@ -15,6 +15,8 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 | **`[CATERING-GUESTLIST-SHEET]`** | Dynamic Shareable Guest List Spreadsheet for Catering Vendor — Dynamically builds a dedicated caterer guest list spreadsheet/export containing: `#`, `First Name`, `Last Name`, `Age Category` (for kids vs adult menus), `Dietary Restrictions` (allergies/preferences), `Meal Choice`, and `Table Number`. Enforces table resolution rule: strictly maps internal IDs (`table-1788572224912`) to the couple's human-designated table names/numbers (e.g. `Table 1`, `Sweetheart Table`), excluding declined RSVPs. Integrated into Catering Manager and Vendor Share Portal. | `src/components/MenuSetupManager.tsx`, `src/app/share/[token]/page.tsx`, `src/app/api/share/[token]/route.ts`, `src/lib/sheets/mapper.ts`, `src/types/wedding.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | 📝 Backlog |
 
 ### 🖨️ Print Studio & Canva Exporter
+> ⚠️ **Launch Status:** Sidelined / Disabled for Initial Launch — Not priority for launch and pending production readiness. All entry points across sidebar rail, mobile drawer, top header, and relational module toolbars have been hidden.
+
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[PRINT-8]`** | Full Wedding Planner Binder Printout (combines all modules into bound book) | `PrintTemplatesModal.tsx` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
@@ -42,6 +44,14 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
 | **`[SHARE-4]`** | Spouse & Partner Co-Planning Access (delegate Drive read/write permissions & free Google email notification with max 2 co-planner quota) | `src/components/AdvancedSettingsModal.tsx`, `src/app/api/share/partner/route.ts`, `src/types/licensing.ts` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
+| **`[PORTAL-SONG-REQUEST]`** | Guest Live DJ Song Request Portal & Admin Approval Queue — Guest reception QR song request submission portal (`/request-song/[token]`), pending song request alert banner, and admin approval/decline queue in `MusicManager.tsx`. *(Sidelined / Disabled for Initial Launch)* | `src/components/MusicManager.tsx`, `src/app/request-song/[token]/page.tsx`, `src/components/VendorShareLinkManager.tsx` | 🟡 Medium | ⚡ Med (~2-3 turns) | 📝 Backlog |
+| **`[PORTAL-PHOTO-GUESTBOOK]`** | Live Photo & Video Guestbook Direct-to-Drive Upload Portal — Direct mobile guest uploads to couple's personal Google Drive folder (`/upload/[token]`), real-time submissions ledger, and guest wishes feed in `PhotoShotListManager.tsx`. *(Sidelined / Disabled for Initial Launch)* | `src/components/PhotoShotListManager.tsx`, `src/app/upload/[token]/page.tsx`, `src/components/VendorShareLinkManager.tsx` | 🔴 High | ⚡ High (~3-4 turns) | 📝 Backlog |
+| **`[QR-CODE-GENERATOR]`** | Dynamic High-Res QR Code Generator Engine — In-app generation and instant PNG download of high-resolution QR codes for physical table cards, place cards, and reception displays. *(Sidelined / Disabled for Initial Launch)* | `src/components/PhotoShotListManager.tsx`, `src/components/MusicManager.tsx` | 🟢 Low | ⚡ Low (~1 turn) | 📝 Backlog |
+
+### 💰 Financials, Budget & Expense Management
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[EXPENSE-PAID-BY]`** | Expense "Paid By" Contributor Tracking & Family Contribution Breakdown — Track who paid for each logged expense item (e.g. `Couple`, `In-Laws`, `Parents`, `Self`, `Partner`, or custom contributor name). Adds Column G: `Paid By` (`paidBy`: string) to the `EXPENSES` spreadsheet tab. Features an interactive combobox with quick contributor suggestion pills in the Add/Edit Expense modal, contributor badges on purchase ledger rows, and a dedicated "Paid By" filter and contribution breakdown summary (e.g. In-Laws: $X, Couple: $Y, Parents: $Z) in the Financials ledger. | `src/components/BudgetLedgerManager.tsx`, `src/types/wedding.ts`, `src/lib/sheets/mapper.ts`, `src/app/api/sync/route.ts`, `docs/vow/master_spreadsheet_schema.md` | 🟡 Medium | ⚡ Med (~2-3 turns) | 📝 Backlog |
 
 ### 🔔 Versioning, Notifications & App Lifecycle
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |

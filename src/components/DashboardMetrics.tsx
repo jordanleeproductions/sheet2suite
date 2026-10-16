@@ -127,7 +127,7 @@ export default function DashboardMetrics({
   const pendingRequestsCount = allMusic.filter(s => s.approvalStatus === 'Pending Approval').length;
 
   // Planning Status Health Indicator
-  const hasExceptions = isOverBudget || pendingCount > 0 || toDoCount > 5 || unassignedAttending > 0 || pendingRequestsCount > 0;
+  const hasExceptions = isOverBudget || pendingCount > 0 || toDoCount > 5 || unassignedAttending > 0;
 
   return (
     <div className="editorial-overview-briefing" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
@@ -476,43 +476,6 @@ export default function DashboardMetrics({
               </span>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 unassigned guests
-              </span>
-            </div>
-          </button>
-
-          {/* Card 6: Pending Song Requests */}
-          <button
-            type="button"
-            onClick={() => onNavigateTab && onNavigateTab('music', 'Pending')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '0.35rem',
-              padding: '0.55rem 0.65rem',
-              backgroundColor: pendingRequestsCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              borderRadius: '2px',
-              cursor: onNavigateTab ? 'pointer' : 'default',
-              textAlign: 'left',
-              minWidth: 0,
-              width: '100%',
-              boxSizing: 'border-box',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                SONG REQUESTS
-              </span>
-              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
-              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: pendingRequestsCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
-                {pendingRequestsCount}
-              </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                pending review
               </span>
             </div>
           </button>

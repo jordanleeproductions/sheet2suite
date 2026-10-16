@@ -798,185 +798,37 @@ export default function PhotoShotListManager({
         }
       `}</style>
 
-      {/* View Switcher: Photographer Shot List vs Guestbook & Photo Notes */}
-      <div className="photo-view-switcher" style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.625rem',
-        borderBottom: '1px solid var(--color-muted)',
-        paddingBottom: '0.75rem',
-        overflowX: 'auto',
-      }}>
-        <button
-          type="button"
-          className="photo-view-tab"
-          onClick={() => setActiveView('shotlist')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.55rem 1.1rem',
-            borderRadius: 'var(--border-radius-sm)',
-            border: activeView === 'shotlist' ? 'none' : '1px solid var(--color-muted)',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            backgroundColor: activeView === 'shotlist' ? 'var(--color-primary)' : 'var(--color-surface)',
-            color: activeView === 'shotlist' ? 'var(--color-on-primary)' : 'var(--color-text)',
-            transition: 'var(--transition-smooth)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Camera size={15} />
-          <span className="photo-tab-full-title">PHOTOGRAPHER SHOT LIST</span>
-          <span className="photo-tab-short-title">SHOT LIST</span>
-          <span style={{
-            backgroundColor: activeView === 'shotlist' ? 'rgba(255,255,255,0.22)' : 'var(--color-bg)',
-            color: activeView === 'shotlist' ? 'inherit' : 'var(--color-muted)',
-            padding: '0.1rem 0.45rem',
-            borderRadius: '10px',
-            fontSize: '0.72rem',
-          }}>{totalShots}</span>
-        </button>
 
-        <button
-          type="button"
-          className="photo-view-tab"
-          onClick={() => setActiveView('guestbook')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.55rem 1.1rem',
-            borderRadius: 'var(--border-radius-sm)',
-            border: activeView === 'guestbook' ? 'none' : '1px solid var(--color-gold, #cda250)',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            backgroundColor: activeView === 'guestbook' ? 'var(--color-primary)' : 'var(--color-surface)',
-            color: activeView === 'guestbook' ? 'var(--color-on-primary)' : 'var(--color-text)',
-            transition: 'var(--transition-smooth)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Heart size={15} style={{ color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)' }} />
-          <span className="photo-tab-full-title">GUESTBOOK & PHOTO NOTES</span>
-          <span className="photo-tab-short-title">GUESTBOOK</span>
-          <span style={{
-            backgroundColor: activeView === 'guestbook' ? 'rgba(255,255,255,0.22)' : 'var(--color-gold-muted, rgba(205, 162, 80, 0.15))',
-            color: activeView === 'guestbook' ? 'inherit' : 'var(--color-gold, #cda250)',
-            padding: '0.1rem 0.45rem',
-            borderRadius: '10px',
-            fontSize: '0.72rem',
-            fontWeight: 800,
-          }}>{guestUploads.length}</span>
-        </button>
-      </div>
 
       {/* Header Title & Actions */}
       <div className="photo-header-container">
         <div>
           <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>
-            {activeView === 'shotlist' ? 'Shot List' : 'Guestbook & Photo Notes'}
+            Shot List
           </h2>
           <p style={styles.subtitle}>
-            {activeView === 'shotlist' 
-              ? 'Manage required photography moments, VIP group poses, and shot progress for your photographer.'
-              : 'Browse live photo and video uploads from wedding guests, read their messages, and access files in real time.'}
+            Manage required photography moments, VIP group poses, and shot progress for your photographer.
           </p>
         </div>
 
         <div className="photo-header-actions">
-          {activeView === 'shotlist' ? (
-            <>
-              <button 
-                type="button"
-                style={{
-                  ...styles.addButton,
-                  backgroundColor: 'var(--color-bg)',
-                  color: 'var(--color-text)',
-                  border: '1px solid var(--color-muted)'
-                }} 
-                onClick={handleSharePhotos}
-                title="Email shot list to Photographer"
-              >
-                <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
-              </button>
+          <button 
+            type="button"
+            style={{
+              ...styles.addButton,
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-muted)'
+            }} 
+            onClick={handleSharePhotos}
+            title="Email shot list to Photographer"
+          >
+            <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
+          </button>
 
-              <button 
-                type="button"
-                style={{
-                  ...styles.addButton,
-                  backgroundColor: 'var(--color-bg)',
-                  color: 'var(--color-text)',
-                  border: '1.5px solid var(--color-gold, #cda250)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }} 
-                onClick={() => setIsUploadSetupOpen(true)}
-                title="Configure guest photo upload portal, target Google Drive folder, & link expiration"
-              >
-                <UploadCloud size={16} style={{ color: 'var(--color-gold, #cda250)' }} />
-                <span>GUEST UPLOADS</span>
-                {guestUploads.length > 0 && (
-                  <span style={{
-                    backgroundColor: 'var(--color-gold, #cda250)',
-                    color: '#ffffff',
-                    padding: '0.1rem 0.4rem',
-                    borderRadius: '10px',
-                    fontSize: '0.7rem',
-                    fontWeight: 800,
-                  }}>
-                    {guestUploads.length}
-                  </span>
-                )}
-              </button>
-
-              <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
-                <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                type="button"
-                style={{
-                  ...styles.addButton,
-                  backgroundColor: 'var(--color-bg)',
-                  color: 'var(--color-text)',
-                  border: '1px solid var(--color-muted)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }} 
-                onClick={fetchGuestUploads}
-                disabled={isLoadingGuestUploads}
-                title="Refresh guestbook submissions"
-              >
-                <RefreshCw size={15} style={{ marginRight: '6px' }} className={isLoadingGuestUploads ? 'animate-spin' : ''} />
-                <span>{isLoadingGuestUploads ? 'REFRESHING...' : 'REFRESH'}</span>
-              </button>
-
-              <button 
-                type="button"
-                style={{
-                  ...styles.addButton,
-                  backgroundColor: 'var(--color-primary)',
-                  color: 'var(--color-on-primary)',
-                  border: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }} 
-                onClick={() => setIsUploadSetupOpen(true)}
-                title="Open Guest Upload Link & Table QR Code"
-              >
-                <UploadCloud size={16} style={{ marginRight: '6px' }} />
-                <span>PORTAL & QR CODE</span>
-              </button>
-            </>
-          )}
+          <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
+            <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
+          </button>
         </div>
       </div>
 
@@ -2053,8 +1905,8 @@ export default function PhotoShotListManager({
         </div>
       )}
 
-      {/* GUEST PHOTO UPLOAD SETUP MODAL */}
-      {isUploadSetupOpen && (
+      {/* GUEST PHOTO UPLOAD SETUP MODAL (Disabled for Initial Launch) */}
+      {false && isUploadSetupOpen && (
         <div 
           className="photo-modal-overlay" 
           style={styles.modalOverlay} 
@@ -2519,29 +2371,7 @@ export default function PhotoShotListManager({
       )}
 
       {/* Mobile Floating Action Button (FAB) */}
-      {activeView === 'shotlist' ? (
-        <MobileFAB onClick={startAddShot} label="Add Photo Shot" disabled={isSyncing} />
-      ) : (
-        <MobileFAB
-          onClick={handleCopyGuestUploadUrl}
-          label="Share Guest Upload Link"
-          icon={UploadCloud}
-          subActions={[
-            {
-              label: 'Copy Guest Link',
-              onClick: handleCopyGuestUploadUrl,
-              icon: Copy,
-              color: 'var(--color-primary)',
-            },
-            {
-              label: 'Choose Drive Folder',
-              onClick: () => setIsDrivePickerOpen(true),
-              icon: FolderOpen,
-              color: '#d97706',
-            },
-          ]}
-        />
-      )}
+      <MobileFAB onClick={startAddShot} label="Add Photo Shot" disabled={isSyncing} />
     </div>
   );
 }

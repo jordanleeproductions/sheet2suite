@@ -116,6 +116,7 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
   - **Mobile Stacking & 2-Column Compact Metric Strip:** On viewports $\le 1023\text{px}$, converts the split view into a fluid vertical stack (categories rail first, then itemized expenses). On viewports $\le 768\text{px}$, condenses the top financial snapshot into a 2-column grid.
 - **Hybrid Target Mode:** Supports explicit master ceiling caps (`fixed_cap`) with inline editing and dynamic auto-sum of categories (`dynamic`).
 - **Itemized Purchase Ledger & Rapid Entry (`[UX-BULK-LOAD]`):** Maintains full support for recording purchases, receipts, payment status, and 3-button "Save & Add Another" modal workflows.
+- **Expense "Paid By" Contributor Tracking & Family Contribution Breakdown (`[EXPENSE-PAID-BY]` - Backlog):** Planned enhancement enabling couples to track who paid for each expense item (e.g., `Couple`, `In-Laws`, `Parents`, `Self`, `Partner`, or custom contributor name). Maps to Column G: `Paid By` (`paidBy`: string) in the `EXPENSES` spreadsheet tab. Features an interactive combobox with contributor suggestion pills in the Add/Edit Expense modal, row-level payer badges in the itemized purchase ledger, and dedicated "Paid By" filtering and family contribution breakdown metrics (e.g. In-Laws: $X, Couple: $Y, Parents: $Z) in the Financials ledger.
 
 ### 2.6 Day-Of Timeline (`TimelineManager.tsx`)
 - Day-Of itinerary timeline with "UP NEXT" active moment banner ticker.
@@ -148,12 +149,16 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Categorized music tracks (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned / Do Not Play*).
 - Live 30-second iTunes audio preview player, Spotify/YouTube search buttons, and **`EMAIL LIST`** DJ email generator (`mailto:`).
 
-### 2.11 Admin Song Request Approval Queue & DJ Gating (`[MUSIC-4]`)
+### 2.11 Admin Song Request Approval Queue & DJ Gating (`[MUSIC-4]` - Sidelined / Disabled for Initial Launch)
+> ⚠️ **Launch Status:** Sidelined / Disabled for Initial Launch — Guest song request portal links, alert banners, and approval queues are hidden for initial release.
+
 - **Automated Request Gating:** Incoming guest song requests (`/api/request-song/[token]`) default to `approvalStatus: 'Pending Approval'` (or `Banned` if matching a Banned track).
 - **Admin Approval Queue:** Displays a Pending Requests Banner in `MusicManager.tsx` with quick inline action buttons (`Approve ✓`, `Decline ✗`) and `PENDING APPROVAL` filter pills.
 - **DJ Status Filtering:** Tokenized DJ Share portal (`/share/[token]`) status filter pills (`ALL ACTIVE TRACKS`, `APPROVED ONLY`, `PENDING APPROVAL`, `BANNED TRACKS`), automatically hiding Banned songs from the active playlist.
 
 ### 2.10 Photography Shot List (`PhotoShotListManager.tsx`)
+> ⚠️ **Launch Status:** The core Photography Shot List is fully active. The secondary **Photo & Video Guestbook** tab, direct guest upload portal (`/upload/[token]`), and in-app **QR Code generator** have been sidelined / disabled for initial launch.
+
 - Required photography moments (`Shot ID`, `Description`, `Location`, `Shot Time`, `Included People`, `Status`, `Priority`, `Notes`).
 - Priority levels support photographer-friendly enums (`Must Have`, `Nice To Have`, `Optional`) in the UI, bi-directionally translated to Google Sheets `SETTINGS!$E$2:$E$50` Priority Levels (`High`, `Medium`, `Low`).
 - Interactive `Captured` vs `Pending` checkoff toggles and **`EMAIL LIST`** photographer email generator (`mailto:`).
@@ -171,7 +176,9 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
   - **Cards vs Table / List View Toggle**: Added an integrated view mode toggle (`guestViewMode: 'card' | 'table'`) featuring `LayoutGrid` and `List` icons in the Guestbook toolbar adjacent to "With Written Notes Only", providing instant 1-click switching between visual cards and an organized tabular ledger.
   - **Guestbook Data Table**: In Table mode, renders an editorial table layout showing Guest (avatar initials + uploader name + note badge), Date & Time (clock icon + formatted timestamp), Message / Wishes quote, Photos & Files pills (with 1-click links into Google Drive), Target Google Drive Album, and Delete moderation action.
 
-### 2.12 Print & Export Studio (`PrintTemplatesModal.tsx`)
+### 2.12 Print & Export Studio (`PrintTemplatesModal.tsx` - Sidelined / Disabled for Initial Launch)
+> ⚠️ **Launch Status:** Sidelined / Disabled for Initial Launch — Non-priority for initial release and pending production readiness. UI triggers in sidebar utility rail, mobile drawer, top header, and relational module toolbars have been hidden. The core template components remain preserved in the codebase for Phase 2 hardening.
+
 - 🖨️ **Print Studio Launcher:** Header action button (`Printer` icon) and contextual module triggers opening the Print Studio portal.
 - 🎟️ **Escort & Folded Place Cards Template:** 2-column grid layout for attending guests displaying Guest Name, Table Assignment, Meal Selection icon, and optional crop/fold guidelines. Filterable by Table.
 - 🍽️ **Table Tent Cards Template:** Table number display signs featuring Table Name, seat count, and assigned guest list with meal choices. Filterable by Table.

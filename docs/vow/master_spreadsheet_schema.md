@@ -106,6 +106,7 @@ This document defines the authoritative tab structure and column header contract
 | `Amount` | `amount` | Currency ($) | Purchase amount |
 | `Purchase Date` | `purchaseDate` | Date | Date of purchase |
 | `Notes` | `notes` | Text | Payment method or receipt details |
+| `Paid By` | `paidBy` | Text / Dropdown *(Planned `[EXPENSE-PAID-BY]`)* | Contributor name (e.g. `Couple`, `In-Laws`, `Parents`, `Self`, `Partner`) |
 
 ---
 

@@ -188,48 +188,6 @@ export default function VendorShareLinkManager({
             </button>
           )}
 
-          <button 
-            type="button" 
-            style={{ 
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              backgroundColor: 'transparent',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)',
-              borderRadius: 'var(--border-radius-sm)',
-              padding: '0.5rem 0.875rem',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center'
-            }} 
-            onClick={handleGenerateSongRequestLink}
-            title="Generate mobile song request link for guests"
-          >
-            <Music size={15} style={{ marginRight: '4px' }} /> SONG REQUEST LINK
-          </button>
-
-          <button 
-            type="button" 
-            style={{ 
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              backgroundColor: 'transparent',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)',
-              borderRadius: 'var(--border-radius-sm)',
-              padding: '0.5rem 0.875rem',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center'
-            }} 
-            onClick={handleGenerateGuestUploadLink}
-            title="Generate mobile upload portal link for guests"
-          >
-            <UploadCloud size={15} style={{ marginRight: '4px' }} /> GUEST UPLOAD LINK
-          </button>
-
           <button style={styles.addBtn} onClick={onOpenShareModal}>
             <Plus size={16} style={{ marginRight: '4px' }} /> GENERATE VENDOR LINK
           </button>

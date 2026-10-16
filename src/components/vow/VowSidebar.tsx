@@ -29,7 +29,7 @@ export interface VowSidebarProps {
   activeTab: string;
   onSwitchTab: (tab: any) => void;
   enabledModules: Record<string, any>;
-  onOpenPrintStudio: () => void;
+  onOpenPrintStudio?: () => void;
   onOpenShareModal: () => void;
   onOpenSettings: () => void;
   onExportCSV: () => void;
@@ -263,30 +263,32 @@ export default function VowSidebar({
         }}
       >
         {/* Print Studio */}
-        <button
-          type="button"
-          onClick={onOpenPrintStudio}
-          title="Print Studio & Templates"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
-            borderRadius: '2px',
-            backgroundColor: 'transparent',
-            color: 'var(--color-text, #0F172A)',
-            border: '1px solid var(--color-border, #E2E8F0)',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-technical-mono, var(--font-mono))',
-            fontSize: '0.68rem',
-            fontWeight: 600,
-            justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
-            transition: 'background-color 0.1s ease',
-          }}
-        >
-          <Printer size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-          {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>PRINT STUDIO</span>}
-        </button>
+        {onOpenPrintStudio && (
+          <button
+            type="button"
+            onClick={onOpenPrintStudio}
+            title="Print Studio & Templates"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
+              borderRadius: '2px',
+              backgroundColor: 'transparent',
+              color: 'var(--color-text, #0F172A)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-technical-mono, var(--font-mono))',
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+              transition: 'background-color 0.1s ease',
+            }}
+          >
+            <Printer size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+            {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>PRINT STUDIO</span>}
+          </button>
+        )}
 
         {/* Export CSV */}
         <button

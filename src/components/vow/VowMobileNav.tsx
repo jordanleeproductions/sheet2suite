@@ -28,7 +28,7 @@ export interface VowMobileNavProps {
   onToggleDrawer: () => void;
   onCloseDrawer: () => void;
   enabledModules: Record<string, any>;
-  onOpenPrintStudio: () => void;
+  onOpenPrintStudio?: () => void;
   onOpenShareModal: () => void;
   onOpenSettings: () => void;
   onTouchStart?: (e: React.TouchEvent) => void;
@@ -472,38 +472,40 @@ export default function VowMobileNav({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: onOpenPrintStudio ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
                 gap: '0.4rem',
                 paddingTop: '0.6rem',
                 borderTop: '1px solid var(--color-border, #E2E8F0)',
                 marginTop: '0.25rem',
               }}
             >
-              <button
-                type="button"
-                onClick={() => {
-                  onCloseDrawer();
-                  onOpenPrintStudio();
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.35rem',
-                  padding: '0.5rem',
-                  borderRadius: '2px',
-                  backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-                  color: 'var(--color-text, #0F172A)',
-                  border: '1px solid var(--color-border, #E2E8F0)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.65rem',
-                  fontWeight: 600,
-                }}
-              >
-                <Printer size={13} />
-                <span>PRINT</span>
-              </button>
+              {onOpenPrintStudio && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onCloseDrawer();
+                    onOpenPrintStudio();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                    padding: '0.5rem',
+                    borderRadius: '2px',
+                    backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                    color: 'var(--color-text, #0F172A)',
+                    border: '1px solid var(--color-border, #E2E8F0)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-technical-mono, monospace)',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Printer size={13} />
+                  <span>PRINT</span>
+                </button>
+              )}
 
               <button
                 type="button"

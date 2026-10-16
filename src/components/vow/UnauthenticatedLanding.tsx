@@ -6,7 +6,7 @@ import {
   Zap,
   ArrowRight,
   Grid,
-  Printer,
+  Users,
   HardDrive,
   Loader2,
 } from 'lucide-react';
@@ -244,11 +244,11 @@ export const UnauthenticatedLanding: React.FC<UnauthenticatedLandingProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#0b57d0' }}>
-              <Printer size={20} />
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Print & Canva Studio</h3>
+              <Users size={20} />
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Private Co-Planning</h3>
             </div>
             <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
-              Export place cards, binder printouts, and Canva Bulk Create CSV files in 1 click.
+              Invite your partner or wedding planner with instant real-time Google Drive synchronization and tokenized vendor portals.
             </p>
           </div>
         </div>

@@ -436,9 +436,11 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
           <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
             <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
           </button>
-          <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Day-Of Schedule">
-            <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
-          </button>
+          {onOpenPrintStudio && (
+            <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Day-Of Schedule">
+              <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
+            </button>
+          )}
           <button style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} className="timeline-add-btn" onClick={startAdd} disabled={isSyncing}>
             <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD EVENT
           </button>

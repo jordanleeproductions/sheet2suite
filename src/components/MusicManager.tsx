@@ -576,32 +576,6 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                 }}
               >
                 <a
-                  href="/request-song/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setShowPortalsMenu(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.6rem',
-                    borderRadius: 'var(--border-radius-sm)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-text)',
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.725rem',
-                    fontWeight: 600,
-                    transition: 'var(--transition-smooth)'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  <Radio size={14} style={{ color: 'var(--color-primary)' }} />
-                  <span>Guest Song Requests</span>
-                </a>
-
-                <a
                   href="/share/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -667,50 +641,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
         </div>
       </div>
 
-      {/* Pending Guest Requests Alert Banner */}
-      {pendingSongs.length > 0 && (
-        <div style={{
-          backgroundColor: 'var(--color-amber-muted)',
-          border: '1px solid var(--color-amber)',
-          borderRadius: 'var(--border-radius-md)',
-          padding: '0.875rem 1.25rem',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>⏳</span>
-            <div>
-              <strong style={{ fontSize: '0.85rem', color: 'var(--color-amber-dark)', display: 'block' }}>
-                {pendingSongs.length} PENDING GUEST SONG REQUEST{pendingSongs.length > 1 ? 'S' : ''} NEED APPROVAL
-              </strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-amber-dark)' }}>
-                Guests have requested new tracks for your reception. Review and approve before syncing to DJ.
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            style={{
-              padding: '0.4rem 0.85rem',
-              fontSize: '0.75rem',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              backgroundColor: 'var(--color-amber)',
-              color: 'var(--color-on-dark)',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
-            onClick={() => setFilterPill('PENDING APPROVAL')}
-          >
-            REVIEW PENDING ({pendingSongs.length})
-          </button>
-        </div>
-      )}
+
 
       {/* Search & Category Filter Bar */}
       <div style={styles.filterSection}>
@@ -725,7 +656,6 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
         <div style={styles.pillsRow}>
           {[
             { id: 'ALL', label: 'ALL SONGS', count: music.length },
-            { id: 'PENDING APPROVAL', label: '⏳ PENDING APPROVAL', count: pendingSongs.length },
             { id: 'MUST PLAY', label: '🔥 MUST PLAY', count: music.filter(s => (s.playStatus || s.priority || 'Must Play') === 'Must Play' && s.listType !== 'Do Not Play').length },
             { id: 'PLAY IF TIME', label: '⏳ PLAY IF TIME', count: music.filter(s => (s.playStatus || s.priority) === 'Play If Time').length },
             { id: 'BANNED', label: '🚫 BANNED', count: music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play').length },
@@ -873,49 +803,6 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                 borderTop: '1px solid var(--color-muted)',
               }}>
                 {renderExternalLinks(item)}
-
-                {isPending && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <button
-                      type="button"
-                      style={{
-                        fontSize: '0.7rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 700,
-                        backgroundColor: 'var(--color-green)',
-                        color: 'var(--color-on-dark)',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '0.35rem 0.75rem',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 4px rgba(16,185,129,0.2)',
-                      }}
-                      title="Approve song request"
-                      onClick={(e) => updateApprovalStatus(item, 'Approved', e)}
-                    >
-                      APPROVE ✓
-                    </button>
-                    <button
-                      type="button"
-                      style={{
-                        fontSize: '0.7rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 700,
-                        backgroundColor: 'var(--color-red)',
-                        color: 'var(--color-on-dark)',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '0.35rem 0.75rem',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 4px rgba(239,68,68,0.2)',
-                      }}
-                      title="Decline song request"
-                      onClick={(e) => updateApprovalStatus(item, 'Declined', e)}
-                    >
-                      DECLINE ✗
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           );

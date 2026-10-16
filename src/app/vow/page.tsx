@@ -1432,10 +1432,6 @@ export default function Sheet2VowDashboard() {
           activeTab={activeTab}
           onSwitchTab={switchTab}
           enabledModules={enabledModules}
-          onOpenPrintStudio={() => {
-            setPrintModalInitialTemplate('place_cards');
-            setShowPrintModal(true);
-          }}
           onOpenShareModal={() => setShowShareModal(true)}
           onOpenSettings={() => setShowAdvancedSettings(true)}
           onExportCSV={handleExportActiveCSV}
@@ -1585,17 +1581,6 @@ export default function Sheet2VowDashboard() {
 
             {!isMobile && (
               <>
-                <button
-                  style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
-                  onClick={() => {
-                    setPrintModalInitialTemplate('place_cards');
-                    setShowPrintModal(true);
-                  }}
-                  title="Open Print & Export Studio"
-                >
-                  <Printer size={20} />
-                </button>
-
                 <button
                   style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
                   onClick={() => setShowShareModal(true)}
@@ -2410,8 +2395,8 @@ export default function Sheet2VowDashboard() {
         />
       )}
 
-      {/* Print & Export Studio Modal */}
-      {showPrintModal && (
+      {/* Print & Export Studio Modal (Disabled for Initial Launch) */}
+      {/* {showPrintModal && (
         <PrintTemplatesModal
           initialTemplate={printModalInitialTemplate}
           guests={weddingData?.guests || []}
@@ -2424,7 +2409,7 @@ export default function Sheet2VowDashboard() {
           currency={currency}
           onClose={() => setShowPrintModal(false)}
         />
-      )}
+      )} */}
 
       {/* Advanced Settings Modal */}
       {showAdvancedSettings && (
@@ -2738,10 +2723,6 @@ export default function Sheet2VowDashboard() {
                   initialRsvpFilter={guestInitialFilter}
                   initialMealFilter={guestInitialMealFilter}
                   initialDietFilter={guestInitialDietFilter}
-                  onOpenPrintStudio={(tmpl) => {
-                    setPrintModalInitialTemplate(tmpl);
-                    setShowPrintModal(true);
-                  }}
                 />
               )}
 
@@ -2763,10 +2744,6 @@ export default function Sheet2VowDashboard() {
                   onUpdateGuests={(data) => syncUpdate('guests', data)}
                   onUpdateTables={(data) => syncUpdate('tables', data)}
                   isSyncing={isSyncing}
-                  onOpenPrintStudio={(tmpl) => {
-                    setPrintModalInitialTemplate(tmpl);
-                    setShowPrintModal(true);
-                  }}
                 />
               )}
 
@@ -2808,10 +2785,6 @@ export default function Sheet2VowDashboard() {
                   onUpdate={(data) => syncUpdate('schedule', data)}
                   isSyncing={isSyncing}
                   timeFormat={timeFormat}
-                  onOpenPrintStudio={(tmpl) => {
-                    setPrintModalInitialTemplate(tmpl);
-                    setShowPrintModal(true);
-                  }}
                 />
               )}
 
@@ -2829,10 +2802,6 @@ export default function Sheet2VowDashboard() {
                   weddingName={weddingName}
                   driveFolder={driveFolder}
                   onOpenShareModal={() => setShowShareModal(true)}
-                  onOpenPrintStudio={(tmpl) => {
-                    setPrintModalInitialTemplate(tmpl);
-                    setShowPrintModal(true);
-                  }}
                 />
               )}
 
@@ -2898,10 +2867,6 @@ export default function Sheet2VowDashboard() {
           onToggleDrawer={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
           onCloseDrawer={() => setIsMobileDrawerOpen(false)}
           enabledModules={enabledModules}
-          onOpenPrintStudio={() => {
-            setPrintModalInitialTemplate('place_cards');
-            setShowPrintModal(true);
-          }}
           onOpenShareModal={() => setShowShareModal(true)}
           onOpenSettings={() => setShowAdvancedSettings(true)}
           onTouchStart={handleBottomNavTouchStart}

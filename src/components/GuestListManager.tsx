@@ -980,9 +980,11 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
               <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
             </button>
-            <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Guest Registry">
-              <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
-            </button>
+            {onOpenPrintStudio && (
+              <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Guest Registry">
+                <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
+              </button>
+            )}
           </div>
         </div>
       </div>

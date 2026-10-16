@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   HardDrive,
-  Printer,
+  Download,
   Lock,
   CreditCard,
   Unlock,
@@ -350,9 +350,9 @@ export default function Sheet2SuiteParentHub() {
         </div>
 
         <div style={styles.pillarItem}>
-          <Printer size={28} style={{ color: 'var(--color-primary)' }} />
-          <h5 style={styles.pillarTitle}>Print Studio & Canva Ready</h5>
-          <p style={styles.pillarDesc}>Built-in Canva bulk merge CSV exporter and print studio to create gorgeous place cards, schedules, rosters, and vendor directory contact sheets.</p>
+          <Download size={28} style={{ color: 'var(--color-primary)' }} />
+          <h5 style={styles.pillarTitle}>Instant CSV & Data Portability</h5>
+          <p style={styles.pillarDesc}>Built-in 1-click CSV data export across every module. Seamlessly export guest registries, financial ledgers, day-of itineraries, and vendor directories anytime.</p>
         </div>
       </section>
 
