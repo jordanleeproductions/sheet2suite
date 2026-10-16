@@ -537,7 +537,7 @@ export default function VowMobileNav({
                 type="button"
                 onClick={() => {
                   onCloseDrawer();
-                  onOpenSettings();
+                  onSwitchTab('settings');
                 }}
                 style={{
                   display: 'flex',
@@ -546,16 +546,16 @@ export default function VowMobileNav({
                   gap: '0.35rem',
                   padding: '0.5rem',
                   borderRadius: '2px',
-                  backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-                  color: 'var(--color-text, #0F172A)',
-                  border: '1px solid var(--color-border, #E2E8F0)',
+                  backgroundColor: activeTab === 'settings' ? 'var(--color-primary, #0F172A)' : 'var(--color-bg-pane, #F8FAFC)',
+                  color: activeTab === 'settings' ? 'var(--color-on-primary, #FFFFFF)' : 'var(--color-text, #0F172A)',
+                  border: activeTab === 'settings' ? '1px solid var(--color-primary, #0F172A)' : '1px solid var(--color-border, #E2E8F0)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-technical-mono, monospace)',
                   fontSize: '0.65rem',
-                  fontWeight: 600,
+                  fontWeight: activeTab === 'settings' ? 700 : 600,
                 }}
               >
-                <Settings size={13} />
+                <Settings size={13} style={{ color: activeTab === 'settings' ? '#FFFFFF' : 'inherit' }} />
                 <span>SETTINGS</span>
               </button>
             </div>

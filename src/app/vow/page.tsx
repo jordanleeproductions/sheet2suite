@@ -15,7 +15,8 @@ import ThankYouManager from '@/components/ThankYouManager';
 import MenuSetupManager from '@/components/MenuSetupManager';
 import ShareModal from '@/components/ShareModal';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
-import AdvancedSettingsModal from '@/components/AdvancedSettingsModal';
+import SettingsManager from '@/components/settings/SettingsManager';
+import QuickSettingsPopover from '@/components/vow/QuickSettingsPopover';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
@@ -33,7 +34,7 @@ import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
-export default function Sheet2VowDashboard() {
+export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string } = {}) {
   // Authentication & Spreadsheet Settings
   const [spreadsheetId, setSpreadsheetId] = useState<string>('');
   const [googleToken, setGoogleToken] = useState<string>('');
@@ -343,6 +344,7 @@ export default function Sheet2VowDashboard() {
   };
 
   const settingsRef = useRef<HTMLDivElement>(null);
+  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState<boolean>(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Active Feature Modules Configuration
@@ -606,7 +608,26 @@ export default function Sheet2VowDashboard() {
   const [coPlanners, setCoPlanners] = useState<string[]>([]);
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks' | 'settings'>(() => {
+    if (initialTab === 'settings') return 'settings';
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path === '/settings' || path === '/vow/settings' || path.endsWith('/settings')) {
+        return 'settings';
+      }
+      const hash = window.location.hash.replace('#', '').split('?')[0];
+      const valid = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks', 'settings'];
+      if (valid.includes(hash)) return hash as any;
+    }
+    return 'home';
+  });
+  const [settingsInitialSection, setSettingsInitialSection] = useState<string | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      return searchParams.get('section') || undefined;
+    }
+    return undefined;
+  });
   const [guestInitialFilter, setGuestInitialFilter] = useState<RSVPStatus | 'All'>('All');
   const [guestInitialMealFilter, setGuestInitialMealFilter] = useState<string>('All');
   const [guestInitialDietFilter, setGuestInitialDietFilter] = useState<string>('All');
@@ -615,7 +636,7 @@ export default function Sheet2VowDashboard() {
 
   // Tab switching with browser History API push & URL hash sync
   const switchTab = (
-    tab: 'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks',
+    tab: 'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks' | 'settings',
     filter?: string,
     pushToHistory = true,
     extra?: { mealFilter?: string; dietFilter?: string }
@@ -627,6 +648,7 @@ export default function Sheet2VowDashboard() {
       if (tab === 'guests') setGuestInitialFilter(filter as any);
       if (tab === 'tasks') setTaskInitialFilter(filter as any);
       if (tab === 'music') setMusicInitialFilter(filter);
+      if (tab === 'settings') setSettingsInitialSection(filter);
     }
     if (tab === 'guests' && extra?.mealFilter) {
       setGuestInitialMealFilter(extra.mealFilter);
@@ -637,14 +659,23 @@ export default function Sheet2VowDashboard() {
 
     if (pushToHistory && typeof window !== 'undefined') {
       const queryParts: string[] = [];
-      if (filter) queryParts.push(`filter=${encodeURIComponent(filter)}`);
+      if (filter) {
+        if (tab === 'settings') {
+          queryParts.push(`section=${encodeURIComponent(filter)}`);
+        } else {
+          queryParts.push(`filter=${encodeURIComponent(filter)}`);
+        }
+      }
       if (extra?.mealFilter) queryParts.push(`meal=${encodeURIComponent(extra.mealFilter)}`);
       if (extra?.dietFilter) queryParts.push(`diet=${encodeURIComponent(extra.dietFilter)}`);
-      const hash = `#${tab}${queryParts.length > 0 ? `?${queryParts.join('&')}` : ''}`;
+      const hash = `#${tab}${queryParts.length > 0 && tab !== 'settings' ? `?${queryParts.join('&')}` : ''}`;
       const activeSheet = spreadsheetId || localStorage.getItem('s2v_spreadsheet_id') || '';
       const searchParams = new URLSearchParams(window.location.search);
       if (activeSheet && !searchParams.get('spreadsheetId') && !searchParams.get('sheetId')) {
         searchParams.set('spreadsheetId', activeSheet);
+      }
+      if (tab === 'settings' && filter) {
+        searchParams.set('section', filter);
       }
       const searchStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
       const targetUrl = `${window.location.pathname}${searchStr}${hash}`;
@@ -666,8 +697,14 @@ export default function Sheet2VowDashboard() {
         const meal = params.get('meal') || undefined;
         const diet = params.get('diet') || undefined;
 
-        const validTabs = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
+        const validTabs = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks', 'settings'];
         if (validTabs.includes(tabName)) {
+          if (tabName === 'settings') {
+            const sec = params.get('section') || filter;
+            if (sec) setSettingsInitialSection(sec);
+            switchTab('settings', sec, false);
+            return;
+          }
           switchTab(tabName as any, filter, false, (meal || diet) ? { mealFilter: meal, dietFilter: diet } : undefined);
           return;
         }
@@ -681,17 +718,34 @@ export default function Sheet2VowDashboard() {
 
     window.addEventListener('popstate', handlePopState);
 
-    // Initial load URL hash check
-    if (typeof window !== 'undefined' && window.location.hash) {
-      const initialHash = window.location.hash.replace('#', '');
-      const [tabName, queryStr] = initialHash.split('?');
-      const params = new URLSearchParams(queryStr || '');
-      const filter = params.get('filter') || undefined;
-      const meal = params.get('meal') || undefined;
+    // Initial load URL hash & query check
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const searchParams = new URLSearchParams(window.location.search);
+      const sectionQuery = searchParams.get('section');
+      if (sectionQuery) {
+        setSettingsInitialSection(sectionQuery);
+      }
 
-      const validTabs = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks'];
-      if (validTabs.includes(tabName)) {
-        switchTab(tabName as any, filter, false, meal ? { mealFilter: meal } : undefined);
+      if (path === '/settings' || path === '/vow/settings' || path.endsWith('/settings')) {
+        switchTab('settings', sectionQuery || undefined, false);
+      } else if (window.location.hash) {
+        const initialHash = window.location.hash.replace('#', '');
+        const [tabName, queryStr] = initialHash.split('?');
+        const params = new URLSearchParams(queryStr || '');
+        const filter = params.get('filter') || undefined;
+        const meal = params.get('meal') || undefined;
+
+        const validTabs = ['home', 'metrics', 'guests', 'menu', 'tables', 'budget', 'schedule', 'tasks', 'vendors', 'music', 'photos', 'thanks', 'settings'];
+        if (validTabs.includes(tabName)) {
+          if (tabName === 'settings') {
+            const sec = params.get('section') || filter || sectionQuery;
+            if (sec) setSettingsInitialSection(sec);
+            switchTab('settings', sec || undefined, false);
+          } else {
+            switchTab(tabName as any, filter, false, meal ? { mealFilter: meal } : undefined);
+          }
+        }
       }
     }
 
@@ -849,6 +903,7 @@ export default function Sheet2VowDashboard() {
 
   // Ensure activeTab fallback if current activeTab is disabled
   useEffect(() => {
+    if (activeTab === 'settings') return;
     const isTabActive = activeTab === 'home' ? (enabledModules.home ?? enabledModules.metrics) : enabledModules[activeTab];
     if (!isTabActive) {
       const tabsOrder: (keyof ModuleConfig)[] = ['metrics', 'guests', 'budget', 'schedule', 'tasks', 'vendors', 'music'];
@@ -857,23 +912,20 @@ export default function Sheet2VowDashboard() {
     }
   }, [enabledModules, activeTab]);
 
-  // Close settings and profile dropdown on click outside
+  // Close profile dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
-        setShowSettings(false);
-      }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
       }
     };
-    if (showSettings || showProfileMenu) {
+    if (showProfileMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showSettings, showProfileMenu]);
+  }, [showProfileMenu]);
 
   // Apply style theme and color mode when they change
   useEffect(() => {
@@ -1264,7 +1316,6 @@ export default function Sheet2VowDashboard() {
     setWeddingData(null);
     setWeddingName('');
     setWeddingDate('');
-    setShowSettings(false);
     setShowDisconnectModal(false);
     setIsLoading(false);
     setSyncError(null);
@@ -1433,7 +1484,7 @@ export default function Sheet2VowDashboard() {
           onSwitchTab={switchTab}
           enabledModules={enabledModules}
           onOpenShareModal={() => setShowShareModal(true)}
-          onOpenSettings={() => setShowAdvancedSettings(true)}
+          onOpenSettings={() => switchTab('settings')}
           onExportCSV={handleExportActiveCSV}
           theme={theme}
           styleTheme={styleTheme}
@@ -1593,363 +1644,31 @@ export default function Sheet2VowDashboard() {
             )}
 
             <div ref={settingsRef} style={{ position: 'relative' }}>
-              <button style={styles.iconBtn} onClick={() => setShowSettings(!showSettings)} title="Settings">
+              <button
+                style={{
+                  ...styles.iconBtn,
+                  backgroundColor: isQuickSettingsOpen || activeTab === 'settings' ? 'var(--color-primary-light, rgba(2, 132, 199, 0.15))' : 'transparent',
+                  color: isQuickSettingsOpen || activeTab === 'settings' ? 'var(--color-primary)' : 'var(--color-text)',
+                }}
+                onClick={() => setIsQuickSettingsOpen(!isQuickSettingsOpen)}
+                title="Quick settings"
+                aria-label="Quick settings"
+              >
                 <Settings size={20} />
               </button>
-              {showSettings && (
-                <div className="settingsDropdown" style={styles.settingsDropdown}>
-                  <div style={styles.settingsSection}>
-                    <label style={styles.settingsLabel}>DESIGN STYLE</label>
-                    <div style={{ ...styles.themeToggle, flexWrap: 'wrap' }}>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          flex: '1 1 45%',
-                          fontWeight: styleTheme === 'editorial' ? 'bold' : 'normal',
-                          backgroundColor: styleTheme === 'editorial' ? 'var(--color-primary)' : 'transparent',
-                          color: styleTheme === 'editorial' ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleStyleThemeChange('editorial')}
-                        title="Editorial Minimalist: Classic Serif & Soft Shadows"
-                      >
-                        EDITORIAL
-                      </button>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          flex: '1 1 45%',
-                          fontWeight: styleTheme === 'neo-brutalism' ? 'bold' : 'normal',
-                          backgroundColor: styleTheme === 'neo-brutalism' ? 'var(--color-primary)' : 'transparent',
-                          color: styleTheme === 'neo-brutalism' ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleStyleThemeChange('neo-brutalism')}
-                        title="Muted Neo-Brutalism: Geist Mono & Bold Borders"
-                      >
-                        BRUTALISM
-                      </button>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          flex: '1 1 45%',
-                          fontWeight: styleTheme === 'botanical-romance' ? 'bold' : 'normal',
-                          backgroundColor: styleTheme === 'botanical-romance' ? 'var(--color-primary)' : 'transparent',
-                          color: styleTheme === 'botanical-romance' ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleStyleThemeChange('botanical-romance')}
-                        title="Botanical Romance: Cormorant & Organic Sage Tones"
-                      >
-                        BOTANICAL
-                      </button>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          flex: '1 1 45%',
-                          fontWeight: styleTheme === 'midnight-tuxedo' ? 'bold' : 'normal',
-                          backgroundColor: styleTheme === 'midnight-tuxedo' ? 'var(--color-primary)' : 'transparent',
-                          color: styleTheme === 'midnight-tuxedo' ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleStyleThemeChange('midnight-tuxedo')}
-                        title="Midnight Tuxedo: Bodoni & Sharp Monochrome"
-                      >
-                        TUXEDO
-                      </button>
-                    </div>
-                  </div>
 
-                  <div style={styles.settingsSection}>
-                    <label style={styles.settingsLabel}>TOP NAVIGATION BAR</label>
-                    <div style={styles.themeToggle}>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          fontWeight: !showTopNav ? 'bold' : 'normal',
-                          backgroundColor: !showTopNav ? 'var(--color-primary)' : 'transparent',
-                          color: !showTopNav ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleToggleTopNav(false)}
-                        title="Clean Layout (Left Sidebar on Desktop, Bottom Nav on Mobile)"
-                      >
-                        OFF (DEFAULT)
-                      </button>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          fontWeight: showTopNav ? 'bold' : 'normal',
-                          backgroundColor: showTopNav ? 'var(--color-primary)' : 'transparent',
-                          color: showTopNav ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleToggleTopNav(true)}
-                        title="Show Dual Top Horizontal Navigation Bar"
-                      >
-                        ON (SHOW TOP BAR)
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style={styles.settingsSection}>
-                    <label style={styles.settingsLabel}>COLOR MODE</label>
-                    <div style={styles.themeToggle}>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          fontWeight: theme === 'light' ? 'bold' : 'normal',
-                          backgroundColor: theme === 'light' ? 'var(--color-primary)' : 'transparent',
-                          color: theme === 'light' ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleThemeChange('light')}
-                      >
-                        LIGHT
-                      </button>
-                      <button
-                        style={{
-                          ...styles.themeBtn,
-                          fontWeight: theme === 'dark' ? 'bold' : 'normal',
-                          backgroundColor: theme === 'dark' ? 'var(--color-primary)' : 'transparent',
-                          color: theme === 'dark' ? 'var(--color-on-primary)' : 'var(--color-text)'
-                        }}
-                        onClick={() => handleThemeChange('dark')}
-                      >
-                        DARK
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style={styles.settingsSection}>
-                    <label style={styles.settingsLabel}>
-                      {styleTheme === 'neo-brutalism' ? 'ACCENT COLOR' : 'PRIMARY COLOR'}
-                    </label>
-
-                    {/* Suggestive Color Presets (Adapted by Style & Theme Mode) [UX-11] */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                      {getColorPresets(styleTheme, theme).map((preset) => {
-                        const isSelected = (primaryColor || '').toLowerCase() === preset.hex.toLowerCase();
-                        return (
-                          <button
-                            key={preset.hex}
-                            type="button"
-                            onClick={() => setPrimaryColor(preset.hex)}
-                            title={`${preset.name} (${preset.hex})`}
-                            style={{
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '50%',
-                              backgroundColor: preset.hex,
-                              border: isSelected ? '2px solid var(--color-text)' : '1px solid var(--color-border)',
-                              boxShadow: isSelected ? '0 0 0 2px var(--color-bg), 0 0 0 3px var(--color-primary)' : 'none',
-                              cursor: 'pointer',
-                              padding: 0,
-                              flexShrink: 0
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-
-                    {/* Custom Hex Input & Reset [UX-13] */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <input
-                        type="color"
-                        value={
-                          primaryColor ||
-                          (styleTheme === 'neo-brutalism'
-                            ? '#00ED64'
-                            : theme === 'dark'
-                              ? '#f5f5f5'
-                              : '#0d1b2a')
-                        }
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        style={{ padding: 0, border: 'none', width: '24px', height: '24px', cursor: 'pointer', background: 'transparent' }}
-                        title="Custom Color Picker"
-                      />
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-muted)' }}>
-                        {primaryColor ? primaryColor.toUpperCase() : 'DEFAULT'}
-                      </span>
-                      <button
-                        onClick={() => setPrimaryColor('')}
-                        title="Reset primary color to theme default preset"
-                        style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.2rem 0.4rem', background: 'transparent', border: '1px solid var(--color-muted)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text)', marginLeft: 'auto' }}
-                      >
-                        RESET TO DEFAULT
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Font Size Accessibility Scaler [NAV-2] */}
-                  <div style={styles.settingsSection}>
-                    <label style={styles.settingsLabel}>FONT ACCESSIBILITY SCALER</label>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.4rem 0.65rem',
-                      backgroundColor: 'var(--color-bg)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--border-radius-sm)',
-                      fontSize: '0.75rem',
-                      fontFamily: 'var(--font-mono)'
-                    }}>
-                      <button
-                        type="button"
-                        onClick={() => setFontSizeScale(fontSizeScale - 5)}
-                        disabled={fontSizeScale <= 80}
-                        title="Decrease font size"
-                        style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.85rem',
-                          fontWeight: 800,
-                          backgroundColor: 'var(--color-bg-subtle)',
-                          color: 'var(--color-text)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: 'var(--border-radius-sm)',
-                          width: '26px',
-                          height: '26px',
-                          cursor: fontSizeScale <= 80 ? 'not-allowed' : 'pointer',
-                          opacity: fontSizeScale <= 80 ? 0.5 : 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        -
-                      </button>
-
-                      <span style={{ fontWeight: 800, color: 'var(--color-text)' }}>
-                        {fontSizeScale}%
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => setFontSizeScale(fontSizeScale + 5)}
-                        disabled={fontSizeScale >= 120}
-                        title="Increase font size"
-                        style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.85rem',
-                          fontWeight: 800,
-                          backgroundColor: 'var(--color-bg-subtle)',
-                          color: 'var(--color-text)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: 'var(--border-radius-sm)',
-                          width: '26px',
-                          height: '26px',
-                          cursor: fontSizeScale >= 120 ? 'not-allowed' : 'pointer',
-                          opacity: fontSizeScale >= 120 ? 0.5 : 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {process.env.NODE_ENV === 'development' && (
-                    <div style={styles.settingsSection}>
-                      <label style={styles.settingsLabel}>DEV ENVIRONMENT MODE</label>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.5rem 0.65rem',
-                        backgroundColor: isMockMode ? 'rgba(205, 162, 80, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                        border: `1px solid ${isMockMode ? '#cda250' : '#10b981'}`,
-                        borderRadius: 'var(--border-radius-sm)',
-                        fontSize: '0.675rem',
-                        fontFamily: 'var(--font-mono)'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isMockMode ? '#cda250' : '#10b981', flexShrink: 0 }} />
-                          <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
-                            {isMockMode ? 'MOCK MODE ACTIVE' : 'LIVE DRIVE CONNECTED'}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const nextMock = !isMockMode;
-                            setIsMockMode(nextMock);
-                            localStorage.setItem('s2v_is_mock', nextMock.toString());
-                          }}
-                          style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.625rem',
-                            fontWeight: 700,
-                            backgroundColor: 'transparent',
-                            color: 'var(--color-primary)',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 0
-                          }}
-                        >
-                          {isMockMode ? 'TOGGLE LIVE' : 'TOGGLE MOCK'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-muted)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowSettings(false);
-                        setShowAdvancedSettings(true);
-                      }}
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        backgroundColor: 'var(--color-primary)',
-                        color: theme === 'dark' ? '#000000' : '#ffffff',
-                        border: 'none',
-                        borderRadius: 'var(--border-radius-sm)',
-                        padding: '0.625rem',
-                        width: '100%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.35rem',
-                        transition: 'var(--transition-smooth)'
-                      }}
-                    >
-                      <Sliders size={16} style={{ color: theme === 'dark' ? '#000000' : '#ffffff' }} />
-                      <span style={{ color: theme === 'dark' ? '#000000' : '#ffffff' }}>ADVANCED SETTINGS</span>
-                    </button>
-
-                    {/* Temporary Testing Button: Re-Enter Onboarding Setup Mode */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowSettings(false);
-                        setIsOnboarded(false);
-                        setIsDemoMode(false);
-                        addToast('Re-entered Setup Mode (Testing)', 'info');
-                      }}
-                      title="Temporary testing button: Re-opens the Onboarding & Registration Setup Screen"
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.675rem',
-                        fontWeight: 700,
-                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                        color: 'var(--color-amber-dark, #b45309)',
-                        border: '1px dashed #f59e0b',
-                        borderRadius: 'var(--border-radius-sm)',
-                        padding: '0.5rem',
-                        width: '100%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.35rem'
-                      }}
-                    >
-                      <Zap size={14} />
-                      <span>🚀 TEST SETUP MODE (ONBOARDING)</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+              <QuickSettingsPopover
+                isOpen={isQuickSettingsOpen}
+                onClose={() => setIsQuickSettingsOpen(false)}
+                anchorRef={settingsRef}
+                theme={theme}
+                onUpdateTheme={handleThemeChange}
+                styleTheme={styleTheme}
+                onNavigateSettings={(section) => {
+                  setIsQuickSettingsOpen(false);
+                  switchTab('settings', section);
+                }}
+              />
             </div>
 
             {/* Google Profile Picture Avatar Button & Popover */}
@@ -2412,44 +2131,7 @@ export default function Sheet2VowDashboard() {
         />
       )} */}
 
-      {/* Advanced Settings Modal */}
-      {showAdvancedSettings && (
-        <AdvancedSettingsModal
-          spreadsheetId={spreadsheetId}
-          weddingName={weddingName}
-          weddingDate={weddingDate}
-          locationDetails={locationDetails || weddingData?.dashboard?.location || ''}
-          totalBudget={budgetThreshold || weddingData?.dashboard?.totalBudget}
-          driveFolder={driveFolder}
-          enabledModules={enabledModules}
-          isMockMode={isMockMode}
-          styleTheme={styleTheme}
-          theme={theme}
-          primaryColor={primaryColor}
-          timeFormat={timeFormat}
-          currency={currency}
-          showTopNav={showTopNav}
-          onUpdateWeddingDetails={handleUpdateWeddingDetails}
-          onToggleModule={toggleModule}
-          onUpdateStyleTheme={handleStyleThemeChange}
-          onUpdateTheme={handleThemeChange}
-          onToggleTopNav={handleToggleTopNav}
-          onUpdatePrimaryColor={(clr) => setPrimaryColor(clr)}
-          onUpdateTimeFormat={(tf) => {
-            setTimeFormat(tf);
-            localStorage.setItem('s2v_time_format', tf);
-          }}
-          onUpdateCurrency={(cur) => {
-            setCurrency(cur);
-            localStorage.setItem('s2v_currency', cur);
-          }}
-          coPlanners={coPlanners}
-          onUpdateCoPlanners={(c) => setCoPlanners(c)}
-          onDisconnect={() => setShowDisconnectModal(true)}
-          onOpenShareModal={() => setShowShareModal(true)}
-          onClose={() => setShowAdvancedSettings(false)}
-        />
-      )}
+      
 
       {/* Main Core Area */}
       {!isOnboarded ? (
@@ -2700,7 +2382,7 @@ export default function Sheet2VowDashboard() {
                   enabledModules={enabledModules}
                   currency={currency}
                   onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
-                  onOpenModuleSettings={() => setShowSettings(true)}
+                  onOpenModuleSettings={() => switchTab('settings', 'tools')}
                   showWelcomeGuide={!hasDismissedWelcomeCard}
                   onDismissWelcomeGuide={handleDismissWelcomeGuide}
                   weddingName={weddingName}
@@ -2854,13 +2536,62 @@ export default function Sheet2VowDashboard() {
                   isSyncing={isSyncing}
                 />
               )}
+
+              {activeTab === 'settings' && (
+                <SettingsManager
+                  spreadsheetId={spreadsheetId}
+                  weddingName={weddingName}
+                  weddingDate={weddingDate}
+                  locationDetails={locationDetails || weddingData?.dashboard?.location || ''}
+                  totalBudget={budgetThreshold || weddingData?.dashboard?.totalBudget}
+                  driveFolder={driveFolder}
+                  enabledModules={enabledModules}
+                  isMockMode={isMockMode}
+                  styleTheme={styleTheme}
+                  theme={theme}
+                  primaryColor={primaryColor}
+                  timeFormat={timeFormat}
+                  currency={currency}
+                  showTopNav={showTopNav}
+                  initialSection={settingsInitialSection}
+                  isMobile={isMobile}
+                  onUpdateWeddingDetails={handleUpdateWeddingDetails}
+                  onToggleModule={toggleModule}
+                  onUpdateStyleTheme={handleStyleThemeChange}
+                  onUpdateTheme={handleThemeChange}
+                  onUpdatePrimaryColor={(clr) => setPrimaryColor(clr)}
+                  onUpdateTimeFormat={(tf) => {
+                    setTimeFormat(tf);
+                    localStorage.setItem('s2v_time_format', tf);
+                  }}
+                  onUpdateCurrency={(cur) => {
+                    setCurrency(cur);
+                    localStorage.setItem('s2v_currency', cur);
+                  }}
+                  onToggleTopNav={handleToggleTopNav}
+                  onDisconnect={() => setShowDisconnectModal(true)}
+                  onOpenShareModal={() => setShowShareModal(true)}
+                  coPlanners={coPlanners}
+                  onUpdateCoPlanners={(c) => setCoPlanners(c)}
+                  onBack={() => switchTab('home')}
+                  onRestartSetup={() => {
+                    setIsOnboarded(false);
+                    setIsDemoMode(false);
+                    addToast('Restarted setup guide', 'info');
+                  }}
+                  googleUserEmail={googleUserEmail}
+                  googleUserName={googleUserName}
+                  googleUserAvatar={googleUserAvatar}
+                  onOpenGoogleAuth={handleDirectGoogleAuth}
+                />
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* Mobile Ergonomic Bottom Tab Navigation Bar & Categorized Drawer */}
-      {isMobile && isOnboarded && (
+      {isMobile && isOnboarded && activeTab !== 'settings' && (
         <VowMobileNav
           activeTab={activeTab}
           onSwitchTab={switchTab}
@@ -2869,7 +2600,7 @@ export default function Sheet2VowDashboard() {
           onCloseDrawer={() => setIsMobileDrawerOpen(false)}
           enabledModules={enabledModules}
           onOpenShareModal={() => setShowShareModal(true)}
-          onOpenSettings={() => setShowAdvancedSettings(true)}
+          onOpenSettings={() => switchTab('settings')}
           onTouchStart={handleBottomNavTouchStart}
           onTouchEnd={handleBottomNavTouchEnd}
           triggerHaptic={triggerHaptic}

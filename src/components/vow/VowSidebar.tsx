@@ -322,31 +322,51 @@ export default function VowSidebar({
           {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>EXPORT CSV</span>}
         </button>
 
-        {/* Sync Settings */}
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          title="Settings & Sync Configuration"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
-            borderRadius: '2px',
-            backgroundColor: 'transparent',
-            color: isDarkSidebar ? '#CBD5E1' : 'var(--color-text, #0F172A)',
-            border: `1px solid ${isDarkSidebar ? '#334155' : 'var(--color-border, #E2E8F0)'}`,
-            cursor: 'pointer',
-            fontFamily: 'var(--font-technical-mono, var(--font-mono))',
-            fontSize: '0.68rem',
-            fontWeight: 600,
-            justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
-            transition: 'background-color 0.1s ease',
-          }}
-        >
-          <Settings size={14} style={{ color: isDarkSidebar ? '#94A3B8' : 'var(--color-primary)', flexShrink: 0 }} />
-          {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>SYNC SETTINGS</span>}
-        </button>
+        {/* Settings */}
+        {(() => {
+          const isSettingsActive = activeTab === 'settings';
+          return (
+            <button
+              type="button"
+              onClick={() => (onSwitchTab ? onSwitchTab('settings') : onOpenSettings())}
+              title="Settings"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
+                borderRadius: '3px',
+                backgroundColor: isSettingsActive
+                  ? (isDarkSidebar ? '#1E293B' : 'var(--color-primary, #0F172A)')
+                  : 'transparent',
+                color: isSettingsActive
+                  ? '#FFFFFF'
+                  : (isDarkSidebar ? '#CBD5E1' : 'var(--color-text, #0F172A)'),
+                border: isSettingsActive
+                  ? (isDarkSidebar ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid var(--color-primary, #0F172A)')
+                  : `1px solid ${isDarkSidebar ? '#334155' : 'var(--color-border, #E2E8F0)'}`,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-technical-mono, var(--font-mono))',
+                fontSize: '0.68rem',
+                fontWeight: isSettingsActive ? 700 : 600,
+                justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+                transition: 'all 0.12s ease',
+              }}
+            >
+              <Settings
+                size={14}
+                style={{
+                  color: isSettingsActive
+                    ? '#FFFFFF'
+                    : (isDarkSidebar ? '#94A3B8' : 'var(--color-primary)'),
+                  flexShrink: 0,
+                  strokeWidth: isSettingsActive ? 2.3 : 1.9,
+                }}
+              />
+              {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>SETTINGS</span>}
+            </button>
+          );
+        })()}
 
         {/* App Version & Deployment Badge */}
         <div style={{ marginTop: '0.35rem' }}>
