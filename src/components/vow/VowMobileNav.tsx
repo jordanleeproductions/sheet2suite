@@ -359,10 +359,10 @@ export default function VowMobileNav({
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.35rem' }}>
                   {[
-                    { id: 'budget', label: 'Budget Ledger', icon: DollarSign },
+                    { id: 'budget', label: 'Budget & Expenses', icon: DollarSign },
                     { id: 'schedule', label: 'Day Timeline', icon: Calendar },
-                    { id: 'vendors', label: 'Vendor Directory', icon: Briefcase },
-                    { id: 'tasks', label: 'Task Kanban', icon: ListTodo },
+                    { id: 'vendors', label: 'Vendors', icon: Briefcase },
+                    { id: 'tasks', label: 'Tasks & Checklist', icon: ListTodo },
                   ]
                     .filter((tab) => (enabledModules as any)[tab.id] ?? true)
                     .map((tab) => {

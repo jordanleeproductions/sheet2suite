@@ -735,7 +735,7 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
                 Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{itemToDelete.name}"</strong>?
               </p>
               <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: 0, lineHeight: 1.4 }}>
-                This will remove the item from your catering menu and Google Sheet. Any guests who previously selected this meal will retain their selection text until re-assigned.
+                This will remove the item from your catering menu. Any guests who previously selected this meal will retain their selection until re-assigned.
               </p>
 
               <div className="menu-delete-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>

@@ -235,7 +235,7 @@ export default function DashboardMetrics({
               letterSpacing: '0.04em',
             }}
           >
-            AUTO-SAVED TO YOUR GOOGLE SHEET
+            ALL CHANGES SAVED
           </span>
         </div>
       </div>
@@ -511,7 +511,7 @@ export default function DashboardMetrics({
                   color: 'var(--color-primary, #0F172A)',
                 }}
               >
-                BUDGET &amp; SPENDING ALLOCATION
+                BUDGET &amp; SPENDING
               </span>
             </div>
 
@@ -532,7 +532,7 @@ export default function DashboardMetrics({
                 textDecoration: 'underline',
               }}
             >
-              <span>OPEN FINANCIALS</span>
+              <span>OPEN BUDGET</span>
               <ArrowUpRight size={11} />
             </button>
           </div>
@@ -553,7 +553,7 @@ export default function DashboardMetrics({
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                TARGET BUDGET:
+                WEDDING BUDGET:
               </span>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
                 {formatCurrency(effectiveTotalBudget, currency)}
@@ -562,7 +562,7 @@ export default function DashboardMetrics({
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                ACTUAL SPENT:
+                PAID SO FAR:
               </span>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
                 {formatCurrency(actualCost, currency)}
@@ -574,7 +574,7 @@ export default function DashboardMetrics({
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                REMAINING CUSHION:
+                LEFT TO SPEND:
               </span>
               <span style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
@@ -650,7 +650,7 @@ export default function DashboardMetrics({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Users size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
                 <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  GUEST REGISTRY &amp; RSVP
+                  GUESTS &amp; RSVPS
                 </span>
               </div>
               <button
@@ -731,7 +731,7 @@ export default function DashboardMetrics({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <ListTodo size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
                 <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  PLANNING MILESTONES &amp; TASKS
+                  TASKS &amp; CHECKLIST
                 </span>
               </div>
               <button

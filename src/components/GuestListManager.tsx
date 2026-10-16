@@ -395,7 +395,7 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
               {guest.ageCategory.toUpperCase()}
             </span>
           </div>
-          <button style={styles.editBtn} className="anim-ripple" onClick={() => startEdit(guest)} title="Edit Guest Details">
+          <button style={styles.editBtn} className="anim-ripple guest-edit-btn" onClick={() => startEdit(guest)} title="Edit Guest Details">
             <Edit2 size={13} />
           </button>
         </div>
@@ -557,6 +557,7 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                 <button 
                   key={status} 
                   type="button"
+                  className="rsvp-toggle-btn"
                   style={btnStyle}
                   onClick={() => handleQuickRsvp(guest, status)}
                   disabled={isSyncing}
@@ -800,11 +801,12 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           }
           .guest-action-buttons-row button {
             flex: 1 1 auto !important;
-            min-height: 36px !important;
-            padding: 0.45rem 0.65rem !important;
+            min-height: 44px !important;
+            padding: 0.5rem 0.65rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            font-size: 0.75rem !important;
           }
           .guest-grouping-selector-bar {
             width: 100% !important;
@@ -827,9 +829,23 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           .guest-grouping-left .guest-view-toggle button,
           .guest-layout-right .guest-view-toggle button {
             flex: 1 1 auto !important;
-            padding: 0.45rem 0.5rem !important;
-            min-height: 38px !important;
+            padding: 0.5rem 0.5rem !important;
+            min-height: 44px !important;
+            font-size: 0.75rem !important;
+          }
+          .rsvp-toggle-btn {
+            min-height: 44px !important;
             font-size: 0.72rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .guest-edit-btn {
+            min-width: 38px !important;
+            min-height: 38px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
         }
         .catering-desktop-pills {
@@ -969,15 +985,15 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
       {/* Header Panel */}
       <div className="guest-header-card anim-fade-in">
         <div>
-          <h2 style={styles.title}>Guest List</h2>
+          <h2 style={styles.title}>Guests & RSVPs</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Manage wedding invitations, track RSVPs, table assignments, and catering dietary preferences.
+            Track invitations, RSVPs, meals, and table assignments.
           </p>
         </div>
         <div className="guest-header-actions">
           {/* Quick Export & Print Actions */}
           <div className="guest-action-buttons-row" style={styles.actionButtonGroup}>
-            <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
+            <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV">
               <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
             </button>
             {onOpenPrintStudio && (

@@ -647,6 +647,9 @@ export default function VendorManager({
           .vendor-add-btn {
             display: none !important;
           }
+          .vendor-share-links-desktop-section {
+            display: none !important;
+          }
         }
         @media (max-width: 640px) {
           .vendor-header-container {
@@ -665,14 +668,14 @@ export default function VendorManager({
             flex-shrink: 0 !important;
           }
           .vendor-view-toggle button {
-            padding: 0.45rem 0.75rem !important;
-            min-width: 42px !important;
-            min-height: 38px !important;
+            padding: 0.5rem 0.75rem !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
           }
           .vendor-action-btn {
             flex: 1 1 calc(50% - 0.25rem) !important;
             justify-content: center !important;
-            min-height: 38px !important;
+            min-height: 44px !important;
             padding: 0.5rem 0.75rem !important;
           }
         }
@@ -683,7 +686,7 @@ export default function VendorManager({
         <div>
           <h2 style={styles.title}>Vendors</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Track vendor contracts, contacts, payment schedules, balance owing, and staff meal requirements.
+            Keep track of your vendor contracts, payments, and contacts.
           </p>
         </div>
         <div className="vendor-header-actions">
@@ -1003,7 +1006,7 @@ export default function VendorManager({
       )}
 
       {/* Embedded Vendor Share Link Manager Section [VND-4] */}
-      <div style={{ marginTop: '2rem' }}>
+      <div className="vendor-share-links-desktop-section" style={{ marginTop: '2rem' }}>
         <VendorShareLinkManager
           spreadsheetId={spreadsheetId || 'default-wedding'}
           weddingName={weddingName || 'Our Wedding'}

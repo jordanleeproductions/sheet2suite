@@ -234,53 +234,55 @@
   --box-shadow-hover: 5px 5px 0px 0px var(--color-primary);
 }
 
-/* Botanical Romance (Light) */
+/* Botanical Romance (Light) - Warm Cream, White & Restrained Forest Green */
 [data-style='botanical-romance'][data-theme='light'] {
   --style-name: 'botanical-romance';
 
-  --color-bg: #f9f6f0;
-  --color-surface: #ffffff;
-  --color-input-bg: #ffffff;
-  --color-primary: #5c715e; /* Deep sage */
-  --color-on-primary: #ffffff;
-  --color-text: #4a4a4a;
-  --color-muted: #8c8c8c;
-  --color-highlight: #d4a373;
-  --color-gold-dark: #b5835a;
-  --color-white: #ffffff;
+  --color-bg: #FAF7F2; /* Warm organic cream */
+  --color-bg-pane: #F4EFEA; /* Structured warm cream pane */
+  --color-surface: #FFFFFF; /* Pure crisp white */
+  --color-input-bg: #FFFFFF;
+  --color-primary: #1B4332; /* Restrained forest green */
+  --color-on-primary: #FFFFFF;
+  --color-text: #1F2E26; /* Deep rich forest slate */
+  --color-muted: #6B7C73;
+  --color-white: #FFFFFF;
+  --color-highlight: #C29B38;
+  --color-gold: #C29B38;
+  --color-gold-muted: #FAF2E1;
+  --color-gold-dark: #8C6D23;
 
   /* Accent & Status Tokens */
-  --color-green: #5c715e;
-  --color-green-muted: #e8ede9;
-  --color-gold: #d4a373;
-  --color-gold-muted: #f7eedf;
-  --color-red: #c27a7a;
-  --color-red-muted: #f2e1e1;
-  --color-amber: #cca580;
-  --color-amber-muted: #f5ece4;
-  --color-amber-dark: #a37d5c;
-  --color-purple: #9d8eb5;
-  --color-purple-muted: #ebe8f0;
-  --color-sweetheart: #4a4a4a;
+  --color-green: #2D5A43; /* Forest green */
+  --color-green-muted: #E8F0EB;
+  --color-red: #B94A48;
+  --color-red-muted: #F9EBEA;
+  --color-amber: #B87333;
+  --color-amber-muted: #FAF0E6;
+  --color-amber-dark: #8C531B;
+  --color-purple: #7E6B8F;
+  --color-purple-muted: #F2EEF5;
+  --color-sweetheart: #1B4332;
 
-  --color-text-secondary: #6b6b6b;
-  --color-text-tertiary: #a1a1a1;
-  --color-bg-subtle: #f4efeb;
-  --color-bg-hover: #ede7e1;
-  --color-border: #e0dcd3;
-  --color-on-dark: #ffffff;
-  --color-on-light: #4a4a4a;
+  --color-text-secondary: #3D4D44;
+  --color-text-tertiary: #6B7C73;
+  --color-bg-subtle: #F4EFEA;
+  --color-bg-hover: #EBE4DC;
+  --color-border: #E5DFD5; /* Warm hairline rule */
+  --color-border-hairline: #DDD6CB;
+  --color-on-dark: #FFFFFF;
+  --color-on-light: #1F2E26;
 
-  --color-btn-selected-bg: #5c715e;
-  --color-btn-selected-text: #ffffff;
+  --color-btn-selected-bg: #1B4332;
+  --color-btn-selected-text: #FFFFFF;
 
-  --border-radius-sm: 8px;
-  --border-radius-md: 16px;
-  --border-radius-lg: 24px;
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
   --border-width: 1px;
-  --transition-smooth: all 0.4s ease-in-out;
-  --box-shadow-subtle: 0 4px 12px rgba(92, 113, 94, 0.08);
-  --box-shadow-hover: 0 8px 24px rgba(92, 113, 94, 0.12);
+  --transition-smooth: all 0.25s ease-out;
+  --box-shadow-subtle: 0 1px 3px rgba(27, 67, 50, 0.05);
+  --box-shadow-hover: 0 4px 12px rgba(27, 67, 50, 0.08);
 }
 
 /* Botanical Romance Typography */

@@ -38,7 +38,7 @@ export const COLOR_PRESETS: Record<StyleTheme, Record<ColorMode, ColorPreset[]>>
   },
   'botanical-romance': {
     light: [
-      { name: 'Deep Sage', hex: '#3b5240', desc: 'Earthy Botanical Sage' },
+      { name: 'Restrained Forest', hex: '#1B4332', desc: 'Warm Cream & Restrained Forest Green' },
       { name: 'Deep Rose', hex: '#8a3b3b', desc: 'Soft Vintage Romance' },
       { name: 'Dark Lavender', hex: '#5c4a75', desc: 'Gentle Floral Purple' },
       { name: 'Warm Earth', hex: '#7a6654', desc: 'Neutral Earth Tone' },

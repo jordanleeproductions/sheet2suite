@@ -774,7 +774,7 @@ export default function AdvancedSettingsModal({
               <form onSubmit={handleSaveDetails} style={styles.section}>
                 <h4 style={styles.sectionTitle}>💒 Wedding Title & Event Metadata</h4>
                 <p style={styles.sectionDesc}>
-                  Configure your wedding name, event date, and location. Updates are synced directly to your Google Sheet.
+                  Configure your wedding name, event date, and location. Updates are saved automatically.
                 </p>
 
                 <div style={styles.formGroup}>
@@ -822,7 +822,7 @@ export default function AdvancedSettingsModal({
                     step="any"
                   />
                   <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.25rem' }}>
-                    Synced with your Google Sheet to update Financial Ledger and Summary KPI meters.
+                    Updates your overall wedding budget and summary spending meters.
                   </span>
                 </div>
 
@@ -840,7 +840,7 @@ export default function AdvancedSettingsModal({
                     ))}
                   </select>
                   <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.25rem' }}>
-                    Formats currency values across Budget Ledger, Dashboard KPI summary, and Vendor contracts. Supports USD ($), CAD ($), French Canadian (35 000 $), GBP (£), and EUR (€).
+                    Formats currency values across Budget &amp; Expenses, Dashboard KPI summary, and Vendor contracts. Supports USD ($), CAD ($), French Canadian (35 000 $), GBP (£), and EUR (€).
                   </span>
                 </div>
 
@@ -909,9 +909,9 @@ export default function AdvancedSettingsModal({
 
                 <div style={styles.moduleGrid}>
                   {[
-                    { key: 'guests', label: 'Guest Registry', desc: 'RSVPs, dietary restrictions, party groups' },
+                    { key: 'guests', label: 'Guests & RSVPs', desc: 'RSVPs, dietary restrictions, party groups' },
                     { key: 'tables', label: 'Seating Chart', desc: 'Visual floorplan table builder & seat IDs' },
-                    { key: 'budget', label: 'Budget Ledger', desc: 'Itemized cost logger & payment statuses' },
+                    { key: 'budget', label: 'Budget & Expenses', desc: 'Track spending, purchases, and payment statuses' },
                     { key: 'schedule', label: 'Day-Of Timeline', desc: 'Itinerary moments & vendor assignments' },
                     { key: 'vendors', label: 'Vendor Directory', desc: 'Hired vendor contacts & contract values' },
                     { key: 'tasks', label: 'Kanban Checklist', desc: 'Task presets & priority board' },

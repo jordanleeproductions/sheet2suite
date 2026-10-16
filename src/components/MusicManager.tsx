@@ -491,6 +491,9 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           .music-add-btn {
             display: none !important;
           }
+          .music-portals-menu-container {
+            display: none !important;
+          }
         }
         @media (max-width: 640px) {
           .music-header-container {
@@ -510,8 +513,9 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           .music-header-actions a {
             justify-content: center !important;
             padding: 0.6rem 0.5rem !important;
+            min-height: 44px !important;
             width: 100% !important;
-            font-size: 0.72rem !important;
+            font-size: 0.75rem !important;
           }
         }
       `}</style>
@@ -519,15 +523,15 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
       {/* Header [MUSIC-5] */}
       <div className="music-header-container">
         <div>
-          <h2 style={styles.title}>Playlist</h2>
+          <h2 style={styles.title}>Music & Playlists</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Curate wedding music, track first dance & special moment songs, and review live guest song requests.
+            Curate songs for your ceremony, reception, and special moments.
           </p>
         </div>
 
         <div className="music-header-actions">
           {/* Consolidated Share & Portals Dropdown [MUSIC-6] */}
-          <div ref={portalsMenuRef} style={{ position: 'relative' }}>
+          <div ref={portalsMenuRef} className="music-portals-menu-container" style={{ position: 'relative' }}>
             <button
               type="button"
               onClick={() => setShowPortalsMenu(!showPortalsMenu)}
@@ -1262,8 +1266,12 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     color: 'var(--color-muted)',
     cursor: 'pointer',
-    padding: '0',
+    padding: '0.4rem',
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '36px',
+    minHeight: '36px',
   },
   cardBodyContent: {
     display: 'flex',
@@ -1323,8 +1331,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '32px',
-    height: '32px',
+    width: '40px',
+    height: '40px',
     borderRadius: '50%',
     backgroundColor: 'var(--color-primary)',
     color: 'var(--color-on-primary)',

@@ -560,33 +560,23 @@ export default function BudgetLedgerManager({
           )}
         </div>
 
-        {/* Right: Spreadsheet Sync Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
-          <span
-            title="Automatic calculation: Total Actual = Sum of logged purchases; Variance = Projected - Actual"
-            style={{
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.62rem',
-              color: 'var(--color-muted, #64748B)',
-              backgroundColor: 'var(--color-surface, #FFFFFF)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              padding: '0.15rem 0.45rem',
-              borderRadius: '2px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-            }}
-          >
-            <FileSpreadsheet size={11} />
-            <span>BUDGET LEDGER</span>
-          </span>
-          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-            SYNCED TO GOOGLE SHEETS
+        {/* Right: Live Sync Indicator (Clean, No Technical Sheets Wording) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+          <span style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            color: 'var(--color-muted, #64748B)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+          }}>
+            <CheckCircle2 size={12} style={{ color: 'var(--color-green, #10B981)' }} />
+            <span>UPDATED LIVE</span>
           </span>
         </div>
       </div>
 
-      {/* 2. Primary Financial Target & Allocation Strip (Mobile 2-column compact metric strip) */}
+      {/* 2. Primary Financial Metrics: Left to Spend, Paid So Far, Due Soon, Budget */}
       <div
         className="budget-metric-strip"
         style={{
@@ -599,16 +589,65 @@ export default function BudgetLedgerManager({
           padding: '0.75rem 1rem',
         }}
       >
-        {/* Metric 1: Total Target Budget */}
+        {/* Metric 1: Left to Spend (Monarch-Money Primary Focus) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+            LEFT TO SPEND
+          </span>
+          <div style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
+          }}>
+            {isUnsetMode ? 'Open' : `${isOverallOverBudget ? '-' : '+'}${formatCurrency(Math.abs(overallHeadroom), currency)}`}
+          </div>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+            {isOverallOverBudget ? 'Over budget cap' : `${formatCurrency(totalActual, currency)} spent of ${formatCurrency(effectiveTarget, currency)}`}
+          </span>
+        </div>
+
+        {/* Metric 2: Paid So Far */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+            PAID SO FAR
+          </span>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+            {formatCurrency(totalPaid, currency)}
+          </div>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+            {expenses.length} payments recorded
+          </span>
+        </div>
+
+        {/* Metric 3: Due Soon */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: overdueTotal > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
+            DUE SOON
+          </span>
+          <div style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: overdueTotal > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)',
+          }}>
+            {formatCurrency(overdueTotal > 0 ? overdueTotal : (nextUpcomingDue ? (nextUpcomingDue.actual - nextUpcomingDue.paid) : pendingTotal), currency)}
+          </div>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: overdueTotal > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-muted, #64748B)' }}>
+            {overdueTotal > 0 ? `${formatCurrency(overdueTotal, currency)} overdue` : (nextUpcomingDue ? `Next: ${nextUpcomingDue.dueDate}` : 'All payments on track')}
+          </span>
+        </div>
+
+        {/* Metric 4: Total Wedding Budget */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
-              TARGET BUDGET
+              WEDDING BUDGET
             </span>
             <button
               type="button"
               onClick={() => setIsEditingTarget(!isEditingTarget)}
-              title="Edit master target cap"
+              title="Edit master budget cap"
               style={{ background: 'none', border: 'none', color: 'var(--color-muted, #64748B)', cursor: 'pointer', padding: 0 }}
             >
               <Edit2 size={11} />
@@ -653,52 +692,8 @@ export default function BudgetLedgerManager({
             </div>
           )}
           <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
-            {isFixedCapMode ? 'Master Ceiling Cap' : 'Dynamic Category Sum'}
+            {isFixedCapMode ? 'Master Ceiling Cap' : 'Dynamic Category Sum'} • {percentUtilized}% spent
           </span>
-        </div>
-
-        {/* Metric 2: Actual Outlay */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
-            ACTUAL OUTLAY
-          </span>
-          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
-            {formatCurrency(totalActual, currency)}
-          </div>
-          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
-            {expenses.length} Logged Purchases
-          </span>
-        </div>
-
-        {/* Metric 3: Remaining Balance / Variance */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
-            REMAINING CUSHION
-          </span>
-          <div style={{
-            fontFamily: 'var(--font-technical-mono, monospace)',
-            fontSize: '1.25rem',
-            fontWeight: 800,
-            color: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
-          }}>
-            {isUnsetMode ? 'Open' : `${isOverallOverBudget ? '-' : '+'}${formatCurrency(Math.abs(overallHeadroom), currency)}`}
-          </div>
-          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
-            {isOverallOverBudget ? 'Exceeds target cap' : 'Available headroom'}
-          </span>
-        </div>
-
-        {/* Metric 4: Utilization Rate */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>
-            UTILIZATION
-          </span>
-          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
-            {isUnsetMode ? 'N/A' : `${percentUtilized}%`}
-          </div>
-          <div style={{ height: '4px', backgroundColor: 'var(--color-border, #E2E8F0)', borderRadius: '1px', overflow: 'hidden', marginTop: '2px' }}>
-            <div style={{ height: '100%', width: `${Math.min(percentUtilized, 100)}%`, backgroundColor: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)' }} />
-          </div>
         </div>
       </div>
 
@@ -733,7 +728,7 @@ export default function BudgetLedgerManager({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.45rem', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
             <div>
               <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)' }}>
-                CATEGORY BUDGETS
+                BUDGET BY CATEGORY
               </div>
               <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
                 {activeCategoryRows.length} active categor{activeCategoryRows.length === 1 ? 'y' : 'ies'}
@@ -760,7 +755,7 @@ export default function BudgetLedgerManager({
               title="Add New Budget Category"
             >
               <Plus size={12} />
-              <span>BUDGET CATEGORY</span>
+              <span>+ ADD CATEGORY</span>
             </button>
           </div>
 
@@ -1037,10 +1032,10 @@ export default function BudgetLedgerManager({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div>
                 <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  ITEMIZED PURCHASES &amp; EXPENSES {selectedCategoryId ? `// ${selectedCategoryId.toUpperCase()}` : '// ALL LOGGED PURCHASES'}
+                  EXPENSES &amp; PURCHASES {selectedCategoryId ? `// ${selectedCategoryId.toUpperCase()}` : '// ALL EXPENSES'}
                 </span>
                 <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                  {itemizedExpensesForSelected.length} logged purchase items • Synced to Google Sheets
+                  {itemizedExpensesForSelected.length} logged expense items
                 </div>
               </div>
 
@@ -1063,7 +1058,7 @@ export default function BudgetLedgerManager({
                 }}
               >
                 <Plus size={13} />
-                <span>RECORD PURCHASE</span>
+                <span>+ ADD EXPENSE</span>
               </button>
             </div>
 
@@ -1129,8 +1124,9 @@ export default function BudgetLedgerManager({
             )}
           </div>
 
-          {/* Itemized Purchases Table */}
+          {/* Desktop Tabular Purchases Table */}
           <div
+            className="budget-desktop-table"
             style={{
               backgroundColor: 'var(--color-surface, #FFFFFF)',
               border: '1px solid var(--color-border, #E2E8F0)',
@@ -1156,7 +1152,7 @@ export default function BudgetLedgerManager({
                   {itemizedExpensesForSelected.length === 0 ? (
                     <tr>
                       <td colSpan={selectedCategoryId ? 5 : 6} style={{ padding: '2rem 1rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
-                        No purchase items logged yet for this selection. Click &quot;RECORD PURCHASE&quot; to log vendor receipts.
+                        No purchase items logged yet for this selection. Click &quot;+ ADD EXPENSE&quot; to log vendor receipts.
                       </td>
                     </tr>
                   ) : (
@@ -1215,6 +1211,93 @@ export default function BudgetLedgerManager({
               </table>
             </div>
           </div>
+
+          {/* Compact Mobile Payment Rows (Monarch-Money Inspired) */}
+          <div
+            className="budget-mobile-payment-list"
+            style={{
+              display: 'none',
+              flexDirection: 'column',
+              gap: '0.45rem',
+              width: '100%',
+            }}
+          >
+            {itemizedExpensesForSelected.length === 0 ? (
+              <div
+                style={{
+                  padding: '2rem 1rem',
+                  textAlign: 'center',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.75rem',
+                  color: 'var(--color-muted, #64748B)',
+                  backgroundColor: 'var(--color-surface, #FFFFFF)',
+                  border: '1px solid var(--color-border, #E2E8F0)',
+                  borderRadius: '3px',
+                }}
+              >
+                No expense items recorded yet. Tap below to log a payment.
+              </div>
+            ) : (
+              itemizedExpensesForSelected.map((exp, idx) => {
+                const amt = exp.actualCost ?? exp.amount ?? exp.amountPaid ?? 0;
+                const paid = exp.amountPaid ?? amt;
+                const isPaidFull = amt > 0 && paid >= amt;
+                return (
+                  <div
+                    key={exp.itemId || idx}
+                    onClick={() => startEditExpense(exp)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      padding: '0.75rem 0.85rem',
+                      backgroundColor: 'var(--color-surface, #FFFFFF)',
+                      border: '1px solid var(--color-border, #E2E8F0)',
+                      borderRadius: '3px',
+                      minHeight: '52px',
+                      cursor: 'pointer',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0, flex: 1 }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {exp.description}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                        <span>{exp.category}</span>
+                        {exp.purchaseDate && (
+                          <>
+                            <span>•</span>
+                            <span>{exp.purchaseDate}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem', flexShrink: 0 }}>
+                      <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>
+                        {formatCurrency(amt, currency)}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-technical-mono, monospace)',
+                          fontSize: '0.62rem',
+                          fontWeight: 700,
+                          padding: '0.1rem 0.35rem',
+                          borderRadius: '2px',
+                          backgroundColor: isPaidFull ? 'rgba(16, 185, 129, 0.12)' : 'rgba(217, 119, 6, 0.12)',
+                          color: isPaidFull ? 'var(--color-green, #10B981)' : 'var(--color-amber, #D97706)',
+                        }}
+                      >
+                        {isPaidFull ? 'PAID' : `PAID ${formatCurrency(paid, currency)}`}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
@@ -1267,7 +1350,7 @@ export default function BudgetLedgerManager({
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', borderBottom: '1px solid var(--color-border, #E2E8F0)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)' }}>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)' }}>
-                {editingItem ? 'EDIT BUDGET ALLOCATION' : 'ADD BUDGET CATEGORY'}
+                {editingItem ? 'EDIT BUDGET CATEGORY' : 'ADD BUDGET CATEGORY'}
               </span>
               <button type="button" onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted, #64748B)' }}>
                 <X size={15} />
@@ -1296,7 +1379,7 @@ export default function BudgetLedgerManager({
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                    TARGET ALLOCATION ({currencySymbol})
+                    PLANNED BUDGET ({currencySymbol})
                   </label>
                   <input
                     type="number"
@@ -1330,7 +1413,7 @@ export default function BudgetLedgerManager({
                   SAVE & ADD ANOTHER
                 </button>
                 <button type="submit" style={{ padding: '0.35rem 0.85rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--color-primary, #0F172A)', color: '#FFFFFF', border: 'none', borderRadius: '2px', cursor: 'pointer' }}>
-                  SAVE ALLOCATION
+                  SAVE CATEGORY
                 </button>
               </div>
             </form>
@@ -1496,7 +1579,7 @@ export default function BudgetLedgerManager({
               CONFIRM DELETION
             </span>
             <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-muted, #64748B)', lineHeight: 1.4 }}>
-              Are you sure you want to delete {itemToDelete ? `the budget allocation for ${itemToDelete.category}` : `the purchase record "${expenseToDelete?.description}"`}? This action will synchronize directly to your Google Spreadsheet.
+              Are you sure you want to delete {itemToDelete ? `the budget category "${itemToDelete.category}"` : `the purchase record "${expenseToDelete?.description}"`}? This action will permanently remove it from your records.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button
@@ -1559,6 +1642,12 @@ export default function BudgetLedgerManager({
           }
           .budget-add-btn {
             display: none !important;
+          }
+          .budget-desktop-table {
+            display: none !important;
+          }
+          .budget-mobile-payment-list {
+            display: flex !important;
           }
         }
         .budget-master-rail-list::-webkit-scrollbar {

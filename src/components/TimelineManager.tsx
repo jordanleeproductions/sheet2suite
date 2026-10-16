@@ -419,7 +419,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
           .timeline-header-actions button {
             width: 100% !important;
             justify-content: center !important;
-            min-height: 38px !important;
+            min-height: 44px !important;
           }
         }
       `}</style>
@@ -427,13 +427,13 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
       {/* Header Panel */}
       <div className="timeline-header-card anim-fade-in">
         <div>
-          <h2 style={styles.title}>Wedding Day Timeline</h2>
+          <h2 style={styles.title}>Day-of Timeline</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Coordinate day-of wedding milestones, vendor arrival times, and real-time ceremony schedule.
+            Your wedding day schedule, milestones, and cues.
           </p>
         </div>
         <div className="timeline-header-actions">
-          <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV Spreadsheet">
+          <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV">
             <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
           </button>
           {onOpenPrintStudio && (
@@ -1952,12 +1952,20 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     color: 'var(--color-muted)',
     cursor: 'pointer',
-    padding: '0.25rem',
+    padding: '0.4rem',
+    minWidth: '38px',
+    minHeight: '38px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   expandChevron: {
     color: 'var(--color-muted)',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '38px',
+    minHeight: '38px',
   },
   cardBody: {
     padding: '0.75rem 1rem',

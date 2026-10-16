@@ -1046,7 +1046,7 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                 Are you sure you want to delete <strong style={{ color: 'var(--color-red)' }}>"{taskToDelete.taskName}"</strong>?
               </p>
               <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', margin: 0, lineHeight: 1.4 }}>
-                This will permanently remove the task from your wedding planning board and Google Sheet checklist.
+                This will permanently remove the task from your wedding planning board and checklist.
               </p>
 
               <div className="task-delete-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>

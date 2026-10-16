@@ -507,6 +507,24 @@ src/
      - **Ceremonial Milestones**: Strictly restrained champagne gold (`#D4AF37` / `#A16207` text, `#FEF9C3` background).
 - **Tailwind v4 Token Mapping**: Custom Tailwind configuration (`tailwind.config.ts`) declaring tokens for `paper`, `pane`, `ink`, `hairline`, `ledger`, and `ceremonial`, micro border-radii, and hairline outline shadows.
 
+### 3.11 Monarch-Money Inspired UX/UI Refactoring (`[MONARCH-EDITORIAL-UX-OVERHAUL]`)
+- **Contrasting Dark Desktop Sidebar (Editorial Theme)**: In `VowSidebar.tsx`, when `styleTheme === 'editorial'` or in dark mode, the desktop sidebar adopts a contrasting deep ink-slate background (`#090D16`), hairline borders (`#1E293B`), white text, crisp muted labels (`#94A3B8`), and dark elevated active nav highlights (`#1E293B`).
+- **Warm Botanical Palette**: Re-anchored the "Botanical" theme (`theme.css` and `themePresets.ts`) around warm cream (`#FAF7F2`), crisp paper white (`#FFFFFF`), warm off-white pane (`#F4EFEA`), and restrained forest green (`#1B4332`), paired with deep earthy slate text (`#1F2E26`).
+- **Touch Targets & Typography**: Increased mobile typography and hitboxes across interactive controls, filter pills, edit buttons, and RSVP toggles to $\ge 44\text{px}$–$48\text{px}$ to comply with mobile touch guidelines.
+- **Plain-Language Terminology Shift**:
+  - Replaced accounting/developer terms with natural wedding language:
+    - `"Financial Ledger"` $\rightarrow$ `"Budget & Expenses"`
+    - `"Budget Allocation"` $\rightarrow$ `"Budget Category"`
+    - `"Target Allocation"` $\rightarrow$ `"Planned Budget"`
+    - `"Actual Outlay / Spent"` $\rightarrow$ `"Paid so far"`
+    - `"Remaining Cushion"` $\rightarrow$ `"Left to spend"`
+    - `"Guest Registry"` $\rightarrow$ `"Guests & RSVPs"`
+    - `"Day-of Schedule"` $\rightarrow$ `"Day-of Timeline"`
+    - `"Kanban Board"` $\rightarrow$ `"Tasks & Checklist"`
+- **Monarch Budget Experience**: Reworked top financial KPI summary strip around four core metrics: **LEFT TO SPEND**, **PAID SO FAR**, **DUE SOON**, and **WEDDING BUDGET**. Introduced compact mobile payment rows with 1-tap edit access while strictly preserving detailed side-by-side desktop tools (category rail + itemized purchase ledger).
+- **Mobile De-Cluttering**: Eliminated mobile noise by hiding secondary portal managers and export link panels (`.vendor-share-links-desktop-section`, `.music-portals-menu-container`) on viewports $\le 768\text{px}$.
+- **Zero Exposed Spreadsheet Metadata**: Cleaned all visible user-facing text referencing Google Sheets, formulas, cell coordinates, and protected cells across modals, deletion prompts, CSV buttons, and workspace cards.
+
 ---
 
 ## 4. Data Storage & Schema Mapping

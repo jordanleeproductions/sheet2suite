@@ -110,7 +110,7 @@ export default function WelcomeGuideCard({
             lineHeight: 1.45,
             maxWidth: '840px',
           }}>
-            Your digital canvas is synchronized bi-directionally with your private Google Spreadsheet. All guest RSVPs, catering tallies, financial ledger items, and timeline events update live with zero vendor lock-in.
+            Your wedding workspace is synchronized live. All guest RSVPs, catering tallies, expenses, and timeline events update in real time with zero vendor lock-in.
           </p>
         </div>
 

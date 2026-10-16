@@ -34,6 +34,7 @@ export interface VowSidebarProps {
   onOpenSettings: () => void;
   onExportCSV: () => void;
   theme?: 'light' | 'dark';
+  styleTheme?: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
 }
 
 const NAV_ITEMS = [
@@ -61,7 +62,10 @@ export default function VowSidebar({
   onOpenSettings,
   onExportCSV,
   theme = 'light',
+  styleTheme = 'editorial',
 }: VowSidebarProps) {
+  const isDarkSidebar = styleTheme === 'editorial' || theme === 'dark';
+
   const visibleTabs = NAV_ITEMS.filter((tab) =>
     tab.id === 'home'
       ? (enabledModules.home ?? enabledModules.metrics ?? true)
@@ -77,8 +81,8 @@ export default function VowSidebar({
         left: 0,
         bottom: 0,
         width: isSidebarCollapsed ? '60px' : '210px',
-        backgroundColor: 'var(--color-surface, #FFFFFF)',
-        borderRight: '1px solid var(--color-border, #E2E8F0)',
+        backgroundColor: isDarkSidebar ? '#090D16' : 'var(--color-surface, #FFFFFF)',
+        borderRight: `1px solid ${isDarkSidebar ? '#1E293B' : 'var(--color-border, #E2E8F0)'}`,
         padding: isSidebarCollapsed ? '0.85rem 0.4rem' : '0.85rem 0.6rem',
         display: 'flex',
         flexDirection: 'column',
@@ -99,7 +103,7 @@ export default function VowSidebar({
             justifyContent: isSidebarCollapsed ? 'center' : 'space-between',
             padding: '0 0.25rem',
             paddingBottom: '0.75rem',
-            borderBottom: '1px solid var(--color-border, #E2E8F0)',
+            borderBottom: `1px solid ${isDarkSidebar ? '#1E293B' : 'var(--color-border, #E2E8F0)'}`,
           }}
         >
           {!isSidebarCollapsed ? (
@@ -109,8 +113,9 @@ export default function VowSidebar({
                 style={{
                   width: '28px',
                   height: '28px',
-                  backgroundColor: 'var(--color-primary, #0F172A)',
-                  color: 'var(--color-on-primary, #FFFFFF)',
+                  backgroundColor: isDarkSidebar ? '#1E293B' : 'var(--color-primary, #0F172A)',
+                  color: isDarkSidebar ? '#FFFFFF' : 'var(--color-on-primary, #FFFFFF)',
+                  border: isDarkSidebar ? '1px solid #334155' : 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -127,7 +132,7 @@ export default function VowSidebar({
                     fontWeight: 700,
                     fontSize: '0.98rem',
                     lineHeight: '1.1',
-                    color: 'var(--color-primary, #0F172A)',
+                    color: isDarkSidebar ? '#FFFFFF' : 'var(--color-primary, #0F172A)',
                     letterSpacing: '-0.02em',
                   }}
                 >
@@ -138,7 +143,7 @@ export default function VowSidebar({
                     fontFamily: 'var(--font-technical-mono, monospace)',
                     fontSize: '0.54rem',
                     fontWeight: 600,
-                    color: 'var(--color-muted, #64748B)',
+                    color: isDarkSidebar ? '#94A3B8' : 'var(--color-muted, #64748B)',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                   }}
@@ -153,8 +158,9 @@ export default function VowSidebar({
               style={{
                 width: '28px',
                 height: '28px',
-                backgroundColor: 'var(--color-primary, #0F172A)',
-                color: 'var(--color-on-primary, #FFFFFF)',
+                backgroundColor: isDarkSidebar ? '#1E293B' : 'var(--color-primary, #0F172A)',
+                color: isDarkSidebar ? '#FFFFFF' : 'var(--color-on-primary, #FFFFFF)',
+                border: isDarkSidebar ? '1px solid #334155' : 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -171,11 +177,11 @@ export default function VowSidebar({
             title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             style={{
               background: 'transparent',
-              border: '1px solid var(--color-border, #E2E8F0)',
+              border: `1px solid ${isDarkSidebar ? '#334155' : 'var(--color-border, #E2E8F0)'}`,
               borderRadius: '2px',
               cursor: 'pointer',
               padding: '0.25rem',
-              color: 'var(--color-text, #0F172A)',
+              color: isDarkSidebar ? '#CBD5E1' : 'var(--color-text, #0F172A)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -210,12 +216,12 @@ export default function VowSidebar({
                   padding: isSidebarCollapsed ? '0.5rem 0' : '0.45rem 0.55rem',
                   borderRadius: '3px',
                   backgroundColor: isActive
-                    ? 'var(--color-primary, #0F172A)'
+                    ? (isDarkSidebar ? '#1E293B' : 'var(--color-primary, #0F172A)')
                     : 'transparent',
                   color: isActive
-                    ? 'var(--color-on-primary, #FFFFFF)'
-                    : 'var(--color-text, #0F172A)',
-                  border: 'none',
+                    ? '#FFFFFF'
+                    : (isDarkSidebar ? '#94A3B8' : 'var(--color-text, #0F172A)'),
+                  border: isActive && isDarkSidebar ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid transparent',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-technical-mono, var(--font-mono))',
                   fontSize: '0.72rem',
@@ -251,12 +257,12 @@ export default function VowSidebar({
         </nav>
       </div>
 
-      {/* Bottom Group: Utility Actions (Print, Export CSV, Sync Settings) & Version Badge */}
+      {/* Bottom Group: Utility Actions (Export CSV, Sync Settings) & Version Badge */}
       <div
         style={{
           marginTop: 'auto',
           paddingTop: '0.65rem',
-          borderTop: '1px solid var(--color-border, #E2E8F0)',
+          borderTop: `1px solid ${isDarkSidebar ? '#1E293B' : 'var(--color-border, #E2E8F0)'}`,
           display: 'flex',
           flexDirection: 'column',
           gap: '0.25rem',
@@ -275,8 +281,8 @@ export default function VowSidebar({
               padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
               borderRadius: '2px',
               backgroundColor: 'transparent',
-              color: 'var(--color-text, #0F172A)',
-              border: '1px solid var(--color-border, #E2E8F0)',
+              color: isDarkSidebar ? '#CBD5E1' : 'var(--color-text, #0F172A)',
+              border: `1px solid ${isDarkSidebar ? '#334155' : 'var(--color-border, #E2E8F0)'}`,
               cursor: 'pointer',
               fontFamily: 'var(--font-technical-mono, var(--font-mono))',
               fontSize: '0.68rem',
@@ -285,7 +291,7 @@ export default function VowSidebar({
               transition: 'background-color 0.1s ease',
             }}
           >
-            <Printer size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+            <Printer size={14} style={{ color: isDarkSidebar ? '#94A3B8' : 'var(--color-primary)', flexShrink: 0 }} />
             {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>PRINT STUDIO</span>}
           </button>
         )}
@@ -302,8 +308,8 @@ export default function VowSidebar({
             padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
             borderRadius: '2px',
             backgroundColor: 'transparent',
-            color: 'var(--color-text, #0F172A)',
-            border: '1px solid var(--color-border, #E2E8F0)',
+            color: isDarkSidebar ? '#CBD5E1' : 'var(--color-text, #0F172A)',
+            border: `1px solid ${isDarkSidebar ? '#334155' : 'var(--color-border, #E2E8F0)'}`,
             cursor: 'pointer',
             fontFamily: 'var(--font-technical-mono, var(--font-mono))',
             fontSize: '0.68rem',
@@ -312,7 +318,7 @@ export default function VowSidebar({
             transition: 'background-color 0.1s ease',
           }}
         >
-          <Download size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+          <Download size={14} style={{ color: isDarkSidebar ? '#94A3B8' : 'var(--color-primary)', flexShrink: 0 }} />
           {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>EXPORT CSV</span>}
         </button>
 
@@ -328,8 +334,8 @@ export default function VowSidebar({
             padding: isSidebarCollapsed ? '0.45rem 0' : '0.42rem 0.55rem',
             borderRadius: '2px',
             backgroundColor: 'transparent',
-            color: 'var(--color-text, #0F172A)',
-            border: '1px solid var(--color-border, #E2E8F0)',
+            color: isDarkSidebar ? '#CBD5E1' : 'var(--color-text, #0F172A)',
+            border: `1px solid ${isDarkSidebar ? '#334155' : 'var(--color-border, #E2E8F0)'}`,
             cursor: 'pointer',
             fontFamily: 'var(--font-technical-mono, var(--font-mono))',
             fontSize: '0.68rem',
@@ -338,7 +344,7 @@ export default function VowSidebar({
             transition: 'background-color 0.1s ease',
           }}
         >
-          <Settings size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+          <Settings size={14} style={{ color: isDarkSidebar ? '#94A3B8' : 'var(--color-primary)', flexShrink: 0 }} />
           {!isSidebarCollapsed && <span style={{ letterSpacing: '0.04em' }}>SYNC SETTINGS</span>}
         </button>
 

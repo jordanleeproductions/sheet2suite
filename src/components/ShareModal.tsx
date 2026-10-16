@@ -429,7 +429,7 @@ export default function ShareModal({
           <div style={styles.securityBanner}>
             <ShieldCheck size={18} style={{ color: 'var(--color-green)' }} />
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text)' }}>
-              Protected with <strong>HMAC-SHA256 Token Encryption</strong>. Excludes all financial ledger data and private guest addresses.
+              Protected with <strong>HMAC-SHA256 Token Encryption</strong>. Excludes all budget data and private guest addresses.
             </span>
           </div>
 

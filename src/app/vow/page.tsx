@@ -1058,7 +1058,7 @@ export default function Sheet2VowDashboard() {
       }
     } catch (err: any) {
       console.error(err);
-      setSyncError(err.message || 'Error connecting to Google Sheet. Check authentication.');
+      setSyncError(err.message || 'Error connecting to workspace. Check authentication.');
     } finally {
       setIsLoading(false);
     }
@@ -1436,6 +1436,7 @@ export default function Sheet2VowDashboard() {
           onOpenSettings={() => setShowAdvancedSettings(true)}
           onExportCSV={handleExportActiveCSV}
           theme={theme}
+          styleTheme={styleTheme}
         />
       )}
 
@@ -2497,8 +2498,8 @@ export default function Sheet2VowDashboard() {
                   <div style={{ fontWeight: 600 }}>🔗 sheet2vow.com/#home</div>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>SPREADSHEET ID:</span>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', wordBreak: 'break-all' }}>🔑 {spreadsheetId || 'Active Google Sheet'}</div>
+                  <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>WORKSPACE ID:</span>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', wordBreak: 'break-all' }}>🔑 {spreadsheetId || 'Connected Workspace'}</div>
                 </div>
               </div>
             </div>

@@ -12,18 +12,18 @@ export interface VowMastheadProps {
 }
 
 const TAB_TITLES: Record<string, string> = {
-  home: 'WEDDING OVERVIEW',
-  metrics: 'WEDDING OVERVIEW',
-  guests: 'GUEST REGISTRY & CATERING',
-  menu: 'CATERING & MENU SETUP',
-  tables: 'SEATING & FLOORPLAN PLANNER',
-  budget: 'FINANCIAL LEDGER & EXPENSES',
-  schedule: 'DAY-OF SCHEDULE & TIMELINE',
-  vendors: 'VENDOR DIRECTORY & CONTRACTS',
-  tasks: 'PLANNING CHECKLIST & MILESTONES',
-  music: 'MUSIC CATALOG & DJ PLAYLISTS',
-  photos: 'PHOTOGRAPHY SHOT LIST',
-  thanks: 'THANK YOU NOTES & GIFTS',
+  home: 'OVERVIEW',
+  metrics: 'OVERVIEW',
+  guests: 'GUESTS & RSVPS',
+  menu: 'CATERING & MENU',
+  tables: 'SEATING PLANNER',
+  budget: 'BUDGET & EXPENSES',
+  schedule: 'DAY-OF TIMELINE',
+  vendors: 'VENDORS',
+  tasks: 'TASKS & CHECKLIST',
+  music: 'MUSIC & PLAYLISTS',
+  photos: 'PHOTO SHOT LIST',
+  thanks: 'GIFTS & THANK YOUS',
 };
 
 export default function VowMasthead({
