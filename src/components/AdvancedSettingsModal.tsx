@@ -774,7 +774,7 @@ export default function AdvancedSettingsModal({
               <form onSubmit={handleSaveDetails} style={styles.section}>
                 <h4 style={styles.sectionTitle}>💒 Wedding Title & Event Metadata</h4>
                 <p style={styles.sectionDesc}>
-                  Configure your wedding name, event date, and location. Updates are synced to cell <code>Settings!B2</code> in your Google Sheet.
+                  Configure your wedding name, event date, and location. Updates are synced directly to your Google Sheet.
                 </p>
 
                 <div style={styles.formGroup}>
@@ -822,7 +822,7 @@ export default function AdvancedSettingsModal({
                     step="any"
                   />
                   <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.25rem' }}>
-                    Synced with cell <code>Settings!B3</code> and updates Financial Ledger and Summary KPI meters.
+                    Synced with your Google Sheet to update Financial Ledger and Summary KPI meters.
                   </span>
                 </div>
 

@@ -107,13 +107,13 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - Navigation button uses dedicated chair icon (`Armchair`) across mobile drawer, sidebar, and module selectors.
 
 ### 2.5 Structured Financial Ledger (`BudgetLedgerManager.tsx`)
-- **Structured Category Ledger Format (`[FINANCIALS-STRUCTURED-LEDGER]`):**
-  - Replaced mini category cards and donut charts with a compact, tabular category ledger (`Category | Projected | Actual | Variance | Due Date | Status | Cell Ref | Actions`).
-  - **Right-Aligned Monospace Monetary Figures:** Strictly right-aligns Projected, Actual, and Variance numbers in technical monospace (`var(--font-technical-mono)`).
-  - **Immediate Top Exception Strip:** Pinned summary bar surfacing overdue balances with red alert badges, total pending unpaid amounts, over-budget category counts, earliest upcoming due date, and live Google Drive v4 sync indicators.
-  - **Spreadsheet Metadata Indicators:** Displays exact cell coordinates (`Budget!B4:F4`, `Budget!A2:I60`, `Settings!B2:B3`) and formula tooltips (`fx = SUM(Expenses!E:E)`, `fx = Projected - Actual`) directly on table headers and rows.
-  - **Interactive Category Drill-Down:** Clicking any category row filters the itemized purchases ledger beneath it, enabling fast inspection of line-item receipts.
-  - **Mobile 2-Column Compact Metric Strip:** On viewports $\le 768\text{px}$, condenses the top financial snapshot into a 2-column grid and renders the category ledger with horizontal scrolling so primary figures fit comfortably above the fold.
+- **Desktop Split-Screen Ledger Architecture (`[FINANCIALS-DESKTOP-SPLIT-SCREEN]`):**
+  - **Side-by-Side Dual Rail Layout:** Reverted desktop presentation to an ergonomic 12-column split-view (`lg:grid lg:grid-cols-12 lg:gap-5`):
+    - **Categories Master Rail (Left 5 Cols):** High-density scrollable category budget list with live search, status filters (`All`, `Overdue`, `Pending`, `Paid`, `Over Budget`), "+ BUDGET CATEGORY" action, and real-time category stats (`Projected`, `Actual Outlay`, `Variance`, `Status`, `Due Date`, `Edit`, `Add Expense`). Pinned footer totals calculate overall outlay and remaining headroom.
+    - **Itemized Expenses Detail Ledger (Right 7 Cols):** Sticky detail pane (`position: sticky; top: 0.75rem`) displaying line-item purchases for the selected category (or all purchases when unselected), Category Snapshot bar (budget, spent, cushion, earliest due date), "+ RECORD PURCHASE" primary button, and full purchase receipts table (`Date`, `Description`, `Category`, `Amount Paid`, `Total Cost`, `Actions`). Completely eliminates vertical page scrolling past categories to inspect or record expense receipts.
+  - **Everyday Wedding Language & Zero Cell Coordinates:** Stripped technical spreadsheet cell coordinates (`Budget!A2:I60`, `Expenses!A2:G...`, `Cell Ref` columns) in favor of clean, user-friendly labels (`BUDGET LEDGER`, `SYNCED TO GOOGLE SHEETS`).
+  - **Immediate Top Exception Strip:** Pinned summary bar surfacing overdue balances with red alert badges, total pending unpaid amounts, over-budget category counts, earliest upcoming due date, and Google Sheets sync status.
+  - **Mobile Stacking & 2-Column Compact Metric Strip:** On viewports $\le 1023\text{px}$, converts the split view into a fluid vertical stack (categories rail first, then itemized expenses). On viewports $\le 768\text{px}$, condenses the top financial snapshot into a 2-column grid.
 - **Hybrid Target Mode:** Supports explicit master ceiling caps (`fixed_cap`) with inline editing and dynamic auto-sum of categories (`dynamic`).
 - **Itemized Purchase Ledger & Rapid Entry (`[UX-BULK-LOAD]`):** Maintains full support for recording purchases, receipts, payment status, and 3-button "Save & Add Another" modal workflows.
 

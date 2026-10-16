@@ -236,9 +236,6 @@ export default function BudgetLedgerManager({
     else if (catActual > 0) statusLabel = 'Partial Paid';
     else if (catEstimate > 0) statusLabel = 'Budgeted';
 
-    // Cell coordinate in Budget tab
-    const cellRef = `Budget!B${idx + 2}:F${idx + 2}`;
-
     return {
       category: cat,
       projected: catEstimate,
@@ -251,7 +248,6 @@ export default function BudgetLedgerManager({
       isOverdue,
       expenseCount: expStats.count,
       budgetItemCount: catBudgetItems.length,
-      cellRef,
       rawBudgetItems: catBudgetItems,
     };
   });
@@ -564,10 +560,10 @@ export default function BudgetLedgerManager({
           )}
         </div>
 
-        {/* Right: Spreadsheet Metadata & Sync Indicator */}
+        {/* Right: Spreadsheet Sync Indicator */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
           <span
-            title="Formula logic: Actual = SUM(Expenses!E:E); Variance = Projected - Actual"
+            title="Automatic calculation: Total Actual = Sum of logged purchases; Variance = Projected - Actual"
             style={{
               fontFamily: 'var(--font-technical-mono, monospace)',
               fontSize: '0.62rem',
@@ -582,10 +578,10 @@ export default function BudgetLedgerManager({
             }}
           >
             <FileSpreadsheet size={11} />
-            <span>CELL BUDGET!A2:I60</span>
+            <span>BUDGET LEDGER</span>
           </span>
           <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-            DRIVE V4 SYNC ACTIVE
+            SYNCED TO GOOGLE SHEETS
           </span>
         </div>
       </div>
@@ -706,284 +702,202 @@ export default function BudgetLedgerManager({
         </div>
       </div>
 
-      {/* 3. Tabular Category Ledger Toolbar & Actions */}
+      {/* 3. DESKTOP SPLIT VIEW: CATEGORIES MASTER RAIL (LEFT 5 COLS) & ITEM DETAIL LEDGER (RIGHT 7 COLS) */}
       <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '0.65rem',
-          paddingTop: '0.25rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {/* Search Input */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Search size={13} style={{ position: 'absolute', left: '0.55rem', color: 'var(--color-muted, #64748B)' }} />
-            <input
-              type="text"
-              placeholder="Search category ledger..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '0.35rem 0.55rem 0.35rem 1.65rem',
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.72rem',
-                border: '1px solid var(--color-border, #E2E8F0)',
-                borderRadius: '2px',
-                backgroundColor: 'var(--color-surface, #FFFFFF)',
-                color: 'var(--color-text, #0F172A)',
-                minWidth: '200px',
-              }}
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            {(['All', 'Overdue', 'Pending', 'Paid', 'OverBudget'] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.62rem',
-                  fontWeight: statusFilter === st ? 700 : 500,
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: statusFilter === st ? 'var(--color-primary, #0F172A)' : 'transparent',
-                  color: statusFilter === st ? '#FFFFFF' : 'var(--color-muted, #64748B)',
-                  border: '1px solid var(--color-border, #E2E8F0)',
-                  borderRadius: '2px',
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {st === 'OverBudget' ? 'Over Budget' : st}
-              </button>
-            ))}
-          </div>
-
-          {selectedCategoryId && (
-            <button
-              type="button"
-              onClick={() => setSelectedCategoryId('')}
-              style={{
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.62rem',
-                color: 'var(--color-primary, #0F172A)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              }}
-            >
-              CLEAR CATEGORY SELECTION ({selectedCategoryId})
-            </button>
-          )}
-        </div>
-
-        {/* Primary Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <button
-            type="button"
-            onClick={() => startAddExpense(selectedCategoryId)}
-            className="budget-add-btn"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.35rem 0.75rem',
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              backgroundColor: 'var(--color-primary, #0F172A)',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '2px',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={13} />
-            <span>ADD EXPENSE</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => startAddBudget()}
-            className="budget-add-btn"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.35rem 0.75rem',
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              backgroundColor: 'transparent',
-              color: 'var(--color-text, #0F172A)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              borderRadius: '2px',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={13} />
-            <span>BUDGET CATEGORY</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 4. Structured Tabular Category Ledger (`Category | Projected | Actual | Variance | Due Date | Status`) */}
-      <div
-        className="category-ledger-table-wrapper"
+        className="budget-desktop-split-view lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start"
         style={{
           width: '100%',
-          overflowX: 'auto',
-          backgroundColor: 'var(--color-surface, #FFFFFF)',
-          border: '1px solid var(--color-border, #E2E8F0)',
-          borderRadius: '3px',
+          boxSizing: 'border-box',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+          gap: '1.25rem',
+          alignItems: 'start',
         }}
       >
-        <table
+        {/* LEFT COLUMN: Master Category Rail (col-span-12 lg:col-span-5) */}
+        <div
+          className="budget-master-rail col-span-12 lg:col-span-5"
           style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: '0.75rem',
-            textAlign: 'left',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.65rem',
+            backgroundColor: 'var(--color-surface, #FFFFFF)',
+            border: '1px solid var(--color-border, #E2E8F0)',
+            borderRadius: '3px',
+            padding: '0.85rem 1rem',
+            boxSizing: 'border-box',
+            minWidth: 0,
           }}
         >
-          <thead>
-            <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
-              <th style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '90px' }}>
-                CELL REF
-              </th>
-              <th
-                onClick={() => { setSortField('category'); setSortAsc(!sortAsc); }}
-                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', cursor: 'pointer' }}
-              >
-                CATEGORY {sortField === 'category' && (sortAsc ? '▲' : '▼')}
-              </th>
-              <th
-                onClick={() => { setSortField('projected'); setSortAsc(!sortAsc); }}
-                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', cursor: 'pointer' }}
-              >
-                PROJECTED (EST.) {sortField === 'projected' && (sortAsc ? '▲' : '▼')}
-              </th>
-              <th
-                onClick={() => { setSortField('actual'); setSortAsc(!sortAsc); }}
-                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', cursor: 'pointer' }}
-              >
-                ACTUAL OUTLAY {sortField === 'actual' && (sortAsc ? '▲' : '▼')}
-              </th>
-              <th
-                onClick={() => { setSortField('variance'); setSortAsc(!sortAsc); }}
-                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', cursor: 'pointer' }}
-              >
-                VARIANCE {sortField === 'variance' && (sortAsc ? '▲' : '▼')}
-              </th>
-              <th
-                onClick={() => { setSortField('dueDate'); setSortAsc(!sortAsc); }}
-                style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', cursor: 'pointer', width: '100px' }}
-              >
-                DUE DATE {sortField === 'dueDate' && (sortAsc ? '▲' : '▼')}
-              </th>
-              <th style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '105px' }}>
-                STATUS
-              </th>
-              <th style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textAlign: 'center', width: '75px' }}>
-                ACTIONS
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+          {/* Rail Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.45rem', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)' }}>
+                CATEGORY BUDGETS
+              </div>
+              <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                {activeCategoryRows.length} active categor{activeCategoryRows.length === 1 ? 'y' : 'ies'}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => startAddBudget()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                padding: '0.3rem 0.6rem',
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                backgroundColor: 'transparent',
+                color: 'var(--color-primary, #0F172A)',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                borderRadius: '2px',
+                cursor: 'pointer',
+              }}
+              title="Add New Budget Category"
+            >
+              <Plus size={12} />
+              <span>BUDGET CATEGORY</span>
+            </button>
+          </div>
+
+          {/* Search & Status Filters */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+              <Search size={13} style={{ position: 'absolute', left: '0.55rem', color: 'var(--color-muted, #64748B)' }} />
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.35rem 0.55rem 0.35rem 1.65rem',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.72rem',
+                  border: '1px solid var(--color-border, #E2E8F0)',
+                  borderRadius: '2px',
+                  backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                  color: 'var(--color-text, #0F172A)',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+              {(['All', 'Overdue', 'Pending', 'Paid', 'OverBudget'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setStatusFilter(st)}
+                  style={{
+                    fontFamily: 'var(--font-technical-mono, monospace)',
+                    fontSize: '0.58rem',
+                    fontWeight: statusFilter === st ? 700 : 500,
+                    padding: '0.2rem 0.45rem',
+                    backgroundColor: statusFilter === st ? 'var(--color-primary, #0F172A)' : 'transparent',
+                    color: statusFilter === st ? '#FFFFFF' : 'var(--color-muted, #64748B)',
+                    border: '1px solid var(--color-border, #E2E8F0)',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {st === 'OverBudget' ? 'Over Budget' : st}
+                </button>
+              ))}
+
+              {selectedCategoryId && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId('')}
+                  style={{
+                    fontFamily: 'var(--font-technical-mono, monospace)',
+                    fontSize: '0.58rem',
+                    color: 'var(--color-primary, #0F172A)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    marginLeft: 'auto',
+                  }}
+                >
+                  CLEAR FILTER
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Scrollable Category List */}
+          <div
+            className="budget-master-rail-list"
+            style={{
+              maxHeight: 'calc(100vh - 290px)',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.45rem',
+              paddingRight: '0.2rem',
+            }}
+          >
             {filteredCategoryRows.length === 0 ? (
-              <tr>
-                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
-                  No category records match your filter criteria. Click &quot;BUDGET CATEGORY&quot; above to allocate your first budget line.
-                </td>
-              </tr>
+              <div style={{ padding: '1.5rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.72rem', color: 'var(--color-muted, #64748B)' }}>
+                No categories match your search.
+              </div>
             ) : (
               filteredCategoryRows.map((row) => {
                 const isSelected = selectedCategoryId.toLowerCase() === row.category.toLowerCase();
                 return (
-                  <tr
+                  <div
                     key={row.category}
                     onClick={() => setSelectedCategoryId(isSelected ? '' : row.category)}
                     style={{
-                      borderBottom: '1px solid var(--color-border, #E2E8F0)',
+                      border: isSelected ? '1px solid var(--color-primary, #0F172A)' : '1px solid var(--color-border, #E2E8F0)',
+                      borderLeft: isSelected ? '3px solid var(--color-primary, #0F172A)' : '1px solid var(--color-border, #E2E8F0)',
                       backgroundColor: isSelected ? 'rgba(15, 23, 42, 0.04)' : 'transparent',
+                      borderRadius: '2px',
+                      padding: '0.5rem 0.65rem',
                       cursor: 'pointer',
-                      transition: 'background-color 0.1s ease',
+                      transition: 'all 0.1s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.35rem',
                     }}
                   >
-                    {/* Cell Reference */}
-                    <td style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                      {row.cellRef}
-                    </td>
-
-                    {/* Category Name */}
-                    <td style={{ padding: '0.55rem 0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span style={{ fontWeight: isSelected ? 800 : 600, color: 'var(--color-text, #0F172A)' }}>
+                    {/* Row 1: Title + Action Icons */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0 }}>
+                        <span style={{
+                          fontFamily: 'var(--font-editorial-serif, serif)',
+                          fontSize: '0.88rem',
+                          fontWeight: isSelected ? 800 : 700,
+                          color: 'var(--color-primary, #0F172A)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
                           {row.category}
                         </span>
                         {row.expenseCount > 0 && (
-                          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', backgroundColor: 'var(--color-bg-pane, #F8FAFC)', padding: '0.1rem 0.35rem', borderRadius: '2px', border: '1px solid var(--color-border, #E2E8F0)' }}>
-                            {row.expenseCount} purchases
+                          <span style={{
+                            fontFamily: 'var(--font-technical-mono, monospace)',
+                            fontSize: '0.55rem',
+                            color: 'var(--color-muted, #64748B)',
+                            backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                            padding: '0.05rem 0.3rem',
+                            borderRadius: '2px',
+                            border: '1px solid var(--color-border, #E2E8F0)',
+                            flexShrink: 0,
+                          }}>
+                            {row.expenseCount} {row.expenseCount === 1 ? 'item' : 'items'}
                           </span>
                         )}
                       </div>
-                    </td>
 
-                    {/* Projected (Est.) - Right-Aligned Monospace */}
-                    <td style={{ padding: '0.55rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
-                      {formatCurrency(row.projected, currency)}
-                    </td>
-
-                    {/* Actual Outlay - Right-Aligned Monospace */}
-                    <td style={{ padding: '0.55rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>
-                      {formatCurrency(row.actual, currency)}
-                    </td>
-
-                    {/* Variance - Right-Aligned Monospace */}
-                    <td style={{
-                      padding: '0.55rem 0.75rem',
-                      textAlign: 'right',
-                      fontFamily: 'var(--font-technical-mono, monospace)',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: row.isOver ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
-                    }}>
-                      {row.isOver ? '-' : '+'}{formatCurrency(Math.abs(row.variance), currency)}
-                    </td>
-
-                    {/* Due Date */}
-                    <td style={{ padding: '0.55rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: row.isOverdue ? '#B91C1C' : 'var(--color-muted, #64748B)', fontWeight: row.isOverdue ? 700 : 400 }}>
-                      {row.dueDate || '—'}
-                    </td>
-
-                    {/* Status Badge */}
-                    <td style={{ padding: '0.55rem 0.75rem' }}>
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-technical-mono, monospace)',
-                          fontSize: '0.6rem',
-                          fontWeight: 700,
-                          padding: '0.15rem 0.45rem',
-                          borderRadius: '2px',
-                          display: 'inline-block',
-                          backgroundColor: row.isOver ? '#FEE2E2' : (row.isOverdue ? '#FEF3C7' : 'var(--color-bg-pane, #F8FAFC)'),
-                          color: row.isOver ? '#991B1B' : (row.isOverdue ? '#92400E' : 'var(--color-text, #0F172A)'),
-                          border: `1px solid ${row.isOver ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
-                        }}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td style={{ padding: '0.55rem 0.75rem', textAlign: 'center' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }} onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={() => {
@@ -996,14 +910,13 @@ export default function BudgetLedgerManager({
                             background: 'none',
                             border: '1px solid var(--color-border, #E2E8F0)',
                             borderRadius: '2px',
-                            padding: '0.2rem',
+                            padding: '0.15rem 0.25rem',
                             cursor: 'pointer',
                             color: 'var(--color-text, #0F172A)',
                           }}
                         >
-                          <Edit2 size={11} />
+                          <Edit2 size={10} />
                         </button>
-
                         <button
                           type="button"
                           onClick={() => startAddExpense(row.category)}
@@ -1012,170 +925,296 @@ export default function BudgetLedgerManager({
                             background: 'none',
                             border: '1px solid var(--color-border, #E2E8F0)',
                             borderRadius: '2px',
-                            padding: '0.2rem',
+                            padding: '0.15rem 0.25rem',
                             cursor: 'pointer',
-                            color: 'var(--color-text, #0F172A)',
+                            color: 'var(--color-primary, #0F172A)',
                           }}
                         >
-                          <Plus size={11} />
+                          <Plus size={10} />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+
+                    {/* Row 2: Projected vs Outlay vs Variance */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span style={{ color: 'var(--color-muted, #64748B)' }}>Est:</span>
+                        <span style={{ fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
+                          {formatCurrency(row.projected, currency)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span style={{ color: 'var(--color-muted, #64748B)' }}>Spent:</span>
+                        <span style={{ fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>
+                          {formatCurrency(row.actual, currency)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <span style={{ fontWeight: 700, color: row.isOver ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
+                          {row.isOver ? '-' : '+'}{formatCurrency(Math.abs(row.variance), currency)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Status Badge + Due Date */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-technical-mono, monospace)',
+                          fontSize: '0.55rem',
+                          fontWeight: 700,
+                          padding: '0.1rem 0.35rem',
+                          borderRadius: '2px',
+                          display: 'inline-block',
+                          backgroundColor: row.isOver ? '#FEE2E2' : (row.isOverdue ? '#FEF3C7' : 'var(--color-bg-pane, #F8FAFC)'),
+                          color: row.isOver ? '#991B1B' : (row.isOverdue ? '#92400E' : 'var(--color-text, #0F172A)'),
+                          border: `1px solid ${row.isOver ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {row.status}
+                      </span>
+                      {row.dueDate && (
+                        <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: row.isOverdue ? '#B91C1C' : 'var(--color-muted, #64748B)', fontWeight: row.isOverdue ? 700 : 400 }}>
+                          Due: {row.dueDate}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 );
               })
             )}
-          </tbody>
-
-          {/* Ledger Totals Footer Row */}
-          <tfoot>
-            <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderTop: '2px solid var(--color-border, #E2E8F0)' }}>
-              <td style={{ padding: '0.65rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                TOTALS
-              </td>
-              <td style={{ padding: '0.65rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.72rem', fontWeight: 800 }}>
-                {activeCategoryRows.length} ACTIVE CATEGORIES
-              </td>
-              <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>
-                {formatCurrency(totalEstimate, currency)}
-              </td>
-              <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
-                {formatCurrency(totalActual, currency)}
-              </td>
-              <td style={{
-                padding: '0.65rem 0.75rem',
-                textAlign: 'right',
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.8rem',
-                fontWeight: 800,
-                color: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)',
-              }}>
-                {isOverallOverBudget ? '-' : '+'}{formatCurrency(Math.abs(overallHeadroom), currency)}
-              </td>
-              <td colSpan={3} />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      {/* 5. Detail Itemized Purchases Ledger (Filtered by Selected Category) */}
-      <div
-        className="itemized-expenses-section"
-        style={{
-          backgroundColor: 'var(--color-surface, #FFFFFF)',
-          border: '1px solid var(--color-border, #E2E8F0)',
-          borderRadius: '3px',
-          padding: '0.85rem 1rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-              ITEMIZED PURCHASES & EXPENSES {selectedCategoryId ? `// ${selectedCategoryId.toUpperCase()}` : '// ALL LOGGED PURCHASES'}
-            </span>
-            <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-              {itemizedExpensesForSelected.length} logged purchase items • Sheet tab: Expenses!A2:G{itemizedExpensesForSelected.length + 2}
-            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => startAddExpense(selectedCategoryId)}
+          {/* Rail Footer Totals */}
+          <div
             style={{
-              display: 'inline-flex',
+              paddingTop: '0.5rem',
+              borderTop: '1px solid var(--color-border, #E2E8F0)',
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.3rem 0.65rem',
               fontFamily: 'var(--font-technical-mono, monospace)',
               fontSize: '0.68rem',
-              fontWeight: 700,
-              backgroundColor: 'var(--color-primary, #0F172A)',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '2px',
-              cursor: 'pointer',
             }}
           >
-            <Plus size={12} />
-            <span>RECORD PURCHASE</span>
-          </button>
+            <span style={{ fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>TOTAL OUTLAY:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+                {formatCurrency(totalActual, currency)}
+              </span>
+              <span style={{ color: isOverallOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)', fontWeight: 700 }}>
+                ({isOverallOverBudget ? '-' : '+'}{formatCurrency(Math.abs(overallHeadroom), currency)})
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Itemized Table */}
-        <div style={{ width: '100%', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
-                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '85px' }}>DATE</th>
-                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>DESCRIPTION</th>
-                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>CATEGORY</th>
-                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '110px' }}>AMOUNT PAID</th>
-                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '110px' }}>TOTAL COST</th>
-                <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textAlign: 'center', width: '65px' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {itemizedExpensesForSelected.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ padding: '1.5rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
-                    No purchase items logged yet for this selection. Click &quot;RECORD PURCHASE&quot; to log vendor receipts.
-                  </td>
-                </tr>
-              ) : (
-                itemizedExpensesForSelected.map((exp, idx) => {
-                  const amt = exp.actualCost ?? exp.amount ?? exp.amountPaid ?? 0;
-                  const paid = exp.amountPaid ?? amt;
-                  return (
-                    <tr key={exp.itemId || idx} style={{ borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
-                      <td style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
-                        {exp.purchaseDate || '—'}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.65rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
-                        {exp.description}
-                        {exp.notes && (
-                          <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)', fontWeight: 400 }}>
-                            {exp.notes}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
-                        {exp.category}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
-                        {formatCurrency(paid, currency)}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>
-                        {formatCurrency(amt, currency)}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.65rem', textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <button
-                            type="button"
-                            onClick={() => startEditExpense(exp)}
-                            title="Edit purchase"
-                            style={{ background: 'none', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', padding: '0.2rem', cursor: 'pointer', color: 'var(--color-text, #0F172A)' }}
-                          >
-                            <Edit2 size={11} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setExpenseToDelete(exp)}
-                            title="Delete purchase"
-                            style={{ background: 'none', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', padding: '0.2rem', cursor: 'pointer', color: '#B91C1C' }}
-                          >
-                            <Trash2 size={11} />
-                          </button>
-                        </div>
+        {/* RIGHT COLUMN: Itemized Purchases Ledger (col-span-12 lg:col-span-7) */}
+        <div
+          className="budget-detail-ledger col-span-12 lg:col-span-7"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            position: 'sticky',
+            top: '0.75rem',
+            minWidth: 0,
+          }}
+        >
+          {/* Detail Header & Category Snapshot Card */}
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+                  ITEMIZED PURCHASES &amp; EXPENSES {selectedCategoryId ? `// ${selectedCategoryId.toUpperCase()}` : '// ALL LOGGED PURCHASES'}
+                </span>
+                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
+                  {itemizedExpensesForSelected.length} logged purchase items • Synced to Google Sheets
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => startAddExpense(selectedCategoryId)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.35rem 0.75rem',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  backgroundColor: 'var(--color-primary, #0F172A)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                }}
+              >
+                <Plus size={13} />
+                <span>RECORD PURCHASE</span>
+              </button>
+            </div>
+
+            {/* If a category is selected, render a compact snapshot strip */}
+            {selectedCatData && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '0.45rem 1rem',
+                  padding: '0.45rem 0.65rem',
+                  backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                  border: '1px solid var(--color-border, #E2E8F0)',
+                  borderRadius: '2px',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.68rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                  <span style={{ color: 'var(--color-muted, #64748B)' }}>BUDGET:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
+                    {formatCurrency(selectedCatData.projected, currency)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                  <span style={{ color: 'var(--color-muted, #64748B)' }}>SPENT:</span>
+                  <span style={{ fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+                    {formatCurrency(selectedCatData.actual, currency)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                  <span style={{ color: 'var(--color-muted, #64748B)' }}>REMAINING:</span>
+                  <span style={{ fontWeight: 800, color: selectedCatData.isOver ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
+                    {selectedCatData.isOver ? '-' : '+'}{formatCurrency(Math.abs(selectedCatData.variance), currency)}
+                  </span>
+                </div>
+                {selectedCatData.dueDate && (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                    <span style={{ color: 'var(--color-muted, #64748B)' }}>DUE:</span>
+                    <span style={{ fontWeight: 600, color: selectedCatData.isOverdue ? '#B91C1C' : 'var(--color-text, #0F172A)' }}>
+                      {selectedCatData.dueDate}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId('')}
+                  style={{
+                    color: 'var(--color-primary, #0F172A)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    fontSize: '0.62rem',
+                    marginLeft: 'auto',
+                  }}
+                >
+                  SHOW ALL
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Itemized Purchases Table */}
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #FFFFFF)',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              borderRadius: '3px',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: 'var(--color-bg-pane, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
+                    <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', width: '85px' }}>DATE</th>
+                    <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>DESCRIPTION</th>
+                    {!selectedCategoryId && (
+                      <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', width: '110px' }}>CATEGORY</th>
+                    )}
+                    <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '100px' }}>AMOUNT PAID</th>
+                    <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '100px' }}>TOTAL COST</th>
+                    <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textAlign: 'center', width: '65px' }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itemizedExpensesForSelected.length === 0 ? (
+                    <tr>
+                      <td colSpan={selectedCategoryId ? 5 : 6} style={{ padding: '2rem 1rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
+                        No purchase items logged yet for this selection. Click &quot;RECORD PURCHASE&quot; to log vendor receipts.
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ) : (
+                    itemizedExpensesForSelected.map((exp, idx) => {
+                      const amt = exp.actualCost ?? exp.amount ?? exp.amountPaid ?? 0;
+                      const paid = exp.amountPaid ?? amt;
+                      return (
+                        <tr key={exp.itemId || idx} style={{ borderBottom: '1px solid var(--color-border, #E2E8F0)' }}>
+                          <td style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                            {exp.purchaseDate || '—'}
+                          </td>
+                          <td style={{ padding: '0.5rem 0.65rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
+                            {exp.description}
+                            {exp.notes && (
+                              <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)', fontWeight: 400 }}>
+                                {exp.notes}
+                              </span>
+                            )}
+                          </td>
+                          {!selectedCategoryId && (
+                            <td style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                              {exp.category}
+                            </td>
+                          )}
+                          <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
+                            {formatCurrency(paid, currency)}
+                          </td>
+                          <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)' }}>
+                            {formatCurrency(amt, currency)}
+                          </td>
+                          <td style={{ padding: '0.5rem 0.65rem', textAlign: 'center' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <button
+                                type="button"
+                                onClick={() => startEditExpense(exp)}
+                                title="Edit purchase"
+                                style={{ background: 'none', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', padding: '0.2rem', cursor: 'pointer', color: 'var(--color-text, #0F172A)' }}
+                              >
+                                <Edit2 size={11} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setExpenseToDelete(exp)}
+                                title="Delete purchase"
+                                style={{ background: 'none', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', padding: '0.2rem', cursor: 'pointer', color: '#B91C1C' }}
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1484,6 +1523,35 @@ export default function BudgetLedgerManager({
 
       {/* Scoped Responsive CSS */}
       <style>{`
+        @media (min-width: 1024px) {
+          .budget-desktop-split-view {
+            display: grid !important;
+            grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+            gap: 1.25rem !important;
+            align-items: start !important;
+          }
+          .budget-master-rail {
+            grid-column: span 5 / span 5 !important;
+          }
+          .budget-detail-ledger {
+            grid-column: span 7 / span 7 !important;
+          }
+        }
+        @media (max-width: 1023px) {
+          .budget-desktop-split-view {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1rem !important;
+          }
+          .budget-master-rail,
+          .budget-detail-ledger {
+            width: 100% !important;
+            position: static !important;
+          }
+          .budget-master-rail-list {
+            max-height: 400px !important;
+          }
+        }
         @media (max-width: 768px) {
           .budget-metric-strip {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -1492,6 +1560,16 @@ export default function BudgetLedgerManager({
           .budget-add-btn {
             display: none !important;
           }
+        }
+        .budget-master-rail-list::-webkit-scrollbar {
+          width: 4px;
+        }
+        .budget-master-rail-list::-webkit-scrollbar-track {
+          background: var(--color-bg-pane, #f8fafc);
+        }
+        .budget-master-rail-list::-webkit-scrollbar-thumb {
+          background: var(--color-border, #cbd5e1);
+          border-radius: 2px;
         }
       `}</style>
     </div>

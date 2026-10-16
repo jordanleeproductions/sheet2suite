@@ -12,8 +12,8 @@ export interface VowMastheadProps {
 }
 
 const TAB_TITLES: Record<string, string> = {
-  home: 'EXECUTIVE SUMMARY',
-  metrics: 'EXECUTIVE SUMMARY',
+  home: 'WEDDING OVERVIEW',
+  metrics: 'WEDDING OVERVIEW',
   guests: 'GUEST REGISTRY & CATERING',
   menu: 'CATERING & MENU SETUP',
   tables: 'SEATING & FLOORPLAN PLANNER',
@@ -92,7 +92,7 @@ export default function VowMasthead({
 
         {/* Right: Technical Monospace Relative Date / Countdown Indicator */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          {weddingDate && (
+          {weddingDate && !isMobile && (
             <span
               style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
@@ -131,41 +131,14 @@ export default function VowMasthead({
       className="vow-masthead-centered"
       style={{
         textAlign: 'center',
-        paddingTop: isMobile ? '0.75rem' : '1.25rem',
-        paddingBottom: isMobile ? '0.75rem' : '1.25rem',
-        marginBottom: '1.5rem',
+        paddingTop: isMobile ? '0.65rem' : '1.25rem',
+        paddingBottom: isMobile ? '0.65rem' : '1.25rem',
+        marginBottom: '1.25rem',
         borderBottom: '1px solid var(--color-border, #E2E8F0)',
         position: 'relative',
       }}
     >
-      {/* Subtle Top Metadata Dateline */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.75rem',
-          marginBottom: '0.35rem',
-          fontFamily: 'var(--font-technical-mono, monospace)',
-          fontSize: '0.65rem',
-          fontWeight: 600,
-          color: 'var(--color-muted, #64748B)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}
-      >
-        <span>OFFICIAL REGISTRY</span>
-        <span>•</span>
-        <span>{weddingDate || 'DATE TBD'}</span>
-        {locationDetails && (
-          <>
-            <span>•</span>
-            <span>{locationDetails}</span>
-          </>
-        )}
-      </div>
-
-      {/* Main Masthead Title in Editorial Serif */}
+      {/* 1. Main Masthead Title in Editorial Serif */}
       <h1
         className="wedding-masthead-title"
         style={{
@@ -181,10 +154,38 @@ export default function VowMasthead({
         {displayTitle}
       </h1>
 
-      {/* Relative Date / Countdown Indicator in Monospace */}
+      {/* 2. Official Registry, date and location label (Desktop only - under OUR WEDDING, hidden on mobile) */}
+      <div
+        className="wedding-masthead-dateline"
+        style={{
+          display: isMobile ? 'none' : 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.65rem',
+          marginTop: '0.45rem',
+          fontFamily: 'var(--font-technical-mono, monospace)',
+          fontSize: '0.68rem',
+          fontWeight: 600,
+          color: 'var(--color-muted, #64748B)',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+        }}
+      >
+        <span>OFFICIAL REGISTRY</span>
+        <span>•</span>
+        <span>{weddingDate || 'DATE TBD'}</span>
+        {locationDetails && (
+          <>
+            <span>•</span>
+            <span>{locationDetails}</span>
+          </>
+        )}
+      </div>
+
+      {/* 3. Relative Date / Countdown Indicator in Monospace */}
       <div
         style={{
-          marginTop: '0.5rem',
+          marginTop: isMobile ? '0.4rem' : '0.55rem',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -195,10 +196,10 @@ export default function VowMasthead({
           className="ceremonial-milestone"
           style={{
             fontFamily: 'var(--font-technical-mono, monospace)',
-            fontSize: '0.72rem',
+            fontSize: isMobile ? '0.65rem' : '0.72rem',
             fontWeight: 700,
             letterSpacing: '0.08em',
-            padding: '0.2rem 0.6rem',
+            padding: '0.15rem 0.55rem',
             borderRadius: '2px',
             backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
             border: '1px solid var(--color-border, #E2E8F0)',
@@ -208,6 +209,14 @@ export default function VowMasthead({
           {countdown}
         </span>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .wedding-masthead-dateline {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

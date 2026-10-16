@@ -6,7 +6,6 @@ import {
   AlertCircle, 
   Clock, 
   CheckCircle2, 
-  XCircle, 
   ArrowUpRight, 
   Users, 
   DollarSign, 
@@ -17,7 +16,6 @@ import {
   Armchair,
   Sliders,
   ExternalLink,
-  ChevronRight,
   Sparkles
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
@@ -127,18 +125,12 @@ export default function DashboardMetrics({
   // Music Calculations
   const allMusic = music || [];
   const pendingRequestsCount = allMusic.filter(s => s.approvalStatus === 'Pending Approval').length;
-  const approvedSongsCount = allMusic.filter(s => s.approvalStatus === 'Approved' || (!s.approvalStatus && (!s.requestedBy || s.requestedBy === 'Admin'))).length;
-
-  // Photography Calculations
-  const allPhotos = photos || [];
-  const capturedPhotosCount = allPhotos.filter(p => p.status === 'Captured').length;
-  const pendingPhotosCount = allPhotos.filter(p => p.status === 'Pending' || !p.status).length;
 
   // Planning Status Health Indicator
   const hasExceptions = isOverBudget || pendingCount > 0 || toDoCount > 5 || unassignedAttending > 0 || pendingRequestsCount > 0;
 
   return (
-    <div className="editorial-overview-briefing" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div className="editorial-overview-briefing" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
       {/* Onboarding Guide Banner (Cleanly Dismissible) */}
       {showWelcomeGuide && onDismissWelcomeGuide && (
         <WelcomeGuideCard
@@ -155,7 +147,7 @@ export default function DashboardMetrics({
         />
       )}
 
-      {/* Top Single-Line "Planning Status" Summary Strip */}
+      {/* Top Single-Line "Planning Progress" Summary Strip */}
       <div
         className="planning-status-strip"
         style={{
@@ -168,6 +160,8 @@ export default function DashboardMetrics({
           backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
           border: '1px solid var(--color-border, #E2E8F0)',
           borderRadius: '2px',
+          boxSizing: 'border-box',
+          width: '100%',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
@@ -192,7 +186,7 @@ export default function DashboardMetrics({
                 textTransform: 'uppercase',
               }}
             >
-              PLANNING STATUS:
+              PLANNING PROGRESS:
             </span>
           </div>
 
@@ -219,7 +213,7 @@ export default function DashboardMetrics({
               <strong style={{ color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
                 {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
               </strong>{' '}
-              {isOverBudget ? 'OVER TARGET CAP' : 'BUDGET CUSHION'}
+              {isOverBudget ? 'OVER TARGET' : 'REMAINING BUDGET'}
             </span>
             {attendingCount > 0 && (
               <>
@@ -241,12 +235,12 @@ export default function DashboardMetrics({
               letterSpacing: '0.04em',
             }}
           >
-            LIVE SYNC: 100% SPREADSHEET FIDELITY
+            AUTO-SAVED TO YOUR GOOGLE SHEET
           </span>
         </div>
       </div>
 
-      {/* Primary Wide Attention Panel: Actionable Deltas & Exceptions */}
+      {/* Primary Wide Attention Panel: Wedding Overview & Action Items */}
       <div
         className="primary-attention-panel"
         style={{
@@ -257,6 +251,9 @@ export default function DashboardMetrics({
           display: 'flex',
           flexDirection: 'column',
           gap: '0.75rem',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -264,39 +261,41 @@ export default function DashboardMetrics({
             <span
               style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.68rem',
+                fontSize: '0.7rem',
                 fontWeight: 800,
-                letterSpacing: '0.08em',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase',
                 color: 'var(--color-primary, #0F172A)',
               }}
             >
-              EXECUTIVE BRIEFING // ACTIONABLE DELTAS & EXCEPTIONS
+              WEDDING OVERVIEW &amp; THINGS TO DO
             </span>
           </div>
 
           <span
             style={{
               fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.6rem',
+              fontSize: '0.62rem',
               color: 'var(--color-muted, #64748B)',
               textTransform: 'uppercase',
             }}
           >
-            SELECT ANY DELTA TO OPEN DRILL-DOWN LEDGER
+            TAP ANY ITEM TO VIEW DETAILS
           </span>
         </div>
 
-        {/* Actionable Deltas Horizontal Row / Grid (Condenses to 2-column on mobile) */}
+        {/* Actionable Items Grid (Vertically stacked text to prevent mobile card bleeding) */}
         <div
           className="attention-deltas-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
             gap: '0.65rem',
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
-          {/* Delta 1: Pending RSVPs */}
+          {/* Card 1: Guests Awaiting RSVP */}
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('guests', 'Pending')}
@@ -305,32 +304,35 @@ export default function DashboardMetrics({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '0.35rem',
-              padding: '0.6rem 0.75rem',
+              padding: '0.55rem 0.65rem',
               backgroundColor: pendingCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
-              border: `1px solid ${pendingCount > 0 ? 'var(--color-border, #E2E8F0)' : 'var(--color-border, #E2E8F0)'}`,
+              border: '1px solid var(--color-border, #E2E8F0)',
               borderRadius: '2px',
               cursor: onNavigateTab ? 'pointer' : 'default',
               textAlign: 'left',
-              transition: 'all 0.1s ease',
+              minWidth: 0,
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                PENDING RSVPS
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                AWAITING RSVP
               </span>
-              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: pendingCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
+              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: pendingCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
                 {pendingCount}
               </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                awaiting reply
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                guests pending
               </span>
             </div>
           </button>
 
-          {/* Delta 2: Declined RSVPs */}
+          {/* Card 2: Declined RSVPs */}
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('guests', 'Declined')}
@@ -339,31 +341,35 @@ export default function DashboardMetrics({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '0.35rem',
-              padding: '0.6rem 0.75rem',
+              padding: '0.55rem 0.65rem',
               backgroundColor: 'transparent',
               border: '1px solid var(--color-border, #E2E8F0)',
               borderRadius: '2px',
               cursor: onNavigateTab ? 'pointer' : 'default',
               textAlign: 'left',
+              minWidth: 0,
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                DECLINED RSVPS
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                DECLINED
               </span>
-              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: declinedCount > 0 ? 'var(--color-muted, #64748B)' : 'var(--color-primary, #0F172A)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
+              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: declinedCount > 0 ? 'var(--color-muted, #64748B)' : 'var(--color-primary, #0F172A)' }}>
                 {declinedCount}
               </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                invitations declined
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                unable to attend
               </span>
             </div>
           </button>
 
-          {/* Delta 3: Pending Tasks */}
+          {/* Card 3: Open Tasks */}
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('tasks', 'To Do')}
@@ -372,31 +378,35 @@ export default function DashboardMetrics({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '0.35rem',
-              padding: '0.6rem 0.75rem',
+              padding: '0.55rem 0.65rem',
               backgroundColor: toDoCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
               border: '1px solid var(--color-border, #E2E8F0)',
               borderRadius: '2px',
               cursor: onNavigateTab ? 'pointer' : 'default',
               textAlign: 'left',
+              minWidth: 0,
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                OPEN TASKS
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                TO-DO TASKS
               </span>
-              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: toDoCount > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
+              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: toDoCount > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)' }}>
                 {toDoCount}
               </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                to do ({inProgressCount} active)
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {inProgressCount} in progress
               </span>
             </div>
           </button>
 
-          {/* Delta 4: Budget Variance / Remaining Balance */}
+          {/* Card 4: Remaining Budget */}
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('budget')}
@@ -405,31 +415,35 @@ export default function DashboardMetrics({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '0.35rem',
-              padding: '0.6rem 0.75rem',
+              padding: '0.55rem 0.65rem',
               backgroundColor: isOverBudget ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
               border: `1px solid ${isOverBudget ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
               borderRadius: '2px',
               cursor: onNavigateTab ? 'pointer' : 'default',
               textAlign: 'left',
+              minWidth: 0,
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                BUDGET VARIANCE
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                REMAINING BUDGET
               </span>
-              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
+              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
               </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-muted, #64748B)' }}>
-                {isOverBudget ? 'over cap' : 'cushion'}
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {isOverBudget ? 'over target' : 'under budget'}
               </span>
             </div>
           </button>
 
-          {/* Delta 5: Unseated Attending Guests */}
+          {/* Card 5: Unseated Guests */}
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('tables')}
@@ -438,31 +452,35 @@ export default function DashboardMetrics({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '0.35rem',
-              padding: '0.6rem 0.75rem',
+              padding: '0.55rem 0.65rem',
               backgroundColor: unassignedAttending > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
               border: '1px solid var(--color-border, #E2E8F0)',
               borderRadius: '2px',
               cursor: onNavigateTab ? 'pointer' : 'default',
               textAlign: 'left',
+              minWidth: 0,
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
-                UNSEATED GUESTS
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                NEED SEATS
               </span>
-              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: unassignedAttending > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
+              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: unassignedAttending > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
                 {unassignedAttending}
               </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                need tables
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                unassigned guests
               </span>
             </div>
           </button>
 
-          {/* Delta 6: Pending Song Requests */}
+          {/* Card 6: Pending Song Requests */}
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('music', 'Pending')}
@@ -471,33 +489,37 @@ export default function DashboardMetrics({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '0.35rem',
-              padding: '0.6rem 0.75rem',
+              padding: '0.55rem 0.65rem',
               backgroundColor: pendingRequestsCount > 0 ? 'var(--color-bg-pane, #F8FAFC)' : 'transparent',
               border: '1px solid var(--color-border, #E2E8F0)',
               borderRadius: '2px',
               cursor: onNavigateTab ? 'pointer' : 'default',
               textAlign: 'left',
+              minWidth: 0,
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 SONG REQUESTS
               </span>
-              <ArrowUpRight size={12} style={{ color: 'var(--color-muted, #64748B)' }} />
+              <ArrowUpRight size={11} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.25rem', fontWeight: 800, color: pendingRequestsCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.05rem', minWidth: 0, width: '100%' }}>
+              <span className="delta-metric-val" style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, lineHeight: 1.1, color: pendingRequestsCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-primary, #0F172A)' }}>
                 {pendingRequestsCount}
               </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', color: 'var(--color-muted, #64748B)' }}>
-                to review
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                pending review
               </span>
             </div>
           </button>
         </div>
       </div>
 
-      {/* Horizontal Financial Allocation Strip (No Ring/Pie Charts) */}
+      {/* Horizontal Financial Allocation Strip (No Cell References) */}
       {modules.budget && (
         <div
           className="financial-allocation-strip"
@@ -509,6 +531,8 @@ export default function DashboardMetrics({
             display: 'flex',
             flexDirection: 'column',
             gap: '0.75rem',
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -519,12 +543,12 @@ export default function DashboardMetrics({
                   fontFamily: 'var(--font-technical-mono, monospace)',
                   fontSize: '0.68rem',
                   fontWeight: 800,
-                  letterSpacing: '0.08em',
+                  letterSpacing: '0.06em',
                   textTransform: 'uppercase',
                   color: 'var(--color-primary, #0F172A)',
                 }}
               >
-                FINANCIAL ALLOCATION STRIP // CELL SETTINGS!B2:B3
+                BUDGET &amp; SPENDING ALLOCATION
               </span>
             </div>
 
@@ -545,7 +569,7 @@ export default function DashboardMetrics({
                 textDecoration: 'underline',
               }}
             >
-              <span>OPEN FULL FINANCIAL LEDGER</span>
+              <span>OPEN FINANCIALS</span>
               <ArrowUpRight size={11} />
             </button>
           </div>
@@ -566,7 +590,7 @@ export default function DashboardMetrics({
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                TARGET CAP:
+                TARGET BUDGET:
               </span>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
                 {formatCurrency(effectiveTotalBudget, currency)}
@@ -575,7 +599,7 @@ export default function DashboardMetrics({
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                ACTUAL OUTLAY:
+                ACTUAL SPENT:
               </span>
               <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
                 {formatCurrency(actualCost, currency)}
@@ -605,7 +629,7 @@ export default function DashboardMetrics({
             <div
               style={{
                 position: 'relative',
-                height: '10px',
+                height: '8px',
                 backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
                 border: '1px solid var(--color-border, #E2E8F0)',
                 borderRadius: '2px',
@@ -633,13 +657,15 @@ export default function DashboardMetrics({
         </div>
       )}
 
-      {/* Structured Operational Briefings: Guests & Tasks (Side-by-side or stacked) */}
+      {/* Operational Briefings: Guests & Tasks */}
       <div
         className="operational-briefings-container"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '1.25rem',
+          width: '100%',
+          boxSizing: 'border-box',
         }}
       >
         {/* Guest Registry Briefing Strip */}
@@ -653,13 +679,15 @@ export default function DashboardMetrics({
               display: 'flex',
               flexDirection: 'column',
               gap: '0.65rem',
+              boxSizing: 'border-box',
+              minWidth: 0,
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Users size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
                 <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  GUEST REGISTRY & RSVP BREAKDOWN
+                  GUEST REGISTRY &amp; RSVP
                 </span>
               </div>
               <button
@@ -679,7 +707,6 @@ export default function DashboardMetrics({
               </button>
             </div>
 
-            {/* Structured Metric Row */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
@@ -708,7 +735,6 @@ export default function DashboardMetrics({
               </div>
             </div>
 
-            {/* Ratio rule */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
               <div style={{ height: '4px', display: 'flex', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
                 <div style={{ width: `${totalGuestsInvited > 0 ? (attendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-green, #10B981)' }} />
@@ -734,13 +760,15 @@ export default function DashboardMetrics({
               display: 'flex',
               flexDirection: 'column',
               gap: '0.65rem',
+              boxSizing: 'border-box',
+              minWidth: 0,
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <ListTodo size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
                 <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  PLANNING MILESTONES & KANBAN
+                  PLANNING MILESTONES &amp; TASKS
                 </span>
               </div>
               <button
@@ -760,7 +788,6 @@ export default function DashboardMetrics({
               </button>
             </div>
 
-            {/* Structured Metric Row */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -785,7 +812,6 @@ export default function DashboardMetrics({
               </div>
             </div>
 
-            {/* Progress rule */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
               <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
                 <div style={{ height: '100%', width: `${taskPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
@@ -807,12 +833,32 @@ export default function DashboardMetrics({
             align-items: flex-start !important;
             gap: 0.4rem !important;
           }
+          .primary-attention-panel {
+            padding: 0.65rem 0.65rem !important;
+          }
           .attention-deltas-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 0.5rem !important;
+            gap: 0.4rem !important;
+            width: 100% !important;
           }
           .attention-deltas-grid button {
-            padding: 0.5rem !important;
+            padding: 0.45rem 0.5rem !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+          .delta-metric-val {
+            font-size: 1.05rem !important;
+          }
+          .operational-briefings-container {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .attention-deltas-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .delta-metric-val {
+            font-size: 1.15rem !important;
           }
         }
       `}</style>

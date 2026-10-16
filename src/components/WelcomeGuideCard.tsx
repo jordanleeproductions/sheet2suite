@@ -88,7 +88,7 @@ export default function WelcomeGuideCard({
             marginBottom: '0.35rem',
           }}>
             <Sparkles size={11} style={{ color: 'var(--color-primary, #0F172A)' }} />
-            <span>EDITORIAL UTILITY • ONBOARDING BRIEFING</span>
+            <span>GETTING STARTED GUIDE</span>
           </div>
 
           <h2 style={{
@@ -134,7 +134,7 @@ export default function WelcomeGuideCard({
             flexShrink: 0,
             transition: 'background-color 0.1s ease',
           }}
-          title="Dismiss getting started briefing"
+          title="Dismiss getting started guide"
         >
           <X size={13} />
           <span>DISMISS GUIDE</span>
