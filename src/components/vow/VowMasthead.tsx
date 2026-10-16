@@ -11,20 +11,6 @@ export interface VowMastheadProps {
   isMobile?: boolean;
 }
 
-const TAB_TITLES: Record<string, string> = {
-  home: 'OVERVIEW',
-  metrics: 'OVERVIEW',
-  guests: 'GUESTS & RSVPS',
-  menu: 'CATERING & MENU',
-  tables: 'SEATING PLANNER',
-  budget: 'BUDGET & EXPENSES',
-  schedule: 'DAY-OF TIMELINE',
-  vendors: 'VENDORS',
-  tasks: 'TASKS & CHECKLIST',
-  music: 'MUSIC & PLAYLISTS',
-  photos: 'PHOTO SHOT LIST',
-  thanks: 'GIFTS & THANK YOUS',
-};
 
 export default function VowMasthead({
   weddingName,
@@ -36,93 +22,10 @@ export default function VowMasthead({
 }: VowMastheadProps) {
   const isDataDense = activeTab !== 'home' && activeTab !== 'metrics';
   const displayTitle = (weddingName && weddingName.trim()) ? weddingName.trim().toUpperCase() : 'OUR WEDDING';
-  const activeTabTitle = TAB_TITLES[activeTab] || activeTab.toUpperCase();
 
-  // Compressed Single-Line Horizontal Masthead for Data-Dense Screens
+  // Suppress duplicate subheader bar across desktop and mobile on data views
   if (isDataDense) {
-    return (
-      <div
-        className="vow-masthead-compressed"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.5rem 1rem',
-          padding: isMobile ? '0.35rem 0.65rem' : '0.45rem 0.85rem',
-          backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-          borderBottom: '1px solid var(--color-border, #E2E8F0)',
-          borderTop: '1px solid var(--color-border, #E2E8F0)',
-          marginBottom: '1rem',
-          borderRadius: '2px',
-        }}
-      >
-        {/* Left: Editorial Title + Tab Identifier */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
-          <span
-            style={{
-              fontFamily: 'var(--font-editorial-serif, serif)',
-              fontSize: isMobile ? '0.85rem' : '0.98rem',
-              fontWeight: 700,
-              color: 'var(--color-primary, #0F172A)',
-              letterSpacing: '-0.02em',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {displayTitle}
-          </span>
-          <span style={{ color: 'var(--color-border, #CBD5E1)', fontSize: '0.75rem' }}>/</span>
-          <span
-            style={{
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: isMobile ? '0.62rem' : '0.7rem',
-              fontWeight: 600,
-              color: 'var(--color-muted, #64748B)',
-              letterSpacing: '0.04em',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {activeTabTitle}
-          </span>
-        </div>
-
-        {/* Right: Technical Monospace Relative Date / Countdown Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          {weddingDate && !isMobile && (
-            <span
-              style={{
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.65rem',
-                color: 'var(--color-muted, #64748B)',
-                letterSpacing: '0.02em',
-              }}
-            >
-              {weddingDate}
-            </span>
-          )}
-          <span
-            className="ceremonial-milestone"
-            style={{
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.65rem',
-              fontWeight: 700,
-              letterSpacing: '0.06em',
-              padding: '0.15rem 0.45rem',
-              borderRadius: '2px',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              backgroundColor: 'var(--color-surface, #FFFFFF)',
-              color: 'var(--color-text, #0F172A)',
-            }}
-          >
-            {countdown}
-          </span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Centered Editorial Masthead Mode for Executive Summary / Overview

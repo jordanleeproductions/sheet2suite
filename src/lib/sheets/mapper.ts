@@ -461,19 +461,40 @@ export const giftMapper = {
   fromRow(headers: string[], row: any[]): GiftItem {
     const obj = mapRowToObject<GiftItem>(headers, row, GIFT_HEADERS);
     const rawThanked = String(obj.thankYouSent || '').toLowerCase();
+
+    let description = obj.description !== undefined && obj.description !== null ? String(obj.description).trim() : '';
+    const parsedAmount = parseCleanNumber(obj.amount);
+
+    // If Google Sheets auto-coerced a currency description (e.g. "$200") into a raw numeric value,
+    // or if the description was stored as a bare number matching the gift's amount or a cash fund:
+    if (typeof obj.description === 'number' && !isNaN(obj.description)) {
+      description = `$${obj.description}`;
+    } else if (/^\d+(\.\d+)?$/.test(description) && (parsedAmount === Number(description) || (obj.category && String(obj.category).toLowerCase().includes('cash')))) {
+      description = `$${description}`;
+    } else if (description.startsWith("'")) {
+      description = description.substring(1);
+    }
+
     return {
       giftId: String(obj.giftId || ''),
-      description: String(obj.description || ''),
+      description,
       giverName: String(obj.giverName || ''),
       category: String(obj.category || ''),
-      amount: parseCleanNumber(obj.amount),
+      amount: parsedAmount,
       thankYouSent: rawThanked === 'true' || rawThanked === 'yes' || rawThanked === '1',
       notes: String(obj.notes || ''),
     };
   },
   toRow(headers: string[], gift: GiftItem): any[] {
+    const rawDesc = String(gift.description || '');
+    // Ensure currency strings like "$200" are escaped with single quote so Google Sheets USER_ENTERED stores them as text
+    const cleanDesc = (/^\s*[$€£¥]\s*\d/.test(rawDesc) && !rawDesc.startsWith("'"))
+      ? `'${rawDesc}`
+      : rawDesc;
+
     return mapObjectToRow(headers, {
       ...gift,
+      description: cleanDesc,
       thankYouSent: gift.thankYouSent ? 'TRUE' : 'FALSE' as any
     }, GIFT_HEADERS);
   }

@@ -863,6 +863,43 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      // Ensure text column formatting in Google Sheets for gift descriptions to prevent auto-numeric coercion
+      if (sheetType === 'gifts' && targetSheetId !== undefined) {
+        const descColIdx = headers.findIndex(h => h.toLowerCase().includes('description'));
+        if (descColIdx !== -1) {
+          try {
+            await sheetsClient.spreadsheets.batchUpdate({
+              spreadsheetId,
+              requestBody: {
+                requests: [
+                  {
+                    repeatCell: {
+                      range: {
+                        sheetId: targetSheetId,
+                        startRowIndex: 1,
+                        endRowIndex: 1000,
+                        startColumnIndex: descColIdx,
+                        endColumnIndex: descColIdx + 1,
+                      },
+                      cell: {
+                        userEnteredFormat: {
+                          numberFormat: {
+                            type: 'TEXT',
+                          }
+                        }
+                      },
+                      fields: 'userEnteredFormat.numberFormat',
+                    }
+                  }
+                ]
+              }
+            });
+          } catch (textFormatErr) {
+            console.warn(`[Sync] Non-critical text formatting warning for ${targetTitle}:`, textFormatErr);
+          }
+        }
+      }
     }
 
     const response = NextResponse.json({

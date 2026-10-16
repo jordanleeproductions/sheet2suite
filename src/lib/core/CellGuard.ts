@@ -19,8 +19,18 @@ export const CellGuard = {
       return value;
     }
 
+    if (trimmed.startsWith("'")) {
+      return value;
+    }
+
     if (/^[=+\-@\t\r]/.test(trimmed)) {
       // Escape leading formula character with single quote
+      return `'${value}`;
+    }
+
+    // Escape currency-like text strings (e.g. "$200", "€50", "£100") so Google Sheets USER_ENTERED
+    // does not auto-coerce them into raw numeric cells in unformatted text columns
+    if (/^[$€£¥]\s*\d/.test(trimmed)) {
       return `'${value}`;
     }
 

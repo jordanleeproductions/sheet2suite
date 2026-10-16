@@ -458,9 +458,11 @@ export default function ThankYouManager({
     }
 
     const rawAmount = formData.amount;
-    const parsedAmount = (rawAmount === '' || rawAmount === undefined || rawAmount === null) 
-      ? 0 
-      : Number(rawAmount);
+    const parsedAmount = (typeof rawAmount === 'number')
+      ? rawAmount
+      : (rawAmount !== '' && rawAmount !== undefined && rawAmount !== null 
+          ? Number(String(rawAmount).replace(/[^0-9.-]+/g, '')) 
+          : 0);
     const validAmount = isNaN(parsedAmount) ? 0 : parsedAmount;
 
     let updated: GiftItem[];
