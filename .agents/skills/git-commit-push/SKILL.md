@@ -13,9 +13,11 @@ When the user asks you to commit and push changes, follow these steps:
 2. **Generate Summary**:
    - Analyze the diff and generate a concise, conventional commit message (e.g., `feat: ...`, `fix: ...`, `chore: ...`).
    - If there are many changes, include a brief bulleted list in the commit body.
-3. **Commit & Push**:
+3. **Commit & Push to Develop**:
    - Run `git add .` to stage all changes.
    - Run `git commit -m "your generated summary"` to commit the changes.
-   - Run `git push origin HEAD` to push the changes to the current upstream branch.
+   - Run `git push origin HEAD` to push the changes to `develop`.
+4. **Deploy to Production (main)**:
+   - Run `git checkout main ; git merge develop ; git push origin main ; git checkout develop` to merge the changes into `main`, push to production, and return to `develop`.
 
 *Note: Use PowerShell syntax (e.g., separating commands with `;` instead of `&&`) when executing these commands.*

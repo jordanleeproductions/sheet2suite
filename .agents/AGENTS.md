@@ -9,3 +9,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Documentation Synchronization Rule (Mandatory)
 - **Mandatory Documentation Sync**: Every major feature addition, schema modification, API route update, or architectural change MUST be immediately synchronized with the authoritative project documentation (`docs/tech_spec.md`, `docs/vow/features.md`, and `docs/vow/master_spreadsheet_schema.md`). Every significant change completed is added as a completed task in the docs.
 - **Never Leave Stale Docs**: Whenever new modules, tabs, endpoints, or data models are introduced or refactored, update the corresponding markdown documentation as part of the core implementation workflow before completing the task.
+
+## Production Deployment Rule (Mandatory)
+- **Always Push Changes to PROD (main)**: Every completed change or feature that is committed and pushed to `develop` must immediately be pushed to production (`main`) afterwards:
+  1. Commit and push changes to `develop` (`git push origin develop`).
+  2. Switch to `main` (`git checkout main`).
+  3. Merge `develop` (`git merge develop`).
+  4. Push to production (`git push origin main`).
+  5. Return to `develop` (`git checkout develop`).
