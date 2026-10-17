@@ -6,6 +6,7 @@ import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Pr
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import PageSearchInput from '@/components/PageSearchInput';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
@@ -854,12 +855,12 @@ export default function VendorManager({
 
       {/* Filter and Search Bar */}
       <div style={styles.filterBar}>
-        <input
-          type="text"
-          placeholder="SEARCH VENDORS, CATEGORY, OR CONTACT..."
+        <PageSearchInput
+          placeholder="Search vendors by name, category, or contact..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
+          onChange={setSearchTerm}
+          resultCount={filteredVendors.length}
+          style={{ flex: '1 1 240px' }}
         />
         
         <div style={styles.filtersGroup}>

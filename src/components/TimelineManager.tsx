@@ -5,6 +5,7 @@ import { ScheduleEvent, Vendor } from '@/lib/sheets/types';
 import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLeft, ChevronRight, Sparkles, Moon, Download, Printer, AlertCircle, Check, Trash2, Search, FileText, Users, Tag } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import TimeDialPicker from '@/components/TimeDialPicker';
+import PageSearchInput from '@/components/PageSearchInput';
 import { parseTimeOrSerial } from '@/lib/currency';
 
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
@@ -579,12 +580,11 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
 
       {/* Role Filter & Search Bar */}
       <div style={styles.filterSection}>
-        <input
-          type="text"
-          placeholder="SEARCH EVENT, LOCATION, OR VENDOR..."
+        <PageSearchInput
+          placeholder="Search timeline by event moment, location, or vendor..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
+          onChange={setSearchTerm}
+          resultCount={filteredEventsWithIndex.length}
         />
         
         <div style={styles.pillsRow} className="timeline-pills-row">

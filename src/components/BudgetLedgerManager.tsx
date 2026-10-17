@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import PageSearchInput from '@/components/PageSearchInput';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
@@ -979,26 +980,13 @@ export default function BudgetLedgerManager({
 
           {/* Search & Status Filters */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
-              <Search size={13} style={{ position: 'absolute', left: '0.55rem', color: 'var(--color-muted, #64748B)' }} />
-              <input
-                type="text"
-                placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.35rem 0.55rem 0.35rem 1.65rem',
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.72rem',
-                  border: '1px solid var(--color-border, #E2E8F0)',
-                  borderRadius: '2px',
-                  backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-                  color: 'var(--color-text, #0F172A)',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
+            <PageSearchInput
+              size="sm"
+              placeholder="Search categories..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+              resultCount={filteredCategoryRows.length}
+            />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
               {(['All', 'Overdue', 'Pending', 'Paid', 'OverBudget'] as const).map((st) => (

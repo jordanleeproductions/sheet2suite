@@ -34,6 +34,7 @@ import {
   List
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import PageSearchInput from '@/components/PageSearchInput';
 import GoogleDrivePickerModal, { SelectedFolder } from '@/components/GoogleDrivePickerModal';
 import { generateShareToken, ShareLinkRecord } from '@/lib/share/token';
 import type { GuestUploadRecord } from '@/lib/db/firestoreDb';
@@ -857,16 +858,13 @@ export default function PhotoShotListManager({
 
           {/* Filters Bar */}
           <div className="photo-filter-bar">
-            <div className="photo-search-wrapper">
-              <Search size={16} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search description, location, or people..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
-            </div>
+            <PageSearchInput
+              placeholder="Search description, location, or people..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+              resultCount={filteredPhotos.length}
+              style={{ flex: '1 1 240px' }}
+            />
 
             <div className="photo-filter-group">
               <select 
@@ -1066,16 +1064,13 @@ export default function PhotoShotListManager({
 
           {/* Guestbook Search & Filter Toolbar */}
           <div className="photo-filter-bar">
-            <div className="photo-search-wrapper">
-              <Search size={16} style={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search guest name, heartfelt note, or uploaded file..."
-                value={guestSearchTerm}
-                onChange={(e) => setGuestSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
-            </div>
+            <PageSearchInput
+              placeholder="Search guest name, heartfelt note, or uploaded file..."
+              value={guestSearchTerm}
+              onChange={setGuestSearchTerm}
+              resultCount={filteredGuestUploads.length}
+              style={{ flex: '1 1 240px' }}
+            />
 
             <div className="photo-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <label style={{

@@ -6,6 +6,7 @@ import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync'
 import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import PageSearchInput from '@/components/PageSearchInput';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 interface GuestListManagerProps {
@@ -1483,12 +1484,11 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
           </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="SEARCH GUEST, EMAIL, DIET, OR TABLE..."
+        <PageSearchInput
+          placeholder="Search guests by name, email, diet, or table..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
+          onChange={setSearchTerm}
+          resultCount={filteredGuests.length}
         />
         
         <div style={styles.filtersGroup}>

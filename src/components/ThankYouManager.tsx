@@ -24,6 +24,7 @@ import {
   Tag
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import PageSearchInput from '@/components/PageSearchInput';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 
 const DEFAULT_GIFT_CATEGORIES = [
@@ -629,16 +630,13 @@ export default function ThankYouManager({
 
       {/* Search & Filter Section */}
       <div style={styles.filterBar} className="thankyou-filter-bar">
-        <div style={styles.searchWrapper} className="thankyou-search-wrapper">
-          <Search size={16} style={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder={subTab === 'gifts' ? "Search gift description, giver, category, or amount..." : "Search attending guest or party name..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
-        </div>
+        <PageSearchInput
+          placeholder={subTab === 'gifts' ? "Search gift description, giver, category, or amount..." : "Search attending guest or party name..."}
+          value={searchTerm}
+          onChange={setSearchTerm}
+          resultCount={subTab === 'gifts' ? filteredGifts.length : filteredAttendingParties.length}
+          style={{ flex: '1 1 280px' }}
+        />
 
         <div style={styles.filterGroup} className="thankyou-filter-group">
           {subTab === 'gifts' && (

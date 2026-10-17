@@ -25,6 +25,7 @@ import {
   Printer
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import PageSearchInput from '@/components/PageSearchInput';
 
 interface SeatingChartManagerProps {
   guests: Guest[];
@@ -1264,19 +1265,12 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
 
             <div style={styles.modalBody}>
               {/* Search Bar */}
-              <div style={{ position: 'relative', marginBottom: '1rem' }}>
-                <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--color-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Filter guests by name or party..."
-                  value={assignSearch}
-                  onChange={(e) => setAssignSearch(e.target.value)}
-                  style={{
-                    ...styles.inputField,
-                    paddingLeft: '32px'
-                  }}
-                />
-              </div>
+              <PageSearchInput
+                placeholder="Filter guests by name or party..."
+                value={assignSearch}
+                onChange={setAssignSearch}
+                style={{ marginBottom: '1rem' }}
+              />
 
               <span style={{ ...styles.fieldLabel, marginBottom: '0.5rem', display: 'block' }}>
                 GUEST REGISTRY ({unassignedGuests.length} unassigned)

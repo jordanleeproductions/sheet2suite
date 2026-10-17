@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Song, SongListType, Vendor } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2, QrCode, Radio, ChevronDown } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import PageSearchInput from '@/components/PageSearchInput';
 
 type DeduplicatedSong = Song & { requestCount: number };
 
@@ -720,12 +721,11 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
 
       {/* Search & Category Filter Bar */}
       <div style={styles.filterSection}>
-        <input
-          type="text"
-          placeholder="SEARCH TITLE, ARTIST, REQUESTED BY, OR NOTES..."
+        <PageSearchInput
+          placeholder="Search songs by title, artist, requested by, or notes..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
+          onChange={setSearchTerm}
+          resultCount={filteredMusic.length}
         />
         
         <div style={styles.pillsRow} className="music-pills-row">

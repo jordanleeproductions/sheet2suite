@@ -732,6 +732,223 @@ input:focus, select:focus, textarea:focus {
   color: var(--color-text, #e2e8f0) !important;
 }
 
+/* =========================================================
+   Unified In-Page Search Bar System (Theme-Adaptive Option 1)
+   ========================================================= */
+.page-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-search-container .page-search-icon {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted, #64748B);
+  pointer-events: none;
+  transition: color 0.15s ease-out, transform 0.15s ease-out;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.page-search-container:focus-within .page-search-icon {
+  color: var(--color-primary);
+}
+
+.page-search-container input.page-search-input {
+  width: 100%;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  padding: 0.6rem 2.25rem 0.6rem 2.35rem;
+  background-color: var(--color-bg-subtle, #F8FAFC) !important;
+  color: var(--color-text, #0F172A) !important;
+  border: 1px solid var(--color-border, #CBD5E1);
+  border-radius: var(--border-radius-sm, 3px);
+  outline: none !important;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.page-search-container input.page-search-input::placeholder {
+  color: var(--color-muted, #64748B);
+  opacity: 0.85;
+  font-size: 0.775rem;
+  letter-spacing: 0.01em;
+}
+
+.page-search-container input.page-search-input:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface, #FFFFFF) !important;
+}
+
+.page-search-container input.page-search-input:focus {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-surface, #FFFFFF) !important;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+/* Sizing Modifiers */
+.page-search-sm input.page-search-input {
+  padding: 0.35rem 1.85rem 0.35rem 1.95rem;
+  font-size: 0.75rem;
+}
+.page-search-sm .page-search-icon {
+  left: 0.6rem;
+}
+
+.page-search-lg input.page-search-input {
+  padding: 0.75rem 2.5rem 0.75rem 2.6rem;
+  font-size: 0.875rem;
+}
+
+/* Clear Button */
+.page-search-clear-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.05));
+  border: none;
+  color: var(--color-muted, #64748B);
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+  transition: all 0.12s ease-out;
+}
+
+.page-search-clear-btn:hover {
+  background-color: var(--color-border, rgba(0, 0, 0, 0.12));
+  color: var(--color-text, #0F172A);
+}
+
+.page-search-result-badge {
+  position: absolute;
+  right: 2.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  color: var(--color-muted, #64748B);
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------
+   Theme Specific Search Bar Styling
+   ------------------------------------------ */
+
+/* Neo-Brutalism */
+[data-style='neo-brutalism'] .page-search-container input.page-search-input {
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-sm, 2px);
+  background-color: #FFFFFF !important;
+  font-weight: 500;
+}
+
+[data-style='neo-brutalism'] .page-search-container input.page-search-input:focus {
+  box-shadow: 3px 3px 0px 0px var(--color-primary) !important;
+}
+
+[data-style='neo-brutalism'][data-theme='dark'] .page-search-container input.page-search-input {
+  background-color: #121824 !important;
+  border-color: var(--color-primary);
+}
+
+/* Botanical Romance */
+[data-style='botanical-romance'] .page-search-container input.page-search-input {
+  border-radius: 8px;
+  background-color: #F4EFEA !important;
+  border-color: #E5DFD5;
+  color: #1F2E26 !important;
+}
+
+[data-style='botanical-romance'] .page-search-container input.page-search-input:focus {
+  border-color: #1B4332 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.15);
+}
+
+[data-style='botanical-romance'][data-theme='dark'] .page-search-container input.page-search-input {
+  background-color: #2d302d !important;
+  border-color: #4d524d;
+  color: #e8e3d3 !important;
+}
+
+[data-style='botanical-romance'][data-theme='dark'] .page-search-container input.page-search-input:focus {
+  border-color: #849b87 !important;
+  box-shadow: 0 0 0 2px rgba(132, 155, 135, 0.2);
+}
+
+/* Midnight Tuxedo */
+[data-style='midnight-tuxedo'] .page-search-container input.page-search-input {
+  border-radius: 0px;
+  border-color: #CBD5E0;
+}
+
+[data-style='midnight-tuxedo'] .page-search-clear-btn {
+  border-radius: 0px;
+}
+
+[data-style='midnight-tuxedo'][data-theme='dark'] .page-search-container input.page-search-input {
+  background-color: #1E293B !important;
+  border-color: #334155;
+  border-radius: 0px;
+}
+
+/* Dark Mode Global */
+[data-theme='dark'] .page-search-container input.page-search-input {
+  background-color: var(--color-bg-subtle, #1E293B) !important;
+  border-color: var(--color-border, #334155);
+  color: var(--color-text, #F1F5F9) !important;
+}
+
+[data-theme='dark'] .page-search-container input.page-search-input:hover {
+  background-color: var(--color-surface, #0F172A) !important;
+  border-color: var(--color-primary, #F8FAFC);
+}
+
+[data-theme='dark'] .page-search-container input.page-search-input:focus {
+  background-color: var(--color-surface, #0F172A) !important;
+  border-color: var(--color-primary, #F8FAFC) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .page-search-clear-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+}
+
+[data-theme='dark'] .page-search-clear-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* Mobile Ergonomics (prevent iOS Safari zoom) */
+@media (max-width: 768px) {
+  .page-search-container input.page-search-input {
+    font-size: 16px !important;
+    min-height: 44px;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+}
+
+
+
 /* Print Media Styles for PDF & Paper Exports */
 @media print {
   header, nav, button, input, select, [role="button"], .no-print {
