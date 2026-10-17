@@ -362,17 +362,18 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
     
     return (
       <button 
+        className="music-play-btn"
         onClick={() => togglePlay(item)} 
         style={styles.playIconBtn} 
         title={isPlaying ? "Pause Sample" : "Preview Sample"}
         disabled={isLoadingAudio !== null && isLoadingAudio !== item.songId}
       >
         {isLoading ? (
-          <Loader2 size={20} className="spin" />
+          <Loader2 size={22} className="spin" />
         ) : isPlaying ? (
-          <PauseCircle size={20} />
+          <PauseCircle size={22} />
         ) : (
-          <PlayCircle size={20} />
+          <PlayCircle size={22} />
         )}
       </button>
     );
@@ -382,28 +383,29 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
     const youtubeMusicUrl = `https://music.youtube.com/search?q=${encodeURIComponent(`${item.title} ${item.artist}`)}`;
 
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
         <a 
           href={youtubeMusicUrl} 
           target="_blank" 
           rel="noopener noreferrer" 
+          className="music-streaming-link"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.35rem',
-            padding: '0.3rem 0.6rem',
+            padding: '0.35rem 0.65rem',
             borderRadius: 'var(--border-radius-sm, 4px)',
             backgroundColor: '#FF0000',
             color: '#ffffff',
             textDecoration: 'none',
-            fontSize: '0.7rem',
+            fontSize: '0.72rem',
             fontFamily: 'var(--font-mono)',
             fontWeight: 700,
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           }}
           title="Search & Play on YouTube Music"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
           </svg>
           YouTube Music
@@ -487,15 +489,27 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           margin-left: auto;
           position: relative;
         }
+        .music-pills-row {
+          display: flex !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          flex-wrap: nowrap !important;
+          gap: 0.45rem !important;
+          padding-bottom: 0.35rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+        .music-pill-btn {
+          min-height: 44px !important;
+          padding: 0.45rem 0.85rem !important;
+          white-space: nowrap !important;
+          flex-shrink: 0 !important;
+          font-size: 0.74rem !important;
+          font-weight: 700 !important;
+        }
         @media (max-width: 768px) {
           .music-add-btn {
             display: none !important;
           }
-          .music-portals-menu-container {
-            display: none !important;
-          }
-        }
-        @media (max-width: 640px) {
           .music-header-container {
             flex-direction: column !important;
             align-items: stretch !important;
@@ -503,19 +517,76 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
             margin-bottom: 1.25rem !important;
           }
           .music-header-actions {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
             width: 100% !important;
             margin-left: 0 !important;
+          }
+          .music-portals-menu-container {
+            width: 100% !important;
+          }
+          .music-portals-menu-container > button {
+            min-height: 46px !important;
+            width: 100% !important;
+            justify-content: center !important;
+            font-size: 0.8rem !important;
+          }
+          .music-portals-menu-container a,
+          .music-portals-menu-container button {
+            min-height: 44px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .music-play-btn {
+            width: 48px !important;
+            height: 48px !important;
+            min-width: 48px !important;
+            min-height: 48px !important;
+          }
+          .music-action-btn {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            padding: 0.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .music-streaming-link {
+            min-height: 44px !important;
+            padding: 0.5rem 0.85rem !important;
+            font-size: 0.78rem !important;
+            display: inline-flex !important;
+            align-items: center !important;
+          }
+          .music-modal-overlay {
+            padding: 0 !important;
+            align-items: flex-end !important;
+          }
+          .music-modal-content {
+            width: 100% !important;
+            max-height: 92vh !important;
+            border-radius: 20px 20px 0 0 !important;
+            border-bottom: none !important;
+          }
+          .music-modal-body {
+            padding: 1rem !important;
+            grid-template-columns: 1fr !important;
+            gap: 0.85rem !important;
+          }
+          .music-modal-body input,
+          .music-modal-body select,
+          .music-modal-body textarea {
+            min-height: 48px !important;
+            font-size: 16px !important;
+            box-sizing: border-box !important;
+          }
+          .music-modal-footer {
+            padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+            flex-wrap: wrap !important;
             gap: 0.5rem !important;
           }
-          .music-header-actions button,
-          .music-header-actions a {
-            justify-content: center !important;
-            padding: 0.6rem 0.5rem !important;
-            min-height: 44px !important;
-            width: 100% !important;
-            font-size: 0.75rem !important;
+          .music-modal-footer button {
+            min-height: 48px !important;
+            font-size: 0.82rem !important;
+            flex: 1 1 45% !important;
           }
         }
       `}</style>
@@ -657,7 +728,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           style={styles.searchInput}
         />
         
-        <div style={styles.pillsRow}>
+        <div style={styles.pillsRow} className="music-pills-row">
           {[
             { id: 'ALL', label: 'ALL SONGS', count: music.length },
             { id: 'MUST PLAY', label: '🔥 MUST PLAY', count: music.filter(s => (s.playStatus || s.priority || 'Must Play') === 'Must Play' && s.listType !== 'Do Not Play').length },
@@ -669,6 +740,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
           ].map(pill => (
             <button
               key={pill.id}
+              className="music-pill-btn"
               style={{
                 ...styles.pillBtn,
                 backgroundColor: filterPill === pill.id ? (pill.id === 'BANNED' ? 'var(--color-red)' : pill.id === 'PENDING APPROVAL' ? 'var(--color-amber)' : 'var(--color-primary)') : 'transparent',
@@ -764,11 +836,11 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                 </div>
 
                 <div style={styles.cardActions}>
-                  <button style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Song">
-                    <Edit2 size={14} />
+                  <button className="music-action-btn" style={styles.actionBtn} onClick={() => startEdit(item)} title="Edit Song">
+                    <Edit2 size={15} />
                   </button>
-                  <button style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setSongToDelete(item)} title="Delete Song">
-                    <Trash2 size={14} />
+                  <button className="music-action-btn" style={{ ...styles.actionBtn, color: 'var(--color-red)' }} onClick={() => setSongToDelete(item)} title="Delete Song">
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
@@ -818,8 +890,8 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
 
       {/* ADD / EDIT SONG MODAL */}
       {(isAdding || editingItem) && (
-        <div style={styles.modalOverlay} onClick={closeModal}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className="music-modal-overlay" style={styles.modalOverlay} onClick={closeModal}>
+          <div className="music-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader} className="modalHeader">
               <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
                 {isAdding ? 'ADD NEW TRACK' : 'EDIT TRACK'}
@@ -829,7 +901,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
               </button>
             </div>
             <form onSubmit={saveItem} style={styles.modalForm}>
-              <div style={styles.formGrid} className="formGrid">
+              <div style={styles.formGrid} className="formGrid music-modal-body">
                 
                 {/* Auto-Search Row */}
                 <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
@@ -987,7 +1059,7 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
                 </div>
                 
               </div>
-              <div style={styles.modalFooter}>
+              <div style={styles.modalFooter} className="music-modal-footer">
                 <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
                 {isAdding && (
                   <button

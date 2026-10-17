@@ -421,6 +421,39 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
             justify-content: center !important;
             min-height: 44px !important;
           }
+          .timeline-pills-row {
+            display: flex !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            flex-wrap: nowrap !important;
+            gap: 0.45rem !important;
+            padding-bottom: 0.35rem !important;
+            margin-bottom: 0.5rem !important;
+          }
+          .timeline-pill-btn {
+            min-height: 44px !important;
+            padding: 0.45rem 0.85rem !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            font-size: 0.74rem !important;
+            font-weight: 700 !important;
+          }
+          .timeline-edit-card-btn {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: var(--border-radius-sm) !important;
+            background-color: var(--color-bg-subtle, #f1f5f9) !important;
+          }
+          .timeline-expand-chevron {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
         }
       `}</style>
 
@@ -554,8 +587,9 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
           style={styles.searchInput}
         />
         
-        <div style={styles.pillsRow}>
+        <div style={styles.pillsRow} className="timeline-pills-row">
           <button
+            className="timeline-pill-btn"
             style={{
               ...styles.pillBtn,
               backgroundColor: selectedRole === 'ALL' ? 'var(--color-primary)' : 'transparent',
@@ -575,6 +609,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
             return (
               <button
                 key={role}
+                className="timeline-pill-btn"
                 style={{
                   ...styles.pillBtn,
                   backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
@@ -713,17 +748,25 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
             }
             @media (max-width: 768px) {
               .timeline-modal-overlay {
-                padding: 0.5rem !important;
+                padding: 0 !important;
                 align-items: flex-end !important;
               }
               .timeline-modal-content {
                 width: 100% !important;
-                max-height: 94vh !important;
-                border-radius: 16px 16px 0 0 !important;
+                max-height: 92vh !important;
+                border-radius: 20px 20px 0 0 !important;
+                border-bottom: none !important;
               }
               .timeline-form-scroll-body {
                 padding: 1rem !important;
                 gap: 1rem !important;
+              }
+              .timeline-form-scroll-body input,
+              .timeline-form-scroll-body select,
+              .timeline-form-scroll-body textarea {
+                min-height: 48px !important;
+                font-size: 16px !important;
+                box-sizing: border-box !important;
               }
               .timeline-timing-grid {
                 grid-template-columns: 1fr !important;
@@ -733,15 +776,31 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                 grid-template-columns: 1fr !important;
                 gap: 0.85rem !important;
               }
+              .timeline-role-pill {
+                min-height: 44px !important;
+                padding: 0.5rem 0.85rem !important;
+                font-size: 0.82rem !important;
+              }
+              .midnight-toggle-btn {
+                min-height: 44px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+              }
               .timeline-footer-actions {
-                padding: 0.85rem 1rem !important;
+                padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
                 flex-wrap: wrap !important;
                 gap: 0.5rem !important;
+              }
+              .timeline-footer-actions button {
+                min-height: 48px !important;
+                font-size: 0.82rem !important;
               }
               .timeline-footer-right {
                 flex-wrap: wrap !important;
                 width: 100% !important;
                 justify-content: flex-end !important;
+                gap: 0.5rem !important;
               }
             }
           `}</style>
@@ -1505,12 +1564,14 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                     
                     <div style={styles.headerRightActions}>
                       <button 
+                        className="timeline-edit-card-btn"
                         style={styles.editCardBtn} 
                         onClick={(e) => { e.stopPropagation(); startEdit(event, originalIndex); }}
+                        title="Edit Moment"
                       >
-                        <Edit2 size={12} />
+                        <Edit2 size={14} />
                       </button>
-                      <div style={styles.expandChevron}>
+                      <div className="timeline-expand-chevron" style={styles.expandChevron}>
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </div>
                     </div>

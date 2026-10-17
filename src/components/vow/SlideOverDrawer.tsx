@@ -268,7 +268,7 @@ export default function SlideOverDrawer({
         )}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes slideInRight {
           from {
             transform: translateX(100%);
@@ -283,10 +283,20 @@ export default function SlideOverDrawer({
             width: 100% !important;
           }
           .slide-over-footer {
+            padding: 0.85rem 1rem !important;
             padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
           }
           .slide-over-footer button {
-            min-height: 44px !important;
+            min-height: 48px !important;
+            font-size: 0.82rem !important;
+            font-weight: 700 !important;
+          }
+          .slide-over-body input,
+          .slide-over-body select,
+          .slide-over-body textarea {
+            min-height: 48px !important;
+            font-size: 16px !important; /* Prevents auto-zoom on iOS */
+            padding: 0.65rem 0.75rem !important;
           }
         }
       `}</style>

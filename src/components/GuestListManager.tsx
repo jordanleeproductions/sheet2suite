@@ -420,16 +420,16 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
 
         {/* Contact Info Row */}
         {(guest.emailAddress || guest.phoneNumber) && (
-          <div style={styles.contactRow}>
+          <div style={styles.contactRow} className="guest-contact-row">
             {guest.emailAddress && (
-              <a href={`mailto:${guest.emailAddress}`} style={styles.contactItem} title={guest.emailAddress}>
-                <Mail size={12} style={styles.icon} />
+              <a href={`mailto:${guest.emailAddress}`} style={styles.contactItem} className="guest-contact-item" title={guest.emailAddress}>
+                <Mail size={13} style={styles.icon} />
                 <span style={styles.truncateText}>{guest.emailAddress}</span>
               </a>
             )}
             {guest.phoneNumber && (
-              <a href={`tel:${guest.phoneNumber}`} style={styles.contactItem} title={guest.phoneNumber}>
-                <Phone size={12} style={styles.icon} />
+              <a href={`tel:${guest.phoneNumber}`} style={styles.contactItem} className="guest-contact-item" title={guest.phoneNumber}>
+                <Phone size={13} style={styles.icon} />
                 <span>{guest.phoneNumber}</span>
               </a>
             )}
@@ -847,18 +847,64 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
             font-size: 0.75rem !important;
           }
           .rsvp-toggle-btn {
-            min-height: 44px !important;
-            font-size: 0.72rem !important;
+            min-height: 48px !important;
+            font-size: 0.76rem !important;
+            font-weight: 700 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            border-radius: var(--border-radius-sm) !important;
+            transition: all 0.15s ease !important;
+          }
+          .rsvp-toggle-btn:active {
+            transform: scale(0.97) !important;
           }
           .guest-edit-btn {
-            min-width: 38px !important;
-            min-height: 38px !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            border-radius: var(--border-radius-sm) !important;
+            background-color: var(--color-bg-subtle, #f1f5f9) !important;
+          }
+          .guest-contact-row {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.45rem !important;
+            margin-bottom: 0.85rem !important;
+          }
+          .guest-contact-item {
+            min-height: 44px !important;
+            padding: 0.45rem 0.75rem !important;
+            background-color: var(--color-bg-subtle, #f8fafc) !important;
+            border: 1px solid var(--color-border, #e2e8f0) !important;
+            border-radius: var(--border-radius-sm) !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.55rem !important;
+            font-size: 0.78rem !important;
+            color: var(--color-text) !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease !important;
+          }
+          .guest-contact-item:active {
+            transform: scale(0.98) !important;
+            background-color: var(--color-bg, #f1f5f9) !important;
+          }
+          .guest-clickable-chip {
+            min-height: 46px !important;
+            padding: 0.45rem 0.6rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+          }
+          .guest-form-grid input,
+          .guest-form-grid select,
+          .guest-form-grid textarea {
+            min-height: 48px !important;
+            font-size: 16px !important;
+            padding: 0.65rem 0.75rem !important;
           }
         }
         .catering-desktop-pills {

@@ -698,6 +698,53 @@ export default function VendorManager({
             min-height: 44px !important;
             padding: 0.5rem 0.75rem !important;
           }
+          .vendor-card-action-btn {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: var(--border-radius-sm) !important;
+            background-color: var(--color-bg-subtle, #f1f5f9) !important;
+          }
+          .vendor-contact-chips-row {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.45rem !important;
+            margin-top: 0.35rem !important;
+          }
+          .vendor-contact-chip {
+            min-height: 44px !important;
+            padding: 0.45rem 0.75rem !important;
+            background-color: var(--color-bg-subtle, #f8fafc) !important;
+            border: 1px solid var(--color-border, #e2e8f0) !important;
+            border-radius: var(--border-radius-sm) !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.55rem !important;
+            font-size: 0.78rem !important;
+            color: var(--color-text) !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease !important;
+          }
+          .vendor-contact-chip:active {
+            transform: scale(0.98) !important;
+            background-color: var(--color-bg, #f1f5f9) !important;
+          }
+          .vendor-contract-pill {
+            min-height: 44px !important;
+            padding: 0.45rem 0.75rem !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 0.76rem !important;
+          }
+          .vendor-form-grid input,
+          .vendor-form-grid select,
+          .vendor-form-grid textarea {
+            min-height: 48px !important;
+            font-size: 16px !important;
+            padding: 0.65rem 0.75rem !important;
+          }
         }
       `}</style>
 
@@ -937,11 +984,11 @@ export default function VendorManager({
                   <span style={styles.cardCategory}>{item.category}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button style={styles.actionBtn} onClick={() => startEdit(item, vendors.indexOf(item))}>
-                    <Edit2 size={14} />
+                  <button style={styles.actionBtn} className="vendor-card-action-btn" onClick={() => startEdit(item, vendors.indexOf(item))} title="Edit Vendor">
+                    <Edit2 size={15} />
                   </button>
-                  <button style={styles.actionBtn} onClick={() => promptDeleteVendor(item)}>
-                    <Trash2 size={14} />
+                  <button style={styles.actionBtn} className="vendor-card-action-btn" onClick={() => promptDeleteVendor(item)} title="Delete Vendor">
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
@@ -950,12 +997,12 @@ export default function VendorManager({
                   <div style={styles.cardLabel}>CONTACT</div>
                   <div style={styles.cardValue}>
                     {item.contactName}
-                    <div style={styles.contactLinks}>
+                    <div style={styles.contactLinks} className="vendor-contact-chips-row">
                       {item.phoneNumber && (
-                        <a href={`tel:${item.phoneNumber}`} style={styles.iconLink}><Phone size={12} /> {item.phoneNumber}</a>
+                        <a href={`tel:${item.phoneNumber}`} style={styles.iconLink} className="vendor-contact-chip"><Phone size={13} /> {item.phoneNumber}</a>
                       )}
                       {item.emailAddress && (
-                        <a href={`mailto:${item.emailAddress}`} style={styles.iconLink}><Mail size={12} /> Email</a>
+                        <a href={`mailto:${item.emailAddress}`} style={styles.iconLink} className="vendor-contact-chip"><Mail size={13} /> Email</a>
                       )}
                     </div>
                   </div>
@@ -1008,8 +1055,8 @@ export default function VendorManager({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--color-muted)' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     {item.contractLink && (
-                      <a href={item.contractLink} target="_blank" rel="noopener noreferrer" style={styles.pillLink}>
-                        <Link2 size={12} style={{ marginRight: '4px' }} /> Contract
+                      <a href={item.contractLink} target="_blank" rel="noopener noreferrer" style={styles.pillLink} className="vendor-contract-pill">
+                        <Link2 size={13} style={{ marginRight: '4px' }} /> Contract
                       </a>
                     )}
                     {item.staffMealsRequired === 'Yes' && <span style={styles.pill}>Meal Required</span>}
