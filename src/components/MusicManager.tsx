@@ -1089,28 +1089,58 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
       {previewError && (
         <div style={{
           position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          backgroundColor: 'var(--color-red)',
-          color: 'var(--color-on-dark)',
-          padding: '0.75rem 1.25rem',
-          borderRadius: 'var(--border-radius-md)',
-          boxShadow: 'var(--box-shadow-large)',
+          bottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+          right: '1.5rem',
+          maxWidth: '380px',
+          backgroundColor: 'var(--color-surface, #FFFFFF)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '14px',
+          boxShadow: '0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.06)',
+          padding: '0.75rem 0.85rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          zIndex: 9999,
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.8rem',
-          fontWeight: 600
+          gap: '0.65rem',
+          zIndex: 10001,
+          fontFamily: 'var(--font-interface-sans, system-ui, -apple-system, sans-serif)',
+          fontSize: '0.825rem',
+          fontWeight: 600,
+          color: 'var(--color-text, #0F172A)'
         }}>
-          <AlertCircle size={18} />
-          <span>{previewError}</span>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '9px',
+            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+            color: '#DC2626',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <AlertCircle size={18} strokeWidth={2.2} />
+          </div>
+          <span style={{ flex: 1, lineHeight: 1.4, wordBreak: 'break-word' }}>{previewError}</span>
           <button 
-            style={{ background: 'none', border: 'none', color: 'var(--color-on-dark)', cursor: 'pointer', marginLeft: '0.5rem' }} 
+            type="button"
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'var(--color-muted, #64748B)', 
+              cursor: 'pointer', 
+              width: '26px',
+              height: '26px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              padding: 0
+            }} 
             onClick={() => setPreviewError(null)}
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
       )}

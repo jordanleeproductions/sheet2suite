@@ -21,6 +21,7 @@ import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTempla
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import AppVersionBadge from '@/components/AppVersionBadge';
+import AppUpdateToast from '@/components/AppUpdateToast';
 import VowDisconnectModal from '@/components/vow/VowDisconnectModal';
 import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
 import VowSidebar from '@/components/vow/VowSidebar';
@@ -2740,7 +2741,10 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
       />
 
       {/* Toast Notification Container [GEN-3] */}
-      <ToastNotification toasts={toasts} onDismiss={dismissToast} />
+      <ToastNotification toasts={toasts} onDismiss={dismissToast} styleTheme={styleTheme} isMobile={isMobile} />
+
+      {/* Persistent New Version Available Update Toast [SYS-UPDATE-TOAST] */}
+      <AppUpdateToast styleTheme={styleTheme} isMobile={isMobile} />
 
       {/* Global Spinner & Animation Styling helpers */}
       <style jsx global>{`

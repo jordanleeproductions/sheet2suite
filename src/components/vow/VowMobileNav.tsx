@@ -20,6 +20,7 @@ import {
   Settings,
   Search,
   ChevronRight,
+  FileSpreadsheet,
 } from 'lucide-react';
 import AppVersionBadge from '@/components/AppVersionBadge';
 import { ModuleConfig } from '@/components/DashboardMetrics';
@@ -105,6 +106,7 @@ export default function VowMobileNav({
 }: VowMobileNavProps) {
   const isSecondaryTabActive = !['home', 'guests', 'budget', 'schedule'].includes(activeTab);
   const isBrutalist = styleTheme === 'neo-brutalism';
+  const isBotanical = styleTheme === 'botanical-romance';
 
   // Currency formatter for live budget previews
   const formatCurrency = (val: number | undefined, curr = 'USD'): string => {
@@ -131,16 +133,6 @@ export default function VowMobileNav({
         }
       })()
     : '';
-
-  // Avatar monogram generator
-  const getInitials = (name?: string): string => {
-    if (!name || !name.trim()) return 'W';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return parts[0].slice(0, 2).toUpperCase();
-  };
 
   // Helper to verify if a given module is enabled
   const isModuleEnabled = (id: string, altKey?: string) => {
@@ -564,22 +556,34 @@ export default function VowMobileNav({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
+                {/* Sheet2Vow Brand Document Icon */}
                 <div
+                  title="Sheet2Vow"
                   style={{
                     width: '36px',
                     height: '36px',
-                    borderRadius: '10px',
-                    backgroundColor: 'rgba(2, 132, 199, 0.10)',
-                    color: '#0284C7',
+                    borderRadius: isBrutalist ? '4px' : '10px',
+                    backgroundColor: isBrutalist
+                      ? 'var(--color-primary, #0F172A)'
+                      : isBotanical
+                      ? '#2D6A4F'
+                      : 'var(--color-primary, #0F172A)',
+                    color: '#FFFFFF',
+                    border: isBrutalist
+                      ? '2px solid var(--color-primary, #0F172A)'
+                      : isBotanical
+                      ? '1px solid rgba(255, 255, 255, 0.2)'
+                      : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
                     flexShrink: 0,
+                    boxShadow: isBrutalist
+                      ? '2px 2px 0px var(--color-primary, #0F172A)'
+                      : '0 2px 6px rgba(0, 0, 0, 0.12)',
                   }}
                 >
-                  {getInitials(weddingName)}
+                  <FileSpreadsheet size={19} strokeWidth={2.2} />
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <h3
