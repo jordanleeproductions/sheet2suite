@@ -26,9 +26,10 @@ import UnauthenticatedLanding from '@/components/vow/UnauthenticatedLanding';
 import VowSidebar from '@/components/vow/VowSidebar';
 import VowMasthead from '@/components/vow/VowMasthead';
 import VowMobileNav from '@/components/vow/VowMobileNav';
+import CommandPalette from '@/components/vow/CommandPalette';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink, Search } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -51,6 +52,28 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
   const [budgetThreshold, setBudgetThreshold] = useState<number>(35000);
   const [driveFolder, setDriveFolder] = useState<string>('My Drive/Wedding Planning');
   const [selectedTasks, setSelectedTasks] = useState<string[]>(ALL_DEFAULT_TASKS.map(t => t.taskName));
+  const [partner1Name, setPartner1Name] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('s2v_partner1_name') || '';
+    }
+    return '';
+  });
+  const [partner2Name, setPartner2Name] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('s2v_partner2_name') || '';
+    }
+    return '';
+  });
+
+  // Auto-derive Partner 1 Name default from connected Google account
+  useEffect(() => {
+    if (!partner1Name && googleUserName) {
+      setPartner1Name(googleUserName);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('s2v_partner1_name', googleUserName);
+      }
+    }
+  }, [googleUserName, partner1Name]);
 
   // Direct 1-Click Google OAuth Kickoff [AUTH-FAST]
   const handleDirectGoogleAuth = async () => {
@@ -345,7 +368,20 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState<boolean>(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Global Cmd+K / Ctrl+K listener for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Active Feature Modules Configuration
   const [enabledModules, setEnabledModules] = useState<ModuleConfig>({
@@ -573,6 +609,27 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         dashboard: updatedDash,
       }) : prev);
       await syncUpdate('dashboard', updatedDash);
+    }
+  };
+
+  const handleUpdatePartnerNames = (p1: string, p2: string) => {
+    setPartner1Name(p1);
+    setPartner2Name(p2);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_partner1_name', p1);
+      localStorage.setItem('s2v_partner2_name', p2);
+    }
+    if (weddingData) {
+      const updatedDash = {
+        ...weddingData.dashboard,
+        partner1Name: p1,
+        partner2Name: p2,
+      };
+      setWeddingData(prev => prev ? ({
+        ...prev,
+        dashboard: updatedDash,
+      }) : prev);
+      syncUpdate('dashboard', updatedDash);
     }
   };
 
@@ -1485,6 +1542,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           enabledModules={enabledModules}
           onOpenShareModal={() => setShowShareModal(true)}
           onOpenSettings={() => switchTab('settings')}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           onExportCSV={handleExportActiveCSV}
           theme={theme}
           styleTheme={styleTheme}
@@ -1633,6 +1691,42 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
 
             {!isMobile && (
               <>
+                <button
+                  type="button"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.28rem 0.55rem',
+                    borderRadius: '4px',
+                    border: '1px solid var(--color-border, #E2E8F0)',
+                    backgroundColor: 'var(--color-background-subtle, #F8FAFC)',
+                    color: 'var(--color-muted, #64748B)',
+                    fontSize: '0.72rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onClick={() => setIsCommandPaletteOpen(true)}
+                  title="Universal Search (⌘K / Ctrl+K)"
+                >
+                  <Search size={13} />
+                  <span style={{ fontWeight: 500 }}>Search</span>
+                  <kbd
+                    style={{
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.62rem',
+                      fontWeight: 600,
+                      padding: '0.05rem 0.25rem',
+                      borderRadius: '3px',
+                      background: 'var(--color-surface, #FFFFFF)',
+                      border: '1px solid var(--color-border, #CBD5E1)',
+                      color: 'var(--color-text, #334155)',
+                    }}
+                  >
+                    ⌘K
+                  </kbd>
+                </button>
+
                 <button
                   style={{ ...styles.iconBtn, color: 'var(--color-primary)' }}
                   onClick={() => setShowShareModal(true)}
@@ -2379,8 +2473,11 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   tasks={weddingData.tasks}
                   music={weddingData.music}
                   photos={weddingData.photos}
+                  vendors={weddingData.vendors}
                   enabledModules={enabledModules}
                   currency={currency}
+                  partner1Name={partner1Name || googleUserName}
+                  partner2Name={partner2Name}
                   onNavigateTab={(tab, filter) => switchTab(tab as any, filter)}
                   onOpenModuleSettings={() => switchTab('settings', 'tools')}
                   showWelcomeGuide={!hasDismissedWelcomeCard}
@@ -2494,6 +2591,8 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   onUpdate={(data) => syncUpdate('tasks', data)}
                   isSyncing={isSyncing}
                   initialStage={taskInitialFilter}
+                  partner1Name={partner1Name || googleUserName}
+                  partner2Name={partner2Name}
                 />
               )}
 
@@ -2583,6 +2682,9 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   googleUserName={googleUserName}
                   googleUserAvatar={googleUserAvatar}
                   onOpenGoogleAuth={handleDirectGoogleAuth}
+                  partner1Name={partner1Name || googleUserName}
+                  partner2Name={partner2Name}
+                  onUpdatePartnerNames={handleUpdatePartnerNames}
                 />
               )}
             </div>
@@ -2601,12 +2703,34 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           enabledModules={enabledModules}
           onOpenShareModal={() => setShowShareModal(true)}
           onOpenSettings={() => switchTab('settings')}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           onTouchStart={handleBottomNavTouchStart}
           onTouchEnd={handleBottomNavTouchEnd}
           triggerHaptic={triggerHaptic}
         />
       )}
 
+
+      {/* Universal Command Palette [Monarch UX] */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        guests={weddingData?.guests}
+        vendors={weddingData?.vendors}
+        budget={weddingData?.budget}
+        expenses={weddingData?.expenses}
+        tasks={weddingData?.tasks}
+        music={weddingData?.music}
+        currency={currency}
+        onNavigateTab={(tab, filter) => {
+          switchTab(tab as any, filter);
+        }}
+        onOpenSettings={(section) => {
+          switchTab('settings', section);
+        }}
+        onToggleTheme={handleToggleTheme}
+        onExportCSV={handleExportActiveCSV}
+      />
 
       {/* Toast Notification Container [GEN-3] */}
       <ToastNotification toasts={toasts} onDismiss={dismissToast} />

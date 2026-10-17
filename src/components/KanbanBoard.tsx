@@ -11,6 +11,8 @@ interface KanbanBoardProps {
   onUpdate: (updatedTasks: Task[]) => Promise<void>;
   isSyncing: boolean;
   initialStage?: KanbanStage;
+  partner1Name?: string;
+  partner2Name?: string;
 }
 
 interface TaskComboboxProps {
@@ -271,7 +273,17 @@ export const isDueDatePast = (dueDateStr?: string, stage?: KanbanStage): boolean
   return dueEndOfDay.getTime() < Date.now();
 };
 
-export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }: KanbanBoardProps) {
+export default function KanbanBoard({ 
+  tasks, 
+  onUpdate, 
+  isSyncing, 
+  initialStage,
+  partner1Name,
+  partner2Name,
+}: KanbanBoardProps) {
+  const p1 = partner1Name?.trim() || 'Partner 1';
+  const p2 = partner2Name?.trim() || 'Partner 2';
+
   // Mobile Column Selector
   const [activeMobileStage, setActiveMobileStage] = useState<KanbanStage>(initialStage || 'To Do');
 
@@ -377,7 +389,12 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
   ])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
   const existingAssignees = Array.from(new Set([
-    'Bride', 'Groom', 'Bride & Groom', 'Maid of Honor', 'Best Man', 'Wedding Planner',
+    p1,
+    p2,
+    `${p1} & ${p2}`,
+    'Wedding Planner',
+    'Maid of Honor',
+    'Best Man',
     ...tasks.map(t => (t.assignedTo || '').trim()).filter(Boolean)
   ])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
@@ -937,7 +954,98 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>ASSIGNED TO</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label style={{ ...styles.label, marginBottom: 0 }}>ASSIGNED TO</label>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--color-muted, #64748B)', fontFamily: 'var(--font-mono)' }}>
+                      Quick assign:
+                    </span>
+                  </div>
+
+                  {/* Partner Quick Assign Chips */}
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.45rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('assignedTo', p1)}
+                      style={{
+                        padding: '0.2rem 0.5rem',
+                        fontSize: '0.72rem',
+                        fontFamily: 'var(--font-mono)',
+                        borderRadius: '2px',
+                        border: `1px solid ${formState.assignedTo === p1 ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
+                        backgroundColor: formState.assignedTo === p1 ? 'var(--color-primary, #0F172A)' : 'var(--color-surface, #FFFFFF)',
+                        color: formState.assignedTo === p1 ? '#FFFFFF' : 'var(--color-text, #0F172A)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontWeight: formState.assignedTo === p1 ? 700 : 500,
+                      }}
+                      title={`Assign to ${p1}`}
+                    >
+                      <User size={10} />
+                      <span>{p1}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('assignedTo', p2)}
+                      style={{
+                        padding: '0.2rem 0.5rem',
+                        fontSize: '0.72rem',
+                        fontFamily: 'var(--font-mono)',
+                        borderRadius: '2px',
+                        border: `1px solid ${formState.assignedTo === p2 ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
+                        backgroundColor: formState.assignedTo === p2 ? 'var(--color-primary, #0F172A)' : 'var(--color-surface, #FFFFFF)',
+                        color: formState.assignedTo === p2 ? '#FFFFFF' : 'var(--color-text, #0F172A)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontWeight: formState.assignedTo === p2 ? 700 : 500,
+                      }}
+                      title={`Assign to ${p2}`}
+                    >
+                      <User size={10} />
+                      <span>{p2}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('assignedTo', `${p1} & ${p2}`)}
+                      style={{
+                        padding: '0.2rem 0.5rem',
+                        fontSize: '0.72rem',
+                        fontFamily: 'var(--font-mono)',
+                        borderRadius: '2px',
+                        border: `1px solid ${formState.assignedTo === `${p1} & ${p2}` ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
+                        backgroundColor: formState.assignedTo === `${p1} & ${p2}` ? 'var(--color-primary, #0F172A)' : 'var(--color-surface, #FFFFFF)',
+                        color: formState.assignedTo === `${p1} & ${p2}` ? '#FFFFFF' : 'var(--color-text, #0F172A)',
+                        cursor: 'pointer',
+                        fontWeight: formState.assignedTo === `${p1} & ${p2}` ? 700 : 500,
+                      }}
+                      title="Shared task"
+                    >
+                      <span>Shared ({p1} &amp; {p2})</span>
+                    </button>
+                    {formState.assignedTo && (
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('assignedTo', '')}
+                        style={{
+                          padding: '0.2rem 0.4rem',
+                          fontSize: '0.72rem',
+                          fontFamily: 'var(--font-mono)',
+                          borderRadius: '2px',
+                          border: '1px solid var(--color-border, #CBD5E1)',
+                          backgroundColor: 'transparent',
+                          color: 'var(--color-muted, #64748B)',
+                          cursor: 'pointer',
+                        }}
+                        title="Clear assignee"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
                   <TaskCombobox
                     label="Assigned To"
                     fieldId="task-assignee-input"
@@ -1177,12 +1285,39 @@ export default function KanbanBoard({ tasks, onUpdate, isSyncing, initialStage }
 
                         <div style={styles.cardFooter}>
                           <div style={styles.metaRow}>
-                            {task.assignedTo && (
-                              <div style={styles.metaItem}>
-                                <User size={12} style={styles.icon} />
-                                <span>{task.assignedTo}</span>
-                              </div>
-                            )}
+                            {task.assignedTo && (() => {
+                              const isP1 = task.assignedTo.trim().toLowerCase() === p1.toLowerCase();
+                              const isP2 = task.assignedTo.trim().toLowerCase() === p2.toLowerCase();
+                              const isShared = task.assignedTo.toLowerCase().includes('&') || task.assignedTo.toLowerCase().includes('shared');
+                              return (
+                                <div 
+                                  style={{
+                                    ...styles.metaItem,
+                                    padding: '0.1rem 0.35rem',
+                                    borderRadius: '2px',
+                                    backgroundColor: isP1 
+                                      ? 'rgba(15, 23, 42, 0.08)' 
+                                      : isP2 
+                                        ? 'rgba(99, 102, 241, 0.1)' 
+                                        : isShared 
+                                          ? 'rgba(16, 185, 129, 0.1)' 
+                                          : 'transparent',
+                                    color: isP1 
+                                      ? 'var(--color-primary, #0F172A)' 
+                                      : isP2 
+                                        ? '#4F46E5' 
+                                        : isShared 
+                                          ? '#059669' 
+                                          : 'inherit',
+                                    fontWeight: isP1 || isP2 || isShared ? 600 : 400,
+                                  }}
+                                  title={`Assigned to ${task.assignedTo}`}
+                                >
+                                  <User size={11} style={styles.icon} />
+                                  <span>{task.assignedTo}</span>
+                                </div>
+                              );
+                            })()}
                             {task.dueDate && (() => {
                               const isPastDue = isDueDatePast(task.dueDate, stage);
                               const formattedDate = formatDateToMMDDYYYY(task.dueDate);

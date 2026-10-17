@@ -23,6 +23,8 @@ export interface DashboardSummary {
   weddingName?: string;
   location?: string;
   currency?: string;
+  partner1Name?: string;
+  partner2Name?: string;
 }
 
 export interface Guest {

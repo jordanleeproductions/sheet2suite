@@ -73,6 +73,9 @@ export interface SettingsManagerProps {
   googleUserName?: string;
   googleUserAvatar?: string;
   onOpenGoogleAuth?: () => void;
+  partner1Name?: string;
+  partner2Name?: string;
+  onUpdatePartnerNames?: (partner1: string, partner2: string) => void;
 }
 
 export type SettingsSection =
@@ -137,6 +140,9 @@ export default function SettingsManager({
   googleUserName,
   googleUserAvatar,
   onOpenGoogleAuth,
+  partner1Name: initialPartner1 = '',
+  partner2Name: initialPartner2 = '',
+  onUpdatePartnerNames,
 }: SettingsManagerProps) {
   const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
 
@@ -196,6 +202,8 @@ export default function SettingsManager({
     date: initialDate || '',
     location: initialLocation || '',
     budget: initialBudget ?? '',
+    partner1: initialPartner1 || '',
+    partner2: initialPartner2 || '',
   });
 
   useEffect(() => {
@@ -204,13 +212,17 @@ export default function SettingsManager({
       date: initialDate || '',
       location: initialLocation || '',
       budget: initialBudget ?? '',
+      partner1: initialPartner1 || '',
+      partner2: initialPartner2 || '',
     };
-  }, [initialName, initialDate, initialLocation, initialBudget]);
+  }, [initialName, initialDate, initialLocation, initialBudget, initialPartner1, initialPartner2]);
 
   const [weddingName, setWeddingName] = useState(initialName || 'Our Wedding');
   const [weddingDate, setWeddingDate] = useState(initialDate || '');
   const [locationDetails, setLocationDetails] = useState(initialLocation || '');
   const [totalBudget, setTotalBudget] = useState<number | string>(initialBudget ?? '');
+  const [partner1Name, setPartner1Name] = useState(initialPartner1 || '');
+  const [partner2Name, setPartner2Name] = useState(initialPartner2 || '');
   const [isSavingDetails, setIsSavingDetails] = useState(false);
 
   // Dirty state calculation
@@ -218,7 +230,9 @@ export default function SettingsManager({
     weddingName.trim() !== initialRef.current.name.trim() ||
     weddingDate !== initialRef.current.date ||
     locationDetails.trim() !== initialRef.current.location.trim() ||
-    String(totalBudget) !== String(initialRef.current.budget);
+    String(totalBudget) !== String(initialRef.current.budget) ||
+    partner1Name.trim() !== initialRef.current.partner1.trim() ||
+    partner2Name.trim() !== initialRef.current.partner2.trim();
 
   // Unsaved changes confirmation dialog state
   const [pendingNavigationSection, setPendingNavigationSection] = useState<SettingsSection | 'back' | null>(null);
@@ -318,6 +332,8 @@ export default function SettingsManager({
     setWeddingDate(initialRef.current.date);
     setLocationDetails(initialRef.current.location);
     setTotalBudget(initialRef.current.budget);
+    setPartner1Name(initialRef.current.partner1);
+    setPartner2Name(initialRef.current.partner2);
   };
 
   const handleSaveDetails = async (e?: React.FormEvent) => {
@@ -326,11 +342,16 @@ export default function SettingsManager({
     try {
       const budgetNum = totalBudget !== '' && !isNaN(Number(totalBudget)) ? Number(totalBudget) : undefined;
       await onUpdateWeddingDetails(weddingName, weddingDate, locationDetails, budgetNum);
+      if (onUpdatePartnerNames) {
+        onUpdatePartnerNames(partner1Name.trim(), partner2Name.trim());
+      }
       initialRef.current = {
         name: weddingName,
         date: weddingDate,
         location: locationDetails,
         budget: totalBudget,
+        partner1: partner1Name.trim(),
+        partner2: partner2Name.trim(),
       };
       triggerQuietSaved('wedding');
     } catch (err) {
@@ -616,6 +637,39 @@ export default function SettingsManager({
                 <span style={styles.fieldHint}>
                   Used for guest invitations, printable place cards, vendor links, and your wedding dashboard.
                 </span>
+              </div>
+
+              <div style={styles.dividerLine} />
+
+              {/* Couple / Partner Names */}
+              <div style={isMobileView ? styles.fieldStack : styles.twoColRow}>
+                <div style={styles.formField}>
+                  <label style={styles.fieldLabel}>Partner 1 name</label>
+                  <input
+                    type="text"
+                    value={partner1Name}
+                    onChange={(e) => setPartner1Name(e.target.value)}
+                    placeholder={googleUserName || 'e.g. Partner 1'}
+                    style={styles.textInput}
+                  />
+                  <span style={styles.fieldHint}>
+                    {googleUserName ? `Connected Google account: ${googleUserName}` : 'Primary account holder for task assignments'}
+                  </span>
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.fieldLabel}>Partner 2 name</label>
+                  <input
+                    type="text"
+                    value={partner2Name}
+                    onChange={(e) => setPartner2Name(e.target.value)}
+                    placeholder={coPlannersList[0] || 'e.g. Partner 2'}
+                    style={styles.textInput}
+                  />
+                  <span style={styles.fieldHint}>
+                    Co-planner for collaborative assignments and couple overview
+                  </span>
+                </div>
               </div>
 
               <div style={styles.dividerLine} />

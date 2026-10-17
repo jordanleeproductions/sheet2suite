@@ -648,6 +648,31 @@
   - **Tailwind v4 Configuration (`tailwind.config.ts`)**: Built full static Tailwind token configuration mapping `paper`, `pane`, `ink`, `hairline`, `ledger`, `ceremonial`, micro border radii, and hairline box-shadow utilities.
 
 ---
+
+## 👑 21. Monarch Money UX & Navigation Modernization (`CommandPalette.tsx`, `SlideOverDrawer.tsx`, `BudgetLedgerManager.tsx`, `DashboardMetrics.tsx`, `KanbanBoard.tsx`, `SettingsManager.tsx`)
+- [x] **[MONARCH-COMMAND-PALETTE] Universal Client-Side Command Palette (`CommandPalette.tsx`, `src/app/vow/page.tsx`, `VowSidebar.tsx`, `VowMobileNav.tsx`):**
+  - **In-Memory Instant Search**: Instant fuzzy indexing across Guests (by name, table, email, RSVP), Vendors (by company, category, contact), Budget Categories & Ledger Items, Kanban Tasks, and Direct App Navigation Actions.
+  - **Ergonomic Hotkeys**: Global `Cmd+K` / `Ctrl+K` listener, keyboard arrow navigation (`↑`, `↓`), `Enter` to select, and `Escape` to close.
+  - **Direct Quick Action Routing**: Selecting any record jumps directly to the target module with pre-filtered or active search context. Search triggers integrated in sidebar, mobile drawer, and top header bar.
+- [x] **[MONARCH-SLIDE-OVER-DRAWERS] Contextual Slide-Over Drawers vs. Center Modals (`SlideOverDrawer.tsx`, `GuestListManager.tsx`, `VendorManager.tsx`, `BudgetLedgerManager.tsx`):**
+  - **480px Right-Sliding Inspector Panels**: Replaced jarring centered popups in Guest Registry, Vendor Directory, and Financial Ledger with smooth 480px right-sliding inspection panels with subtle backdrop blur (`backdrop-filter: blur(3px)`).
+  - **Background Context Continuity**: Keeps the full data table/card context visible behind the active inspector sheet, eliminating visual disorientation.
+  - **Rapid Multi-Record Cycling**: Integrated keyboard-friendly adjacent navigation controls (`↑` / `↓` buttons and shortcuts) enabling couples to rapidly browse and edit consecutive guest RSVPs or vendor contracts without closing and reopening modals.
+  - **Sticky Action Bars**: Sticky footer submit and cancel controls with mobile safe-area inset support and 44px+ tap targets.
+- [x] **[MONARCH-FINANCIALS-LEFT-TO-SPEND] Monarch-Style "Left to Spend" & 30-Day Cash Flow Horizon (`BudgetLedgerManager.tsx`, `DashboardMetrics.tsx`):**
+  - **Elevated Hero Headroom Card**: Features high-prominence "Left to Spend" headline, available financial headroom, and total budget breakdown.
+  - **Tri-Color Progress Bar**: Color-graded progress bar based on spend ratio ($\le 85\%$ primary slate/green, $85\%-100\%$ amber caution, $>100\%$ red over-budget warning).
+  - **30-Day Financial Horizon Strip**: Dedicated upcoming vendor installment strip highlighting payments due between `today` and `today + 30 days`, with urgency badges (`OVERDUE`, `DUE TODAY`, `DUE IN X DAYS`) and 1-click "Mark Paid" reconciliation.
+  - **Category-Level Progress Bars**: 4px micro-progress bars on category ledger rows for instant visual category utilization.
+- [x] **[MONARCH-OVERVIEW-HERO-AND-ACTION-CENTER] Modernized Overview Hero & 30-Day Action Center (`DashboardMetrics.tsx`):**
+  - **3 High-Impact Hero Cards**: Event Horizon & Countdown card (wedding title, days remaining badge, ceremony date/venue, partner attribution), Monarch Left to Spend card (color-graded bar, headroom stats, 1-click budget link), and Confirmed Guests card (attending count, RSVP %, pending/declined badges, seating progress).
+  - **Prioritized 30-Day Action Center**: Interactive real-time panel organizing all urgent vendor installment payments and milestone tasks due within 30 days or overdue. Filter tabs for `All`, `Payments`, `Tasks`, and `Overdue`.
+  - **Calm Reassurance State**: Monarch-style "All caught up for the next 30 days" calm state when zero urgent payments or tasks are pending.
+- [x] **[MONARCH-PARTNER-ATTRIBUTION] Collaborative Co-Planning & Partner Attribution (`SettingsManager.tsx`, `KanbanBoard.tsx`, `src/app/vow/page.tsx`):**
+  - **Customizable Partner Names in Wedding Details**: Explicit Partner 1 Name and Partner 2 Name fields in Settings, auto-derived from connected Google account (`googleUserName`) and co-planners with full couple customization. Persisted in `localStorage` and synchronized with dashboard data.
+  - **Kanban Partner Assignment**: Quick attribution chips (`[Partner 1]`, `[Partner 2]`, `[Shared]`, `[Clear]`) in task editor modal, dynamic partner name suggestions in assignee combobox, and styled partner attribution tags on Kanban task cards.
+
+---
 ---
 
 

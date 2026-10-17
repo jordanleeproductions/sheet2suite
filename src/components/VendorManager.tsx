@@ -5,6 +5,7 @@ import { Vendor, BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Grid, List, Mail, Phone, Link2, AlertCircle, Printer, Upload, CheckCircle2, FileText, ChevronDown, Check } from 'lucide-react';
 import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import MobileFAB from '@/components/MobileFAB';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
@@ -319,6 +320,25 @@ export default function VendorManager({
 
     return matchesSearch && matchesCategory && matchesPayment;
   });
+
+  // Adjacent Vendor navigation for Slide-Over Inspector [Monarch UX]
+  const currentVendorIndex = editingItem ? filteredVendors.findIndex(v => v.vendorId === editingItem.vendorId) : -1;
+  const handleNavigateAdjacentVendor = (direction: number) => {
+    if (currentVendorIndex === -1) return;
+    const nextIdx = currentVendorIndex + direction;
+    if (nextIdx >= 0 && nextIdx < filteredVendors.length) {
+      const targetVendor = filteredVendors[nextIdx];
+      const total = Number(targetVendor.totalContractValue) || 0;
+      const deposit = Number(targetVendor.depositPaid) || 0;
+      const calculatedBalance = Math.max(0, Math.round((total - deposit) * 100) / 100);
+      setEditingItem(targetVendor);
+      setEditingIndex(nextIdx);
+      setFormState({
+        ...targetVendor,
+        balanceOwing: calculatedBalance,
+      });
+    }
+  };
 
   const startAdd = async () => {
     if (!(await verifyActiveSession())) return;
@@ -1014,30 +1034,46 @@ export default function VendorManager({
         />
       </div>
 
-      {/* Modal Overlay for Add/Edit */}
-      {(isAdding || editingItem) && (
-        <div className="vendor-modal-overlay" style={styles.modalOverlay}>
-          <style>{`
-            @media (max-width: 640px) {
-              .vendor-modal-overlay {
-                padding: 0.5rem !important;
-              }
-              .vendor-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-              }
-              .vendor-form-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-            }
-          `}</style>
-          <div className="vendor-modal-content" style={styles.modalContent}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: '#ffffff' }} className="modalTitle">{isAdding ? 'ADD VENDOR' : 'EDIT VENDOR'}</h3>
-              <button style={{ ...styles.closeBtn, color: '#ffffff' }} className="closeBtn" onClick={closeModal}><X size={20} /></button>
+      {/* Slide-Over Vendor Inspector [Monarch UX] */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAdding || editingItem)}
+        onClose={closeModal}
+        title={isAdding ? 'Add New Vendor' : (formState.vendorName || 'Edit Vendor')}
+        subtitle={editingItem ? `${formState.category || 'Vendor'} · ${formState.contactName || 'No contact named'}` : 'New wedding vendor record'}
+        badge="VENDOR PROFILE"
+        badgeColor="#0284C7"
+        hasPrevious={currentVendorIndex > 0}
+        hasNext={currentVendorIndex >= 0 && currentVendorIndex < filteredVendors.length - 1}
+        onPrevious={() => handleNavigateAdjacentVendor(-1)}
+        onNext={() => handleNavigateAdjacentVendor(1)}
+        width="480px"
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+            <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {isAdding && (
+                <button
+                  type="button"
+                  style={{
+                    ...styles.saveBtn,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-primary, #0F172A)',
+                    border: '1px solid var(--color-border, #CBD5E1)',
+                  }}
+                  disabled={isSyncing}
+                  onClick={(e) => saveItem(e, true)}
+                >
+                  SAVE & ADD NEW
+                </button>
+              )}
+              <button type="submit" form="vendor-inspector-form" style={styles.saveBtn} disabled={isSyncing}>
+                {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE VENDOR' : 'SAVE CHANGES')}
+              </button>
             </div>
-            <form onSubmit={saveItem} style={styles.form}>
+          </div>
+        }
+      >
+        <form id="vendor-inspector-form" onSubmit={saveItem} style={styles.form}>
               <div className="vendor-form-grid" style={styles.formGrid}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Vendor Name</label>
@@ -1260,31 +1296,8 @@ export default function VendorManager({
                   </label>
                 </div>
               </div>
-              <div style={styles.modalFooter}>
-                <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
-                {isAdding && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                    disabled={isSyncing}
-                    onClick={(e) => saveItem(e, true)}
-                  >
-                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
-                  </button>
-                )}
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE VENDOR' : 'SAVE CHANGES')}
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
-      )}
+      </SlideOverDrawer>
 
       {/* IN-APP DELETE VENDOR CONFIRMATION MODAL */}
       {vendorToDelete && (

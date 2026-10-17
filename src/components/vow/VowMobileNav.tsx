@@ -19,6 +19,7 @@ import {
   Printer,
   Share2,
   Settings,
+  Search,
 } from 'lucide-react';
 
 export interface VowMobileNavProps {
@@ -31,6 +32,7 @@ export interface VowMobileNavProps {
   onOpenPrintStudio?: () => void;
   onOpenShareModal: () => void;
   onOpenSettings: () => void;
+  onOpenCommandPalette?: () => void;
   onTouchStart?: (e: React.TouchEvent) => void;
   onTouchEnd?: (e: React.TouchEvent) => void;
   triggerHaptic?: (ms: number) => void;
@@ -46,6 +48,7 @@ export default function VowMobileNav({
   onOpenPrintStudio,
   onOpenShareModal,
   onOpenSettings,
+  onOpenCommandPalette,
   onTouchStart,
   onTouchEnd,
   triggerHaptic,
@@ -277,6 +280,36 @@ export default function VowMobileNav({
                 <X size={18} />
               </button>
             </div>
+
+            {/* Quick Search Entry */}
+            {onOpenCommandPalette && (
+              <button
+                type="button"
+                onClick={() => {
+                  onCloseDrawer();
+                  onOpenCommandPalette();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.55rem',
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--color-background-subtle, #F1F5F9)',
+                  border: '1px solid var(--color-border, #E2E8F0)',
+                  color: 'var(--color-muted, #64748B)',
+                  fontSize: '0.8rem',
+                  fontWeight: 500,
+                  width: '100%',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <Search size={15} style={{ flexShrink: 0 }} />
+                <span>Search guests, vendors, budget, tasks...</span>
+              </button>
+            )}
 
             {/* Categorized Module Groups */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

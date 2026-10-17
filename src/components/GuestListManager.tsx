@@ -5,6 +5,7 @@ import { Guest, AgeCategory, RSVPStatus, MenuItem, TableConfig } from '@/lib/she
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 interface GuestListManagerProps {
@@ -193,6 +194,18 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
     
     return matchesSearch && matchesRsvp && matchesGroup && matchesMeal && matchesDiet;
   });
+
+  // Adjacent Guest navigation for Slide-Over Inspector [Monarch UX]
+  const currentGuestIndex = editingGuest ? filteredGuests.findIndex(g => g.guestId === editingGuest.guestId) : -1;
+  const handleNavigateAdjacentGuest = (direction: number) => {
+    if (currentGuestIndex === -1) return;
+    const nextIdx = currentGuestIndex + direction;
+    if (nextIdx >= 0 && nextIdx < filteredGuests.length) {
+      const targetGuest = filteredGuests[nextIdx];
+      setEditingGuest(targetGuest);
+      setFormState({ ...targetGuest });
+    }
+  };
 
   // Grouping helper for Seating Tables
   const tableGroupsMap = filteredGuests.reduce((acc, guest) => {
@@ -1642,270 +1655,258 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         </div>
       )}
 
-      {/* Editor Overlay Modal */}
-      {(editingGuest || isAdding) && (
-        <div className="guest-modal-overlay" style={styles.modalOverlay}>
-          <style>{`
-            @media (max-width: 640px) {
-              .guest-modal-overlay {
-                padding: 0.5rem !important;
-              }
-              .guest-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-                padding: 1rem !important;
-              }
-              .guest-form-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-              .form-field-span-2 {
-                grid-column: span 1 !important;
-              }
-            }
-          `}</style>
-          <div className="guest-modal-content" style={styles.modalContent}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAdding ? 'ADD NEW GUEST' : `EDIT GUEST: ${formState.firstName} ${formState.lastName}`}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setEditingGuest(null); setIsAdding(false); }}>
-                <X size={18} />
+      {/* Slide-Over Guest Inspector [Monarch UX] */}
+      <SlideOverDrawer
+        isOpen={Boolean(editingGuest || isAdding)}
+        onClose={() => { setEditingGuest(null); setIsAdding(false); }}
+        title={isAdding ? 'Add New Guest' : `${formState.firstName || ''} ${formState.lastName || ''}`}
+        subtitle={editingGuest ? `${formState.partyGroup || 'Individual Guest'} · ${formState.rsvpStatus || 'No Response'}` : 'New wedding guest record'}
+        badge="GUEST INSPECTOR"
+        badgeColor="#0284C7"
+        hasPrevious={currentGuestIndex > 0}
+        hasNext={currentGuestIndex >= 0 && currentGuestIndex < filteredGuests.length - 1}
+        onPrevious={() => handleNavigateAdjacentGuest(-1)}
+        onNext={() => handleNavigateAdjacentGuest(1)}
+        width="480px"
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+            <button 
+              type="button" 
+              style={styles.cancelBtn} 
+              onClick={() => { setEditingGuest(null); setIsAdding(false); }}
+            >
+              CANCEL
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {isAdding && (
+                <button
+                  type="button"
+                  style={{
+                    ...styles.saveBtn,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-primary, #0F172A)',
+                    border: '1px solid var(--color-border, #CBD5E1)',
+                  }}
+                  disabled={isSyncing}
+                  onClick={(e) => saveGuest(e as any, true)}
+                >
+                  SAVE & ADD NEW
+                </button>
+              )}
+              <button
+                type="button"
+                style={styles.saveBtn}
+                disabled={isSyncing}
+                onClick={(e) => saveGuest(e as any)}
+              >
+                {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE GUEST' : 'SAVE CHANGES')}
               </button>
             </div>
-            
-            <form onSubmit={saveGuest} style={styles.form}>
-              <div className="guest-form-grid" style={styles.formGrid}>
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>FIRST NAME *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formState.firstName || ''}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>LAST NAME *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formState.lastName || ''}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                {/* Dynamic Party Group Combo Dropdown [GUEST-8] */}
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>PARTY GROUP</label>
-                  <input
-                    type="text"
-                    list="party-group-options"
-                    value={formState.partyGroup || ''}
-                    placeholder="Select existing or type custom group..."
-                    onChange={(e) => handleInputChange('partyGroup', e.target.value)}
-                    style={styles.input}
-                  />
-                  <datalist id="party-group-options">
-                    {groups.map(grp => (
-                      <option key={grp} value={grp} />
-                    ))}
-                    <option value="Bride Family" />
-                    <option value="Groom Family" />
-                    <option value="Wedding Party" />
-                    <option value="Mutual Friends" />
-                    <option value="Co-Workers" />
-                  </datalist>
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>AGE CATEGORY</label>
-                  <select
-                    value={formState.ageCategory || 'Adult'}
-                    onChange={(e) => handleInputChange('ageCategory', e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="Adult">Adult</option>
-                    <option value="Youth">Youth</option>
-                    <option value="Child">Child</option>
-                    <option value="Infant">Infant</option>
-                    <option value="Vendor">Vendor</option>
-                  </select>
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>RSVP STATUS</label>
-                  <select
-                    value={formState.rsvpStatus || 'No Response'}
-                    onChange={(e) => handleInputChange('rsvpStatus', e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="No Response">No Response</option>
-                    <option value="Attending">Attending</option>
-                    <option value="Declined">Declined</option>
-                  </select>
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>
-                    RECEPTION TABLE ASSIGNMENT
-                    {formState.rsvpStatus === 'Declined' && (
-                      <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
-                        (N/A — Guest Declined)
-                      </span>
-                    )}
-                  </label>
-                  {existingTables.length > 0 ? (
-                    <select
-                      value={formState.rsvpStatus === 'Declined' ? '' : (formState.tableAssignment || '')}
-                      onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
-                      disabled={formState.rsvpStatus === 'Declined'}
-                      style={{
-                        ...styles.select,
-                        opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
-                        cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
-                        backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
-                      }}
-                    >
-                      <option value="">Unassigned</option>
-                      {existingTables.map(t => (
-                        <option key={t.id} value={t.id}>{t.label}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', padding: '0.5rem 0.625rem', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-muted)', borderRadius: 'var(--border-radius-sm)' }}>
-                      No tables set up yet. Go to <strong>Seating Chart</strong> to add tables first.
-                    </div>
-                  )}
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>
-                    CEREMONY SEATING (ROW / SIDE)
-                    {formState.rsvpStatus === 'Declined' && (
-                      <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
-                        (N/A — Guest Declined)
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type="text"
-                    value={formState.rsvpStatus === 'Declined' ? '' : (formState.ceremonySeating || '')}
-                    onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
-                    disabled={formState.rsvpStatus === 'Declined'}
-                    placeholder={formState.rsvpStatus === 'Declined' ? 'Not Applicable (Declined)' : 'e.g. Row 1 - Bride Side, Front Aisle'}
-                    style={{
-                      ...styles.input,
-                      opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
-                      cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'text',
-                      backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
-                    }}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>
-                    MEAL SELECTION
-                    {formState.rsvpStatus === 'Declined' && (
-                      <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
-                        (N/A — Guest Declined)
-                      </span>
-                    )}
-                  </label>
-                  <select
-                    value={formState.rsvpStatus === 'Declined' ? '' : (formState.mealChoice || 'Unassigned / Pending')}
-                    onChange={(e) => handleInputChange('mealChoice', e.target.value)}
-                    disabled={formState.rsvpStatus === 'Declined'}
-                    style={{
-                      ...styles.select,
-                      opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
-                      cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
-                      backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
-                    }}
-                  >
-                    <option value="Unassigned / Pending">Unassigned / Pending</option>
-                    {menuOptions.map((item) => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>EMAIL ADDRESS</label>
-                  <input
-                    type="email"
-                    value={formState.emailAddress || ''}
-                    onChange={(e) => handleInputChange('emailAddress', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>PHONE NUMBER</label>
-                  <input
-                    type="text"
-                    value={formState.phoneNumber || ''}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>DIETARY RESTRICTIONS</label>
-                  <input
-                    type="text"
-                    value={formState.dietaryRestrictions || ''}
-                    placeholder="e.g. Vegetarian, Gluten Free, Nut Allergy"
-                    onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>MAILING ADDRESS</label>
-                  <textarea
-                    value={formState.mailingAddress || ''}
-                    rows={2}
-                    onChange={(e) => handleInputChange('mailingAddress', e.target.value)}
-                    style={styles.textarea}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formActions}>
-                <button 
-                  type="button" 
-                  style={styles.cancelBtn} 
-                  onClick={() => { setEditingGuest(null); setIsAdding(false); }}
-                >
-                  CANCEL
-                </button>
-                {isAdding && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                    disabled={isSyncing}
-                    onClick={(e) => saveGuest(e, true)}
-                  >
-                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
-                  </button>
-                )}
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE GUEST' : 'SAVE CHANGES')}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form onSubmit={saveGuest} style={styles.form}>
+          <div className="guest-form-grid" style={styles.formGrid}>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>FIRST NAME *</label>
+              <input
+                type="text"
+                required
+                value={formState.firstName || ''}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>LAST NAME *</label>
+              <input
+                type="text"
+                required
+                value={formState.lastName || ''}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                style={styles.input}
+              />
+            </div>
+
+            {/* Dynamic Party Group Combo Dropdown [GUEST-8] */}
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>PARTY GROUP</label>
+              <input
+                type="text"
+                list="party-group-options"
+                value={formState.partyGroup || ''}
+                placeholder="Select existing or type custom group..."
+                onChange={(e) => handleInputChange('partyGroup', e.target.value)}
+                style={styles.input}
+              />
+              <datalist id="party-group-options">
+                {groups.map(grp => (
+                  <option key={grp} value={grp} />
+                ))}
+                <option value="Bride Family" />
+                <option value="Groom Family" />
+                <option value="Wedding Party" />
+                <option value="Mutual Friends" />
+                <option value="Co-Workers" />
+              </datalist>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>AGE CATEGORY</label>
+              <select
+                value={formState.ageCategory || 'Adult'}
+                onChange={(e) => handleInputChange('ageCategory', e.target.value)}
+                style={styles.select}
+              >
+                <option value="Adult">Adult</option>
+                <option value="Youth">Youth</option>
+                <option value="Child">Child</option>
+                <option value="Infant">Infant</option>
+                <option value="Vendor">Vendor</option>
+              </select>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>RSVP STATUS</label>
+              <select
+                value={formState.rsvpStatus || 'No Response'}
+                onChange={(e) => handleInputChange('rsvpStatus', e.target.value)}
+                style={styles.select}
+              >
+                <option value="No Response">No Response</option>
+                <option value="Attending">Attending</option>
+                <option value="Declined">Declined</option>
+              </select>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>
+                RECEPTION TABLE ASSIGNMENT
+                {formState.rsvpStatus === 'Declined' && (
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
+                    (N/A — Guest Declined)
+                  </span>
+                )}
+              </label>
+              {existingTables.length > 0 ? (
+                <select
+                  value={formState.rsvpStatus === 'Declined' ? '' : (formState.tableAssignment || '')}
+                  onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
+                  disabled={formState.rsvpStatus === 'Declined'}
+                  style={{
+                    ...styles.select,
+                    opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
+                    cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
+                    backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                  }}
+                >
+                  <option value="">Unassigned</option>
+                  {existingTables.map(t => (
+                    <option key={t.id} value={t.id}>{t.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', padding: '0.5rem 0.625rem', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-muted)', borderRadius: 'var(--border-radius-sm)' }}>
+                  No tables set up yet. Go to <strong>Seating Chart</strong> to add tables first.
+                </div>
+              )}
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>
+                CEREMONY SEATING (ROW / SIDE)
+                {formState.rsvpStatus === 'Declined' && (
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
+                    (N/A — Guest Declined)
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                value={formState.rsvpStatus === 'Declined' ? '' : (formState.ceremonySeating || '')}
+                onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
+                disabled={formState.rsvpStatus === 'Declined'}
+                placeholder={formState.rsvpStatus === 'Declined' ? 'Not Applicable (Declined)' : 'e.g. Row 1 - Bride Side, Front Aisle'}
+                style={{
+                  ...styles.input,
+                  opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
+                  cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'text',
+                  backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                }}
+              />
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>
+                MEAL SELECTION
+                {formState.rsvpStatus === 'Declined' && (
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
+                    (N/A — Guest Declined)
+                  </span>
+                )}
+              </label>
+              <select
+                value={formState.rsvpStatus === 'Declined' ? '' : (formState.mealChoice || 'Unassigned / Pending')}
+                onChange={(e) => handleInputChange('mealChoice', e.target.value)}
+                disabled={formState.rsvpStatus === 'Declined'}
+                style={{
+                  ...styles.select,
+                  opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
+                  cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
+                  backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                }}
+              >
+                <option value="Unassigned / Pending">Unassigned / Pending</option>
+                {menuOptions.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>EMAIL ADDRESS</label>
+              <input
+                type="email"
+                value={formState.emailAddress || ''}
+                onChange={(e) => handleInputChange('emailAddress', e.target.value)}
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>PHONE NUMBER</label>
+              <input
+                type="text"
+                value={formState.phoneNumber || ''}
+                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                style={styles.input}
+              />
+            </div>
+
+            <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+              <label style={styles.label}>DIETARY RESTRICTIONS</label>
+              <input
+                type="text"
+                value={formState.dietaryRestrictions || ''}
+                placeholder="e.g. Vegetarian, Gluten Free, Nut Allergy"
+                onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
+                style={styles.input}
+              />
+            </div>
+
+            <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
+              <label style={styles.label}>MAILING ADDRESS</label>
+              <textarea
+                value={formState.mailingAddress || ''}
+                rows={2}
+                onChange={(e) => handleInputChange('mailingAddress', e.target.value)}
+                style={styles.textarea}
+              />
+            </div>
+          </div>
+        </form>
+      </SlideOverDrawer>
 
       {/* Mobile Floating Action Button (FAB) */}
       <MobileFAB onClick={startAdd} label="Add Guest" disabled={isSyncing} />

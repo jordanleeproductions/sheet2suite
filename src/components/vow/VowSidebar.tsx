@@ -20,6 +20,7 @@ import {
   Download,
   Settings,
   Share2,
+  Search,
 } from 'lucide-react';
 import AppVersionBadge from '@/components/AppVersionBadge';
 
@@ -32,6 +33,7 @@ export interface VowSidebarProps {
   onOpenPrintStudio?: () => void;
   onOpenShareModal: () => void;
   onOpenSettings: () => void;
+  onOpenCommandPalette?: () => void;
   onExportCSV: () => void;
   theme?: 'light' | 'dark';
   styleTheme?: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
@@ -60,6 +62,7 @@ export default function VowSidebar({
   onOpenPrintStudio,
   onOpenShareModal,
   onOpenSettings,
+  onOpenCommandPalette,
   onExportCSV,
   theme = 'light',
   styleTheme = 'editorial',
@@ -191,6 +194,65 @@ export default function VowSidebar({
             {isSidebarCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
           </button>
         </div>
+
+        {/* Command Palette / Search Trigger */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            title="Search anything (⌘K / Ctrl+K)"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: isSidebarCollapsed ? 'center' : 'space-between',
+              gap: '0.5rem',
+              padding: isSidebarCollapsed ? '0.5rem 0' : '0.45rem 0.6rem',
+              borderRadius: '4px',
+              backgroundColor: isDarkSidebar ? 'rgba(255, 255, 255, 0.05)' : 'var(--color-background-subtle, #F1F5F9)',
+              border: `1px solid ${isDarkSidebar ? 'rgba(255, 255, 255, 0.08)' : 'var(--color-border, #E2E8F0)'}`,
+              color: isDarkSidebar ? '#94A3B8' : 'var(--color-muted, #64748B)',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              width: '100%',
+              transition: 'all 0.15s ease',
+              boxSizing: 'border-box',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = isDarkSidebar ? 'rgba(255, 255, 255, 0.09)' : '#E2E8F0';
+              e.currentTarget.style.color = isDarkSidebar ? '#F8FAFC' : '#0F172A';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isDarkSidebar ? 'rgba(255, 255, 255, 0.05)' : 'var(--color-background-subtle, #F1F5F9)';
+              e.currentTarget.style.color = isDarkSidebar ? '#94A3B8' : 'var(--color-muted, #64748B)';
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0 }}>
+              <Search size={14} style={{ flexShrink: 0 }} />
+              {!isSidebarCollapsed && (
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>
+                  Search...
+                </span>
+              )}
+            </div>
+            {!isSidebarCollapsed && (
+              <kbd
+                style={{
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.62rem',
+                  fontWeight: 600,
+                  padding: '0.1rem 0.3rem',
+                  borderRadius: '3px',
+                  background: isDarkSidebar ? '#1E293B' : '#E2E8F0',
+                  color: isDarkSidebar ? '#CBD5E1' : '#475569',
+                  border: `1px solid ${isDarkSidebar ? '#334155' : '#CBD5E1'}`,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                ⌘K
+              </kbd>
+            )}
+          </button>
+        )}
 
         {/* Navigation Item Rail */}
         <nav
