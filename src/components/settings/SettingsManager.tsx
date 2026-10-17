@@ -34,7 +34,6 @@ import {
   LifeBuoy,
 } from 'lucide-react';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
-import { getColorPresets } from '@/lib/themePresets';
 import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout } from '@/lib/dashboardLayout';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
@@ -923,44 +922,6 @@ export default function SettingsManager({
                             </span>
                           </div>
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div style={styles.dividerLine} />
-
-              {/* Accent Color */}
-              <div style={styles.formField}>
-                <label style={styles.fieldLabel}>Accent color</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {getColorPresets(styleTheme, theme).map((preset) => {
-                    const isSelected = (primaryColor || '').toLowerCase() === preset.hex.toLowerCase();
-                    return (
-                      <button
-                        key={preset.hex}
-                        type="button"
-                        onClick={() => {
-                          if (onUpdatePrimaryColor) onUpdatePrimaryColor(preset.hex);
-                          triggerQuietSaved('appearance');
-                        }}
-                        title={`${preset.name} (${preset.hex})`}
-                        style={{
-                          width: '34px',
-                          height: '34px',
-                          borderRadius: '50%',
-                          backgroundColor: preset.hex,
-                          border: isSelected ? '2px solid var(--color-text, #0F172A)' : '2px solid transparent',
-                          boxShadow: isSelected ? '0 0 0 2px var(--color-surface, #FFFFFF), 0 2px 4px rgba(0,0,0,0.15)' : 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-                        }}
-                      >
-                        {isSelected && <Check size={14} style={{ color: '#FFFFFF', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }} />}
                       </button>
                     );
                   })}

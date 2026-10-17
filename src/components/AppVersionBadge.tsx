@@ -6,9 +6,10 @@ import { APP_VERSION, BUILD_TIMESTAMP } from '@/lib/buildInfo';
 interface AppVersionBadgeProps {
   collapsed?: boolean;
   variant?: 'sidebar' | 'mobile-drawer';
+  isDark?: boolean;
 }
 
-export default function AppVersionBadge({ collapsed = false, variant = 'sidebar' }: AppVersionBadgeProps) {
+export default function AppVersionBadge({ collapsed = false, variant = 'sidebar', isDark = false }: AppVersionBadgeProps) {
   if (variant === 'mobile-drawer') {
     return (
       <div
@@ -46,13 +47,17 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
   }
 
   // Desktop sidebar variant
+  const sidebarBorderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'var(--color-border)';
+  const sidebarTextColor = isDark ? '#FFFFFF' : 'var(--color-text)';
+  const sidebarMutedColor = isDark ? 'rgba(255, 255, 255, 0.65)' : 'var(--color-muted)';
+
   if (collapsed) {
     return (
       <div
         title={`Sheet2Vow ${APP_VERSION} (Deployed: ${BUILD_TIMESTAMP})`}
         style={{
           padding: '0.6rem 0',
-          borderTop: '1px solid var(--color-border)',
+          borderTop: `1px solid ${sidebarBorderColor}`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -61,7 +66,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
           fontFamily: 'var(--font-mono)',
           fontSize: '0.55rem',
           fontWeight: 700,
-          color: 'var(--color-muted)',
+          color: sidebarMutedColor,
           cursor: 'help',
           userSelect: 'none',
         }}
@@ -85,17 +90,17 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
     <div
       style={{
         padding: '0.65rem 0.75rem',
-        borderTop: '1px solid var(--color-border)',
+        borderTop: `1px solid ${sidebarBorderColor}`,
         fontFamily: 'var(--font-mono)',
         fontSize: '0.65rem',
-        color: 'var(--color-muted)',
+        color: sidebarMutedColor,
         display: 'flex',
         flexDirection: 'column',
         gap: '0.15rem',
         userSelect: 'none',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: 'var(--color-text)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: sidebarTextColor }}>
         <span
           style={{
             display: 'inline-block',
@@ -108,7 +113,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
         />
         <span>Sheet2Vow {APP_VERSION}</span>
       </div>
-      <div style={{ fontSize: '0.575rem', color: 'var(--color-muted)', opacity: 0.85 }}>
+      <div style={{ fontSize: '0.575rem', color: sidebarMutedColor, opacity: 0.85 }}>
         Deployed {BUILD_TIMESTAMP}
       </div>
     </div>

@@ -926,9 +926,12 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     if (savedDate) setWeddingDate(savedDate);
     if (savedLocation) setLocationDetails(savedLocation);
     if (savedBudget && !isNaN(Number(savedBudget))) setBudgetThreshold(Number(savedBudget));
-    if (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') setStyleTheme(savedStyleTheme);
-    if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
-    if (savedColor) setPrimaryColor(savedColor);
+    const activeStyle = (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') ? savedStyleTheme : 'editorial';
+    const activeTheme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light';
+    if (savedStyleTheme) setStyleTheme(activeStyle);
+    if (savedTheme) setTheme(activeTheme);
+    const defaultAccent = getColorPresets(activeStyle, activeTheme)[0]?.hex || '';
+    setPrimaryColor(defaultAccent);
     if (savedTimeFormat === '12h' || savedTimeFormat === '24h') setTimeFormat(savedTimeFormat);
     if (savedCurrency) setCurrency(savedCurrency);
     if (savedFolder) setDriveFolder(savedFolder);
