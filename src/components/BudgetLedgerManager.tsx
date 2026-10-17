@@ -974,7 +974,7 @@ export default function BudgetLedgerManager({
               title="Add New Budget Category"
             >
               <Plus size={12} />
-              <span>+ ADD CATEGORY</span>
+              <span>ADD CATEGORY</span>
             </button>
           </div>
 
@@ -1279,7 +1279,7 @@ export default function BudgetLedgerManager({
                 }}
               >
                 <Plus size={13} />
-                <span>+ ADD EXPENSE</span>
+                <span>ADD EXPENSE</span>
               </button>
             </div>
 
@@ -1373,7 +1373,7 @@ export default function BudgetLedgerManager({
                   {itemizedExpensesForSelected.length === 0 ? (
                     <tr>
                       <td colSpan={selectedCategoryId ? 5 : 6} style={{ padding: '2rem 1rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
-                        No purchase items logged yet for this selection. Click &quot;+ ADD EXPENSE&quot; to log vendor receipts.
+                        No purchase items logged yet for this selection. Click &quot;ADD EXPENSE&quot; to log vendor receipts.
                       </td>
                     </tr>
                   ) : (
