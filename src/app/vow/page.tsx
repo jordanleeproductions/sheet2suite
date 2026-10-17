@@ -35,6 +35,7 @@ import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
+import { DashboardSectionConfig, loadDashboardLayout, loadPlanningToolsOrder } from '@/lib/dashboardLayout';
 
 export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string } = {}) {
   // Authentication & Spreadsheet Settings
@@ -65,6 +66,35 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     }
     return '';
   });
+
+  // Dynamic Dashboard and Navigation Layout Order (reactive across settings & tabs)
+  const [dashboardLayout, setDashboardLayout] = useState<DashboardSectionConfig[]>(() => loadDashboardLayout());
+  const [planningToolsOrder, setPlanningToolsOrder] = useState<string[]>(() => loadPlanningToolsOrder());
+
+  useEffect(() => {
+    const handleToolsOrderChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string[]>;
+      if (customEvent.detail) {
+        setPlanningToolsOrder(customEvent.detail);
+      } else {
+        setPlanningToolsOrder(loadPlanningToolsOrder());
+      }
+    };
+    const handleLayoutChange = (e: Event) => {
+      const customEvent = e as CustomEvent<DashboardSectionConfig[]>;
+      if (customEvent.detail) {
+        setDashboardLayout(customEvent.detail);
+      } else {
+        setDashboardLayout(loadDashboardLayout());
+      }
+    };
+    window.addEventListener('s2v:tools-order-updated', handleToolsOrderChange);
+    window.addEventListener('s2v:dashboard-layout-updated', handleLayoutChange);
+    return () => {
+      window.removeEventListener('s2v:tools-order-updated', handleToolsOrderChange);
+      window.removeEventListener('s2v:dashboard-layout-updated', handleLayoutChange);
+    };
+  }, []);
 
   // Auto-derive Partner 1 Name default from connected Google account
   useEffect(() => {
@@ -1550,6 +1580,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           onExportCSV={handleExportActiveCSV}
           theme={theme}
           styleTheme={styleTheme}
+          planningToolsOrder={planningToolsOrder}
         />
       )}
 
@@ -2480,6 +2511,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   onSelectStyleTheme={handleStyleThemeChange}
                   onToggleColorTheme={handleToggleTheme}
                   onToggleTopNav={handleToggleTopNav}
+                  dashboardLayout={dashboardLayout}
                 />
               )}
 
@@ -2675,6 +2707,8 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   partner1Name={partner1Name || googleUserName}
                   partner2Name={partner2Name}
                   onUpdatePartnerNames={handleUpdatePartnerNames}
+                  onUpdatePlanningToolsOrder={setPlanningToolsOrder}
+                  onUpdateDashboardLayout={setDashboardLayout}
                 />
               )}
             </div>
@@ -2715,6 +2749,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           photosCount={weddingData?.photos?.length}
           giftsCount={weddingData?.gifts?.length}
           styleTheme={styleTheme}
+          planningToolsOrder={planningToolsOrder}
         />
       )}
 

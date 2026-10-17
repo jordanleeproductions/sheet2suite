@@ -34,7 +34,7 @@ import {
   LifeBuoy,
 } from 'lucide-react';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
-import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout } from '@/lib/dashboardLayout';
+import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout, savePlanningToolsOrder } from '@/lib/dashboardLayout';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
 
 export interface SettingsManagerProps {
@@ -75,6 +75,8 @@ export interface SettingsManagerProps {
   partner1Name?: string;
   partner2Name?: string;
   onUpdatePartnerNames?: (partner1: string, partner2: string) => void;
+  onUpdatePlanningToolsOrder?: (order: string[]) => void;
+  onUpdateDashboardLayout?: (sections: DashboardSectionConfig[]) => void;
 }
 
 export type SettingsSection =
@@ -142,6 +144,8 @@ export default function SettingsManager({
   partner1Name: initialPartner1 = '',
   partner2Name: initialPartner2 = '',
   onUpdatePartnerNames,
+  onUpdatePlanningToolsOrder,
+  onUpdateDashboardLayout,
 }: SettingsManagerProps) {
   const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
 
@@ -430,6 +434,7 @@ export default function SettingsManager({
     updated.splice(targetIndex, 0, moved);
     setDashSections(updated);
     saveDashboardLayout(updated);
+    onUpdateDashboardLayout?.(updated);
     triggerQuietSaved('tools');
   };
 
@@ -455,8 +460,8 @@ export default function SettingsManager({
           const parsedKeys: string[] = JSON.parse(saved);
           const sorted: Array<{ key: keyof ModuleConfig; label: string; desc: string }> = [];
           parsedKeys.forEach((k) => {
-            const found = DEFAULT_PLANNING_TOOLS.find((t) => t.key === k);
-            if (found) sorted.push(found);
+            const found = DEFAULT_PLANNING_TOOLS.find((t) => t.key === k || (k === 'thanks' && t.key === 'gifts'));
+            if (found && !sorted.some((s) => s.key === found.key)) sorted.push(found);
           });
           DEFAULT_PLANNING_TOOLS.forEach((t) => {
             if (!sorted.some((s) => s.key === t.key)) sorted.push(t);
@@ -475,9 +480,9 @@ export default function SettingsManager({
     const [moved] = updated.splice(index, 1);
     updated.splice(targetIndex, 0, moved);
     setPlanningToolsList(updated);
-    try {
-      localStorage.setItem('s2v_planning_tools_order', JSON.stringify(updated.map((t) => t.key)));
-    } catch (_) {}
+    const orderKeys = updated.map((t) => (t.key === 'gifts' ? 'thanks' : (t.key as string)));
+    savePlanningToolsOrder(orderKeys);
+    onUpdatePlanningToolsOrder?.(orderKeys);
     triggerQuietSaved('tools');
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileSpreadsheet,
   PanelLeftClose,
@@ -23,6 +23,7 @@ import {
   Search,
 } from 'lucide-react';
 import AppVersionBadge from '@/components/AppVersionBadge';
+import { loadPlanningToolsOrder } from '@/lib/dashboardLayout';
 
 export interface VowSidebarProps {
   isSidebarCollapsed: boolean;
@@ -37,6 +38,7 @@ export interface VowSidebarProps {
   onExportCSV: () => void;
   theme?: 'light' | 'dark';
   styleTheme?: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+  planningToolsOrder?: string[];
 }
 
 const NAV_ITEMS = [
@@ -66,7 +68,29 @@ export default function VowSidebar({
   onExportCSV,
   theme = 'light',
   styleTheme = 'editorial',
+  planningToolsOrder,
 }: VowSidebarProps) {
+  const [toolsOrder, setToolsOrder] = useState<string[]>(() => planningToolsOrder || loadPlanningToolsOrder());
+
+  useEffect(() => {
+    if (planningToolsOrder) {
+      setToolsOrder(planningToolsOrder);
+    }
+  }, [planningToolsOrder]);
+
+  useEffect(() => {
+    const handleOrderChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string[]>;
+      if (customEvent.detail) {
+        setToolsOrder(customEvent.detail);
+      } else {
+        setToolsOrder(loadPlanningToolsOrder());
+      }
+    };
+    window.addEventListener('s2v:tools-order-updated', handleOrderChange);
+    return () => window.removeEventListener('s2v:tools-order-updated', handleOrderChange);
+  }, []);
+
   const isBotanical = styleTheme === 'botanical-romance';
   const isDarkTheme = styleTheme === 'editorial' || theme === 'dark';
   const isDarkSidebar = isBotanical || isDarkTheme;
@@ -88,7 +112,23 @@ export default function VowSidebar({
   const searchBg = isBotanical ? 'rgba(255, 255, 255, 0.08)' : (isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'var(--color-background-subtle, #F1F5F9)');
   const searchBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.14)' : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid var(--color-border, #E2E8F0)');
 
-  const visibleTabs = NAV_ITEMS.filter((tab) =>
+  const orderedNavItems = useMemo(() => {
+    const homeItem = NAV_ITEMS.find((item) => item.id === 'home');
+    const toolItems = NAV_ITEMS.filter((item) => item.id !== 'home');
+
+    // Sort tool items according to user toolsOrder
+    toolItems.sort((a, b) => {
+      const aKey = a.id === 'thanks' ? 'gifts' : a.id;
+      const bKey = b.id === 'thanks' ? 'gifts' : b.id;
+      const aIdx = toolsOrder.indexOf(aKey) !== -1 ? toolsOrder.indexOf(aKey) : (toolsOrder.indexOf(a.id) !== -1 ? toolsOrder.indexOf(a.id) : 999);
+      const bIdx = toolsOrder.indexOf(bKey) !== -1 ? toolsOrder.indexOf(bKey) : (toolsOrder.indexOf(b.id) !== -1 ? toolsOrder.indexOf(b.id) : 999);
+      return aIdx - bIdx;
+    });
+
+    return homeItem ? [homeItem, ...toolItems] : toolItems;
+  }, [toolsOrder]);
+
+  const visibleTabs = orderedNavItems.filter((tab) =>
     tab.id === 'home'
       ? (enabledModules.home ?? enabledModules.metrics ?? true)
       : (enabledModules[tab.id] ?? true)

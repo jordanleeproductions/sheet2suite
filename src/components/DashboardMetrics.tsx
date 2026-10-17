@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DashboardSummary, Guest, Task, Song, PhotoShot, Vendor } from '@/lib/sheets/types';
 import { 
   AlertCircle, 
@@ -27,6 +27,7 @@ import {
 import { formatCurrency } from '@/lib/currency';
 import WelcomeGuideCard from '@/components/WelcomeGuideCard';
 import { StyleTheme, ColorTheme } from '@/lib/core/theme/ThemeProvider';
+import { DashboardSectionConfig, loadDashboardLayout } from '@/lib/dashboardLayout';
 
 export interface ModuleConfig {
   home?: boolean;
@@ -67,6 +68,7 @@ interface DashboardMetricsProps {
   onSelectStyleTheme?: (style: StyleTheme) => void;
   onToggleColorTheme?: () => void;
   onToggleTopNav?: () => void;
+  dashboardLayout?: DashboardSectionConfig[];
 }
 
 export default function DashboardMetrics({ 
@@ -92,7 +94,29 @@ export default function DashboardMetrics({
   onSelectStyleTheme,
   onToggleColorTheme,
   onToggleTopNav,
+  dashboardLayout,
 }: DashboardMetricsProps) {
+  const [sections, setSections] = useState<DashboardSectionConfig[]>(() => dashboardLayout || loadDashboardLayout());
+
+  useEffect(() => {
+    if (dashboardLayout) {
+      setSections(dashboardLayout);
+    }
+  }, [dashboardLayout]);
+
+  useEffect(() => {
+    const handleLayoutChange = (e: Event) => {
+      const customEvent = e as CustomEvent<DashboardSectionConfig[]>;
+      if (customEvent.detail) {
+        setSections(customEvent.detail);
+      } else {
+        setSections(loadDashboardLayout());
+      }
+    };
+    window.addEventListener('s2v:dashboard-layout-updated', handleLayoutChange);
+    return () => window.removeEventListener('s2v:dashboard-layout-updated', handleLayoutChange);
+  }, []);
+
   const { totalBudget, estimatedCost, actualCost } = metrics;
 
   const modules = enabledModules || {
@@ -137,6 +161,14 @@ export default function DashboardMetrics({
   // Music Calculations
   const allMusic = music || [];
   const pendingRequestsCount = allMusic.filter(s => s.approvalStatus === 'Pending Approval').length;
+  const approvedMusicCount = allMusic.filter(s => (s.approvalStatus || '').toLowerCase() === 'approved').length;
+  const musicPercentApproved = allMusic.length > 0 ? Math.round((approvedMusicCount / allMusic.length) * 100) : 0;
+
+  // Photo Calculations
+  const allPhotos = photos || [];
+  const capturedPhotosCount = allPhotos.filter(p => (p.status || '').toLowerCase() === 'captured').length;
+  const pendingPhotosCount = allPhotos.length - capturedPhotosCount;
+  const photoPercentComplete = allPhotos.length > 0 ? Math.round((capturedPhotosCount / allPhotos.length) * 100) : 0;
 
   // Planning Status Health Indicator
   const hasExceptions = isOverBudget || pendingCount > 0 || toDoCount > 5 || unassignedAttending > 0;
@@ -257,6 +289,762 @@ export default function DashboardMetrics({
     if (actionFilter === 'overdue') return allActionItems.filter(i => i.isOverdue);
     return allActionItems;
   }, [actionFilter, allActionItems, upcomingVendorInstallments, upcomingTasks]);
+
+  const renderActionCenter = () => (
+    <div
+      key="sec-action_center"
+      className="action-center-panel"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '4px',
+        padding: '0.85rem 1.15rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: overdueCount > 0
+                ? '#EF4444'
+                : (allActionItems.length > 0 ? '#F59E0B' : '#10B981'),
+              display: 'inline-block',
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: 'var(--color-primary, #0F172A)',
+            }}
+          >
+            ACTION CENTER · 30-DAY HORIZON
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              padding: '0.1rem 0.45rem',
+              borderRadius: '10px',
+              backgroundColor: overdueCount > 0 ? 'rgba(239, 68, 68, 0.1)' : 'var(--color-bg-pane, #F1F5F9)',
+              color: overdueCount > 0 ? '#DC2626' : 'var(--color-muted, #64748B)',
+            }}
+          >
+            {allActionItems.length} {allActionItems.length === 1 ? 'item' : 'items'}
+          </span>
+        </div>
+
+        {/* Filter Pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: `All (${allActionItems.length})` },
+            { id: 'vendors', label: `Payments (${upcomingVendorInstallments.length})` },
+            { id: 'tasks', label: `Tasks (${upcomingTasks.length})` },
+            { id: 'overdue', label: `Overdue (${overdueCount})` },
+          ].map(pill => {
+            const isActive = actionFilter === pill.id;
+            return (
+              <button
+                key={pill.id}
+                type="button"
+                onClick={() => setActionFilter(pill.id as any)}
+                style={{
+                  padding: '0.2rem 0.5rem',
+                  fontSize: '0.65rem',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  borderRadius: '2px',
+                  border: `1px solid ${isActive ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
+                  backgroundColor: isActive ? 'var(--color-primary, #0F172A)' : 'transparent',
+                  color: isActive ? '#FFFFFF' : 'var(--color-muted, #64748B)',
+                  cursor: 'pointer',
+                  fontWeight: isActive ? 700 : 500,
+                }}
+              >
+                {pill.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Action Center Items Content */}
+      {allActionItems.length === 0 ? (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.85rem 1rem',
+            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '3px',
+          }}
+        >
+          <CheckCircle2 size={18} style={{ color: '#10B981', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#065F46' }}>
+              All caught up for the next 30 days
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#047857' }}>
+              No vendor installment payments or tasks are overdue or due within the upcoming 30-day window.
+            </div>
+          </div>
+        </div>
+      ) : filteredActionItems.length === 0 ? (
+        <div style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-muted, #64748B)' }}>
+          No items in the &ldquo;{actionFilter}&rdquo; filter.
+        </div>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '0.65rem',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        >
+          {filteredActionItems.slice(0, 6).map(item => {
+            const isPayment = item.type === 'vendor';
+            return (
+              <div
+                key={item.id}
+                style={{
+                  backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                  border: `1px solid ${item.isOverdue ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
+                  borderRadius: '3px',
+                  padding: '0.65rem 0.85rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.4rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    {isPayment ? (
+                      <Receipt size={12} style={{ color: 'var(--color-primary, #0F172A)' }} />
+                    ) : (
+                      <ListTodo size={12} style={{ color: 'var(--color-primary, #0F172A)' }} />
+                    )}
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-technical-mono, monospace)',
+                        fontSize: '0.58rem',
+                        fontWeight: 700,
+                        color: 'var(--color-muted, #64748B)',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {isPayment ? 'INSTALLMENT' : 'TASK'}
+                    </span>
+                  </div>
+
+                  {/* Urgency Badge */}
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.6rem',
+                      fontWeight: 700,
+                      padding: '0.12rem 0.45rem',
+                      borderRadius: '2px',
+                      backgroundColor: item.isOverdue
+                        ? '#FEE2E2'
+                        : (item.isDueToday ? '#FEF3C7' : 'rgba(15, 23, 42, 0.06)'),
+                      color: item.isOverdue
+                        ? '#991B1B'
+                        : (item.isDueToday ? '#92400E' : 'var(--color-primary, #0F172A)'),
+                    }}
+                  >
+                    {item.isOverdue
+                      ? `OVERDUE (${Math.abs(item.diffDays)}D)`
+                      : (item.isDueToday ? 'DUE TODAY' : `IN ${item.diffDays}D`)}
+                  </span>
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: 'var(--color-text, #0F172A)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={item.title}
+                  >
+                    {item.title}
+                  </div>
+
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748B)', marginTop: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.subtitle}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.35rem', borderTop: '1px solid var(--color-border-light, #F1F5F9)' }}>
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab && onNavigateTab(item.targetTab)}
+                    style={{
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: 'var(--color-primary, #0F172A)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.2rem',
+                      padding: 0,
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    <span>{isPayment ? 'OPEN VENDOR' : 'OPEN KANBAN'}</span>
+                    <ArrowUpRight size={10} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderBudget = () => (
+    <div
+      key="sec-budget"
+      className="financial-allocation-strip"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '3px',
+        padding: '0.85rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <DollarSign size={14} style={{ color: 'var(--color-primary, #0F172A)' }} />
+          <span
+            style={{
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: 'var(--color-primary, #0F172A)',
+            }}
+          >
+            BUDGET &amp; SPENDING
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onNavigateTab && onNavigateTab('budget')}
+          style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            fontWeight: 700,
+            color: 'var(--color-primary, #0F172A)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.25rem',
+            textDecoration: 'underline',
+          }}
+        >
+          <span>OPEN BUDGET</span>
+          <ArrowUpRight size={11} />
+        </button>
+      </div>
+
+      {/* Metric Summary Bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.5rem 1.5rem',
+          padding: '0.5rem 0.75rem',
+          backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          borderRadius: '2px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
+            WEDDING BUDGET:
+          </span>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
+            {formatCurrency(effectiveTotalBudget, currency)}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
+            PAID SO FAR:
+          </span>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
+            {formatCurrency(actualCost, currency)}
+          </span>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+            ({actualPercent}%)
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
+            LEFT TO SPEND:
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.88rem',
+            fontWeight: 800,
+            color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)'
+          }}>
+            {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
+          </span>
+        </div>
+      </div>
+
+      {/* Structured Hairline Allocation Bar */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <div
+          style={{
+            position: 'relative',
+            height: '8px',
+            backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+            border: '1px solid var(--color-border, #E2E8F0)',
+            borderRadius: '2px',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${actualPercent}%`,
+              backgroundColor: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)',
+              transition: 'width 0.3s ease-out',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
+          <span>0%</span>
+          <span>25%</span>
+          <span>50%</span>
+          <span>75%</span>
+          <span>100% TARGET</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderGuests = () => (
+    <div
+      key="sec-guests"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '3px',
+        padding: '0.85rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.65rem',
+        boxSizing: 'border-box',
+        width: '100%',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Users size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+            GUESTS &amp; RSVPS
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigateTab && onNavigateTab('guests')}
+          style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            color: 'var(--color-muted, #64748B)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          VIEW LIST
+        </button>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        gap: '0.35rem',
+        backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        padding: '0.5rem 0.4rem',
+        borderRadius: '2px',
+        textAlign: 'center',
+      }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>INVITED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>{totalGuestsInvited}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>ACCEPTED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{attendingCount}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-amber, #D97706)', textTransform: 'uppercase' }}>PENDING</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-amber, #D97706)' }}>{pendingCount}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>DECLINED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-muted, #64748B)' }}>{declinedCount}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div style={{ height: '4px', display: 'flex', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+          <div style={{ width: `${totalGuestsInvited > 0 ? (attendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-green, #10B981)' }} />
+          <div style={{ width: `${totalGuestsInvited > 0 ? (pendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-amber, #F59E0B)' }} />
+          <div style={{ width: `${totalGuestsInvited > 0 ? (declinedCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-muted, #94A3B8)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+          <span>CONFIRMED: {confirmedPercent}%</span>
+          <span>TABLES: {totalTables} ACTIVE</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTasks = () => (
+    <div
+      key="sec-tasks"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '3px',
+        padding: '0.85rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.65rem',
+        boxSizing: 'border-box',
+        width: '100%',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <ListTodo size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+            TASKS &amp; CHECKLIST
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigateTab && onNavigateTab('tasks')}
+          style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            color: 'var(--color-muted, #64748B)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          VIEW KANBAN
+        </button>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: '0.35rem',
+        backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        padding: '0.5rem 0.4rem',
+        borderRadius: '2px',
+        textAlign: 'center',
+      }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-red, #EF4444)', textTransform: 'uppercase' }}>TO DO</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-red, #EF4444)' }}>{toDoCount}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-amber, #D97706)', textTransform: 'uppercase' }}>IN PROGRESS</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-amber, #D97706)' }}>{inProgressCount}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>COMPLETED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{doneCount}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+          <div style={{ height: '100%', width: `${taskPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+          <span>PROGRESS: {taskPercentComplete}%</span>
+          <span>{doneCount} OF {totalTasksCount} COMPLETE</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTables = () => (
+    <div
+      key="sec-tables"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '3px',
+        padding: '0.85rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.65rem',
+        boxSizing: 'border-box',
+        width: '100%',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Armchair size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+            RECEPTION SEATING &amp; TABLES
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigateTab && onNavigateTab('tables')}
+          style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            color: 'var(--color-muted, #64748B)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          VIEW TABLES
+        </button>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: '0.35rem',
+        backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        padding: '0.5rem 0.4rem',
+        borderRadius: '2px',
+        textAlign: 'center',
+      }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>SEATED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{assignedAttending.length}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: unassignedAttending > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>UNASSIGNED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: unassignedAttending > 0 ? 'var(--color-red, #EF4444)' : 'var(--color-text, #0F172A)' }}>{unassignedAttending}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>ACTIVE TABLES</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>{totalTables}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+          <div style={{ height: '100%', width: `${seatedPercent}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+          <span>PROGRESS: {seatedPercent}% SEATED</span>
+          <span>{assignedAttending.length} OF {attendingCount || 1} ATTENDING GUESTS</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMusic = () => (
+    <div
+      key="sec-music"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '3px',
+        padding: '0.85rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.65rem',
+        boxSizing: 'border-box',
+        width: '100%',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Music size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+            MUSIC &amp; PLAYLISTS
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigateTab && onNavigateTab('music')}
+          style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            color: 'var(--color-muted, #64748B)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          VIEW PLAYLISTS
+        </button>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: '0.35rem',
+        backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        padding: '0.5rem 0.4rem',
+        borderRadius: '2px',
+        textAlign: 'center',
+      }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>TOTAL TRACKS</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>{allMusic.length}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>APPROVED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{approvedMusicCount}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: pendingRequestsCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>PENDING</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: pendingRequestsCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-text, #0F172A)' }}>{pendingRequestsCount}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+          <div style={{ height: '100%', width: `${musicPercentApproved}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+          <span>APPROVED: {musicPercentApproved}%</span>
+          <span>{approvedMusicCount} OF {allMusic.length} SONGS READY</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPhotos = () => (
+    <div
+      key="sec-photos"
+      style={{
+        backgroundColor: 'var(--color-surface, #FFFFFF)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '3px',
+        padding: '0.85rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.65rem',
+        boxSizing: 'border-box',
+        width: '100%',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Camera size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
+          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
+            PHOTOGRAPHY SHOT LIST
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigateTab && onNavigateTab('photos')}
+          style={{
+            fontFamily: 'var(--font-technical-mono, monospace)',
+            fontSize: '0.62rem',
+            color: 'var(--color-muted, #64748B)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          VIEW SHOT LIST
+        </button>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: '0.35rem',
+        backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        padding: '0.5rem 0.4rem',
+        borderRadius: '2px',
+        textAlign: 'center',
+      }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>TOTAL SHOTS</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>{allPhotos.length}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>CAPTURED</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{capturedPhotosCount}</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: pendingPhotosCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>PENDING</div>
+          <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: pendingPhotosCount > 0 ? 'var(--color-amber, #D97706)' : 'var(--color-text, #0F172A)' }}>{pendingPhotosCount}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
+          <div style={{ height: '100%', width: `${photoPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
+          <span>PROGRESS: {photoPercentComplete}% CAPTURED</span>
+          <span>{capturedPhotosCount} OF {allPhotos.length} SHOTS TAKEN</span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="editorial-overview-briefing" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
@@ -733,546 +1521,34 @@ export default function DashboardMetrics({
         </div>
       </div>
 
-      {/* Action Center: 30-Day Window & Prioritized Alerts */}
-      <div
-        className="action-center-panel"
-        style={{
-          backgroundColor: 'var(--color-surface, #FFFFFF)',
-          border: '1px solid var(--color-border, #E2E8F0)',
-          borderRadius: '4px',
-          padding: '0.85rem 1.15rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem',
-          width: '100%',
-          boxSizing: 'border-box',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: overdueCount > 0
-                  ? '#EF4444'
-                  : (allActionItems.length > 0 ? '#F59E0B' : '#10B981'),
-                display: 'inline-block',
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                color: 'var(--color-primary, #0F172A)',
-              }}
-            >
-              ACTION CENTER · 30-DAY HORIZON
-            </span>
-            <span
-              style={{
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                padding: '0.1rem 0.45rem',
-                borderRadius: '10px',
-                backgroundColor: overdueCount > 0 ? 'rgba(239, 68, 68, 0.1)' : 'var(--color-bg-pane, #F1F5F9)',
-                color: overdueCount > 0 ? '#DC2626' : 'var(--color-muted, #64748B)',
-              }}
-            >
-              {allActionItems.length} {allActionItems.length === 1 ? 'item' : 'items'}
-            </span>
-          </div>
-
-          {/* Filter Pills */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
-            {[
-              { id: 'all', label: `All (${allActionItems.length})` },
-              { id: 'vendors', label: `Payments (${upcomingVendorInstallments.length})` },
-              { id: 'tasks', label: `Tasks (${upcomingTasks.length})` },
-              { id: 'overdue', label: `Overdue (${overdueCount})` },
-            ].map(pill => {
-              const isActive = actionFilter === pill.id;
-              return (
-                <button
-                  key={pill.id}
-                  type="button"
-                  onClick={() => setActionFilter(pill.id as any)}
-                  style={{
-                    padding: '0.2rem 0.5rem',
-                    fontSize: '0.65rem',
-                    fontFamily: 'var(--font-technical-mono, monospace)',
-                    borderRadius: '2px',
-                    border: `1px solid ${isActive ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
-                    backgroundColor: isActive ? 'var(--color-primary, #0F172A)' : 'transparent',
-                    color: isActive ? '#FFFFFF' : 'var(--color-muted, #64748B)',
-                    cursor: 'pointer',
-                    fontWeight: isActive ? 700 : 500,
-                  }}
-                >
-                  {pill.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Action Center Items Content */}
-        {allActionItems.length === 0 ? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.85rem 1rem',
-              backgroundColor: 'rgba(16, 185, 129, 0.05)',
-              border: '1px solid rgba(16, 185, 129, 0.2)',
-              borderRadius: '3px',
-            }}
-          >
-            <CheckCircle2 size={18} style={{ color: '#10B981', flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#065F46' }}>
-                All caught up for the next 30 days
-              </div>
-              <div style={{ fontSize: '0.72rem', color: '#047857' }}>
-                No vendor installment payments or tasks are overdue or due within the upcoming 30-day window.
-              </div>
-            </div>
-          </div>
-        ) : filteredActionItems.length === 0 ? (
-          <div style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-muted, #64748B)' }}>
-            No items in the &ldquo;{actionFilter}&rdquo; filter.
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: '0.65rem',
-              width: '100%',
-              boxSizing: 'border-box',
-            }}
-          >
-            {filteredActionItems.slice(0, 6).map(item => {
-              const isPayment = item.type === 'vendor';
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-                    border: `1px solid ${item.isOverdue ? '#FCA5A5' : 'var(--color-border, #E2E8F0)'}`,
-                    borderRadius: '3px',
-                    padding: '0.65rem 0.85rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '0.5rem',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.4rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      {isPayment ? (
-                        <Receipt size={12} style={{ color: 'var(--color-primary, #0F172A)' }} />
-                      ) : (
-                        <ListTodo size={12} style={{ color: 'var(--color-primary, #0F172A)' }} />
-                      )}
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-technical-mono, monospace)',
-                          fontSize: '0.58rem',
-                          fontWeight: 700,
-                          color: 'var(--color-muted, #64748B)',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {isPayment ? 'INSTALLMENT' : 'TASK'}
-                      </span>
-                    </div>
-
-                    {/* Urgency Badge */}
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-technical-mono, monospace)',
-                        fontSize: '0.6rem',
-                        fontWeight: 700,
-                        padding: '0.12rem 0.45rem',
-                        borderRadius: '2px',
-                        backgroundColor: item.isOverdue
-                          ? '#FEE2E2'
-                          : (item.isDueToday ? '#FEF3C7' : 'rgba(15, 23, 42, 0.06)'),
-                        color: item.isOverdue
-                          ? '#991B1B'
-                          : (item.isDueToday ? '#92400E' : 'var(--color-primary, #0F172A)'),
-                      }}
-                    >
-                      {item.isOverdue
-                        ? `OVERDUE (${Math.abs(item.diffDays)}D)`
-                        : (item.isDueToday ? 'DUE TODAY' : `IN ${item.diffDays}D`)}
-                    </span>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        color: 'var(--color-text, #0F172A)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                      title={item.title}
-                    >
-                      {item.title}
-                    </div>
-
-                    <div style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748B)', marginTop: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.subtitle}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.35rem', borderTop: '1px solid var(--color-border-light, #F1F5F9)' }}>
-                    <button
-                      type="button"
-                      onClick={() => onNavigateTab && onNavigateTab(item.targetTab)}
-                      style={{
-                        fontFamily: 'var(--font-technical-mono, monospace)',
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        color: 'var(--color-primary, #0F172A)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.2rem',
-                        padding: 0,
-                        textDecoration: 'underline',
-                      }}
-                    >
-                      <span>{isPayment ? 'OPEN VENDOR' : 'OPEN KANBAN'}</span>
-                      <ArrowUpRight size={10} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Horizontal Financial Allocation Strip (No Cell References) */}
-      {modules.budget && (
-        <div
-          className="financial-allocation-strip"
-          style={{
-            backgroundColor: 'var(--color-surface, #FFFFFF)',
-            border: '1px solid var(--color-border, #E2E8F0)',
-            borderRadius: '3px',
-            padding: '0.85rem 1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <DollarSign size={14} style={{ color: 'var(--color-primary, #0F172A)' }} />
-              <span
-                style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.68rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-primary, #0F172A)',
-                }}
-              >
-                BUDGET &amp; SPENDING
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onNavigateTab && onNavigateTab('budget')}
-              style={{
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.62rem',
-                fontWeight: 700,
-                color: 'var(--color-primary, #0F172A)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                textDecoration: 'underline',
-              }}
-            >
-              <span>OPEN BUDGET</span>
-              <ArrowUpRight size={11} />
-            </button>
-          </div>
-
-          {/* Metric Summary Bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '0.5rem 1.5rem',
-              padding: '0.5rem 0.75rem',
-              backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              borderRadius: '2px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                WEDDING BUDGET:
-              </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
-                {formatCurrency(effectiveTotalBudget, currency)}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                PAID SO FAR:
-              </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.88rem', fontWeight: 800, color: 'var(--color-primary, #0F172A)' }}>
-                {formatCurrency(actualCost, currency)}
-              </span>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
-                ({actualPercent}%)
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', color: 'var(--color-muted, #64748B)' }}>
-                LEFT TO SPEND:
-              </span>
-              <span style={{
-                fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.88rem',
-                fontWeight: 800,
-                color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)'
-              }}>
-                {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
-              </span>
-            </div>
-          </div>
-
-          {/* Structured Hairline Allocation Bar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            <div
-              style={{
-                position: 'relative',
-                height: '8px',
-                backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-                border: '1px solid var(--color-border, #E2E8F0)',
-                borderRadius: '2px',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  width: `${actualPercent}%`,
-                  backgroundColor: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-primary, #0F172A)',
-                  transition: 'width 0.3s ease-out',
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #64748B)' }}>
-              <span>0%</span>
-              <span>25%</span>
-              <span>50%</span>
-              <span>75%</span>
-              <span>100% TARGET</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Operational Briefings: Guests & Tasks */}
-      <div
-        className="operational-briefings-container"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '1.25rem',
-          width: '100%',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Guest Registry Briefing Strip */}
-        {modules.guests && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface, #FFFFFF)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              borderRadius: '3px',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.65rem',
-              boxSizing: 'border-box',
-              minWidth: 0,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Users size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
-                <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  GUESTS &amp; RSVPS
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => onNavigateTab && onNavigateTab('guests')}
-                style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.62rem',
-                  color: 'var(--color-muted, #64748B)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                }}
-              >
-                VIEW LIST
-              </button>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-              gap: '0.35rem',
-              backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              padding: '0.5rem 0.4rem',
-              borderRadius: '2px',
-              textAlign: 'center',
-            }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>INVITED</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-text, #0F172A)' }}>{totalGuestsInvited}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>ACCEPTED</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{attendingCount}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-amber, #D97706)', textTransform: 'uppercase' }}>PENDING</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-amber, #D97706)' }}>{pendingCount}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)', textTransform: 'uppercase' }}>DECLINED</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-muted, #64748B)' }}>{declinedCount}</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-              <div style={{ height: '4px', display: 'flex', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
-                <div style={{ width: `${totalGuestsInvited > 0 ? (attendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-green, #10B981)' }} />
-                <div style={{ width: `${totalGuestsInvited > 0 ? (pendingCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-amber, #F59E0B)' }} />
-                <div style={{ width: `${totalGuestsInvited > 0 ? (declinedCount / totalGuestsInvited) * 100 : 0}%`, backgroundColor: 'var(--color-muted, #94A3B8)' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
-                <span>CONFIRMED: {confirmedPercent}%</span>
-                <span>TABLES: {totalTables} ACTIVE</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tasks Checklist Briefing Strip */}
-        {modules.tasks && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface, #FFFFFF)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              borderRadius: '3px',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.65rem',
-              boxSizing: 'border-box',
-              minWidth: 0,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <ListTodo size={13} style={{ color: 'var(--color-primary, #0F172A)' }} />
-                <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-primary, #0F172A)', letterSpacing: '0.06em' }}>
-                  TASKS &amp; CHECKLIST
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => onNavigateTab && onNavigateTab('tasks')}
-                style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.62rem',
-                  color: 'var(--color-muted, #64748B)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                }}
-              >
-                VIEW KANBAN
-              </button>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-              gap: '0.35rem',
-              backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              padding: '0.5rem 0.4rem',
-              borderRadius: '2px',
-              textAlign: 'center',
-            }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-red, #EF4444)', textTransform: 'uppercase' }}>TO DO</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-red, #EF4444)' }}>{toDoCount}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-amber, #D97706)', textTransform: 'uppercase' }}>IN PROGRESS</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-amber, #D97706)' }}>{inProgressCount}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-green, #10B981)', textTransform: 'uppercase' }}>COMPLETED</div>
-                <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-green, #10B981)' }}>{doneCount}</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-              <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
-                <div style={{ height: '100%', width: `${taskPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
-                <span>PROGRESS: {taskPercentComplete}%</span>
-                <span>{doneCount} OF {totalTasksCount} COMPLETE</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Dynamic Reorderable Dashboard Overview Sections */}
+      {sections.map((sec) => {
+        if (!sec.enabled) return null;
+        switch (sec.key) {
+          case 'action_center':
+            return renderActionCenter();
+          case 'budget':
+            if (modules.budget === false) return null;
+            return renderBudget();
+          case 'guests':
+            if (modules.guests === false) return null;
+            return renderGuests();
+          case 'tasks':
+            if (modules.tasks === false) return null;
+            return renderTasks();
+          case 'tables':
+            if (modules.tables === false) return null;
+            return renderTables();
+          case 'music':
+            if (modules.music === false) return null;
+            return renderMusic();
+          case 'photos':
+            if (modules.photos === false) return null;
+            return renderPhotos();
+          default:
+            return null;
+        }
+      })}
 
       {/* Scoped CSS for Mobile Responsive Adaptations */}
       <style>{`

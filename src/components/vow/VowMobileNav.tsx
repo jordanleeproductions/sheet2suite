@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import AppVersionBadge from '@/components/AppVersionBadge';
 import { ModuleConfig } from '@/components/DashboardMetrics';
+import { loadPlanningToolsOrder } from '@/lib/dashboardLayout';
 
 export type VowTabKey =
   | 'budget'
@@ -71,6 +72,7 @@ export interface VowMobileNavProps {
   photosCount?: number;
   giftsCount?: number;
   styleTheme?: string;
+  planningToolsOrder?: string[];
 }
 
 export default function VowMobileNav({
@@ -103,8 +105,29 @@ export default function VowMobileNav({
   photosCount,
   giftsCount,
   styleTheme,
+  planningToolsOrder,
 }: VowMobileNavProps) {
-  const isSecondaryTabActive = !['home', 'guests', 'budget', 'schedule'].includes(activeTab);
+  const [toolsOrder, setToolsOrder] = useState<string[]>(() => planningToolsOrder || loadPlanningToolsOrder());
+
+  useEffect(() => {
+    if (planningToolsOrder) {
+      setToolsOrder(planningToolsOrder);
+    }
+  }, [planningToolsOrder]);
+
+  useEffect(() => {
+    const handleOrderChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string[]>;
+      if (customEvent.detail) {
+        setToolsOrder(customEvent.detail);
+      } else {
+        setToolsOrder(loadPlanningToolsOrder());
+      }
+    };
+    window.addEventListener('s2v:tools-order-updated', handleOrderChange);
+    return () => window.removeEventListener('s2v:tools-order-updated', handleOrderChange);
+  }, []);
+
   const isBrutalist = styleTheme === 'neo-brutalism';
   const isBotanical = styleTheme === 'botanical-romance';
 
@@ -142,20 +165,53 @@ export default function VowMobileNav({
     return true;
   };
 
-  // Primary 4 items in Bottom Navigation Bar
-  const PRIMARY_NAV: Array<{
+  // Dynamic candidate items mapping
+  const ALL_CANDIDATE_TABS: Record<string, {
     id: VowTabKey;
     label: string;
     icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
     color: string;
     bg: string;
-  }> = [
-    { id: 'home', label: 'Home', icon: LayoutDashboard, color: '#4F46E5', bg: 'rgba(79, 70, 229, 0.10)' },
-    { id: 'guests', label: 'Guests', icon: Users, color: '#059669', bg: 'rgba(16, 185, 129, 0.10)' },
-    { id: 'budget', label: 'Budget', icon: DollarSign, color: '#16A34A', bg: 'rgba(22, 163, 74, 0.10)' },
-    { id: 'schedule', label: 'Timeline', icon: Calendar, color: '#D97706', bg: 'rgba(217, 119, 6, 0.10)' },
-  ];
+  }> = {
+    guests: { id: 'guests', label: 'Guests', icon: Users, color: '#059669', bg: 'rgba(16, 185, 129, 0.10)' },
+    budget: { id: 'budget', label: 'Budget', icon: DollarSign, color: '#16A34A', bg: 'rgba(22, 163, 74, 0.10)' },
+    schedule: { id: 'schedule', label: 'Timeline', icon: Calendar, color: '#D97706', bg: 'rgba(217, 119, 6, 0.10)' },
+    tasks: { id: 'tasks', label: 'Tasks', icon: ListTodo, color: '#4F46E5', bg: 'rgba(79, 70, 229, 0.10)' },
+    tables: { id: 'tables', label: 'Seating', icon: Armchair, color: '#7C3AED', bg: 'rgba(124, 58, 237, 0.10)' },
+    vendors: { id: 'vendors', label: 'Vendors', icon: Briefcase, color: '#2563EB', bg: 'rgba(37, 99, 235, 0.10)' },
+    music: { id: 'music', label: 'Music', icon: Music, color: '#9333EA', bg: 'rgba(147, 51, 234, 0.10)' },
+    photos: { id: 'photos', label: 'Photos', icon: Camera, color: '#0284C7', bg: 'rgba(2, 132, 199, 0.10)' },
+    menu: { id: 'menu', label: 'Menu', icon: Utensils, color: '#EA580C', bg: 'rgba(234, 88, 12, 0.10)' },
+    thanks: { id: 'thanks', label: 'Gifts', icon: Heart, color: '#E11D48', bg: 'rgba(225, 29, 72, 0.10)' },
+  };
 
+  // Primary 4 items in Bottom Navigation Bar (Home + Top 3 enabled tools in user's preferred order)
+  const PRIMARY_NAV = useMemo(() => {
+    const homeTab = { id: 'home' as VowTabKey, label: 'Home', icon: LayoutDashboard, color: '#4F46E5', bg: 'rgba(79, 70, 229, 0.10)' };
+
+    const selectedKeys: string[] = [];
+    for (const key of toolsOrder) {
+      const normalizedKey = key === 'gifts' ? 'thanks' : key;
+      if (ALL_CANDIDATE_TABS[normalizedKey] && isModuleEnabled(normalizedKey, normalizedKey === 'thanks' ? 'gifts' : undefined)) {
+        if (!selectedKeys.includes(normalizedKey)) {
+          selectedKeys.push(normalizedKey);
+          if (selectedKeys.length >= 3) break;
+        }
+      }
+    }
+
+    // Default fallback if fewer than 3 were selected
+    ['guests', 'budget', 'schedule'].forEach((defKey) => {
+      if (selectedKeys.length < 3 && !selectedKeys.includes(defKey) && isModuleEnabled(defKey)) {
+        selectedKeys.push(defKey);
+      }
+    });
+
+    const candidateTabs = selectedKeys.map((k) => ALL_CANDIDATE_TABS[k]);
+    return [homeTab, ...candidateTabs];
+  }, [toolsOrder, enabledModules]);
+
+  const isSecondaryTabActive = !PRIMARY_NAV.some((tab) => tab.id === activeTab);
   const isMoreActive = isSecondaryTabActive || isMobileDrawerOpen;
   const moreColor = '#7C3AED';
   const moreBg = 'rgba(124, 58, 237, 0.10)';
@@ -326,6 +382,19 @@ export default function VowMobileNav({
       ],
     },
   ];
+
+  const sortedModuleGroups = useMemo(() => {
+    return MODULE_GROUPS.map((group) => {
+      const sortedItems = [...group.items].sort((a, b) => {
+        const aKey = a.altKey || a.id;
+        const bKey = b.altKey || b.id;
+        const aIdx = toolsOrder.indexOf(aKey) !== -1 ? toolsOrder.indexOf(aKey) : (toolsOrder.indexOf(a.id) !== -1 ? toolsOrder.indexOf(a.id) : 999);
+        const bIdx = toolsOrder.indexOf(bKey) !== -1 ? toolsOrder.indexOf(bKey) : (toolsOrder.indexOf(b.id) !== -1 ? toolsOrder.indexOf(b.id) : 999);
+        return aIdx - bIdx;
+      });
+      return { ...group, items: sortedItems };
+    });
+  }, [MODULE_GROUPS, toolsOrder]);
 
   return (
     <>
@@ -668,7 +737,7 @@ export default function VowMobileNav({
 
             {/* Categorized Module Groups (Option A - Monarch / Settings Grouped Card Rows) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {MODULE_GROUPS.map((group) => {
+              {sortedModuleGroups.map((group) => {
                 const visibleItems = group.items.filter((item) =>
                   isModuleEnabled(item.id, item.altKey)
                 );
