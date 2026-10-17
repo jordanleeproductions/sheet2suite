@@ -1710,24 +1710,10 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                     transition: 'all 0.15s ease',
                   }}
                   onClick={() => setIsCommandPaletteOpen(true)}
-                  title="Universal Search (⌘K / Ctrl+K)"
+                  title="Search"
                 >
                   <Search size={13} />
                   <span style={{ fontWeight: 500 }}>Search</span>
-                  <kbd
-                    style={{
-                      fontFamily: 'var(--font-technical-mono, monospace)',
-                      fontSize: '0.62rem',
-                      fontWeight: 600,
-                      padding: '0.05rem 0.25rem',
-                      borderRadius: '3px',
-                      background: 'var(--color-surface, #FFFFFF)',
-                      border: '1px solid var(--color-border, #CBD5E1)',
-                      color: 'var(--color-text, #334155)',
-                    }}
-                  >
-                    ⌘K
-                  </kbd>
                 </button>
 
                 <button

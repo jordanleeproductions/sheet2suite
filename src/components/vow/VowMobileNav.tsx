@@ -21,6 +21,7 @@ import {
   Settings,
   Search,
 } from 'lucide-react';
+import AppVersionBadge from '@/components/AppVersionBadge';
 
 export interface VowMobileNavProps {
   activeTab: string;
@@ -591,6 +592,11 @@ export default function VowMobileNav({
                 <Settings size={13} style={{ color: activeTab === 'settings' ? '#FFFFFF' : 'inherit' }} />
                 <span>SETTINGS</span>
               </button>
+            </div>
+
+            {/* Version & Deployment Date Time [MOBILE-NAV] */}
+            <div style={{ marginTop: '0.4rem', paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}>
+              <AppVersionBadge variant="mobile-drawer" />
             </div>
           </div>
         </div>

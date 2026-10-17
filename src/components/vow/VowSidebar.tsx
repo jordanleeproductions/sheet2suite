@@ -87,9 +87,6 @@ export default function VowSidebar({
   const logoBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.2)' : (isDarkTheme ? '1px solid #334155' : 'none');
   const searchBg = isBotanical ? 'rgba(255, 255, 255, 0.08)' : (isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'var(--color-background-subtle, #F1F5F9)');
   const searchBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.14)' : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid var(--color-border, #E2E8F0)');
-  const kbdBg = isBotanical ? '#25583E' : (isDarkTheme ? '#1E293B' : '#E2E8F0');
-  const kbdBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.2)' : (isDarkTheme ? '1px solid #334155' : '1px solid #CBD5E1');
-  const kbdColor = isBotanical ? '#E8F5E9' : (isDarkTheme ? '#CBD5E1' : '#475569');
 
   const visibleTabs = NAV_ITEMS.filter((tab) =>
     tab.id === 'home'
@@ -150,32 +147,21 @@ export default function VowSidebar({
               >
                 <FileSpreadsheet size={16} strokeWidth={2.2} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-editorial-serif, serif)',
-                    fontWeight: 700,
-                    fontSize: '0.98rem',
-                    lineHeight: '1.1',
-                    color: textPrimary,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  Sheet2Vow
-                </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-technical-mono, monospace)',
-                    fontSize: '0.54rem',
-                    fontWeight: 600,
-                    color: textMuted,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Utility Rail
-                </span>
-              </div>
+              <span
+                style={{
+                  fontFamily: 'var(--font-editorial-serif, serif)',
+                  fontWeight: 700,
+                  fontSize: '0.98rem',
+                  lineHeight: '1.2',
+                  color: textPrimary,
+                  letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                Sheet2Vow
+              </span>
             </div>
           ) : (
             <div
@@ -202,11 +188,11 @@ export default function VowSidebar({
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            title="Search anything (⌘K / Ctrl+K)"
+            title="Search anything"
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: isSidebarCollapsed ? 'center' : 'space-between',
+              justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
               gap: '0.5rem',
               padding: isSidebarCollapsed ? '0.5rem 0' : '0.45rem 0.6rem',
               borderRadius: '4px',
@@ -236,23 +222,6 @@ export default function VowSidebar({
                 </span>
               )}
             </div>
-            {!isSidebarCollapsed && (
-              <kbd
-                style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.62rem',
-                  fontWeight: 600,
-                  padding: '0.1rem 0.3rem',
-                  borderRadius: '3px',
-                  background: kbdBg,
-                  color: kbdColor,
-                  border: kbdBorder,
-                  letterSpacing: '0.04em',
-                }}
-              >
-                ⌘K
-              </kbd>
-            )}
           </button>
         )}
 
