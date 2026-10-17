@@ -35,11 +35,12 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
               borderRadius: '50%',
               backgroundColor: 'var(--color-green, #10b981)',
               boxShadow: '0 0 6px rgba(16, 185, 129, 0.4)',
+              flexShrink: 0,
             }}
           />
-          <span>{APP_VERSION}</span>
+          <span style={{ whiteSpace: 'nowrap' }}>{APP_VERSION}</span>
         </div>
-        <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', opacity: 0.85 }}>
+        <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', opacity: 0.85, whiteSpace: 'nowrap' }}>
           Deployed {BUILD_TIMESTAMP}
         </div>
       </div>
@@ -88,8 +89,9 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
 
   return (
     <div
+      title={`Sheet2Vow ${APP_VERSION} (Deployed: ${BUILD_TIMESTAMP})`}
       style={{
-        padding: '0.65rem 0.75rem',
+        padding: '0.6rem 0.25rem',
         borderTop: `1px solid ${sidebarBorderColor}`,
         fontFamily: 'var(--font-mono)',
         fontSize: '0.65rem',
@@ -109,11 +111,22 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
             borderRadius: '50%',
             backgroundColor: 'var(--color-green, #10b981)',
             boxShadow: '0 0 6px rgba(16, 185, 129, 0.4)',
+            flexShrink: 0,
           }}
         />
-        <span>Sheet2Vow {APP_VERSION}</span>
+        <span style={{ whiteSpace: 'nowrap' }}>Sheet2Vow {APP_VERSION}</span>
       </div>
-      <div style={{ fontSize: '0.575rem', color: sidebarMutedColor, opacity: 0.85 }}>
+      <div
+        style={{
+          fontSize: '0.54rem',
+          color: sidebarMutedColor,
+          opacity: 0.85,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          letterSpacing: '-0.02em',
+        }}
+      >
         Deployed {BUILD_TIMESTAMP}
       </div>
     </div>

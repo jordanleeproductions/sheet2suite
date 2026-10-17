@@ -17,3 +17,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
   3. Merge `develop` (`git merge develop`).
   4. Push to production (`git push origin main`).
   5. Return to `develop` (`git checkout develop`).
+
+## Versioning Policy & Automation (Mandatory)
+- **Patch Version** (`npm run bump:patch`): Increment patch (`X.Y.Z` -> `X.Y.Z+1`) with every patch change, bug fix, styling tweak, or minor cleanup.
+- **Minor Version** (`npm run bump:minor`): Increment minor (`X.Y.Z` -> `X.Y+1.0`) whenever features are added, removed, or updated.
+- **Major Version** (`npm run bump:major`): Increment major (`X.Y.Z` -> `X+1.0.0`) for significant changes / "New release bundles", ONLY when the USER explicitly mentions it is a major release.
+- **Always Update Build Metadata**: Running the bump script automatically updates both `package.json` and `src/lib/buildInfo.ts` with the new version and current formatted deployment timestamp (`MMM D, YYYY • H:MM A`).
