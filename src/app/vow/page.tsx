@@ -2696,6 +2696,24 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           onTouchStart={handleBottomNavTouchStart}
           onTouchEnd={handleBottomNavTouchEnd}
           triggerHaptic={triggerHaptic}
+          weddingName={weddingName || weddingData?.dashboard?.weddingName}
+          weddingDate={weddingDate || weddingData?.dashboard?.weddingDate}
+          guestCount={weddingData?.guests?.length}
+          rsvpAttendingCount={
+            weddingData?.guests?.filter((g) => g.rsvpStatus === 'Attending').length
+          }
+          tablesCount={weddingData?.tables?.length}
+          menuCoursesCount={weddingData?.catering?.length}
+          budgetTotal={budgetThreshold || Number(weddingData?.dashboard?.totalBudget) || undefined}
+          budgetSpent={weddingData?.expenses?.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)}
+          currency={currency}
+          scheduleEventsCount={weddingData?.schedule?.length}
+          vendorsCount={weddingData?.vendors?.length}
+          tasksPendingCount={weddingData?.tasks?.filter((t) => t.kanbanStage !== 'Done').length}
+          musicTracksCount={weddingData?.music?.length}
+          photosCount={weddingData?.photos?.length}
+          giftsCount={weddingData?.gifts?.length}
+          styleTheme={styleTheme}
         />
       )}
 
