@@ -5,6 +5,8 @@ import { Song, SongListType, Vendor } from '@/lib/sheets/types';
 import { Plus, Edit2, X, Trash2, Music, Ban, PlayCircle, PauseCircle, Loader2, ExternalLink, AlertCircle, Mail, Share2, QrCode, Radio, ChevronDown } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import PageSearchInput from '@/components/PageSearchInput';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
 
 type DeduplicatedSong = Song & { requestCount: number };
 
@@ -592,130 +594,165 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
         }
       `}</style>
 
-      {/* Header [MUSIC-5] */}
-      <div className="music-header-container">
-        <div>
-          <h2 style={styles.title}>Music & Playlists</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Curate songs for your ceremony, reception, and special moments.
-          </p>
-        </div>
+      {/* Standardized Header Banner */}
+      <PageHeaderCard
+        title="Music & Playlists"
+        subtitle="Curate songs for your ceremony, reception, and special moments."
+        badge={`${music.length} Songs`}
+        actionButtons={
+          <>
+            {/* Consolidated Share & Portals Dropdown */}
+            <div ref={portalsMenuRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={() => setShowPortalsMenu(!showPortalsMenu)}
+                title="Portals & Sharing Actions"
+              >
+                <Radio size={14} style={{ color: showPortalsMenu ? 'currentColor' : 'var(--color-primary)' }} />
+                <span>PORTALS & SHARE</span>
+                <ChevronDown size={14} style={{ transform: showPortalsMenu ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
+              </button>
 
-        <div className="music-header-actions">
-          {/* Consolidated Share & Portals Dropdown [MUSIC-6] */}
-          <div ref={portalsMenuRef} className="music-portals-menu-container" style={{ position: 'relative' }}>
+              {showPortalsMenu && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '0.4rem',
+                    backgroundColor: 'var(--color-surface, #fff)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--border-radius-md)',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                    padding: '0.5rem',
+                    minWidth: '220px',
+                    zIndex: 80,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                    animation: 'fadeIn 0.15s ease-out'
+                  }}
+                >
+                  <a
+                    href="/share/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowPortalsMenu(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.6rem',
+                      borderRadius: 'var(--border-radius-sm)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--color-text)',
+                      textDecoration: 'none',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.725rem',
+                      fontWeight: 600,
+                      transition: 'var(--transition-smooth)'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <Share2 size={14} style={{ color: 'var(--color-primary)' }} />
+                    <span>DJ / Vendor Share Page</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPortalsMenu(false);
+                      handleShareMusic();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.6rem',
+                      borderRadius: 'var(--border-radius-sm)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--color-text)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.725rem',
+                      fontWeight: 600,
+                      textAlign: 'left',
+                      width: '100%',
+                      transition: 'var(--transition-smooth)'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <Mail size={14} style={{ color: 'var(--color-primary)' }} />
+                    <span>Send Playlist to DJ</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Primary Action Button */}
             <button
               type="button"
-              onClick={() => setShowPortalsMenu(!showPortalsMenu)}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.725rem',
-                fontWeight: 700,
-                backgroundColor: showPortalsMenu ? 'var(--color-primary)' : 'var(--color-bg)',
-                color: showPortalsMenu ? 'var(--color-on-primary)' : 'var(--color-text)',
-                border: '1px solid var(--color-muted)',
-                borderRadius: 'var(--border-radius-sm)',
-                padding: '0.5rem 0.75rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                width: '100%',
-                transition: 'var(--transition-smooth)'
-              }}
-              title="Portals & Sharing Actions"
+              className="s2v-header-btn s2v-header-btn-primary"
+              onClick={startAdd}
+              disabled={isSyncing}
+              title="Add Song"
             >
-              <Radio size={14} style={{ color: showPortalsMenu ? 'currentColor' : 'var(--color-primary)' }} />
-              <span>PORTALS & SHARE</span>
-              <ChevronDown size={14} style={{ transform: showPortalsMenu ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
+              <Plus size={14} />
+              <span>ADD SONG</span>
             </button>
+          </>
+        }
+      />
 
-            {showPortalsMenu && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '0.4rem',
-                  backgroundColor: 'var(--color-surface, #fff)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-md)',
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                  padding: '0.5rem',
-                  minWidth: '220px',
-                  zIndex: 80,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.35rem',
-                  animation: 'fadeIn 0.15s ease-out'
-                }}
-              >
-                <a
-                  href="/share/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcHJlYWRzaGVldElkIjoibW9jay0xMjMiLCJpYXQiOjE3MTY4ODg4ODh9.mock"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setShowPortalsMenu(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.6rem',
-                    borderRadius: 'var(--border-radius-sm)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-text)',
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.725rem',
-                    fontWeight: 600,
-                    transition: 'var(--transition-smooth)'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  <Share2 size={14} style={{ color: 'var(--color-primary)' }} />
-                  <span>DJ / Vendor Share Page</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPortalsMenu(false);
-                    handleShareMusic();
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.6rem',
-                    borderRadius: 'var(--border-radius-sm)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-text)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.725rem',
-                    fontWeight: 600,
-                    textAlign: 'left',
-                    width: '100%',
-                    transition: 'var(--transition-smooth)'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-bg-subtle)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  <Mail size={14} style={{ color: 'var(--color-primary)' }} />
-                  <span>Send Playlist to DJ</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Primary Action Button */}
-          <button style={{ ...styles.addButton, width: '100%', justifyContent: 'center' }} className="music-add-btn" onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD SONG
-          </button>
-        </div>
-      </div>
+      {/* Monarch-Style Hero Metric Strip */}
+      <PageMetricStrip
+        style={{ marginBottom: '1.25rem' }}
+        metrics={[
+          {
+            id: 'all',
+            label: 'ALL SONGS',
+            value: music.length,
+            subtext: 'Across all playlists',
+            statusBadge: `${deduplicatedMusic.length} Unique`,
+            statusColor: 'blue',
+            onClick: () => setFilterPill('ALL'),
+            isActive: filterPill === 'ALL',
+          },
+          {
+            id: 'must-play',
+            label: 'MUST PLAY',
+            value: music.filter(s => (s.playStatus || s.priority || 'Must Play') === 'Must Play' && s.listType !== 'Do Not Play').length,
+            subtext: 'High-priority cues',
+            statusBadge: 'Priority',
+            statusColor: 'green',
+            onClick: () => setFilterPill('MUST PLAY'),
+            isActive: filterPill === 'MUST PLAY',
+          },
+          {
+            id: 'ceremony',
+            label: 'CEREMONY',
+            value: music.filter(s => s.listType === 'Ceremony').length,
+            subtext: 'Aisle, vows & recessional',
+            statusColor: 'purple',
+            onClick: () => setFilterPill('CEREMONY'),
+            isActive: filterPill === 'CEREMONY',
+          },
+          {
+            id: 'banned',
+            label: 'DO NOT PLAY',
+            value: music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play').length,
+            subtext: 'Blacklisted tracks',
+            statusBadge: music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play').length > 0 ? 'Banned' : 'Clear',
+            statusColor: music.filter(s => (s.playStatus || s.priority) === 'Banned' || s.listType === 'Do Not Play').length > 0 ? 'red' : 'neutral',
+            onClick: () => setFilterPill('BANNED'),
+            isActive: filterPill === 'BANNED',
+          },
+        ]}
+      />
 
 
 

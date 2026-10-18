@@ -7,6 +7,8 @@ import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import PageSearchInput from '@/components/PageSearchInput';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
 interface GuestListManagerProps {
@@ -1042,127 +1044,108 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
         }
       `}</style>
 
-      {/* Header Panel */}
-      <div className="guest-header-card anim-fade-in">
-        <div>
-          <h2 style={styles.title}>Guests & RSVPs</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Track invitations, RSVPs, meals, and table assignments.
-          </p>
-        </div>
-        <div className="guest-header-actions">
-          {/* Quick Export & Print Actions */}
-          <div className="guest-action-buttons-row" style={styles.actionButtonGroup}>
-            <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV">
-              <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
+      {/* Page Header Card [Consistent Monarch UX] */}
+      <PageHeaderCard
+        title="Guests & RSVPs"
+        subtitle="Track invitations, RSVPs, meals, and table assignments."
+        actions={
+          <>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={exportToCSV}
+              title="Export CSV"
+            >
+              <Download size={14} />
+              <span>CSV</span>
             </button>
             {onOpenPrintStudio && (
-              <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Guest Registry">
-                <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
+              <button
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={handlePrint}
+                title="Print Guest Registry"
+              >
+                <Printer size={14} />
+                <span>PRINT</span>
               </button>
             )}
-          </div>
-        </div>
-      </div>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary"
+              onClick={startAdd}
+              disabled={isSyncing}
+              title="Add New Guest"
+            >
+              <Plus size={14} />
+              <span>ADD GUEST</span>
+            </button>
+          </>
+        }
+      />
 
-      {/* RSVP Stats KPI Cards & Collapsible Catering Filters Banner */}
+      {/* RSVP Stats KPI Metric Strip & Collapsible Catering Filters Banner */}
       {(() => {
         const summary = calculateRelationalCateringSummary(guests, []);
+        const totalGuests = guests.length;
+        const attendingPct = totalGuests > 0 ? Math.round((summary.attendingCount / totalGuests) * 100) : 0;
+        const pendingPct = totalGuests > 0 ? Math.round((summary.pendingCount / totalGuests) * 100) : 0;
+        const declinedPct = totalGuests > 0 ? Math.round((summary.declinedCount / totalGuests) * 100) : 0;
+
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', margin: '1rem 0' }}>
-            {/* Standalone RSVP Stat Filter Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '0.75rem',
-            }}>
-              {/* Confirmed Attending Card */}
-              <div
-                onClick={() => setRsvpFilter(prev => prev === 'Attending' ? 'All' : 'Attending')}
-                style={{
-                  backgroundColor: rsvpFilter === 'Attending' ? 'var(--color-green, #10b981)' : 'var(--color-surface, #ffffff)',
-                  color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-text)',
-                  border: rsvpFilter === 'Attending' ? '2px solid var(--color-green, #10b981)' : '1px solid var(--color-muted)',
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: '0.75rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  gap: '0.2rem',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--box-shadow-subtle)',
-                  transition: 'all 0.2s ease',
-                }}
-                title="Click to filter list by Confirmed Attending guests"
-              >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
-                  CONFIRMED ATTENDING
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Attending' ? '#ffffff' : 'var(--color-green, #10b981)', textAlign: 'center' }}>
-                  {summary.attendingCount}
-                </span>
-              </div>
-
-              {/* Pending Response Card */}
-              <div
-                onClick={() => setRsvpFilter(prev => prev === 'No Response' ? 'All' : 'No Response')}
-                style={{
-                  backgroundColor: rsvpFilter === 'No Response' ? 'var(--color-gold, #f59e0b)' : 'var(--color-surface, #ffffff)',
-                  color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-text)',
-                  border: rsvpFilter === 'No Response' ? '2px solid var(--color-gold, #f59e0b)' : '1px solid var(--color-muted)',
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: '0.75rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  gap: '0.2rem',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--box-shadow-subtle)',
-                  transition: 'all 0.2s ease',
-                }}
-                title="Click to filter list by Pending RSVP guests"
-              >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
-                  PENDING RESPONSES
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'No Response' ? '#ffffff' : 'var(--color-gold, #f59e0b)', textAlign: 'center' }}>
-                  {summary.pendingCount}
-                </span>
-              </div>
-
-              {/* Declined Card */}
-              <div
-                onClick={() => setRsvpFilter(prev => prev === 'Declined' ? 'All' : 'Declined')}
-                style={{
-                  backgroundColor: rsvpFilter === 'Declined' ? 'var(--color-red, #ef4444)' : 'var(--color-surface, #ffffff)',
-                  color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-text)',
-                  border: rsvpFilter === 'Declined' ? '2px solid var(--color-red, #ef4444)' : '1px solid var(--color-muted)',
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: '0.75rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  gap: '0.2rem',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--box-shadow-subtle)',
-                  transition: 'all 0.2s ease',
-                }}
-                title="Click to filter list by Declined guests"
-              >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
-                  DECLINED
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 800, color: rsvpFilter === 'Declined' ? '#ffffff' : 'var(--color-muted)', textAlign: 'center' }}>
-                  {summary.declinedCount}
-                </span>
-              </div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', margin: '0.5rem 0' }}>
+            {/* Monarch 4-Tile Hero Metric Strip */}
+            <PageMetricStrip
+              metrics={[
+                {
+                  id: 'attending',
+                  label: 'CONFIRMED ATTENDING',
+                  value: summary.attendingCount,
+                  subtext: `${attendingPct}% of invited guests`,
+                  statusBadge: rsvpFilter === 'Attending' ? 'ACTIVE' : `${attendingPct}%`,
+                  statusColor: 'green',
+                  progress: attendingPct,
+                  onClick: () => setRsvpFilter(prev => prev === 'Attending' ? 'All' : 'Attending'),
+                  isActive: rsvpFilter === 'Attending',
+                  tooltip: 'Click to filter list by Confirmed Attending guests',
+                },
+                {
+                  id: 'pending',
+                  label: 'PENDING RESPONSES',
+                  value: summary.pendingCount,
+                  subtext: `${pendingPct}% awaiting reply`,
+                  statusBadge: rsvpFilter === 'No Response' ? 'ACTIVE' : `${pendingPct}%`,
+                  statusColor: 'amber',
+                  progress: pendingPct,
+                  onClick: () => setRsvpFilter(prev => prev === 'No Response' ? 'All' : 'No Response'),
+                  isActive: rsvpFilter === 'No Response',
+                  tooltip: 'Click to filter list by Pending RSVP guests',
+                },
+                {
+                  id: 'declined',
+                  label: 'DECLINED REGRETS',
+                  value: summary.declinedCount,
+                  subtext: `${declinedPct}% declined`,
+                  statusBadge: rsvpFilter === 'Declined' ? 'ACTIVE' : undefined,
+                  statusColor: 'red',
+                  progress: declinedPct,
+                  onClick: () => setRsvpFilter(prev => prev === 'Declined' ? 'All' : 'Declined'),
+                  isActive: rsvpFilter === 'Declined',
+                  tooltip: 'Click to filter list by Declined guests',
+                },
+                {
+                  id: 'total',
+                  label: 'TOTAL INVITED',
+                  value: totalGuests,
+                  subtext: rsvpFilter !== 'All' ? 'Click to show all' : 'Complete guest list',
+                  statusBadge: rsvpFilter === 'All' ? 'SHOWING ALL' : 'ALL GUESTS',
+                  statusColor: 'blue',
+                  onClick: () => setRsvpFilter('All'),
+                  isActive: rsvpFilter === 'All',
+                  tooltip: 'Click to reset filter and show all guests',
+                },
+              ]}
+            />
 
             {/* Collapsible Catering Filters Banner */}
             <div style={{

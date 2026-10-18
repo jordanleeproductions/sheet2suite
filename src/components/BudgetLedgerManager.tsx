@@ -26,6 +26,8 @@ import {
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import PageSearchInput from '@/components/PageSearchInput';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
@@ -571,111 +573,35 @@ export default function BudgetLedgerManager({
     <div className="budget-ledger-editorial-view" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       
       {/* 0. Page Header Card [Consistent Monarch UX Page Title] */}
-      <div
-        className="budget-header-card anim-fade-in"
-        style={{
-          backgroundColor: 'var(--color-surface, #FFFFFF)',
-          border: '1px solid var(--color-border, #E2E8F0)',
-          borderRadius: 'var(--border-radius-md, 8px)',
-          padding: '1.25rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '1rem',
-          flexWrap: 'wrap',
-          boxShadow: 'var(--box-shadow-subtle, 0 1px 2px rgba(0,0,0,0.04))',
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              fontFamily: 'var(--font-serif, serif)',
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: 'var(--color-primary, #0F172A)',
-              margin: 0,
-            }}
-          >
-            Financials
-          </h2>
-          <p
-            style={{
-              fontSize: '0.85rem',
-              color: 'var(--color-muted, #64748B)',
-              margin: '0.25rem 0 0 0',
-              fontFamily: 'var(--font-sans, system-ui)',
-            }}
-          >
-            Track your wedding budget, category allocations, and itemized expenses.
-          </p>
-        </div>
+      <PageHeaderCard
+        title="Financials"
+        subtitle="Track your wedding budget, category allocations, and itemized expenses."
+        actions={
+          <>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={() => startAddBudget()}
+              disabled={isSyncing}
+              title="Add New Budget Category"
+            >
+              <Plus size={14} />
+              <span>ADD CATEGORY</span>
+            </button>
 
-        <div
-          className="budget-header-actions"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.6rem',
-            flexWrap: 'wrap',
-          }}
-        >
-          <button
-            type="button"
-            className="budget-header-action-btn"
-            onClick={() => startAddBudget()}
-            disabled={isSyncing}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.35rem',
-              padding: '0.5rem 0.85rem',
-              fontSize: '0.75rem',
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontWeight: 700,
-              backgroundColor: 'var(--color-bg, #F8FAFC)',
-              color: 'var(--color-text, #0F172A)',
-              border: '1px solid var(--color-border, #CBD5E1)',
-              borderRadius: 'var(--border-radius-sm, 4px)',
-              cursor: isSyncing ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s ease',
-              minHeight: '38px',
-            }}
-            title="Add New Budget Category"
-          >
-            <Plus size={14} />
-            <span>ADD CATEGORY</span>
-          </button>
-
-          <button
-            type="button"
-            className="budget-header-action-btn budget-header-primary-btn"
-            onClick={() => startAddExpense()}
-            disabled={isSyncing}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.35rem',
-              padding: '0.5rem 0.85rem',
-              fontSize: '0.75rem',
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontWeight: 700,
-              backgroundColor: 'var(--color-primary, #0F172A)',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: 'var(--border-radius-sm, 4px)',
-              cursor: isSyncing ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s ease',
-              minHeight: '38px',
-            }}
-            title="Record New Purchase"
-          >
-            <Plus size={14} />
-            <span>RECORD EXPENSE</span>
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary"
+              onClick={() => startAddExpense()}
+              disabled={isSyncing}
+              title="Record New Purchase"
+            >
+              <Plus size={14} />
+              <span>RECORD EXPENSE</span>
+            </button>
+          </>
+        }
+      />
 
       {/* 1. 30-Day Financial Horizon Strip [Monarch Cash Flow Horizon] */}
       <div

@@ -26,6 +26,9 @@ import {
 import MobileFAB from '@/components/MobileFAB';
 import PageSearchInput from '@/components/PageSearchInput';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import { triggerConfetti } from '@/lib/confetti';
 
 const DEFAULT_GIFT_CATEGORIES = [
   'Kitchen & Dining',
@@ -408,9 +411,20 @@ export default function ThankYouManager({
   // Toggle Gift Thank You Status
   const toggleGiftThanked = async (giftId: string) => {
     if (isSyncing) return;
+    const targetGift = gifts.find(g => g.giftId === giftId);
+    const willBeThanked = targetGift && !targetGift.thankYouSent;
+
     const updated = gifts.map(g => 
       g.giftId === giftId ? { ...g, thankYouSent: !g.thankYouSent } : g
     );
+
+    if (willBeThanked) {
+      const remainingUnthanked = updated.filter(g => !g.thankYouSent);
+      if (remainingUnthanked.length === 0 && updated.length > 0) {
+        triggerConfetti({ particleCount: 90 });
+      }
+    }
+
     await onUpdateGifts(updated);
   };
 
@@ -423,6 +437,15 @@ export default function ThankYouManager({
     const updated = guests.map(g => 
       targetGuestIds.has(g.guestId) ? { ...g, thankedSent: newThankedState } : g
     );
+
+    if (newThankedState) {
+      const attendingGuestsList = updated.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending');
+      const allAttendingThanked = attendingGuestsList.length > 0 && attendingGuestsList.every(g => Boolean(g.thankedSent));
+      if (allAttendingThanked) {
+        triggerConfetti({ particleCount: 90 });
+      }
+    }
+
     await onUpdateGuests(updated);
   };
 
@@ -515,118 +538,154 @@ export default function ThankYouManager({
 
   return (
     <div style={styles.container}>
-      {/* Header Title & Top Controls */}
-      <div style={styles.header}>
-        <div>
-          <h2 style={styles.title}>Thank You Card & Gift Tracker</h2>
-          <p style={styles.subtitle}>
-            Track wedding gifts received, thank you note progress, and attendance thank you cards.
-          </p>
-        </div>
+      {/* Standardized Header Card with Integrated View Switcher */}
+      <PageHeaderCard
+        title="Thank You & Gift Tracker"
+        subtitle="Track wedding gifts received, thank you note progress, and attendance thank you cards."
+        badge={subTab === 'gifts' ? `${gifts.length} Gifts` : `${attendingParties.length} Parties`}
+        segmentSwitcher={{
+          activeKey: subTab,
+          onChange: (key) => setSubTab(key as 'gifts' | 'attendance'),
+          segments: [
+            { key: 'gifts', label: 'GIFT REGISTRY', icon: <Gift size={14} /> },
+            { key: 'attendance', label: 'ATTENDANCE CARDS', icon: <UserCheck size={14} /> },
+          ],
+        }}
+        actionButtons={
+          subTab === 'gifts' ? (
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary thankyou-add-btn"
+              onClick={startAddGift}
+              disabled={isSyncing}
+              title="Log Received Gift"
+            >
+              <Plus size={14} />
+              <span>LOG GIFT</span>
+            </button>
+          ) : undefined
+        }
+      />
 
-        <style>{`
-          @media (max-width: 768px) {
-            .thankyou-add-btn {
-              display: none !important;
-            }
-            .thankyou-filter-bar {
-              flex-direction: column !important;
-              align-items: stretch !important;
-              gap: 0.65rem !important;
-              width: 100% !important;
-            }
-            .thankyou-search-wrapper {
-              width: 100% !important;
-              flex: 1 1 100% !important;
-            }
-            .thankyou-filter-group {
-              width: 100% !important;
-              flex-direction: column !important;
-              align-items: stretch !important;
-              gap: 0.5rem !important;
-            }
-            .thankyou-filter-item {
-              width: 100% !important;
-              display: flex !important;
-              align-items: center !important;
-              gap: 0.4rem !important;
-            }
-            .thankyou-filter-select {
-              width: 100% !important;
-              flex: 1 1 auto !important;
-              min-width: 0 !important;
-              max-width: 100% !important;
-              text-overflow: ellipsis !important;
-            }
+      <style>{`
+        @media (max-width: 768px) {
+          .thankyou-add-btn {
+            display: none !important;
           }
-        `}</style>
-        {subTab === 'gifts' && (
-          <button style={styles.addButton} className="thankyou-add-btn" onClick={startAddGift}>
-            <Plus size={16} style={{ marginRight: '6px' }} /> LOG RECEIVED GIFT
-          </button>
-        )}
-      </div>
+          .thankyou-filter-bar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.65rem !important;
+            width: 100% !important;
+          }
+          .thankyou-search-wrapper {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+          }
+          .thankyou-filter-group {
+            width: 100% !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+          }
+          .thankyou-filter-item {
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+          }
+          .thankyou-filter-select {
+            width: 100% !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            text-overflow: ellipsis !important;
+          }
+        }
+      `}</style>
 
-      {/* KPI Bar */}
-      <div style={styles.kpiBar}>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>TOTAL GIFTS RECEIVED</span>
-          <span style={styles.kpiValue}>
-            {totalGifts} <span style={{ fontSize: '0.8rem', color: 'var(--color-muted)', fontWeight: 400 }}>Gifts</span>
-          </span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>TOTAL ESTIMATED VALUE</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
-            {formatCurrency(totalGiftValue, currency)}
-          </span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>GIFT THANK YOUS SENT</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-            {giftsThankedCount} / {totalGifts} ({giftsThankedPercent}%)
-          </span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>ATTENDING PARTIES</span>
-          <span style={styles.kpiValue}>
-            {attendingParties.length} Parties <span style={{ fontSize: '0.8rem', color: 'var(--color-muted)', fontWeight: 400 }}>({attendingGuests.length} Guests)</span>
-          </span>
-        </div>
-        <div style={styles.kpiItem}>
-          <span style={styles.kpiLabel}>ATTENDANCE NOTES SENT</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
-            {attendanceThankedCount} / {attendingParties.length} ({attendanceThankedPercent}%)
-          </span>
-        </div>
-      </div>
-
-      {/* Sub-Tab Navigation Bar */}
-      <div style={styles.subTabBar}>
-        <button
-          style={{
-            ...styles.subTabBtn,
-            backgroundColor: subTab === 'gifts' ? 'var(--color-primary)' : 'transparent',
-            color: subTab === 'gifts' ? 'var(--color-on-primary)' : 'var(--color-text)',
-            fontWeight: subTab === 'gifts' ? 700 : 400
-          }}
-          onClick={() => setSubTab('gifts')}
-        >
-          <Gift size={16} style={{ marginRight: '6px' }} /> GIFT REGISTRY THANK YOUS ({gifts.length})
-        </button>
-
-        <button
-          style={{
-            ...styles.subTabBtn,
-            backgroundColor: subTab === 'attendance' ? 'var(--color-primary)' : 'transparent',
-            color: subTab === 'attendance' ? 'var(--color-on-primary)' : 'var(--color-text)',
-            fontWeight: subTab === 'attendance' ? 700 : 400
-          }}
-          onClick={() => setSubTab('attendance')}
-        >
-          <UserCheck size={16} style={{ marginRight: '6px' }} /> GUEST ATTENDANCE CARDS ({attendingParties.length} PARTIES)
-        </button>
-      </div>
+      {/* Monarch-Style Hero Metric Strip */}
+      <PageMetricStrip
+        style={{ marginBottom: '1.25rem' }}
+        metrics={subTab === 'gifts' ? [
+          {
+            id: 'gifts',
+            label: 'TOTAL GIFTS',
+            value: totalGifts,
+            subtext: 'Recorded gifts',
+            statusBadge: `${totalGifts} Received`,
+            statusColor: 'blue',
+            onClick: () => setThankedFilter('All'),
+            isActive: thankedFilter === 'All',
+          },
+          {
+            id: 'value',
+            label: 'ESTIMATED VALUE',
+            value: formatCurrency(totalGiftValue, currency),
+            subtext: 'Registry & cash funds',
+            statusColor: 'purple',
+          },
+          {
+            id: 'gift-thanked',
+            label: 'THANK YOUS SENT',
+            value: `${giftsThankedCount} / ${totalGifts}`,
+            progress: giftsThankedPercent,
+            statusBadge: `${giftsThankedPercent}% Sent`,
+            statusColor: giftsThankedPercent === 100 && totalGifts > 0 ? 'green' : 'blue',
+            onClick: () => setThankedFilter(thankedFilter === 'Thanked' ? 'All' : 'Thanked'),
+            isActive: thankedFilter === 'Thanked',
+          },
+          {
+            id: 'pending',
+            label: 'PENDING CARDS',
+            value: Math.max(0, totalGifts - giftsThankedCount),
+            subtext: 'Cards left to write',
+            statusBadge: totalGifts - giftsThankedCount === 0 ? 'All Sent' : `${totalGifts - giftsThankedCount} Left`,
+            statusColor: totalGifts - giftsThankedCount === 0 ? 'green' : 'amber',
+            onClick: () => setThankedFilter(thankedFilter === 'Pending' ? 'All' : 'Pending'),
+            isActive: thankedFilter === 'Pending',
+          },
+        ] : [
+          {
+            id: 'parties',
+            label: 'ATTENDING PARTIES',
+            value: attendingParties.length,
+            subtext: `${attendingGuests.length} total guests`,
+            statusBadge: `${attendingParties.length} Households`,
+            statusColor: 'blue',
+            onClick: () => setThankedFilter('All'),
+            isActive: thankedFilter === 'All',
+          },
+          {
+            id: 'attendance-thanked',
+            label: 'NOTES SENT',
+            value: `${attendanceThankedCount} / ${attendingParties.length}`,
+            progress: attendanceThankedPercent,
+            statusBadge: `${attendanceThankedPercent}% Sent`,
+            statusColor: attendanceThankedPercent === 100 && attendingParties.length > 0 ? 'green' : 'blue',
+            onClick: () => setThankedFilter(thankedFilter === 'Thanked' ? 'All' : 'Thanked'),
+            isActive: thankedFilter === 'Thanked',
+          },
+          {
+            id: 'attendance-pending',
+            label: 'PENDING HOUSEHOLDS',
+            value: Math.max(0, attendingParties.length - attendanceThankedCount),
+            subtext: 'Parties left to thank',
+            statusBadge: attendingParties.length - attendanceThankedCount === 0 ? 'All Sent' : `${attendingParties.length - attendanceThankedCount} Left`,
+            statusColor: attendingParties.length - attendanceThankedCount === 0 ? 'green' : 'amber',
+            onClick: () => setThankedFilter(thankedFilter === 'Pending' ? 'All' : 'Pending'),
+            isActive: thankedFilter === 'Pending',
+          },
+          {
+            id: 'guests-total',
+            label: 'CONFIRMED GUESTS',
+            value: attendingGuests.length,
+            subtext: 'Celebrated in person',
+            statusBadge: 'Attended',
+            statusColor: 'green',
+          },
+        ]}
+      />
 
       {/* Search & Filter Section */}
       <div style={styles.filterBar} className="thankyou-filter-bar">

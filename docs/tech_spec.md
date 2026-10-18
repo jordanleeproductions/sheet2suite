@@ -204,6 +204,19 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
   - **Dedicated Total Estimated Value KPI Card:** Displays total value in its own standalone KPI card alongside Total Gifts Received.
   - **Category Filtering & Value Aggregations:** Filter gifts by category with inline counts and category sums in the dropdown selector, plus dynamic filtered value summary banner.
 
+### 2.15 Unified Page Experience & Monarch Hero Metric Strips (`PageHeaderCard.tsx`, `PageMetricStrip.tsx`, `confetti.ts`)
+- **Standardized Page Header Card (`src/components/vow/PageHeaderCard.tsx`):**
+  - High-impact header component with editorial serif display title, sans subtitle, count badge, integrated segment switcher (e.g., Reception vs. Ceremony, Shot List vs. Guestbook, Gift Registry vs. Attendance Cards), and responsive action button hierarchy.
+  - Automatically stacks actions into full-width thumb targets ($\ge 44\text{px}$) on mobile viewports ($\le 768\text{px}$).
+- **Monarch-Style Hero Metric Strip (`src/components/vow/PageMetricStrip.tsx`):**
+  - 3- to 4-metric strip with uppercase technical monospace labels, large tabular figures, colored status delta pills, micro progress bars, and interactive click-to-filter capabilities.
+  - Automatically reflows from horizontal columns to a 2x2 grid on mobile viewports ($\le 768\text{px}$) to prevent horizontal clipping.
+- **Milestone Gamification & Celebratory Confetti (`src/lib/confetti.ts`):**
+  - Zero-dependency HTML5 canvas confetti particle engine with mobile haptic vibration (`navigator.vibrate([20, 40, 25])`) and celebratory wedding palette (gold, rose, champagne, emerald, violet).
+  - Programmatically triggered on 100% milestone completions (all tasks done, all guests seated, all photo shots captured, all thank-you notes sent).
+- **Tactile Micro-Interactions (`globals.css`):**
+  - Includes `@keyframes springCheck` for milestone checkmark springs and `.btn-pressable` active scale feedback (`scale(0.97)`).
+
 ---
 
 ## 4. Native Sheet2Suite License & Entitlement Architecture

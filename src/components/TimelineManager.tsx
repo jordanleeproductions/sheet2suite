@@ -6,6 +6,8 @@ import { Clock, MapPin, User, ChevronDown, ChevronUp, Plus, Edit2, X, ChevronLef
 import MobileFAB from '@/components/MobileFAB';
 import TimeDialPicker from '@/components/TimeDialPicker';
 import PageSearchInput from '@/components/PageSearchInput';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { parseTimeOrSerial } from '@/lib/currency';
 
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
@@ -458,28 +460,45 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
         }
       `}</style>
 
-      {/* Header Panel */}
-      <div className="timeline-header-card anim-fade-in">
-        <div>
-          <h2 style={styles.title}>Day-of Timeline</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Your wedding day schedule, milestones, and cues.
-          </p>
-        </div>
-        <div className="timeline-header-actions">
-          <button style={styles.secondaryBtn} onClick={exportToCSV} title="Export CSV">
-            <Download size={14} style={{ marginRight: '0.25rem' }} /> CSV
-          </button>
-          {onOpenPrintStudio && (
-            <button style={styles.secondaryBtn} onClick={handlePrint} title="Print Day-Of Schedule">
-              <Printer size={14} style={{ marginRight: '0.25rem' }} /> PRINT
+      {/* 0. Page Header Card [Consistent Monarch UX] */}
+      <PageHeaderCard
+        title="Day-of Timeline"
+        subtitle="Your wedding day schedule, milestones, and cues."
+        actions={
+          <>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={exportToCSV}
+              title="Export CSV"
+            >
+              <Download size={14} />
+              <span>CSV</span>
             </button>
-          )}
-          <button style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} className="timeline-add-btn" onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD EVENT
-          </button>
-        </div>
-      </div>
+            {onOpenPrintStudio && (
+              <button
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={handlePrint}
+                title="Print Day-Of Schedule"
+              >
+                <Printer size={14} />
+                <span>PRINT</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary"
+              onClick={startAdd}
+              disabled={isSyncing}
+              title="Add New Timeline Moment"
+            >
+              <Plus size={14} />
+              <span>ADD EVENT</span>
+            </button>
+          </>
+        }
+      />
 
       {/* UP NEXT Featured Event Banner */}
       {filteredEventsWithIndex.length > 0 && (

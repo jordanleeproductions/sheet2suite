@@ -6,6 +6,8 @@ import { Guest } from '@/lib/sheets/types';
 import { Utensils, Plus, Edit2, Trash2, Check, X, Leaf, ShieldAlert, Award, ChevronRight, RefreshCw, AlertTriangle } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
 
 interface MenuSetupManagerProps {
   guests: Guest[];
@@ -185,76 +187,86 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
 
   return (
     <div style={styles.container}>
-      {/* Header Banner */}
-      <div style={styles.header}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Utensils size={22} style={{ color: 'var(--color-primary)' }} />
-            <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>Catering & Menu Setup</h2>
-          </div>
-          <p style={styles.subtitle}>
-            Configure your wedding menu offerings. Entrees defined here populate into guest RSVP meal selections.
-          </p>
-        </div>
+      {/* Standardized Header Banner */}
+      <PageHeaderCard
+        title="Catering & Menu Setup"
+        subtitle="Configure your wedding menu offerings. Entrees defined here populate into guest RSVP meal selections."
+        badge={`${menuItems.length} Offerings`}
+        actionButtons={
+          <>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={handleResetDefault}
+              title="Reset to default sample menu"
+            >
+              <RefreshCw size={14} />
+              <span>RESET SAMPLES</span>
+            </button>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary"
+              onClick={startAdd}
+              disabled={isSyncing}
+              title="Add Menu Item"
+            >
+              <Plus size={14} />
+              <span>ADD MENU ITEM</span>
+            </button>
+          </>
+        }
+      />
 
-        <style>{`
-          @media (max-width: 768px) {
-            .menu-add-btn {
-              display: none !important;
-            }
-          }
-          .entree-kpi-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-          }
-          .entree-kpi-card:hover {
-            border-color: var(--color-primary) !important;
-            box-shadow: var(--box-shadow-hover) !important;
-            transform: translateY(-2px);
-          }
-          .entree-kpi-card:active {
-            transform: translateY(0);
-          }
-        `}</style>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
-          <button
-            type="button"
-            onClick={handleResetDefault}
-            style={styles.secondaryBtn}
-            title="Reset to default sample menu"
-          >
-            <RefreshCw size={14} style={{ marginRight: '4px' }} /> RESET SAMPLE MENU
-          </button>
-          <button type="button" onClick={startAdd} style={styles.primaryBtn} className="menu-add-btn">
-            <Plus size={16} style={{ marginRight: '4px' }} /> ADD MENU ITEM
-          </button>
-        </div>
-      </div>
+      <style>{`
+        .entree-kpi-card {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .entree-kpi-card:hover {
+          border-color: var(--color-primary) !important;
+          box-shadow: var(--box-shadow-hover) !important;
+          transform: translateY(-2px);
+        }
+        .entree-kpi-card:active {
+          transform: translateY(0);
+        }
+      `}</style>
 
-      {/* KPI Overview Summary Bar */}
-      <div style={styles.kpiBar}>
-        <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>MAIN COURSE OPTIONS</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>{entrees.length}</span>
-          <span style={styles.kpiSub}>Custom Main Courses</span>
-        </div>
-        <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>APPETIZERS & HORS D'OEUVRES</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-purple)' }}>{appetizers.length}</span>
-          <span style={styles.kpiSub}>Tray-Passed Options</span>
-        </div>
-        <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>DESSERT SELECTION</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-gold-dark)' }}>{desserts.length}</span>
-          <span style={styles.kpiSub}>Cakes & Sweet Treats</span>
-        </div>
-        <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>MEAL ORDERS</span>
-          <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-            {guests.filter(g => g.rsvpStatus === 'Attending').length}
-          </span>
-          <span style={styles.kpiSub}>Total Meals to Prepare</span>
-        </div>
-      </div>
+      {/* Monarch-Style Hero Metric Strip */}
+      <PageMetricStrip
+        style={{ marginBottom: '1.25rem' }}
+        metrics={[
+          {
+            id: 'entrees',
+            label: 'MAIN COURSES',
+            value: entrees.length,
+            subtext: 'Custom main courses',
+            statusBadge: `${entrees.length} Options`,
+            statusColor: 'blue',
+          },
+          {
+            id: 'appetizers',
+            label: 'APPETIZERS',
+            value: appetizers.length,
+            subtext: "Tray-passed & hors d'oeuvres",
+            statusColor: 'purple',
+          },
+          {
+            id: 'desserts',
+            label: 'DESSERT SELECTION',
+            value: desserts.length,
+            subtext: 'Cakes & sweets',
+            statusColor: 'amber',
+          },
+          {
+            id: 'meals',
+            label: 'CONFIRMED MEALS',
+            value: guests.filter(g => g.rsvpStatus === 'Attending').length,
+            subtext: 'Total meals to prepare',
+            statusBadge: 'Attending',
+            statusColor: 'green',
+          },
+        ]}
+      />
 
       {/* Guest Selection Entree Breakdown Cards */}
       {guestSelectionEntrees.length > 0 && (

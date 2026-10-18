@@ -38,6 +38,9 @@ import PageSearchInput from '@/components/PageSearchInput';
 import GoogleDrivePickerModal, { SelectedFolder } from '@/components/GoogleDrivePickerModal';
 import { generateShareToken, ShareLinkRecord } from '@/lib/share/token';
 import type { GuestUploadRecord } from '@/lib/db/firestoreDb';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import { triggerConfetti } from '@/lib/confetti';
 
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
@@ -147,6 +150,9 @@ export default function PhotoShotListManager({
 
   // Toggle Shot Status (Captured <-> Pending)
   const toggleShotStatus = async (shotId: string) => {
+    const targetShot = photos.find(p => p.shotId === shotId);
+    const willBeCaptured = targetShot && (targetShot.status || '').toLowerCase() !== 'captured' && (targetShot.status || '').toLowerCase() !== 'completed';
+
     const updated = photos.map(p => {
       if (p.shotId === shotId) {
         const isCurrentCaptured = 
@@ -160,6 +166,14 @@ export default function PhotoShotListManager({
       }
       return p;
     });
+
+    if (willBeCaptured) {
+      const remainingPending = updated.filter(p => (p.status || '').toLowerCase() !== 'captured' && (p.status || '').toLowerCase() !== 'completed');
+      if (remainingPending.length === 0 && updated.length > 0) {
+        triggerConfetti({ particleCount: 90 });
+      }
+    }
+
     await onUpdatePhotos(updated);
   };
 
@@ -801,60 +815,118 @@ export default function PhotoShotListManager({
 
 
 
-      {/* Header Title & Actions */}
-      <div className="photo-header-container">
-        <div>
-          <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>
-            Photo Shot List
-          </h2>
-          <p style={styles.subtitle}>
-            Manage required photography moments, VIP group poses, and shot progress for your photographer.
-          </p>
-        </div>
+      {/* Standardized Header Card with Integrated View Switcher */}
+      <PageHeaderCard
+        title={activeView === 'shotlist' ? "Photo Shot List" : "Guestbook & Photos"}
+        subtitle={activeView === 'shotlist' ? "Manage required photography moments, VIP group poses, and shot progress for your photographer." : "Heartfelt messages, guest candid photo uploads, and shared digital memories."}
+        badge={activeView === 'shotlist' ? `${photos.length} Shots` : `${guestUploads.length} Messages`}
+        segmentSwitcher={{
+          activeKey: activeView,
+          onChange: (key) => setActiveView(key as 'shotlist' | 'guestbook'),
+          segments: [
+            { key: 'shotlist', label: 'SHOT LIST', icon: <Camera size={14} /> },
+            { key: 'guestbook', label: 'GUESTBOOK', icon: <MessageSquare size={14} /> },
+          ],
+        }}
+        actionButtons={
+          activeView === 'shotlist' ? (
+            <>
+              <button 
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={handleSharePhotos}
+                title="Email shot list to Photographer"
+              >
+                <Mail size={14} />
+                <span>EMAIL LIST</span>
+              </button>
 
-        <div className="photo-header-actions">
-          <button 
-            type="button"
-            style={{
-              ...styles.addButton,
-              backgroundColor: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-muted)'
-            }} 
-            onClick={handleSharePhotos}
-            title="Email shot list to Photographer"
-          >
-            <Mail size={16} style={{ marginRight: '6px' }} /> EMAIL LIST
-          </button>
+              <button
+                type="button"
+                className="s2v-header-btn s2v-header-btn-primary photo-add-btn"
+                onClick={startAddShot}
+                disabled={isSyncing}
+                title="Add Photo Shot"
+              >
+                <Plus size={14} />
+                <span>ADD SHOT</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={fetchGuestUploads}
+                disabled={isLoadingGuestUploads}
+                title="Refresh submissions"
+              >
+                <RefreshCw size={14} className={isLoadingGuestUploads ? 'spin' : ''} />
+                <span>REFRESH</span>
+              </button>
 
-          <button style={styles.addButton} className="photo-add-btn" onClick={startAddShot}>
-            <Plus size={16} style={{ marginRight: '6px' }} /> ADD PHOTO SHOT
-          </button>
-        </div>
-      </div>
+              <button
+                type="button"
+                className="s2v-header-btn s2v-header-btn-primary"
+                onClick={() => setIsUploadSetupOpen(true)}
+                title="Share Guest Photo Upload Portal Link"
+              >
+                <UploadCloud size={14} />
+                <span>UPLOAD SETUP</span>
+              </button>
+            </>
+          )
+        }
+      />
 
       {/* SHOT LIST VIEW */}
       {activeView === 'shotlist' && (
         <>
-          {/* KPI Bar */}
-          <div className="photo-kpi-bar">
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>TOTAL REQUIRED SHOTS</span>
-              <span className="photo-kpi-value">{totalShots}</span>
-            </div>
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>CAPTURED SHOTS</span>
-              <span className="photo-kpi-value" style={{ color: 'var(--color-green)' }}>{capturedShots}</span>
-            </div>
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>PENDING SHOTS</span>
-              <span className="photo-kpi-value" style={{ color: 'var(--color-gold)' }}>{pendingShots}</span>
-            </div>
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>ESSENTIAL SHOTS</span>
-              <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{mustHaveShots}</span>
-            </div>
-          </div>
+          {/* Monarch-Style Hero Metric Strip */}
+          <PageMetricStrip
+            style={{ marginBottom: '1.25rem' }}
+            metrics={[
+              {
+                id: 'total',
+                label: 'TOTAL REQUIRED',
+                value: totalShots,
+                subtext: 'Shot list moments',
+                statusBadge: `${totalShots} Moments`,
+                statusColor: 'blue',
+                onClick: () => { setStatusFilter('All'); setPriorityFilter('All'); },
+                isActive: statusFilter === 'All' && priorityFilter === 'All',
+              },
+              {
+                id: 'captured',
+                label: 'CAPTURED SHOTS',
+                value: `${capturedShots} / ${totalShots}`,
+                progress: totalShots > 0 ? Math.round((capturedShots / totalShots) * 100) : 0,
+                statusBadge: capturedShots === totalShots && totalShots > 0 ? '100% Captured' : `${totalShots > 0 ? Math.round((capturedShots / totalShots) * 100) : 0}%`,
+                statusColor: capturedShots === totalShots && totalShots > 0 ? 'green' : 'blue',
+                onClick: () => setStatusFilter('Captured'),
+                isActive: statusFilter === 'Captured',
+              },
+              {
+                id: 'pending',
+                label: 'PENDING SHOTS',
+                value: pendingShots,
+                subtext: 'Awaiting photographer cue',
+                statusColor: pendingShots > 0 ? 'amber' : 'neutral',
+                onClick: () => setStatusFilter('Pending'),
+                isActive: statusFilter === 'Pending',
+              },
+              {
+                id: 'must-have',
+                label: 'ESSENTIAL VIP SHOTS',
+                value: mustHaveShots,
+                subtext: 'High-priority VIP poses',
+                statusBadge: 'Must Have',
+                statusColor: 'purple',
+                onClick: () => setPriorityFilter('Must Have'),
+                isActive: priorityFilter === 'Must Have',
+              },
+            ]}
+          />
 
           {/* Filters Bar */}
           <div className="photo-filter-bar">
@@ -1027,40 +1099,47 @@ export default function PhotoShotListManager({
       {/* GUESTBOOK & PHOTO NOTES VIEW */}
       {activeView === 'guestbook' && (
         <>
-          {/* Guestbook KPI Bar */}
-          <div className="photo-kpi-bar">
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>TOTAL GUEST SUBMISSIONS</span>
-              <span className="photo-kpi-value" style={{ color: 'var(--color-primary)' }}>{guestUploads.length}</span>
-            </div>
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>PHOTOS & VIDEOS RECEIVED</span>
-              <span className="photo-kpi-value" style={{ color: 'var(--color-gold, #cda250)' }}>{guestTotalFiles}</span>
-            </div>
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>HEARTFELT NOTES & WISHES</span>
-              <span className="photo-kpi-value" style={{ color: 'var(--color-green)' }}>{guestNotesCount}</span>
-            </div>
-            <div className="photo-kpi-item">
-              <span style={styles.kpiLabel}>GOOGLE DRIVE ALBUM</span>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem', marginTop: '0.15rem' }}>
-                <span className="photo-kpi-value" style={{ fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selectedFolder.name || 'Guest Uploads'}>
-                  {selectedFolder.name || 'Guest Uploads'}
-                </span>
-                {selectedFolder.id && (
-                  <a
-                    href={`https://drive.google.com/drive/folders/${selectedFolder.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
-                    title="Open album in Google Drive"
-                  >
-                    <ExternalLink size={14} />
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* Monarch-Style Hero Metric Strip */}
+          <PageMetricStrip
+            style={{ marginBottom: '1.25rem' }}
+            metrics={[
+              {
+                id: 'submissions',
+                label: 'GUEST SUBMISSIONS',
+                value: guestUploads.length,
+                subtext: 'Total guest entries',
+                statusBadge: 'Guestbook',
+                statusColor: 'blue',
+              },
+              {
+                id: 'media',
+                label: 'PHOTOS & VIDEOS',
+                value: guestTotalFiles,
+                subtext: 'Uploaded to Drive',
+                statusBadge: `${guestTotalFiles} Files`,
+                statusColor: 'amber',
+              },
+              {
+                id: 'notes',
+                label: 'WRITTEN NOTES',
+                value: guestNotesCount,
+                subtext: 'Heartfelt wishes',
+                statusBadge: `${guestNotesCount} Messages`,
+                statusColor: 'green',
+                onClick: () => setOnlyWithNotes(prev => !prev),
+                isActive: onlyWithNotes,
+              },
+              {
+                id: 'album',
+                label: 'DRIVE ALBUM',
+                value: selectedFolder.name || 'Guest Uploads',
+                subtext: 'Target cloud album',
+                statusBadge: selectedFolder.id ? 'Connected' : 'Default',
+                statusColor: selectedFolder.id ? 'green' : 'neutral',
+                onClick: () => setIsUploadSetupOpen(true),
+              },
+            ]}
+          />
 
           {/* Guestbook Search & Filter Toolbar */}
           <div className="photo-filter-bar">

@@ -7,6 +7,8 @@ import VendorShareLinkManager from '@/components/VendorShareLinkManager';
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import PageSearchInput from '@/components/PageSearchInput';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { verifyActiveSession } from '@/lib/core/sessionCheck';
 
@@ -749,109 +751,135 @@ export default function VendorManager({
         }
       `}</style>
 
-      {/* Header */}
-      <div className="vendor-header-container">
-        <div>
-          <h2 style={styles.title}>Vendors</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
-            Keep track of your vendor contracts, payments, and contacts.
-          </p>
-        </div>
-        <div className="vendor-header-actions">
-          <div className="vendor-view-toggle">
-            <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'table' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)' }}
-              onClick={() => setViewMode('table')}
-              title="Table View"
-            >
-              <List size={16} />
-            </button>
-            <button
-              style={{ ...styles.toggleBtn, backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'card' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)' }}
-              onClick={() => setViewMode('card')}
-              title="Card View"
-            >
-              <Grid size={16} />
-            </button>
-          </div>
-          {onOpenPrintStudio && (
-            <button 
-              className="vendor-action-btn"
+      {/* 0. Page Header Card [Consistent Monarch UX] */}
+      <PageHeaderCard
+        title="Vendors"
+        subtitle="Keep track of your vendor contracts, payments, and contacts."
+        actions={
+          <>
+            <div
+              className="vendor-view-toggle"
               style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                backgroundColor: 'transparent',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-muted)',
-                borderRadius: 'var(--border-radius-sm)',
-                padding: '0.5rem 0.875rem',
-                cursor: 'pointer',
                 display: 'inline-flex',
-                alignItems: 'center'
+                alignItems: 'center',
+                backgroundColor: 'var(--color-bg, #F8FAFC)',
+                border: '1px solid var(--color-border, #CBD5E1)',
+                borderRadius: '4px',
+                padding: '2px',
+                height: '38px',
               }}
-              onClick={() => onOpenPrintStudio('vendors')}
-              title="Print Emergency Vendor Contact Directory"
             >
-              <Printer size={15} style={{ marginRight: '0.35rem' }} /> PRINT ROSTER
+              <button
+                type="button"
+                style={{
+                  ...styles.toggleBtn,
+                  backgroundColor: viewMode === 'table' ? 'var(--color-primary)' : 'transparent',
+                  color: viewMode === 'table' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                  borderRadius: '3px',
+                  border: 'none',
+                  padding: '0.35rem 0.6rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+                onClick={() => setViewMode('table')}
+                title="Table View"
+              >
+                <List size={15} />
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...styles.toggleBtn,
+                  backgroundColor: viewMode === 'card' ? 'var(--color-primary)' : 'transparent',
+                  color: viewMode === 'card' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                  borderRadius: '3px',
+                  border: 'none',
+                  padding: '0.35rem 0.6rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+                onClick={() => setViewMode('card')}
+                title="Card View"
+              >
+                <Grid size={15} />
+              </button>
+            </div>
+
+            {onOpenPrintStudio && (
+              <button 
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={() => onOpenPrintStudio('vendors')}
+                title="Print Emergency Vendor Contact Directory"
+              >
+                <Printer size={14} />
+                <span>PRINT ROSTER</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary"
+              onClick={startAdd}
+              disabled={isSyncing}
+              title="Add New Vendor"
+            >
+              <Plus size={14} />
+              <span>ADD VENDOR</span>
             </button>
-          )}
-          <button className="vendor-action-btn vendor-add-btn" style={{ ...styles.addButton, color: 'var(--color-on-primary, #ffffff)' }} onClick={startAdd} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.25rem' }} /> ADD VENDOR
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      {/* Financial KPI Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', margin: '0.75rem 0' }}>
-        <div style={{
-          backgroundColor: 'var(--color-surface, #ffffff)',
-          border: '1px solid var(--color-muted)',
-          borderRadius: 'var(--border-radius-md)',
-          padding: '1rem',
-          textAlign: 'center',
-          boxShadow: 'var(--box-shadow-subtle)',
-        }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
-            TOTAL CONTRACTS
-          </div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: '0.25rem' }}>
-            {formatCurrency(financialSummary.totalContracts, currency)}
-          </div>
-        </div>
+      {/* Monarch 4-Tile Hero Metric Strip */}
+      {(() => {
+        const totalPaidPct = financialSummary.totalContracts > 0
+          ? Math.round((financialSummary.totalDeposits / financialSummary.totalContracts) * 100)
+          : 0;
 
-        <div style={{
-          backgroundColor: 'var(--color-surface, #ffffff)',
-          border: '1px solid var(--color-muted)',
-          borderRadius: 'var(--border-radius-md)',
-          padding: '1rem',
-          textAlign: 'center',
-          boxShadow: 'var(--box-shadow-subtle)',
-        }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
-            TOTAL DEPOSITS PAID
+        return (
+          <div style={{ margin: '0.5rem 0' }}>
+            <PageMetricStrip
+              metrics={[
+                {
+                  id: 'booked',
+                  label: 'BOOKED VENDORS',
+                  value: vendors.length,
+                  subtext: `${filteredVendors.length} matching view`,
+                  statusBadge: `${vendors.length} ACTIVE`,
+                  statusColor: 'blue',
+                },
+                {
+                  id: 'contracts',
+                  label: 'TOTAL CONTRACTED',
+                  value: formatCurrency(financialSummary.totalContracts, currency),
+                  subtext: 'Agreed contract value',
+                  statusColor: 'neutral',
+                },
+                {
+                  id: 'paid',
+                  label: 'PAID TO DATE',
+                  value: formatCurrency(financialSummary.totalDeposits, currency),
+                  subtext: `${totalPaidPct}% settled`,
+                  statusBadge: `${totalPaidPct}%`,
+                  statusColor: 'green',
+                  progress: totalPaidPct,
+                },
+                {
+                  id: 'owing',
+                  label: 'BALANCE REMAINING',
+                  value: formatCurrency(financialSummary.totalOwing, currency),
+                  subtext: financialSummary.totalOwing > 0 ? 'Remaining to be paid' : 'All balances clear',
+                  statusBadge: financialSummary.totalOwing > 0 ? 'OUTSTANDING' : 'CLEAR',
+                  statusColor: financialSummary.totalOwing > 0 ? 'amber' : 'green',
+                },
+              ]}
+            />
           </div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-green, #10b981)', marginTop: '0.25rem' }}>
-            {formatCurrency(financialSummary.totalDeposits, currency)}
-          </div>
-        </div>
-
-        <div style={{
-          backgroundColor: 'var(--color-surface, #ffffff)',
-          border: '1px solid var(--color-muted)',
-          borderRadius: 'var(--border-radius-md)',
-          padding: '1rem',
-          textAlign: 'center',
-          boxShadow: 'var(--box-shadow-subtle)',
-        }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--color-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
-            TOTAL AMOUNT OWING
-          </div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-red, #ef4444)', marginTop: '0.25rem' }}>
-            {formatCurrency(financialSummary.totalOwing, currency)}
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Filter and Search Bar */}
       <div style={styles.filterBar}>

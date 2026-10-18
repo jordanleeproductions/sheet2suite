@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import PageSearchInput from '@/components/PageSearchInput';
+import PageHeaderCard from '@/components/vow/PageHeaderCard';
+import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import { triggerConfetti } from '@/lib/confetti';
 
 interface SeatingChartManagerProps {
   guests: Guest[];
@@ -275,6 +278,14 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
       return { ...g, tableAssignment: targetAssignment, seatNumber: tableIdOrName === 'Unassigned' ? undefined : seatNumber };
     });
     await onUpdateGuests(updated);
+
+    const remainingUnassigned = updated.filter(g => 
+      (g.rsvpStatus === 'Attending' || g.rsvpStatus === 'No Response') && 
+      (!g.tableAssignment || g.tableAssignment.trim() === '' || g.tableAssignment === 'Unassigned')
+    );
+    if (remainingUnassigned.length === 0 && updated.length > 0) {
+      triggerConfetti({ particleCount: 90 });
+    }
     
     // Reset all popups cleanly
     setSelectedGuest(null);
@@ -379,106 +390,61 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
 
   return (
     <div style={styles.container}>
-      {/* Seating Mode View Switcher Bar */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <button
-          type="button"
-          style={{
-            padding: '0.55rem 1.1rem',
-            fontSize: '0.8rem',
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 700,
-            backgroundColor: seatingMode === 'reception' ? 'var(--color-primary)' : 'var(--color-surface)',
-            color: seatingMode === 'reception' ? 'var(--color-on-primary)' : 'var(--color-text)',
-            border: '1px solid var(--color-muted)',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            transition: 'var(--transition-smooth)',
-          }}
-          onClick={() => setSeatingMode('reception')}
-        >
-          <Utensils size={15} /> RECEPTION TABLES
-        </button>
-        <button
-          type="button"
-          style={{
-            padding: '0.55rem 1.1rem',
-            fontSize: '0.8rem',
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 700,
-            backgroundColor: seatingMode === 'ceremony' ? 'var(--color-primary)' : 'var(--color-surface)',
-            color: seatingMode === 'ceremony' ? 'var(--color-on-primary)' : 'var(--color-text)',
-            border: '1px solid var(--color-muted)',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            transition: 'var(--transition-smooth)',
-          }}
-          onClick={() => setSeatingMode('ceremony')}
-        >
-          <Sparkles size={15} /> CEREMONY AISLE SEATING
-        </button>
-      </div>
+      {/* 0. Page Header Card [Consistent Monarch UX] */}
+      <PageHeaderCard
+        title={seatingMode === 'reception' ? 'Seating & Tables' : 'Ceremony Aisle Seating'}
+        subtitle={seatingMode === 'reception'
+          ? 'Arrange floorplan layouts, configure seat capacities, and view guest assignments.'
+          : 'Configure dual-side aisle seating, account for accepted + pending guests, and assign ceremony seats.'
+        }
+        segmentSwitcher={{
+          options: [
+            { id: 'reception', label: 'RECEPTION TABLES', icon: Utensils, count: tables.length },
+            { id: 'ceremony', label: 'CEREMONY AISLE', icon: Sparkles },
+          ],
+          activeId: seatingMode,
+          onChange: (id) => setSeatingMode(id as 'reception' | 'ceremony'),
+        }}
+        actions={
+          <>
+            {onOpenPrintStudio && (
+              <button 
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={() => onOpenPrintStudio('table_cards')}
+                title="Print Table Tent Cards & Seating Roster"
+              >
+                <Printer size={14} />
+                <span>PRINT CARDS</span>
+              </button>
+            )}
 
-      {/* Header Toolbar */}
-      <div style={styles.header}>
-        <div>
-          <h2 style={styles.title}>{seatingMode === 'reception' ? 'Visual Table Seating Plan' : 'Ceremony Aisle Seating Planner'}</h2>
-          <p style={styles.subtitle}>
-            {seatingMode === 'reception'
-              ? 'Arrange seating layouts, configure seat capacities, and view guest profiles.'
-              : 'Configure dual-side aisle seating, account for accepted + pending guests, and assign ceremony seats.'}
-          </p>
-        </div>
-
-        <div style={styles.headerActions}>
-          {onOpenPrintStudio && (
             <button 
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={() => setShowUnassignedDrawer(!showUnassignedDrawer)}
               style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                backgroundColor: 'transparent',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-muted)',
-                borderRadius: 'var(--border-radius-sm)',
-                padding: '0.5rem 0.875rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center'
+                borderColor: unassignedGuests.length > 0 ? 'var(--color-amber, #F59E0B)' : undefined,
+                color: unassignedGuests.length > 0 ? 'var(--color-amber-dark, #92400E)' : undefined,
               }}
-              onClick={() => onOpenPrintStudio('table_cards')}
-              title="Print Table Tent Cards & Seating Roster"
             >
-              <Printer size={15} style={{ marginRight: '0.35rem' }} /> PRINT TABLE CARDS
+              <UserPlus size={14} />
+              <span>UNASSIGNED ({unassignedGuests.length})</span>
             </button>
-          )}
 
-          <button 
-            style={styles.drawerToggleBtn} 
-            onClick={() => setShowUnassignedDrawer(!showUnassignedDrawer)}
-          >
-            <UserPlus size={16} style={{ marginRight: '0.35rem' }} />
-            UNASSIGNED GUESTS ({unassignedGuests.length})
-          </button>
-
-          <style>{`
-            @media (max-width: 768px) {
-              .seating-add-table-btn {
-                display: none !important;
-              }
-            }
-          `}</style>
-          <button style={styles.addButton} className="seating-add-table-btn" onClick={startAddTable} disabled={isSyncing}>
-            <Plus size={16} style={{ marginRight: '0.35rem' }} /> ADD TABLE
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              className="s2v-header-btn s2v-header-btn-primary seating-add-table-btn"
+              onClick={startAddTable}
+              disabled={isSyncing}
+              title="Add New Table"
+            >
+              <Plus size={14} />
+              <span>ADD TABLE</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Unassigned Guests Quick Drawer Panel */}
       {showUnassignedDrawer && (
@@ -516,44 +482,41 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
       {seatingMode === 'ceremony' ? (
         <div className="ceremony-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1rem' }}>
           {/* Ceremony KPI Summary Strip */}
-          <div style={styles.kpiBar}>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>CEREMONY SEATS NEEDED</span>
-              <span style={{ ...styles.kpiValue, color: 'var(--color-primary)' }}>
-                {ceremonyRequiredGuests.length}
-              </span>
-              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                (Attending + Pending)
-              </span>
-            </div>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>DECLINED GUESTS</span>
-              <span style={{ ...styles.kpiValue, color: 'var(--color-muted)' }}>
-                {ceremonyDeclinedCount}
-              </span>
-              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                (Excluded)
-              </span>
-            </div>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>TOTAL CHAIR CAPACITY</span>
-              <span style={{ ...styles.kpiValue, color: totalCeremonyCapacity >= ceremonyRequiredGuests.length ? 'var(--color-green, #10b981)' : '#ef4444' }}>
-                {totalCeremonyCapacity} Seats
-              </span>
-              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                ({ceremonyConfig.rowsCount} rows × {ceremonyConfig.chairsPerSide * 2} per row)
-              </span>
-            </div>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>CURRENT LAYOUT</span>
-              <span style={styles.kpiValue}>
-                {ceremonyConfig.rowsCount} Rows
-              </span>
-              <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                {ceremonyConfig.chairsPerSide} per side
-              </span>
-            </div>
-          </div>
+          <PageMetricStrip
+            style={{ marginBottom: '0.5rem' }}
+            metrics={[
+              {
+                id: 'ceremony-needed',
+                label: 'SEATS NEEDED',
+                value: ceremonyRequiredGuests.length,
+                subtext: 'Attending + Pending',
+                statusBadge: 'Required',
+                statusColor: 'blue',
+              },
+              {
+                id: 'ceremony-declined',
+                label: 'DECLINED GUESTS',
+                value: ceremonyDeclinedCount,
+                subtext: 'Excluded from chairs',
+                statusColor: 'neutral',
+              },
+              {
+                id: 'ceremony-capacity',
+                label: 'CHAIR CAPACITY',
+                value: `${totalCeremonyCapacity} Seats`,
+                subtext: `${ceremonyConfig.rowsCount} rows × ${ceremonyConfig.chairsPerSide * 2} chairs`,
+                statusBadge: totalCeremonyCapacity >= ceremonyRequiredGuests.length ? 'Sufficient' : 'Shortage',
+                statusColor: totalCeremonyCapacity >= ceremonyRequiredGuests.length ? 'green' : 'red',
+              },
+              {
+                id: 'ceremony-layout',
+                label: 'CURRENT LAYOUT',
+                value: `${ceremonyConfig.rowsCount} Rows`,
+                subtext: `${ceremonyConfig.chairsPerSide} chairs / side`,
+                statusColor: 'neutral',
+              },
+            ]}
+          />
 
           {/* Ceremony Configuration Toolbar */}
           <div style={{
@@ -835,30 +798,42 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
       ) : (
         <>
           {/* Summary KPI Strip */}
-          <div style={styles.kpiBar}>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>TOTAL TABLES</span>
-              <span style={styles.kpiValue}>{tables.length}</span>
-            </div>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>TOTAL SEAT CAPACITY</span>
-              <span style={styles.kpiValue}>
-                {tables.reduce((acc, t) => acc + t.capacity, 0)}
-              </span>
-            </div>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>SEATED GUESTS</span>
-              <span style={{ ...styles.kpiValue, color: 'var(--color-green)' }}>
-                {seatedGuestsCount} / {eligibleSeatingGuests.length}
-              </span>
-            </div>
-            <div style={styles.kpiItem}>
-              <span style={styles.kpiLabel}>UNASSIGNED GUESTS</span>
-              <span style={{ ...styles.kpiValue, color: unassignedGuests.length > 0 ? 'var(--color-gold)' : 'var(--color-muted)' }}>
-                {unassignedGuests.length}
-              </span>
-            </div>
-          </div>
+          <PageMetricStrip
+            style={{ marginBottom: '1.25rem' }}
+            metrics={[
+              {
+                id: 'tables',
+                label: 'TOTAL TABLES',
+                value: tables.length,
+                subtext: 'Configured tables',
+                statusBadge: `${tables.length} Active`,
+                statusColor: 'blue',
+              },
+              {
+                id: 'capacity',
+                label: 'SEAT CAPACITY',
+                value: tables.reduce((acc, t) => acc + t.capacity, 0),
+                subtext: `${Math.max(0, tables.reduce((acc, t) => acc + t.capacity, 0) - seatedGuestsCount)} open seats`,
+                statusColor: 'neutral',
+              },
+              {
+                id: 'seated',
+                label: 'SEATED GUESTS',
+                value: `${seatedGuestsCount} / ${eligibleSeatingGuests.length}`,
+                progress: eligibleSeatingGuests.length > 0 ? Math.round((seatedGuestsCount / eligibleSeatingGuests.length) * 100) : 0,
+                statusBadge: seatedGuestsCount === eligibleSeatingGuests.length && eligibleSeatingGuests.length > 0 ? '100% Seated' : `${eligibleSeatingGuests.length > 0 ? Math.round((seatedGuestsCount / eligibleSeatingGuests.length) * 100) : 0}%`,
+                statusColor: seatedGuestsCount === eligibleSeatingGuests.length && eligibleSeatingGuests.length > 0 ? 'green' : 'blue',
+              },
+              {
+                id: 'unassigned',
+                label: 'UNASSIGNED GUESTS',
+                value: unassignedGuests.length,
+                statusBadge: unassignedGuests.length === 0 ? 'All Assigned' : `${unassignedGuests.length} unseated`,
+                statusColor: unassignedGuests.length === 0 ? 'green' : 'amber',
+                onClick: () => setShowUnassignedDrawer(prev => !prev),
+              },
+            ]}
+          />
 
           {/* Main Floorplan Canvas Grid */}
           <div style={styles.floorplanGrid}>
