@@ -970,16 +970,16 @@ export default function AdvancedSettingsModal({
                       fontWeight: 700,
                       padding: '0.2rem 0.5rem',
                       borderRadius: 'var(--border-radius-sm)',
-                      backgroundColor: coPlannersList.length >= 2 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                      color: coPlannersList.length >= 2 ? 'var(--color-red, #ef4444)' : 'var(--color-green, #10b981)',
-                      border: coPlannersList.length >= 2 ? '1px solid var(--color-red, #ef4444)' : '1px solid var(--color-green, #10b981)',
+                      backgroundColor: coPlannersList.length >= 1 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: coPlannersList.length >= 1 ? 'var(--color-red, #ef4444)' : 'var(--color-green, #10b981)',
+                      border: coPlannersList.length >= 1 ? '1px solid var(--color-red, #ef4444)' : '1px solid var(--color-green, #10b981)',
                     }}>
-                      {coPlannersList.length} / 2 CO-PLANNER SLOTS USED
+                      {coPlannersList.length} / 1 SECONDARY USER SLOTS USED
                     </span>
                   </div>
 
                   <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0 0 0.75rem 0' }}>
-                    Grant your spouse or partner access to co-plan on your wedding database in real time. Automatically sends a free native Google Drive email notification to their inbox. (Maximum 2 co-planners per workspace).
+                    Grant your spouse or partner access to co-plan on your wedding database in real time. Standard plan includes 2 users (Primary + 1 Secondary). Upgrade to Pro for additional collaborators.
                   </p>
 
                   {coPlannerMsg && (
@@ -1009,13 +1009,13 @@ export default function AdvancedSettingsModal({
                       onChange={(e) => setCoPlannerEmailInput(e.target.value)}
                       placeholder="e.g. partner@example.com"
                       required
-                      disabled={coPlannersList.length >= 2 || isGrantingCoPlanner}
+                      disabled={coPlannersList.length >= 1 || isGrantingCoPlanner}
                       style={{ ...styles.input, flex: '1 1 200px', minWidth: '180px' }}
                     />
                     <select
                       value={coPlannerRole}
                       onChange={(e) => setCoPlannerRole(e.target.value as 'writer' | 'reader')}
-                      disabled={coPlannersList.length >= 2 || isGrantingCoPlanner}
+                      disabled={coPlannersList.length >= 1 || isGrantingCoPlanner}
                       style={{ ...styles.select, width: 'auto', minWidth: '110px' }}
                     >
                       <option value="writer">Editor (Co-Planner)</option>
@@ -1023,14 +1023,14 @@ export default function AdvancedSettingsModal({
                     </select>
                     <button
                       type="submit"
-                      disabled={coPlannersList.length >= 2 || isGrantingCoPlanner || !coPlannerEmailInput.trim()}
+                      disabled={coPlannersList.length >= 1 || isGrantingCoPlanner || !coPlannerEmailInput.trim()}
                       style={{
                         ...styles.saveBtn,
-                        backgroundColor: coPlannersList.length >= 2 ? 'var(--color-muted)' : 'var(--color-primary)',
+                        backgroundColor: coPlannersList.length >= 1 ? 'var(--color-muted)' : 'var(--color-primary)',
                         color: 'var(--color-on-primary, #ffffff)',
                         border: 'none',
-                        opacity: (coPlannersList.length >= 2 || isGrantingCoPlanner) ? 0.6 : 1,
-                        cursor: (coPlannersList.length >= 2 || isGrantingCoPlanner) ? 'not-allowed' : 'pointer',
+                        opacity: (coPlannersList.length >= 1 || isGrantingCoPlanner) ? 0.6 : 1,
+                        cursor: (coPlannersList.length >= 1 || isGrantingCoPlanner) ? 'not-allowed' : 'pointer',
                       }}
                     >
                       <UserPlus size={14} />

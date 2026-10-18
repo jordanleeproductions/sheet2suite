@@ -31,7 +31,7 @@ import VowMobileNav from '@/components/vow/VowMobileNav';
 import CommandPalette from '@/components/vow/CommandPalette';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search, ChevronRight } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -713,6 +713,36 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [coPlanners, setCoPlanners] = useState<string[]>([]);
+
+  // Automatically fetch active co-planners from Cloud Firestore
+  useEffect(() => {
+    if (!spreadsheetId || isMockMode) return;
+    fetch(`/api/share/partner?spreadsheetId=${encodeURIComponent(spreadsheetId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.coPlanners)) {
+          setCoPlanners(data.coPlanners);
+        }
+      })
+      .catch((e) => console.warn('[CoPlanners] Load error:', e));
+  }, [spreadsheetId, isMockMode]);
+
+  // Tab Title Mapping for Desktop Breadcrumb
+  const TAB_TITLES: Record<string, string> = {
+    home: 'Summary',
+    metrics: 'Executive Briefing',
+    guests: 'Guest List',
+    menu: 'Catering',
+    tables: 'Seating',
+    budget: 'Financials',
+    schedule: 'Timeline',
+    tasks: 'Tasks',
+    vendors: 'Vendors',
+    music: 'Music',
+    photos: 'Photos',
+    thanks: 'Thanks',
+    settings: 'Settings',
+  };
 
   // Navigation
   const [activeTab, setActiveTab] = useState<'home' | 'metrics' | 'guests' | 'menu' | 'tables' | 'budget' | 'schedule' | 'tasks' | 'vendors' | 'music' | 'photos' | 'thanks' | 'settings'>(() => {
@@ -1646,53 +1676,115 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         }}
       >
         <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: isMobile ? '0' : '0.5rem' }}>
-          {!isMobile && !isDesktopSidebarActive && (
-            <div
+          {!isMobile && isDesktopSidebarActive ? (
+            /* Desktop Hybrid Breadcrumb Navigation (replaces duplicate Sheet2Vow brand) */
+            <nav
+              aria-label="Breadcrumb"
               style={{
-                width: '26px',
-                height: '26px',
-                backgroundColor: 'var(--color-primary, #0F172A)',
-                color: 'var(--color-on-primary, #FFFFFF)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '2px',
-                flexShrink: 0,
+                gap: '0.45rem',
+                fontSize: '0.92rem',
+                fontFamily: 'var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
               }}
             >
-              <FileSpreadsheet size={15} strokeWidth={2.2} />
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <h1
-              style={{
-                fontFamily: 'var(--font-editorial-serif, serif)',
-                fontSize: isMobile ? '1.35rem' : (isDesktopSidebarActive ? '1.2rem' : '1.45rem'),
-                margin: 0,
-                lineHeight: '1.1',
-                fontWeight: 700,
-                color: 'var(--color-primary, #0F172A)',
-                letterSpacing: isMobile ? '-0.025em' : '-0.02em',
-              }}
-            >
-              Sheet2Vow
-            </h1>
-            {!isMobile && !isDesktopSidebarActive && (
-              <p
+              <button
+                type="button"
+                onClick={() => setActiveTab('home')}
+                title="Go to Overview"
                 style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.62rem',
-                  color: 'var(--color-muted, #64748B)',
+                  background: 'none',
+                  border: 'none',
+                  padding: '3px 8px',
                   margin: 0,
-                  marginTop: '1px',
-                  letterSpacing: '0.04em',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  color: 'var(--color-muted, #64748B)',
+                  fontWeight: 500,
+                  fontSize: '0.9rem',
+                  borderRadius: '4px',
+                  transition: 'color 0.15s ease, background-color 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--color-primary, #0F172A)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-surface-hover, rgba(0,0,0,0.04))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--color-muted, #64748B)';
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                Clean digital canvas for spreadsheet purists.
-              </p>
-            )}
-          </div>
+                <Heart size={14} style={{ color: 'var(--color-accent, #6366F1)' }} />
+                <span>{weddingName || 'Our Wedding'}</span>
+              </button>
+
+              <ChevronRight size={14} style={{ color: 'var(--color-border-subtle, #94A3B8)', flexShrink: 0 }} />
+
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: 'var(--color-primary, #0F172A)',
+                  letterSpacing: '-0.01em',
+                  padding: '3px 6px',
+                  fontSize: '0.92rem',
+                }}
+              >
+                {TAB_TITLES[activeTab] || 'Summary'}
+              </span>
+            </nav>
+          ) : (
+            <>
+              {!isMobile && !isDesktopSidebarActive && (
+                <div
+                  style={{
+                    width: '26px',
+                    height: '26px',
+                    backgroundColor: 'var(--color-primary, #0F172A)',
+                    color: 'var(--color-on-primary, #FFFFFF)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                >
+                  <FileSpreadsheet size={15} strokeWidth={2.2} />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h1
+                  style={{
+                    fontFamily: 'var(--font-editorial-serif, serif)',
+                    fontSize: isMobile ? '1.35rem' : '1.45rem',
+                    margin: 0,
+                    lineHeight: '1.1',
+                    fontWeight: 700,
+                    color: 'var(--color-primary, #0F172A)',
+                    letterSpacing: isMobile ? '-0.025em' : '-0.02em',
+                  }}
+                >
+                  Sheet2Vow
+                </h1>
+                {!isMobile && !isDesktopSidebarActive && (
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.62rem',
+                      color: 'var(--color-muted, #64748B)',
+                      margin: 0,
+                      marginTop: '1px',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Clean digital canvas for spreadsheet purists.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {!isOnboarded ? (

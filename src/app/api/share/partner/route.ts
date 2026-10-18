@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { getGoogleAuth } from '@/lib/sheets/client';
-import { LocalFirestore, WorkspaceDocument } from '@/lib/db/firestoreDb';
+import { getGoogleAuthAsync } from '@/lib/sheets/client';
+import { LocalLicensingDb } from '@/lib/db/licensingDb';
 
-const MAX_CO_PLANNERS = 2;
+// Default model allows strictly 1 secondary user (co-planner / partner) alongside 1 primary user (owner) = 2 users total
+const MAX_SECONDARY_USERS = 1;
 
 /**
  * GET /api/share/partner?spreadsheetId=xxx
- * Retrieves active co-planners for a workspace.
+ * Retrieves primary user and active secondary co-planners for a workspace.
+ * Reconciles Cloud Firestore records with live Google Drive permissions.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -18,17 +20,87 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'spreadsheetId query parameter is required.' }, { status: 400 });
     }
 
-    const workspaces = LocalFirestore.getDocs<WorkspaceDocument>('workspaces');
-    const ws = workspaces.find((w: WorkspaceDocument) => w.spreadsheetId === spreadsheetId);
+    // 1. Fetch workspace document from Cloud Firestore / Local store
+    const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
 
-    const coPlanners = ws?.coPlanners || (ws?.partnerEmail ? [ws.partnerEmail] : []);
+    let coPlanners: string[] = [];
+    if (ws?.coPlanners && Array.isArray(ws.coPlanners)) {
+      coPlanners = [...ws.coPlanners];
+    } else if (ws?.partnerEmail) {
+      coPlanners = [ws.partnerEmail];
+    }
+
+    // 2. Drive Reconciliation: Query live Google Drive permissions if credentials are available
+    try {
+      const authHeader = req.headers.get('authorization');
+      const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+      const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
+      const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
+      const userEmail = req.cookies.get('s2s_user_email')?.value || ws?.userEmail;
+
+      const auth = await getGoogleAuthAsync(bearerToken || cookieToken, spreadsheetId, userEmail, refreshToken);
+      if (auth) {
+        const drive = google.drive({ version: 'v3', auth });
+        const listRes = await drive.permissions.list({
+          fileId: spreadsheetId,
+          fields: 'permissions(id, emailAddress, role, type, displayName)',
+        });
+
+        const perms = listRes.data.permissions || [];
+        for (const p of perms) {
+          if (p.type === 'user' && p.emailAddress) {
+            const email = p.emailAddress.toLowerCase().trim();
+            // Exclude service account and primary owner email
+            const isOwner = p.role === 'owner' || (ws?.userEmail && ws.userEmail.toLowerCase().trim() === email);
+            const isServiceAccount = email.includes('gserviceaccount.com') || email.includes('sheet2suite');
+            if (!isOwner && !isServiceAccount) {
+              if (!coPlanners.some((cp) => cp.toLowerCase() === email)) {
+                coPlanners.push(email);
+              }
+            }
+          }
+        }
+      }
+    } catch (driveErr: any) {
+      console.warn('[Co-Planner API GET] Drive permissions reconciliation note:', driveErr?.message);
+    }
+
+    // Deduplicate and clean emails
+    coPlanners = Array.from(new Set(coPlanners.map((e) => e.trim().toLowerCase()))).filter(Boolean);
+
+    // If new co-planners were discovered from Drive, update the workspace in Firestore
+    if (ws && JSON.stringify(ws.coPlanners || []) !== JSON.stringify(coPlanners)) {
+      try {
+        await LocalLicensingDb.saveWorkspaceAsync({
+          ...ws,
+          partnerEmail: coPlanners[0] || ws.partnerEmail,
+          coPlanners,
+        });
+      } catch (saveErr) {
+        console.warn('[Co-Planner API GET] Auto-heal save note:', saveErr);
+      }
+    }
+
+    const primaryEmail = ws?.userEmail || req.cookies.get('s2s_user_email')?.value || '';
 
     return NextResponse.json({
       success: true,
       spreadsheetId,
+      primaryUser: {
+        email: primaryEmail,
+        role: 'owner',
+      },
+      secondaryUsers: coPlanners.map((email) => ({
+        email,
+        role: 'writer',
+        status: 'active',
+      })),
       coPlanners,
-      maxAllowed: MAX_CO_PLANNERS,
+      maxTotalUsers: 2,
+      maxSecondaryUsers: MAX_SECONDARY_USERS,
       slotsUsed: coPlanners.length,
+      canAddMore: coPlanners.length < MAX_SECONDARY_USERS,
+      isProTier: false,
     });
   } catch (err: any) {
     console.error('[Co-Planner API GET Error]:', err);
@@ -39,7 +111,7 @@ export async function GET(req: NextRequest) {
 /**
  * POST /api/share/partner
  * Grants Google Drive permission & sends free native Google Drive notification email.
- * Enforces strict quota limit of MAX 2 co-planners per workspace.
+ * Enforces strict quota limit of MAX 1 secondary user (2 users total: Primary + Secondary).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -52,40 +124,51 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = String(partnerEmail).trim().toLowerCase();
 
-    // 1. Quota Check in Database
-    const workspaces = LocalFirestore.getDocs<WorkspaceDocument>('workspaces');
-    const ws = workspaces.find((w: WorkspaceDocument) => w.spreadsheetId === spreadsheetId);
-    let existingCoPlanners = ws?.coPlanners || (ws?.partnerEmail ? [ws.partnerEmail] : []);
+    // 1. Quota Check in Cloud Firestore Database
+    const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
+    let existingCoPlanners: string[] = ws?.coPlanners && Array.isArray(ws.coPlanners)
+      ? [...ws.coPlanners]
+      : (ws?.partnerEmail ? [ws.partnerEmail] : []);
 
-    // Ensure array is unique
-    existingCoPlanners = Array.from(new Set(existingCoPlanners.map((e: string) => e.toLowerCase())));
+    existingCoPlanners = Array.from(new Set(existingCoPlanners.map((e) => e.trim().toLowerCase()))).filter(Boolean);
+
+    // Prevent primary user from adding themselves as secondary user
+    if (ws?.userEmail && ws.userEmail.toLowerCase().trim() === cleanEmail) {
+      return NextResponse.json(
+        { success: false, error: 'This email is already the primary workspace owner.' },
+        { status: 400 }
+      );
+    }
 
     const alreadyExists = existingCoPlanners.includes(cleanEmail);
-    if (!alreadyExists && existingCoPlanners.length >= MAX_CO_PLANNERS) {
+    if (!alreadyExists && existingCoPlanners.length >= MAX_SECONDARY_USERS) {
       return NextResponse.json(
         {
           success: false,
-          error: `Co-planner quota limit reached (Max ${MAX_CO_PLANNERS} co-planners per workspace). Revoke an existing co-planner to invite a new partner.`,
+          error: `Standard workspace plan allows a maximum of 2 users (Primary + 1 Secondary). Upgrade to Sheet2Vow Pro to invite additional co-planners and wedding coordinators.`,
+          requiresPro: true,
+          slotsUsed: existingCoPlanners.length,
+          maxSecondaryUsers: MAX_SECONDARY_USERS,
         },
         { status: 403 }
       );
     }
 
-    // 2. Obtain Auth Token
+    // 2. Obtain Auth Token & Drive Client
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
-    const cookieToken = req.cookies.get('s2s_access_token')?.value;
-    const token = accessToken || bearerToken || cookieToken || process.env.GOOGLE_ACCESS_TOKEN;
+    const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
+    const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
+    const userEmail = req.cookies.get('s2s_user_email')?.value || ws?.userEmail;
 
-    if (!token && !process.env.GOOGLE_CLIENT_EMAIL) {
+    const auth = await getGoogleAuthAsync(accessToken || bearerToken || cookieToken, spreadsheetId, userEmail, refreshToken);
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Google connection required to manage Google Drive permissions.' },
         { status: 401 }
       );
     }
 
-    // 3. Execute Google Drive Permission API Call
-    const auth = getGoogleAuth(token);
     const drive = google.drive({ version: 'v3', auth });
 
     const origin = req.headers.get('origin') || req.nextUrl?.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://sheet2vow.com';
@@ -96,7 +179,7 @@ export async function POST(req: NextRequest) {
     try {
       const permRes = await drive.permissions.create({
         fileId: spreadsheetId,
-        sendNotificationEmail: true, // Native Free Google Notification Email
+        sendNotificationEmail: true,
         emailMessage: customEmailMsg,
         requestBody: {
           role: role === 'reader' ? 'reader' : 'writer',
@@ -110,27 +193,38 @@ export async function POST(req: NextRequest) {
       console.warn('[Co-Planner API] Google Drive permission creation note:', gErr?.message);
     }
 
-    // 4. Update Database Record
+    // 3. Update Database Record in Cloud Firestore
     if (!alreadyExists) {
       existingCoPlanners.push(cleanEmail);
     }
 
-    if (ws) {
-      LocalFirestore.setDoc<WorkspaceDocument>('workspaces', ws.workspaceId || ws.id, {
-        ...ws,
-        partnerEmail: ws.partnerEmail || cleanEmail,
-        coPlanners: existingCoPlanners,
-        lastActiveAt: new Date().toISOString(),
-      });
-    }
+    await LocalLicensingDb.saveWorkspaceAsync({
+      ...(ws || {}),
+      spreadsheetId,
+      partnerEmail: cleanEmail,
+      coPlanners: existingCoPlanners,
+      lastActiveAt: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,
       message: `Successfully granted co-planning access to ${cleanEmail} and sent Google notification email.`,
       permissionId,
+      primaryUser: {
+        email: ws?.userEmail || userEmail || '',
+        role: 'owner',
+      },
+      secondaryUsers: existingCoPlanners.map((email) => ({
+        email,
+        role: 'writer',
+        status: 'active',
+      })),
       coPlanners: existingCoPlanners,
       slotsUsed: existingCoPlanners.length,
-      maxAllowed: MAX_CO_PLANNERS,
+      maxTotalUsers: 2,
+      maxSecondaryUsers: MAX_SECONDARY_USERS,
+      canAddMore: existingCoPlanners.length < MAX_SECONDARY_USERS,
+      isProTier: false,
     });
   } catch (err: any) {
     console.error('[Co-Planner API POST Error]:', err);
@@ -157,15 +251,18 @@ export async function DELETE(req: NextRequest) {
 
     const cleanEmail = String(partnerEmail).trim().toLowerCase();
 
-    // 1. Obtain Auth Token
+    // 1. Obtain Auth Token & Drive Client
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
-    const cookieToken = req.cookies.get('s2s_access_token')?.value;
-    const token = bearerToken || cookieToken || process.env.GOOGLE_ACCESS_TOKEN;
+    const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
+    const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
-    if (token) {
-      try {
-        const auth = getGoogleAuth(token);
+    const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
+    const userEmail = req.cookies.get('s2s_user_email')?.value || ws?.userEmail;
+
+    try {
+      const auth = await getGoogleAuthAsync(bearerToken || cookieToken, spreadsheetId, userEmail, refreshToken);
+      if (auth) {
         const drive = google.drive({ version: 'v3', auth });
 
         const listRes = await drive.permissions.list({
@@ -181,31 +278,43 @@ export async function DELETE(req: NextRequest) {
             permissionId: targetPerm.id,
           });
         }
-      } catch (gErr: any) {
-        console.warn('[Co-Planner API DELETE] Could not delete Google Drive permission:', gErr?.message);
       }
+    } catch (gErr: any) {
+      console.warn('[Co-Planner API DELETE] Could not delete Google Drive permission:', gErr?.message);
     }
 
-    // 2. Update Database Record
-    const workspaces = LocalFirestore.getDocs<WorkspaceDocument>('workspaces');
-    const ws = workspaces.find((w: WorkspaceDocument) => w.spreadsheetId === spreadsheetId);
+    // 2. Update Database Record in Cloud Firestore
     let updatedCoPlanners: string[] = [];
-
-    if (ws) {
-      updatedCoPlanners = (ws.coPlanners || []).filter((e: string) => e.toLowerCase() !== cleanEmail);
-      LocalFirestore.setDoc<WorkspaceDocument>('workspaces', ws.workspaceId || ws.id, {
-        ...ws,
-        coPlanners: updatedCoPlanners,
-        lastActiveAt: new Date().toISOString(),
-      });
+    if (ws?.coPlanners && Array.isArray(ws.coPlanners)) {
+      updatedCoPlanners = ws.coPlanners.filter((e: string) => e.toLowerCase().trim() !== cleanEmail);
     }
+
+    await LocalLicensingDb.saveWorkspaceAsync({
+      ...(ws || {}),
+      spreadsheetId,
+      partnerEmail: updatedCoPlanners[0] || undefined,
+      coPlanners: updatedCoPlanners,
+      lastActiveAt: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,
       message: `Successfully revoked access for ${cleanEmail}.`,
+      primaryUser: {
+        email: ws?.userEmail || '',
+        role: 'owner',
+      },
+      secondaryUsers: updatedCoPlanners.map((email) => ({
+        email,
+        role: 'writer',
+        status: 'active',
+      })),
       coPlanners: updatedCoPlanners,
       slotsUsed: updatedCoPlanners.length,
-      maxAllowed: MAX_CO_PLANNERS,
+      maxTotalUsers: 2,
+      maxSecondaryUsers: MAX_SECONDARY_USERS,
+      canAddMore: updatedCoPlanners.length < MAX_SECONDARY_USERS,
+      isProTier: false,
     });
   } catch (err: any) {
     console.error('[Co-Planner API DELETE Error]:', err);

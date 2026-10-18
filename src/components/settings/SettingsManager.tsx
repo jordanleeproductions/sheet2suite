@@ -32,7 +32,9 @@ import {
   Plus,
   UserPlus,
   LifeBuoy,
+  Crown,
 } from 'lucide-react';
+import ProUpgradeModal from '@/components/vow/ProUpgradeModal';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/lib/currency';
 import { DashboardSectionConfig, loadDashboardLayout, saveDashboardLayout, savePlanningToolsOrder } from '@/lib/dashboardLayout';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
@@ -148,6 +150,7 @@ export default function SettingsManager({
   onUpdateDashboardLayout,
 }: SettingsManagerProps) {
   const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
+  const isBrutalist = styleTheme === 'neo-brutalism';
 
   // Responsive mobile viewport detection
   const [isViewportMobile, setIsViewportMobile] = useState<boolean>(() => {
@@ -366,12 +369,44 @@ export default function SettingsManager({
 
   // Partner Co-Planner state
   const [coPlannersList, setCoPlannersList] = useState<string[]>(initialCoPlanners || []);
+  const [primaryUserEmail, setPrimaryUserEmail] = useState<string>('');
+  const [maxSecondaryUsers, setMaxSecondaryUsers] = useState<number>(1);
   const [newPartnerEmail, setNewPartnerEmail] = useState('');
   const [isInvitingPartner, setIsInvitingPartner] = useState(false);
   const [partnerMsg, setPartnerMsg] = useState<{ text: string; isError: boolean } | null>(null);
+  const [isProModalOpen, setIsProModalOpen] = useState(false);
+
+  // Load co-planners & primary user from Cloud Firestore API
+  const loadCoPlanners = React.useCallback(async () => {
+    if (!spreadsheetId || isMockMode) return;
+    try {
+      const res = await fetch(`/api/share/partner?spreadsheetId=${encodeURIComponent(spreadsheetId)}`);
+      const data = await res.json();
+      if (data.success) {
+        if (Array.isArray(data.coPlanners)) {
+          setCoPlannersList(data.coPlanners);
+          if (onUpdateCoPlanners) onUpdateCoPlanners(data.coPlanners);
+        }
+        if (data.primaryUser?.email) {
+          setPrimaryUserEmail(data.primaryUser.email);
+        }
+        if (data.maxSecondaryUsers !== undefined) {
+          setMaxSecondaryUsers(data.maxSecondaryUsers);
+        }
+      }
+    } catch (e) {
+      console.warn('[SettingsManager] Error fetching co-planners:', e);
+    }
+  }, [spreadsheetId, isMockMode, onUpdateCoPlanners]);
 
   useEffect(() => {
-    if (initialCoPlanners) setCoPlannersList(initialCoPlanners);
+    loadCoPlanners();
+  }, [loadCoPlanners]);
+
+  useEffect(() => {
+    if (initialCoPlanners && initialCoPlanners.length > 0) {
+      setCoPlannersList(initialCoPlanners);
+    }
   }, [initialCoPlanners]);
 
   const handleInvitePartner = async (e: React.FormEvent) => {
@@ -379,19 +414,33 @@ export default function SettingsManager({
     const email = newPartnerEmail.trim();
     if (!email) return;
 
+    // Check 1-secondary-user cap before submitting
+    if (coPlannersList.length >= maxSecondaryUsers && !coPlannersList.some((cp) => cp.toLowerCase() === email.toLowerCase())) {
+      setIsProModalOpen(true);
+      setPartnerMsg({
+        text: 'Standard plan limit reached (1 Primary + 1 Secondary). Upgrade to Pro to add more collaborators.',
+        isError: true,
+      });
+      return;
+    }
+
     setIsInvitingPartner(true);
     setPartnerMsg(null);
     try {
       const res = await fetch('/api/share/partner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spreadsheetId, partnerEmail: email }),
+        body: JSON.stringify({ spreadsheetId, partnerEmail: email, weddingName }),
       });
       const data = await res.json();
+      if (res.status === 403 || data.requiresPro) {
+        setIsProModalOpen(true);
+        throw new Error(data.error || 'Standard plan limit reached (1 Primary + 1 Secondary). Upgrade to Pro.');
+      }
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to send partner invite');
       }
-      const updated = [...coPlannersList, email];
+      const updated = data.coPlanners || [...coPlannersList, email];
       setCoPlannersList(updated);
       if (onUpdateCoPlanners) onUpdateCoPlanners(updated);
       setPartnerMsg({ text: `Invitation sent to ${email}`, isError: false });
@@ -407,14 +456,14 @@ export default function SettingsManager({
   const handleRevokePartner = async (emailToRevoke: string) => {
     try {
       const res = await fetch(
-        `/api/share/partner?spreadsheetId=${spreadsheetId}&partnerEmail=${encodeURIComponent(emailToRevoke)}`,
+        `/api/share/partner?spreadsheetId=${encodeURIComponent(spreadsheetId)}&partnerEmail=${encodeURIComponent(emailToRevoke)}`,
         { method: 'DELETE' }
       );
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to revoke partner access');
       }
-      const updated = coPlannersList.filter((e) => e.toLowerCase() !== emailToRevoke.toLowerCase());
+      const updated = data.coPlanners || coPlannersList.filter((e) => e.toLowerCase() !== emailToRevoke.toLowerCase());
       setCoPlannersList(updated);
       if (onUpdateCoPlanners) onUpdateCoPlanners(updated);
       setPartnerMsg({ text: `Revoked access for ${emailToRevoke}`, isError: false });
@@ -1264,38 +1313,180 @@ export default function SettingsManager({
             )}
 
             <div style={styles.fieldStack}>
-              {/* Partner Co-Planners */}
+              {/* Workspace Users & Co-Planning (2 Users Max Model) */}
               <div>
-                <label style={styles.fieldLabel}>Partner co-planners</label>
-                <p style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748B)', margin: '0.15rem 0 0.65rem 0' }}>
-                  Grant full 2-way spreadsheet editing access to your spouse or wedding coordinator.
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <label style={{ ...styles.fieldLabel, margin: 0 }}>Workspace Users</label>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.15rem 0.5rem', borderRadius: '9999px', backgroundColor: 'var(--color-bg-subtle, #F1F5F9)', border: '1px solid var(--color-border, #E2E8F0)', fontSize: '0.68rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
+                    <span>{1 + coPlannersList.length} / 2 Users</span>
+                    <span style={{ color: 'var(--color-muted, #64748B)', fontWeight: 500 }}>· Standard</span>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748B)', margin: '0.15rem 0 0.85rem 0' }}>
+                  The standard plan allows a maximum of 2 users (Primary Owner + Secondary Co-Planner) with full spreadsheet editing access.
                 </p>
 
-                <form onSubmit={handleInvitePartner} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem' }}>
-                  <input
-                    type="email"
-                    value={newPartnerEmail}
-                    onChange={(e) => setNewPartnerEmail(e.target.value)}
-                    placeholder="partner@gmail.com"
-                    style={{ ...styles.textInput, flex: 1 }}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={isInvitingPartner}
-                    style={styles.primaryActionButton}
+                {/* Users List Card Stack */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                  {/* Primary User Row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: isBrutalist ? '4px' : '10px',
+                      backgroundColor: 'var(--color-surface, #FFFFFF)',
+                      border: isBrutalist ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border, #E2E8F0)',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                    }}
                   >
-                    {isInvitingPartner ? <RefreshCw className="spin" size={13} /> : <UserPlus size={14} />}
-                    <span>Invite</span>
-                  </button>
-                </form>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: isBrutalist ? '2px' : '50%',
+                          backgroundColor: 'rgba(15, 23, 42, 0.08)',
+                          color: 'var(--color-primary, #0F172A)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Crown size={15} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text, #0F172A)', wordBreak: 'break-all' }}>
+                            {primaryUserEmail || googleUserEmail || 'Primary Account'}
+                          </span>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'var(--color-primary, #0F172A)', color: 'var(--color-on-primary, #FFFFFF)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                            Owner · Primary
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--color-muted, #64748B)' }}>
+                          Workspace Creator · Full Google Drive admin access
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
+                  {/* Secondary User Row (If Exists) */}
+                  {coPlannersList.length > 0 ? (
+                    coPlannersList.map((email) => (
+                      <div
+                        key={email}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.65rem 0.85rem',
+                          borderRadius: isBrutalist ? '4px' : '10px',
+                          backgroundColor: 'var(--color-surface, #FFFFFF)',
+                          border: isBrutalist ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border, #E2E8F0)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: isBrutalist ? '2px' : '50%',
+                              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                              color: '#059669',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '0.85rem',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {email[0]?.toUpperCase() || 'P'}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text, #0F172A)', wordBreak: 'break-all' }}>
+                                {email}
+                              </span>
+                              <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#059669', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                                Co-Planner · Secondary
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--color-muted, #64748B)' }}>
+                              Full 2-way spreadsheet editing access
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRevokePartner(email)}
+                          style={{
+                            ...styles.destructiveTextBtn,
+                            padding: '0.35rem 0.65rem',
+                            fontSize: '0.74rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Revoke Access
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    /* Open Secondary User Invite Slot */
+                    <div
+                      style={{
+                        padding: '0.85rem',
+                        borderRadius: isBrutalist ? '4px' : '10px',
+                        border: isBrutalist ? '1.5px dashed var(--color-primary)' : '1.5px dashed var(--color-border, #CBD5E1)',
+                        backgroundColor: 'var(--color-bg-subtle, #F8FAFC)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.4rem' }}>
+                        <UserPlus size={15} style={{ color: 'var(--color-primary, #0F172A)' }} />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
+                          Secondary User Slot (Available)
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748B)', margin: '0 0 0.65rem 0' }}>
+                        Invite your spouse or partner to co-plan on your wedding database in real time. Sends an instant Google Drive notification email.
+                      </p>
+
+                      <form onSubmit={handleInvitePartner} style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="email"
+                          value={newPartnerEmail}
+                          onChange={(e) => setNewPartnerEmail(e.target.value)}
+                          placeholder="partner@gmail.com"
+                          style={{ ...styles.textInput, flex: 1 }}
+                          required
+                        />
+                        <button
+                          type="submit"
+                          disabled={isInvitingPartner}
+                          style={styles.primaryActionButton}
+                        >
+                          {isInvitingPartner ? <RefreshCw className="spin" size={13} /> : <UserPlus size={14} />}
+                          <span>Invite Partner</span>
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+
+                {/* Feedback message banner */}
                 {partnerMsg && (
                   <div
                     style={{
                       padding: '0.5rem 0.75rem',
                       borderRadius: '6px',
-                      fontSize: '0.72rem',
+                      fontSize: '0.74rem',
                       marginBottom: '0.75rem',
                       backgroundColor: partnerMsg.isError ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
                       color: partnerMsg.isError ? '#DC2626' : '#059669',
@@ -1306,43 +1497,52 @@ export default function SettingsManager({
                   </div>
                 )}
 
-                {coPlannersList.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    {coPlannersList.map((email) => (
-                      <div
-                        key={email}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.55rem 0.75rem',
-                          borderRadius: '8px',
-                          backgroundColor: 'var(--color-bg, #F8FAFC)',
-                          border: '1px solid var(--color-border, #E2E8F0)',
-                          minHeight: '48px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                          <div style={styles.avatarCircle}>
-                            {email[0].toUpperCase()}
-                          </div>
-                          <span style={{ fontFamily: 'var(--font-sans, system-ui)', fontSize: '0.78rem', color: 'var(--color-text, #0F172A)', fontWeight: 500 }}>
-                            {email}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRevokePartner(email)}
-                          style={styles.destructiveTextBtn}
-                        >
-                          Revoke
-                        </button>
+                {/* Pro Tier Upgrade Card (Shown when slots are full) */}
+                {coPlannersList.length >= maxSecondaryUsers && (
+                  <div
+                    style={{
+                      padding: '0.85rem 1rem',
+                      borderRadius: isBrutalist ? '4px' : '10px',
+                      backgroundColor: 'rgba(245, 158, 11, 0.06)',
+                      border: '1px solid rgba(245, 158, 11, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
+                      marginTop: '0.5rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1, minWidth: '220px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Sparkles size={14} />
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={styles.emptyNoticeBox}>
-                    No partner co-planners linked yet. Add their Google account email above.
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text, #0F172A)' }}>
+                          Need more collaborators or coordinators?
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--color-muted, #64748B)' }}>
+                          Standard workspaces include 2 users (Primary + 1 Secondary). Upgrade to Pro for unlimited co-planners & role permissions.
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsProModalOpen(true)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: isBrutalist ? '2px' : '6px',
+                        backgroundColor: '#D97706',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        fontSize: '0.74rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Explore Pro Tier
+                    </button>
                   </div>
                 )}
               </div>
@@ -2188,7 +2388,7 @@ export default function SettingsManager({
                     : sec.id === 'tools'
                     ? `${activeToolsCount} tools active`
                     : sec.id === 'sharing'
-                    ? coPlannersList.length > 0 ? `${coPlannersList.length} co-planners` : 'Private link'
+                    ? `${1 + coPlannersList.length}/2 users`
                     : sec.id === 'data'
                     ? isMockMode ? 'Demo workspace' : spreadsheetId ? 'Sheet connected' : 'Not connected'
                     : sec.id === 'notifications'
@@ -2309,6 +2509,15 @@ export default function SettingsManager({
           </div>
         </div>
       )}
+
+      {/* Sheet2Vow Pro Tier Early Access / Upgrade Modal */}
+      <ProUpgradeModal
+        isOpen={isProModalOpen}
+        onClose={() => setIsProModalOpen(false)}
+        userEmail={primaryUserEmail || googleUserEmail}
+        weddingName={weddingName}
+        styleTheme={styleTheme}
+      />
     </div>
   );
 }

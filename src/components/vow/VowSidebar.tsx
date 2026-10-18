@@ -191,10 +191,10 @@ export default function VowSidebar({
                 style={{
                   fontFamily: 'var(--font-editorial-serif, serif)',
                   fontWeight: 700,
-                  fontSize: '0.98rem',
-                  lineHeight: '1.2',
+                  fontSize: '1.28rem',
+                  lineHeight: '1.05',
                   color: textPrimary,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.025em',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
