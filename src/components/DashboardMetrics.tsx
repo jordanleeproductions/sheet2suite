@@ -556,7 +556,7 @@ export default function DashboardMetrics({
               color: 'var(--color-primary, #0F172A)',
             }}
           >
-            BUDGET &amp; SPENDING
+            FINANCIALS &amp; EXPENSES
           </span>
         </div>
 
@@ -577,7 +577,7 @@ export default function DashboardMetrics({
             textDecoration: 'underline',
           }}
         >
-          <span>OPEN BUDGET</span>
+          <span>OPEN FINANCIALS</span>
           <ArrowUpRight size={11} />
         </button>
       </div>
@@ -1334,7 +1334,7 @@ export default function DashboardMetrics({
                   textDecoration: 'underline',
                 }}
               >
-                <span>BUDGET</span>
+                <span>FINANCIALS</span>
                 <ArrowUpRight size={10} />
               </button>
             )}

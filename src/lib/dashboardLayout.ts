@@ -15,7 +15,7 @@ export interface DashboardSectionConfig {
 
 export const DEFAULT_DASHBOARD_SECTIONS: DashboardSectionConfig[] = [
   { key: 'action_center', label: 'Action Center & Priority Alerts', enabled: true },
-  { key: 'budget', label: 'Financials & Budget Progress', enabled: true },
+  { key: 'budget', label: 'Financials & Expenses', enabled: true },
   { key: 'guests', label: 'Guest Registry & RSVP Summary', enabled: true },
   { key: 'tasks', label: 'Kanban Checklist & Task Completion', enabled: true },
   { key: 'tables', label: 'Reception Table Seating', enabled: true },

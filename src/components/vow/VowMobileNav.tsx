@@ -174,7 +174,7 @@ export default function VowMobileNav({
     bg: string;
   }> = {
     guests: { id: 'guests', label: 'Guests', icon: Users, color: '#059669', bg: 'rgba(16, 185, 129, 0.10)' },
-    budget: { id: 'budget', label: 'Budget', icon: DollarSign, color: '#16A34A', bg: 'rgba(22, 163, 74, 0.10)' },
+    budget: { id: 'budget', label: 'Financials', icon: DollarSign, color: '#16A34A', bg: 'rgba(22, 163, 74, 0.10)' },
     schedule: { id: 'schedule', label: 'Timeline', icon: Calendar, color: '#D97706', bg: 'rgba(217, 119, 6, 0.10)' },
     tasks: { id: 'tasks', label: 'Tasks', icon: ListTodo, color: '#4F46E5', bg: 'rgba(79, 70, 229, 0.10)' },
     tables: { id: 'tables', label: 'Seating', icon: Armchair, color: '#7C3AED', bg: 'rgba(124, 58, 237, 0.10)' },
@@ -298,7 +298,7 @@ export default function VowMobileNav({
       items: [
         {
           id: 'budget',
-          label: 'Budget & Expenses',
+          label: 'Financials & Expenses',
           icon: DollarSign,
           badgeColor: '#16A34A',
           badgeBg: 'rgba(22, 163, 74, 0.10)',

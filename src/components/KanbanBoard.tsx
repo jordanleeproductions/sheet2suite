@@ -554,7 +554,7 @@ export default function KanbanBoard({
       <div style={styles.header} className="kanban-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '1rem', flexWrap: 'wrap' }}>
           <div className="kanban-header-text">
-            <h2 style={styles.title}>Kanban Checklist</h2>
+            <h2 style={styles.title}>Tasks & Checklist</h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-sans)' }}>
               Organize your wedding tasks using Kanban workflow columns (To Do, In Progress, Done) for visual task tracking.
             </p>

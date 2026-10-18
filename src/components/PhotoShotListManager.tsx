@@ -805,7 +805,7 @@ export default function PhotoShotListManager({
       <div className="photo-header-container">
         <div>
           <h2 style={{ ...styles.title, color: 'var(--color-text)' }}>
-            Shot List
+            Photo Shot List
           </h2>
           <p style={styles.subtitle}>
             Manage required photography moments, VIP group poses, and shot progress for your photographer.

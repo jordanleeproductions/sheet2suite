@@ -122,7 +122,7 @@ export default function CommandPalette({
     {
       id: 'nav-budget',
       type: 'action',
-      title: 'Budget & Expenses',
+      title: 'Financials & Expenses',
       subtitle: 'Category budgets and itemized expenses',
       icon: DollarSign,
       onSelect: () => { onNavigateTab('budget'); onClose(); },
@@ -382,7 +382,7 @@ export default function CommandPalette({
     if (matchedActions.length > 0) groups.push({ name: q ? 'COMMANDS & NAVIGATION' : 'SUGGESTED ACTIONS', items: matchedActions });
     if (matchedGuests.length > 0) groups.push({ name: 'GUESTS', items: matchedGuests });
     if (matchedVendors.length > 0) groups.push({ name: 'VENDORS', items: matchedVendors });
-    if (matchedBudget.length > 0) groups.push({ name: 'BUDGET & EXPENSES', items: matchedBudget });
+    if (matchedBudget.length > 0) groups.push({ name: 'FINANCIALS & EXPENSES', items: matchedBudget });
     if (matchedTasks.length > 0) groups.push({ name: 'TASKS & MILESTONES', items: matchedTasks });
 
     return groups;

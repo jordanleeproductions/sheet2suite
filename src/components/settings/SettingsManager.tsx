@@ -443,7 +443,7 @@ export default function SettingsManager({
     { key: 'guests', label: 'Guest list & RSVPs', desc: 'Guest directory, plus-ones, dietary tags, and RSVP statuses.' },
     { key: 'menu', label: 'Menu & catering', desc: 'Hors d\'oeuvres, dinner courses, wine pairings, and dietary requirements.' },
     { key: 'tables', label: 'Seating chart', desc: 'Interactive floorplan table seating, guest assignment, and ceremony rows.' },
-    { key: 'budget', label: 'Budget & expenses', desc: 'Categorized financial ledger, payment due dates, and expense logging.' },
+    { key: 'budget', label: 'Financials & expenses', desc: 'Categorized financial ledger, payment due dates, and expense logging.' },
     { key: 'schedule', label: 'Timeline & run of show', desc: 'Sequential day-of itinerary, rehearsal details, and run of show.' },
     { key: 'vendors', label: 'Vendors & contracts', desc: 'Vendor directory, coordinator contacts, and balance tracker.' },
     { key: 'tasks', label: 'Kanban tasks', desc: 'Visual task planning board organized by milestone timeline.' },
