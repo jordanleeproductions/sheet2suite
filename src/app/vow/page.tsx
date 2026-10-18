@@ -19,6 +19,7 @@ import SettingsManager from '@/components/settings/SettingsManager';
 import QuickSettingsPopover from '@/components/vow/QuickSettingsPopover';
 import PrintTemplatesModal, { PrintTemplateType } from '@/components/PrintTemplatesModal';
 import ToastNotification, { ToastMessage } from '@/components/ToastNotification';
+import AmbientSyncIndicator, { SyncStatus } from '@/components/vow/AmbientSyncIndicator';
 import SafetyShieldSyncBadge from '@/components/SafetyShieldSyncBadge';
 import AppVersionBadge from '@/components/AppVersionBadge';
 import AppUpdateToast from '@/components/AppUpdateToast';
@@ -388,9 +389,27 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
   // Toast Notification System [GEN-3]
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  // Ambient Sync Status Indicator (Monarch-Style Quiet Auto-Save)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const syncStatusTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (syncStatusTimerRef.current) {
+        clearTimeout(syncStatusTimerRef.current);
+      }
+    };
+  }, []);
+
   const addToast = (message: string, type: 'success' | 'info' | 'warning' = 'success', duration = 3000) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    setToasts(prev => [...prev, { id, message, type, duration }]);
+    setToasts(prev => {
+      // Deduplicate identical active messages and keep at most 1 previous toast to avoid stacking
+      const filtered = prev.filter(t => t.message !== message);
+      const capped = filtered.slice(-1);
+      return [...capped, { id, message, type, duration }];
+    });
   };
 
   const dismissToast = (id: string) => {
@@ -1294,6 +1313,11 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     if (isSyncing || !spreadsheetId) return;
     setIsSyncing(true);
     setSyncError(null);
+    if (syncStatusTimerRef.current) {
+      clearTimeout(syncStatusTimerRef.current);
+      syncStatusTimerRef.current = null;
+    }
+    setSyncStatus('saving');
 
     // Optimistically update UI local state first
     setWeddingData(prev => {
@@ -1384,10 +1408,19 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
       if (res.data) {
         setWeddingData(res.data);
       }
-      addToast(`Saved! ${sheetType.toUpperCase()} Updated.`, 'success');
+      setSyncStatus('saved');
+      setLastSavedAt(new Date());
+
+      if (syncStatusTimerRef.current) {
+        clearTimeout(syncStatusTimerRef.current);
+      }
+      syncStatusTimerRef.current = setTimeout(() => {
+        setSyncStatus('idle');
+      }, 3200);
     } catch (err: any) {
       console.error(err);
       setSyncError(`Sync error: ${err.message || 'Could not push updates.'}`);
+      setSyncStatus('error');
       // Re-fetch database to rollback client optimistic updates
       fetchWeddingData();
     } finally {
@@ -1703,6 +1736,19 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           </Link>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+
+            {/* Ambient Sync Status Indicator (Monarch-Style Quiet Auto-Save) */}
+            <AmbientSyncIndicator
+              status={syncStatus}
+              lastSavedAt={lastSavedAt}
+              isMockMode={isMockMode}
+              isMobile={isMobile}
+              styleTheme={styleTheme}
+              onRetry={() => {
+                setSyncStatus('saving');
+                fetchWeddingData();
+              }}
+            />
 
             {!isMobile && (
               <>

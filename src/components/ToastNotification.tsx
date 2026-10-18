@@ -43,6 +43,9 @@ export default function ToastNotification({
 
   if (!toasts || toasts.length === 0) return null;
 
+  // Enforce strict limit of max 2 visible toasts to prevent vertical clutter
+  const visibleToasts = toasts.slice(-2);
+
   return (
     <div
       role="region"
@@ -61,7 +64,7 @@ export default function ToastNotification({
         pointerEvents: 'none',
       }}
     >
-      {toasts.map((toast) => (
+      {visibleToasts.map((toast) => (
         <ToastItem
           key={toast.id}
           toast={toast}
@@ -84,13 +87,22 @@ function ToastItem({
 }) {
   const { id, message, type = 'success', duration = 3000 } = toast;
   const [isHovered, setIsHovered] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleDismiss = React.useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onDismiss(id);
+    }, 200);
+  }, [id, onDismiss]);
 
   useEffect(() => {
+    if (isHovered) return;
     const timer = setTimeout(() => {
-      onDismiss(id);
+      handleDismiss();
     }, duration);
     return () => clearTimeout(timer);
-  }, [id, duration, onDismiss]);
+  }, [id, duration, isHovered, handleDismiss]);
 
   const isBrutalist = styleTheme === 'neo-brutalism';
 
@@ -117,6 +129,8 @@ function ToastItem({
     <div
       role="alert"
       aria-live="polite"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         pointerEvents: 'auto',
         position: 'relative',
@@ -138,7 +152,9 @@ function ToastItem({
           : '0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.06)',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        animation: 'toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+        animation: isExiting
+          ? 'toastSlideOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+          : 'toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <style>{`
@@ -150,6 +166,16 @@ function ToastItem({
           to {
             transform: translateY(0) scale(1);
             opacity: 1;
+          }
+        }
+        @keyframes toastSlideOut {
+          from {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+          to {
+            transform: translateY(12px) scale(0.96);
+            opacity: 0;
           }
         }
         @keyframes toastProgress {
@@ -197,7 +223,7 @@ function ToastItem({
       {/* Dismiss Button */}
       <button
         type="button"
-        onClick={() => onDismiss(id)}
+        onClick={handleDismiss}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         aria-label="Dismiss notification"
