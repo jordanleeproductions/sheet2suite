@@ -30,7 +30,7 @@ import VowMobileNav from '@/components/vow/VowMobileNav';
 import CommandPalette from '@/components/vow/CommandPalette';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, Menu, ExternalLink, Search } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -1612,28 +1612,8 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           marginBottom: isMobile ? '0.5rem' : '1rem',
         }}
       >
-        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {isMobile && isOnboarded ? (
-            <button
-              type="button"
-              onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
-              title="Open Navigation Menu"
-              style={{
-                backgroundColor: 'transparent',
-                border: '1px solid var(--color-border, #E2E8F0)',
-                borderRadius: '2px',
-                padding: '0.3rem',
-                cursor: 'pointer',
-                color: 'var(--color-text, #0F172A)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '0.2rem',
-              }}
-            >
-              <Menu size={18} style={{ color: 'var(--color-primary)' }} />
-            </button>
-          ) : !isDesktopSidebarActive ? (
+        <div style={{ ...styles.brandGroup, display: 'flex', alignItems: 'center', gap: isMobile ? '0' : '0.5rem' }}>
+          {!isMobile && !isDesktopSidebarActive && (
             <div
               style={{
                 width: '26px',
@@ -1649,18 +1629,18 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
             >
               <FileSpreadsheet size={15} strokeWidth={2.2} />
             </div>
-          ) : null}
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h1
               style={{
                 fontFamily: 'var(--font-editorial-serif, serif)',
-                fontSize: isMobile ? '1.15rem' : (isDesktopSidebarActive ? '1.2rem' : '1.45rem'),
+                fontSize: isMobile ? '1.35rem' : (isDesktopSidebarActive ? '1.2rem' : '1.45rem'),
                 margin: 0,
                 lineHeight: '1.1',
                 fontWeight: 700,
                 color: 'var(--color-primary, #0F172A)',
-                letterSpacing: '-0.02em',
+                letterSpacing: isMobile ? '-0.025em' : '-0.02em',
               }}
             >
               Sheet2Vow

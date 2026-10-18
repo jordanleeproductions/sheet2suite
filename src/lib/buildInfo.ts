@@ -1,4 +1,4 @@
 // Application Build & Version Information
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || 'v1.5.2';
-export const BUILD_TIMESTAMP = process.env.NEXT_PUBLIC_BUILD_TIMESTAMP || 'Oct 17, 2026 • 10:59 PM';
-export const BUILD_ISO = process.env.NEXT_PUBLIC_BUILD_ISO || '2026-10-18T02:59:26.936Z';
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || 'v1.5.3';
+export const BUILD_TIMESTAMP = process.env.NEXT_PUBLIC_BUILD_TIMESTAMP || 'Oct 17, 2026 • 11:44 PM';
+export const BUILD_ISO = process.env.NEXT_PUBLIC_BUILD_ISO || '2026-10-18T03:44:04.006Z';
