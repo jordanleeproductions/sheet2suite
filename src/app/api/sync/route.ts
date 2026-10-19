@@ -23,7 +23,7 @@ import { parseDateOrSerial } from '@/lib/currency';
 
 // Map sheet columns to standard header lists so that we can write files correctly
 const HEADERS_MAP = {
-  guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'],
+  guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked', 'Seat Number'],
   tables: ['Table ID', 'Table Name', 'Table Shape', 'Max Seats', 'Include End Seats', 'Single Side Seating'],
   budget: ['Category ID', 'Category', 'Target Budget', 'Total Spent', 'Remaining', 'Notes'],
   expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'],
@@ -170,7 +170,7 @@ export async function GET(req: NextRequest) {
     };
 
     registerRange('settingsTable', settingsTitle, 'A1:B10');
-    registerRange('guests', guestsTitle, 'A1:L1000');
+    registerRange('guests', guestsTitle, 'A1:O1000');
     registerRange('budget', budgetTitle, 'A1:H1000');
     registerRange('expenses', expensesTitle, 'A1:G1000');
     registerRange('schedule', scheduleTitle, 'A1:F1000');
@@ -666,7 +666,7 @@ export async function POST(req: NextRequest) {
 
       if (sheetType === 'guests') {
         targetTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
-        range = `'${targetTitle}'!A1:N1000`;
+        range = `'${targetTitle}'!A1:O1000`;
         (data as Guest[]).forEach(item => {
           values.push(guestMapper.toRow(headers, item));
         });

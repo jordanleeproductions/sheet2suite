@@ -8,11 +8,11 @@ export const EXPECTED_SCHEMA: Record<string, string[]> = {
   GUESTS: [
     'Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 
     'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 
-    'Email Address', 'Phone Number', 'Mailing Address', 'Thanked'
+    'Email Address', 'Phone Number', 'Mailing Address', 'Thanked', 'Seat Number'
   ],
   BUDGET: [
-    'Item ID', 'Category', 'Vendor Name', 'Estimated Cost', 
-    'Actual Cost', 'Amount Paid', 'Due Date', 'Payment Status'
+    'Category ID', 'Category', 'Target Budget', 
+    'Total Spent', 'Remaining', 'Notes'
   ],
   EXPENSES: [
     'Item ID', 'Description', 'Category', 'Actual Cost', 

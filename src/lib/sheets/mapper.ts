@@ -201,7 +201,7 @@ export const guestMapper = {
       emailAddress: String(obj.emailAddress || ''),
       phoneNumber: String(obj.phoneNumber || ''),
       mailingAddress: String(obj.mailingAddress || ''),
-      seatNumber: obj.seatNumber ? Number(obj.seatNumber) : undefined,
+      seatNumber: (obj.seatNumber !== undefined && obj.seatNumber !== null && String(obj.seatNumber).trim() !== '' && !isNaN(Number(obj.seatNumber))) ? Number(obj.seatNumber) : undefined,
       hasPlusOne: rawPlusOne === 'true' || rawPlusOne === 'yes' || rawPlusOne === '1',
       plusOneName: String(obj.plusOneName || ''),
       thankedSent: rawThanked === 'true' || rawThanked === 'yes' || rawThanked === '1',

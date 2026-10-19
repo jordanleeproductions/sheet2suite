@@ -43,8 +43,14 @@ This document defines the authoritative tab structure and column header contract
 | `RSVP Status` | `rsvpStatus` | Dropdown | `Attending`, `Declined`, `Pending` |
 | `Dietary Restrictions` | `dietaryRestrictions` | Text | e.g. `Vegetarian`, `Nut Allergy`, `None` |
 | `Meal Choice` | `mealChoice` | Text / Dropdown | e.g. `Filet Mignon`, `Pan-Seared Salmon`, `Vegan Risotto` |
+| `Email Address` | `emailAddress` | Text (Email) | Guest contact email |
+| `Phone Number` | `phoneNumber` | Text (Phone) | Guest phone number |
+| `Mailing Address` | `mailingAddress` | Text | Physical postal address for invitations |
+| `Thanked` | `thankedSent` | Checkbox | `TRUE`, `FALSE` |
+| `Seat Number` | `seatNumber` | Integer | Specific numbered seat position assigned at reception dinner table (1..capacity) |
 | `Notes` | `notes` | Text | Additional guest notes |
 
+> **Schema Change Notice (`[GUEST-SEAT-NUMBER]`):** Column O `Seat Number` persists explicit numbered seat positioning at reception tables (1..capacity) across devices and sessions.
 > **Schema Change Notice (`[GUEST-9]`):** The legacy single `Table Number` column has been split into two separate columns: `Ceremony Seating` and `Reception Table`. This prevents the ceremony aisle planner from overwriting the reception dinner table assignment and vice-versa. Both the XLSX master template and the Google Sheets provisioning API must be updated to reflect this two-column layout.
 
 ---

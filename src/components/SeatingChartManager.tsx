@@ -271,6 +271,12 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
     }
 
     const updated = guests.map(g => {
+      // Prevent duplicate seat collisions: if another guest is already at this specific seat at this table, clear their seat number
+      if (!isCeremonyMode && tableIdOrName !== 'Unassigned' && typeof seatNumber === 'number') {
+        if (g.guestId !== guestId && isGuestAtTable(g, { tableId: targetAssignment } as any) && g.seatNumber === seatNumber) {
+          return { ...g, seatNumber: undefined };
+        }
+      }
       if (g.guestId !== guestId) return g;
       if (isCeremonyMode) {
         return { ...g, ceremonySeating: tableIdOrName === 'Unassigned' ? '' : tableIdOrName };
@@ -842,11 +848,22 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
           const isOverCapacity = seatedGuests.length > table.capacity;
 
           // Helper to resolve specific guest at physical seat number (1..capacity)
+          const takenSeats = new Set(
+            seatedGuests
+              .map(g => g.seatNumber)
+              .filter((n): n is number => typeof n === 'number' && n >= 1 && n <= table.capacity)
+          );
+          const openSeatSlots = Array.from({ length: table.capacity }, (_, i) => i + 1).filter(s => !takenSeats.has(s));
+          const unnumberedGuests = seatedGuests.filter(g => typeof g.seatNumber !== 'number' || g.seatNumber < 1 || g.seatNumber > table.capacity);
+
           const getGuestAtSeat = (seatNum: number): Guest | undefined => {
             const exact = seatedGuests.find(g => g.seatNumber === seatNum);
             if (exact) return exact;
-            const unassignedNumber = seatedGuests.filter(g => typeof g.seatNumber !== 'number');
-            return unassignedNumber[seatNum - 1];
+            const openIdx = openSeatSlots.indexOf(seatNum);
+            if (openIdx !== -1 && openIdx < unnumberedGuests.length) {
+              return unnumberedGuests[openIdx];
+            }
+            return undefined;
           };
 
           // Helper to handle seat clicks cleanly

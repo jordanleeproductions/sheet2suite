@@ -37,6 +37,7 @@ export async function generateMasterXlsxBuffer(coupleName: string = 'Alex & Sam'
     { header: 'Phone Number', key: 'phone', width: 18 },
     { header: 'Mailing Address', key: 'address', width: 28 },
     { header: 'Thanked', key: 'thanked', width: 12 },
+    { header: 'Seat Number', key: 'seatNumber', width: 14 },
   ];
   styleHeaderRow(guestSheet);
 

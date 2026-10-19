@@ -549,7 +549,7 @@ src/
 ### 4.1 Master Google Spreadsheet Structure (14 Tabs)
 1. **`Settings`**: System configuration JSON stored in cell **`B2`** (`budget`, `weddingName`, `weddingDate`, `shareVersion`), keeping system metadata separated from human-readable tabs.
 2. **`DASHBOARD`**: Visual KPI summary cards and charts for human spreadsheet viewers.
-3. **`Guest List`**: Columns A–L (`Guest ID`, `First Name`, `Last Name`, `Party Group`, `Age Category`, `RSVP Status`, `Dietary Restrictions`, `Table Assignment`, `Email Address`, `Phone Number`, `Mailing Address`, `Thanked`).
+3. **`Guest List`**: Columns A–O (`Guest ID`, `First Name`, `Last Name`, `Party Group`, `Age Category`, `RSVP Status`, `Dietary Restrictions`, `Meal Choice`, `Reception Table`, `Ceremony Seating`, `Email Address`, `Phone Number`, `Mailing Address`, `Thanked`, `Seat Number`). Persists reception table assignments and explicit numbered seat positions.
 4. **`Budget Ledger`**: Columns A–F (`Item ID`, `Category`, `Target Budget`, `Total Actual`, `Total Paid`, `Notes`). Streamlined category allocation ledger.
 5. **`Expenses`**: Columns A–H (`Item ID`, `Description / Receipt`, `Category`, `Estimated Amount`, `Actual Cost`, `Amount Paid`, `Purchase Date`, `Notes`). Granular receipt tracker with automatic vendor deposit sync.
 6. **`Day-Of-Schedule`**: Columns A–F (`Start Time`, `End Time`, `Event Moment`, `Location`, `Responsibility / Vendors`, `Notes / Details`).
