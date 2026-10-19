@@ -83,6 +83,14 @@ export async function GET(req: NextRequest) {
 
     const primaryEmail = ws?.userEmail || req.cookies.get('s2s_user_email')?.value || '';
 
+    // Check workspace license tier
+    const licenseKeyOrOrderId = ws?.orderId || (ws as any)?.licenseKey || '';
+    const license = licenseKeyOrOrderId
+      ? await LocalLicensingDb.getLicenseByKeyAsync(licenseKeyOrOrderId)
+      : null;
+    const isPro = license?.licenseTier === 'pro' || license?.licenseTier === 'unlimited';
+    const effectiveMaxSecondary = isPro ? 999 : MAX_SECONDARY_USERS;
+
     return NextResponse.json({
       success: true,
       spreadsheetId,
@@ -96,11 +104,12 @@ export async function GET(req: NextRequest) {
         status: 'active',
       })),
       coPlanners,
-      maxTotalUsers: 2,
-      maxSecondaryUsers: MAX_SECONDARY_USERS,
+      maxTotalUsers: isPro ? 1000 : 2,
+      maxSecondaryUsers: effectiveMaxSecondary,
       slotsUsed: coPlanners.length,
-      canAddMore: coPlanners.length < MAX_SECONDARY_USERS,
-      isProTier: false,
+      canAddMore: coPlanners.length < effectiveMaxSecondary,
+      isProTier: isPro,
+      licenseTier: license?.licenseTier || 'standard',
     });
   } catch (err: any) {
     console.error('[Co-Planner API GET Error]:', err);
@@ -111,7 +120,8 @@ export async function GET(req: NextRequest) {
 /**
  * POST /api/share/partner
  * Grants Google Drive permission & sends free native Google Drive notification email.
- * Enforces strict quota limit of MAX 1 secondary user (2 users total: Primary + Secondary).
+ * Enforces strict quota limit of MAX 1 secondary user for Standard tier (2 users total: Primary + Secondary).
+ * Allows unlimited collaborators for Pro tier.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -140,8 +150,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check workspace license tier
+    const postLicenseKeyOrOrderId = ws?.orderId || (ws as any)?.licenseKey || '';
+    const license = postLicenseKeyOrOrderId
+      ? await LocalLicensingDb.getLicenseByKeyAsync(postLicenseKeyOrOrderId)
+      : null;
+    const isPro = license?.licenseTier === 'pro' || license?.licenseTier === 'unlimited';
+
     const alreadyExists = existingCoPlanners.includes(cleanEmail);
-    if (!alreadyExists && existingCoPlanners.length >= MAX_SECONDARY_USERS) {
+    if (!alreadyExists && !isPro && existingCoPlanners.length >= MAX_SECONDARY_USERS) {
       return NextResponse.json(
         {
           success: false,

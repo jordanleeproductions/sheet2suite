@@ -200,12 +200,16 @@ export const LocalLicensingDb = {
     if (!doc) return null;
 
     const sku = (doc.sku.includes('MASTER') || doc.sku.includes('BUNDLE') ? 'sheet2suite_bundle' : 'sheet2vow') as any;
+    const tier = doc.licenseTier || 'standard';
     return {
       licenseKey: doc.licenseKey,
       orderId: doc.orderId,
       purchasePlatform: 'etsy',
       purchaserEmail: doc.purchaserEmail,
       sku,
+      licenseTier: tier,
+      maxWorkspaces: doc.maxWorkspaces || (tier === 'pro' ? 5 : 2),
+      maxSecondaryUsers: tier === 'pro' || tier === 'unlimited' ? 999 : 1,
       productAccess: {
         sheet2vow: true,
         sheet2home: sku === 'sheet2suite_bundle',
@@ -213,7 +217,43 @@ export const LocalLicensingDb = {
       },
       status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
       createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     };
+  },
+
+  // 3b. Async license lookup checking Cloud Firestore and local storage
+  async getLicenseByKeyAsync(keyOrOrderId: string): Promise<LicenseDocument | null> {
+    if (!keyOrOrderId) return null;
+    const cleanKey = keyOrOrderId.trim();
+    const cloudDb = getCloudFirestore();
+
+    if (cloudDb) {
+      try {
+        const docRef = await cloudDb.collection('licenses').doc(cleanKey).get();
+        if (docRef.exists) {
+          return { ...(docRef.data() as LicenseDocument), id: docRef.id };
+        }
+        const snapKey = await cloudDb.collection('licenses').where('licenseKey', '==', cleanKey).limit(1).get();
+        if (!snapKey.empty) {
+          return { ...(snapKey.docs[0].data() as LicenseDocument), id: snapKey.docs[0].id };
+        }
+        const snapOrder = await cloudDb.collection('licenses').where('orderId', '==', cleanKey).limit(1).get();
+        if (!snapOrder.empty) {
+          return { ...(snapOrder.docs[0].data() as LicenseDocument), id: snapOrder.docs[0].id };
+        }
+      } catch (err: any) {
+        console.warn('[LicensingDb] Error querying Cloud Firestore license:', err?.message);
+      }
+    }
+
+    const localDoc = await LocalFirestore.getDocAsync<LicenseDocument>('licenses', cleanKey);
+    if (localDoc) return localDoc;
+
+    const allLocal = LocalFirestore.getDocs<LicenseDocument>('licenses');
+    const match = allLocal.find(
+      (l) => l.licenseKey?.toLowerCase() === cleanKey.toLowerCase() || l.orderId?.toLowerCase() === cleanKey.toLowerCase()
+    );
+    return match || null;
   },
 
   // 4. Register new license (sync)

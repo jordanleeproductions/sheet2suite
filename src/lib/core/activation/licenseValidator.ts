@@ -55,16 +55,9 @@ export class LicenseValidator {
       };
     }
 
-    // Step 1: Query LocalFirestore 'licenses' collection for exact license document
-    let licenseDoc = LocalFirestore.getDoc<LicenseDocument>('licenses', cleanOrderId);
-
-    if (!licenseDoc) {
-      // Query by licenseKey or purchaserEmail if document ID didn't match directly
-      const byKey = LocalFirestore.query<LicenseDocument>('licenses', 'licenseKey', cleanOrderId);
-      if (byKey.length > 0) {
-        licenseDoc = byKey[0];
-      }
-    }
+    // Step 1: Query Cloud Firestore and local store for exact license document
+    const { LocalLicensingDb } = await import('@/lib/db/licensingDb');
+    let licenseDoc = await LocalLicensingDb.getLicenseByKeyAsync(cleanOrderId);
 
     // If license exists in Firestore database, enforce active status
     if (licenseDoc) {
@@ -90,31 +83,25 @@ export class LicenseValidator {
       };
     }
 
-    // Step 2: If new Order ID, auto-register license document into LocalFirestore
-    let entitledProducts: ProductCode[] = [req.productCode];
-    if (cleanOrderId.includes('BUNDLE') || cleanOrderId.includes('MASTER') || cleanOrderId.includes('SUITE') || cleanOrderId.includes('ALL')) {
-      entitledProducts = ['SHEET2VOW', 'SHEET2FINANCE', 'SHEET2HOME', 'SHEET2CLOSET', 'SHEET2INVENTORY'];
-    } else if (cleanOrderId.includes('FINANCE')) {
-      entitledProducts = ['SHEET2FINANCE'];
-    } else if (cleanOrderId.includes('STAY') || cleanOrderId.includes('HOME')) {
-      entitledProducts = ['SHEET2HOME'];
-    }
+    // Step 2: If new Order ID, auto-register license document into Cloud Firestore
+    const isPro = cleanOrderId.includes('PRO');
+    const entitledProducts: ProductCode[] = ['SHEET2VOW'];
 
     const newLicense: LicenseDocument = {
       id: cleanOrderId,
       licenseKey: cleanOrderId,
       orderId: cleanOrderId,
       purchaserEmail: cleanEmail,
-      sku: entitledProducts.length > 1 ? 'ETSY-MASTER-SUITE-BUNDLE' : `ETSY-${req.productCode}-PRO`,
+      sku: isPro ? 'ETSY-SHEET2VOW-PRO' : 'ETSY-SHEET2VOW-STANDARD',
       status: 'active',
-      licenseTier: entitledProducts.length > 1 ? 'pro' : 'standard',
+      licenseTier: isPro ? 'pro' : 'standard',
       entitledProducts,
-      maxWorkspaces: entitledProducts.length > 1 ? 10 : 2,
+      maxWorkspaces: isPro ? 5 : 2,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    LocalFirestore.setDoc('licenses', cleanOrderId, newLicense);
+    await LocalLicensingDb.saveLicenseAsync(newLicense);
 
     return {
       valid: true,

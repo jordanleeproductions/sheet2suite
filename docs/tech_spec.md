@@ -570,6 +570,20 @@ src/
 - **Mobile De-Cluttering**: Eliminated mobile noise by hiding secondary portal managers and export link panels (`.vendor-share-links-desktop-section`, `.music-portals-menu-container`) on viewports $\le 768\text{px}$.
 - **Zero Exposed Spreadsheet Metadata**: Cleaned all visible user-facing text referencing Google Sheets, formulas, cell coordinates, and protected cells across modals, deletion prompts, CSV buttons, and workspace cards.
 
+### 3.12 Pre-Launch Reliability & Licensing Architecture (`[PRE-LAUNCH-READINESS-SETUP-LICENSING-HARDENING]`)
+- **Setup Flow Resilience (`/activate` & `/api/provision`):**
+  - **Zero Silent Failures**: Replaced silent error swallowing in `handleSetupComplete` with an explicit diagnostic error card and 1-click `[ 🔄 RETRY PROVISIONING SPREADSHEET ]` action, ensuring users never land on broken mock workspaces after a provisioning fault.
+  - **Proactive Token Refresh**: Upgraded `/api/provision` to use `getGoogleAuthAsync` with proactive refresh and `s2s_refresh_token` cookie fallback, preventing 401 token expiration errors during lengthy setup wizards.
+  - **URL Parameter Pre-Filling**: Automatically extracts `orderId`, `order`, or `license` from Etsy purchase receipt links, eliminating manual retyping.
+  - **Multi-Workspace Onboarding**: Added "Activate Another / New Order" action on the detected workspace banner so customers purchasing additional spreadsheets can proceed cleanly.
+- **Licensing Tier Hierarchy (`Standard` vs `Pro`):**
+  - **Standard Tier**: 1 workspace, maximum 2 users (1 Primary Owner + 1 Secondary Partner/Spouse). Default for standard numeric Etsy orders.
+  - **Pro Tier**: 1 workspace, unlimited collaborators (co-planners, wedding coordinators, bridal party) with priority sync and pro badges. Granted via `PRO` order keywords or pre-registered Cloud Firestore records.
+  - **Dynamic Collaborator Quota Enforcement**: `/api/share/partner` dynamically inspects the workspace's linked license in Cloud Firestore, automatically lifting the 2-user cap for Pro workspaces while enforcing it for Standard workspaces.
+  - **Async Cloud Firestore Lookups**: Upgraded `LicenseValidator.validateLicense` and `LocalLicensingDb.getLicenseByKeyAsync` to query Cloud Firestore asynchronously, surviving serverless container scale-downs.
+- **Production Error Boundaries & 404 Pages:**
+  - Added branded Next.js global error boundary (`src/app/error.tsx`) and 404 page (`src/app/not-found.tsx`) with Monarch typography, reassuring guidance, and 1-click recovery actions.
+
 ---
 
 ## 4. Data Storage & Schema Mapping

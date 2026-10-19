@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { Readable } from 'stream';
-import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth } from '@/lib/sheets/client';
+import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth, getGoogleAuthAsync } from '@/lib/sheets/client';
 import { CellGuard } from '@/lib/core/CellGuard';
 import { generateMasterXlsxBuffer } from '@/lib/core/templates/xlsxGenerator';
 import { getMasterSpreadsheetXlsxBuffer } from '@/lib/sheets/masterTemplateExporter';
@@ -76,11 +76,13 @@ export async function POST(req: NextRequest) {
     // Use passed token or cookie fallback
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
-    const cookieToken = req.cookies.get('s2s_access_token')?.value;
+    const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
+    const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
+    const userEmail = req.cookies.get('s2s_user_email')?.value;
 
     const token = accessToken || bearerToken || cookieToken || process.env.GOOGLE_ACCESS_TOKEN;
 
-    if (!token && !process.env.GOOGLE_CLIENT_EMAIL) {
+    if (!token && !refreshToken && !process.env.GOOGLE_CLIENT_EMAIL) {
       return NextResponse.json(
         {
           success: false,
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const auth = getGoogleAuth(token);
+    const auth = (await getGoogleAuthAsync(token, undefined, userEmail, refreshToken)) || getGoogleAuth(token);
     const drive = google.drive({ version: 'v3', auth });
 
     // Step 1: Create or locate root folder "Sheet2Suite"

@@ -7,7 +7,8 @@ import {
   Sparkles, 
   ArrowRight, 
   ShieldCheck, 
-  HardDrive
+  HardDrive,
+  AlertCircle
 } from 'lucide-react';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
 import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
@@ -38,12 +39,15 @@ export default function ActivationPage() {
   const [showDrivePickerModal, setShowDrivePickerModal] = useState<boolean>(false);
   const [driveFolder, setDriveFolder] = useState('My Drive / Sheet2Suite / Sheet2Vow');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [provisionError, setProvisionError] = useState<string>('');
+  const [lastProductConfig, setLastProductConfig] = useState<any | null>(null);
   const [detectedWorkspace, setDetectedWorkspace] = useState<any | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get('email');
+      const orderParam = params.get('orderId') || params.get('order') || params.get('license');
       const productParam = params.get('product');
       const sheetParam = params.get('spreadsheetId') || params.get('sheetId');
 
@@ -53,6 +57,7 @@ export default function ActivationPage() {
       }
 
       if (emailParam) setEmail(emailParam);
+      if (orderParam) setOrderId(orderParam);
       if (productParam) setTargetProductCode(productParam.toUpperCase());
 
       const savedEmail = localStorage.getItem('s2v_google_email');
@@ -184,6 +189,8 @@ export default function ActivationPage() {
   // Step 2 -> Step 3: Handle Universal Product Setup Completion
   const handleSetupComplete = async (productConfig: any) => {
     setIsSubmitting(true);
+    setProvisionError('');
+    setLastProductConfig(productConfig);
 
     try {
       const currentGoogleToken = googleToken || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null);
@@ -265,13 +272,10 @@ export default function ActivationPage() {
       setTimeout(() => {
         router.push(`/${activeProduct.id}#home`);
       }, 1200);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Universal activation submit error:', err);
       setIsSubmitting(false);
-      setStep(3);
-      setTimeout(() => {
-        router.push(`/${activeProduct.id}#home`);
-      }, 1200);
+      setProvisionError(err?.message || 'Failed to create your spreadsheet in Google Drive. Please verify your Google account permissions and try again.');
     }
   };
 
@@ -323,29 +327,108 @@ export default function ActivationPage() {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                const target = detectedWorkspace.productName?.toLowerCase().includes('vow') ? 'vow' : 'vow';
-                router.push(`/${target}?spreadsheetId=${encodeURIComponent(detectedWorkspace.spreadsheetId)}`);
-              }}
-              style={{
-                backgroundColor: '#059669',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '0.6rem 1.1rem',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-              }}
-            >
-              <span>ENTER WORKSPACE</span>
-              <ArrowRight size={15} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = detectedWorkspace.productName?.toLowerCase().includes('vow') ? 'vow' : 'vow';
+                  router.push(`/${target}?spreadsheetId=${encodeURIComponent(detectedWorkspace.spreadsheetId)}`);
+                }}
+                style={{
+                  backgroundColor: '#059669',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.6rem 1.1rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <span>ENTER WORKSPACE</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetectedWorkspace(null)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#065f46',
+                  border: '1px solid #10b981',
+                  borderRadius: '8px',
+                  padding: '0.6rem 0.9rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <span>ACTIVATE ANOTHER / NEW ORDER</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Provisioning Error Card */}
+        {provisionError && (
+          <div
+            style={{
+              backgroundColor: '#fee2e2',
+              border: '2px solid #ef4444',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              marginBottom: '1.5rem',
+              animation: 'fadeIn 0.2s ease-out',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#b91c1c', fontWeight: 800, fontSize: '0.95rem' }}>
+              <AlertCircle size={20} />
+              <span>Google Drive Provisioning Encountered an Issue</span>
+            </div>
+            <p style={{ fontSize: '0.825rem', color: '#7f1d1d', margin: '0.5rem 0 1rem 0', lineHeight: 1.5 }}>
+              {provisionError}
+            </p>
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => lastProductConfig && handleSetupComplete(lastProductConfig)}
+                style={{
+                  backgroundColor: '#b91c1c',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  opacity: isSubmitting ? 0.7 : 1,
+                }}
+              >
+                {isSubmitting ? 'RETRYING PROVISIONING...' : '🔄 RETRY PROVISIONING SPREADSHEET'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProvisionError('');
+                  setStep(1);
+                }}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#991b1b',
+                  border: '1px solid #b91c1c',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                }}
+              >
+                RE-CHECK GOOGLE DRIVE SETTINGS
+              </button>
+            </div>
           </div>
         )}
 

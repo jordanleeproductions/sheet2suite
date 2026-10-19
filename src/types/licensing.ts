@@ -1,10 +1,15 @@
+export type LicenseTier = 'standard' | 'pro' | 'unlimited';
+
 export interface Sheet2SuiteLicense {
   licenseKey: string;
   orderId: string;
   purchasePlatform: 'etsy' | 'lemonsqueezy' | 'direct_stripe';
   purchaserEmail: string;
   purchaserName?: string;
-  sku: 'sheet2vow' | 'sheet2home' | 'sheet2finance' | 'sheet2suite_bundle';
+  sku: string;
+  licenseTier?: LicenseTier;
+  maxWorkspaces?: number;
+  maxSecondaryUsers?: number;
   productAccess: {
     sheet2vow: boolean;
     sheet2home: boolean;
@@ -12,6 +17,7 @@ export interface Sheet2SuiteLicense {
   };
   status: 'active' | 'refunded' | 'revoked' | 'expired';
   createdAt: string;
+  updatedAt?: string;
   coPlanner?: {
     partnerEmail?: string;
     partnerName?: string;

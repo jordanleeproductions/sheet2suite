@@ -25,9 +25,12 @@ export async function POST(req: NextRequest) {
       email: email.trim().toLowerCase(),
       customerName: email.split('@')[0].replace('.', ' ').replace(/^./, (c: string) => c.toUpperCase()),
       purchaseDate: new Date().toISOString().split('T')[0],
-      packageTier: validation.entitledProducts.length > 1 ? 'Sheet2Suite Master Pass (All Apps)' : 'Sheet2Vow Master Wedding Planner Suite',
+      packageTier: validation.licenseTier === 'pro'
+        ? 'Sheet2Vow Pro (Unlimited Collaborators)'
+        : 'Sheet2Vow Wedding Planner Suite (Standard)',
+      licenseTier: validation.licenseTier,
       entitledProducts: validation.entitledProducts,
-      licensedSheets: validation.entitledProducts.length,
+      licensedSheets: 1,
       isVerified: true,
       message: 'Etsy purchase verified successfully!',
     });
