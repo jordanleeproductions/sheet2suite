@@ -173,6 +173,67 @@ export default function DashboardMetrics({
   // Planning Status Health Indicator
   const hasExceptions = isOverBudget || pendingCount > 0 || toDoCount > 5 || unassignedAttending > 0;
 
+  // Distinct theme styling for Planning Progress card/bar in Editorial & Botanical Romance themes
+  const planningStatusStyles = useMemo(() => {
+    const isDark = colorTheme === 'dark';
+
+    if (styleTheme === 'botanical-romance') {
+      return {
+        bg: isDark ? 'rgba(45, 90, 67, 0.22)' : '#EAF2EC',
+        border: isDark ? '1px solid rgba(155, 209, 166, 0.35)' : '1px solid #A1C4AA',
+        borderLeft: isDark ? '4px solid #849B87' : '4px solid #1B4332',
+        labelBg: isDark ? 'rgba(155, 209, 166, 0.18)' : 'rgba(27, 67, 50, 0.12)',
+        labelBorder: isDark ? '1px solid rgba(155, 209, 166, 0.3)' : '1px solid rgba(27, 67, 50, 0.2)',
+        labelColor: isDark ? '#9BD1A6' : '#1B4332',
+        textColor: isDark ? '#E2ECE5' : '#142C21',
+        mutedColor: isDark ? '#8EABA0' : '#4D6B5A',
+        dotColor: hasExceptions ? '#F59E0B' : (isDark ? '#849B87' : '#1B4332'),
+        progressBarTrack: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(27, 67, 50, 0.12)',
+        progressBarFill: isDark ? '#9BD1A6' : '#1B4332',
+        accentColor: isDark ? '#849B87' : '#1B4332',
+      };
+    }
+
+    if (styleTheme === 'editorial') {
+      return {
+        bg: isDark ? 'rgba(99, 102, 241, 0.14)' : '#EEF2FF',
+        border: isDark ? '1px solid rgba(129, 140, 248, 0.35)' : '1px solid #C7D2FE',
+        borderLeft: isDark ? '4px solid #818CF8' : '4px solid #4F46E5',
+        labelBg: isDark ? 'rgba(99, 102, 241, 0.22)' : 'rgba(79, 70, 229, 0.1)',
+        labelBorder: isDark ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid rgba(79, 70, 229, 0.22)',
+        labelColor: isDark ? '#C7D2FE' : '#4338CA',
+        textColor: isDark ? '#EEF2FF' : '#1E1B4B',
+        mutedColor: isDark ? '#94A3B8' : '#6366F1',
+        dotColor: hasExceptions ? '#F59E0B' : (isDark ? '#818CF8' : '#4F46E5'),
+        progressBarTrack: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(79, 70, 229, 0.12)',
+        progressBarFill: isDark ? '#818CF8' : '#4F46E5',
+        accentColor: isDark ? '#818CF8' : '#4F46E5',
+      };
+    }
+
+    // Default styles for other themes (neo-brutalism, midnight-tuxedo, etc.)
+    return {
+      bg: 'var(--color-bg-pane, #F8FAFC)',
+      border: '1px solid var(--color-border, #E2E8F0)',
+      borderLeft: '1px solid var(--color-border, #E2E8F0)',
+      labelBg: 'transparent',
+      labelBorder: 'none',
+      labelColor: 'var(--color-primary, #0F172A)',
+      textColor: 'var(--color-text, #0F172A)',
+      mutedColor: 'var(--color-muted, #64748B)',
+      dotColor: hasExceptions ? 'var(--color-amber, #F59E0B)' : 'var(--color-green, #10B981)',
+      progressBarTrack: 'var(--color-border, #E2E8F0)',
+      progressBarFill: 'var(--color-primary, #0F172A)',
+      accentColor: 'var(--color-primary, #0F172A)',
+    };
+  }, [styleTheme, colorTheme, hasExceptions]);
+
+  const overallPlanningPercent = useMemo(() => {
+    if (totalTasksCount > 0) return taskPercentComplete;
+    if (totalGuestsInvited > 0) return confirmedPercent;
+    return 0;
+  }, [totalTasksCount, taskPercentComplete, totalGuestsInvited, confirmedPercent]);
+
   // Action Center Filter Tab State
   const [actionFilter, setActionFilter] = useState<'all' | 'vendors' | 'tasks' | 'overdue'>('all');
 
@@ -811,7 +872,7 @@ export default function DashboardMetrics({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
         <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
-          <div style={{ height: '100%', width: `${taskPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+          <div style={{ height: '100%', width: `${taskPercentComplete}%`, backgroundColor: planningStatusStyles.accentColor }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
           <span>PROGRESS: {taskPercentComplete}%</span>
@@ -886,7 +947,7 @@ export default function DashboardMetrics({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
         <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
-          <div style={{ height: '100%', width: `${seatedPercent}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+          <div style={{ height: '100%', width: `${seatedPercent}%`, backgroundColor: planningStatusStyles.accentColor }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
           <span>PROGRESS: {seatedPercent}% SEATED</span>
@@ -1036,7 +1097,7 @@ export default function DashboardMetrics({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
         <div style={{ height: '4px', borderRadius: '1px', overflow: 'hidden', backgroundColor: 'var(--color-border, #E2E8F0)' }}>
-          <div style={{ height: '100%', width: `${photoPercentComplete}%`, backgroundColor: 'var(--color-primary, #0F172A)' }} />
+          <div style={{ height: '100%', width: `${photoPercentComplete}%`, backgroundColor: planningStatusStyles.accentColor }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.58rem', color: 'var(--color-muted, #64748B)' }}>
           <span>PROGRESS: {photoPercentComplete}% CAPTURED</span>
@@ -1064,96 +1125,142 @@ export default function DashboardMetrics({
         />
       )}
 
-      {/* Top Single-Line "Planning Progress" Summary Strip */}
+      {/* Top "Planning Progress" Summary Card/Bar */}
       <div
         className="planning-status-strip"
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.6rem 1.25rem',
-          padding: '0.55rem 0.85rem',
-          backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
-          border: '1px solid var(--color-border, #E2E8F0)',
-          borderRadius: '2px',
+          flexDirection: 'column',
+          gap: '0.45rem',
+          padding: '0.65rem 0.95rem',
+          backgroundColor: planningStatusStyles.bg,
+          border: planningStatusStyles.border,
+          borderLeft: planningStatusStyles.borderLeft,
+          borderRadius: styleTheme === 'botanical-romance' ? '6px' : (styleTheme === 'editorial' ? '3px' : '2px'),
+          boxShadow: styleTheme === 'editorial'
+            ? '0 1px 4px rgba(79, 70, 229, 0.06)'
+            : (styleTheme === 'botanical-romance' ? '0 1px 4px rgba(27, 67, 50, 0.06)' : 'none'),
           boxSizing: 'border-box',
           width: '100%',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.6rem 1.25rem',
+            width: '100%',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <div
               style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                backgroundColor: hasExceptions ? 'var(--color-amber, #F59E0B)' : 'var(--color-green, #10B981)',
-                display: 'inline-block',
-                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: planningStatusStyles.labelBg,
+                border: planningStatusStyles.labelBorder,
+                padding: '0.15rem 0.45rem',
+                borderRadius: '3px',
               }}
-            />
+            >
+              <span
+                style={{
+                  width: '7px',
+                  height: '7px',
+                  borderRadius: '50%',
+                  backgroundColor: planningStatusStyles.dotColor,
+                  display: 'inline-block',
+                  flexShrink: 0,
+                  boxShadow: `0 0 6px ${planningStatusStyles.dotColor}80`,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  color: planningStatusStyles.labelColor,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                PLANNING PROGRESS:
+              </span>
+            </div>
+
+            <div
+              style={{
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.72rem',
+                color: planningStatusStyles.textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span>
+                <strong>{attendingCount}</strong> OF <strong>{totalGuestsInvited}</strong> GUESTS CONFIRMED ({confirmedPercent}%)
+              </span>
+              <span style={{ color: planningStatusStyles.mutedColor, opacity: 0.6 }}>•</span>
+              <span>
+                <strong>{taskPercentComplete}%</strong> OF TASKS COMPLETED ({doneCount}/{totalTasksCount})
+              </span>
+              <span style={{ color: planningStatusStyles.mutedColor, opacity: 0.6 }}>•</span>
+              <span>
+                <strong style={{ color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
+                  {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
+                </strong>{' '}
+                {isOverBudget ? 'OVER TARGET' : 'REMAINING BUDGET'}
+              </span>
+              {attendingCount > 0 && (
+                <>
+                  <span style={{ color: planningStatusStyles.mutedColor, opacity: 0.6 }}>•</span>
+                  <span>
+                    <strong>{seatedPercent}%</strong> SEATED ({assignedAttending.length}/{attendingCount})
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
             <span
               style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                color: 'var(--color-primary, #0F172A)',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
+                fontSize: '0.62rem',
+                color: planningStatusStyles.mutedColor,
+                letterSpacing: '0.04em',
               }}
             >
-              PLANNING PROGRESS:
+              ALL CHANGES SAVED
             </span>
-          </div>
-
-          <div
-            style={{
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.72rem',
-              color: 'var(--color-text, #0F172A)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              flexWrap: 'wrap',
-            }}
-          >
-            <span>
-              <strong>{attendingCount}</strong> OF <strong>{totalGuestsInvited}</strong> GUESTS CONFIRMED ({confirmedPercent}%)
-            </span>
-            <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
-            <span>
-              <strong>{taskPercentComplete}%</strong> OF TASKS COMPLETED ({doneCount}/{totalTasksCount})
-            </span>
-            <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
-            <span>
-              <strong style={{ color: isOverBudget ? 'var(--color-red, #EF4444)' : 'var(--color-green, #10B981)' }}>
-                {isOverBudget ? '-' : '+'}{formatCurrency(Math.abs(remainingBudget), currency)}
-              </strong>{' '}
-              {isOverBudget ? 'OVER TARGET' : 'REMAINING BUDGET'}
-            </span>
-            {attendingCount > 0 && (
-              <>
-                <span style={{ color: 'var(--color-border, #CBD5E1)' }}>•</span>
-                <span>
-                  <strong>{seatedPercent}%</strong> SEATED ({assignedAttending.length}/{attendingCount})
-                </span>
-              </>
-            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          <span
+        {/* Integrated Progress Bar Track */}
+        <div
+          style={{
+            width: '100%',
+            height: '3px',
+            backgroundColor: planningStatusStyles.progressBarTrack,
+            borderRadius: '2px',
+            overflow: 'hidden',
+          }}
+          title={`Overall Planning Completion: ${overallPlanningPercent}%`}
+        >
+          <div
             style={{
-              fontFamily: 'var(--font-technical-mono, monospace)',
-              fontSize: '0.62rem',
-              color: 'var(--color-muted, #64748B)',
-              letterSpacing: '0.04em',
+              height: '100%',
+              width: `${Math.min(Math.max(overallPlanningPercent, 0), 100)}%`,
+              backgroundColor: planningStatusStyles.progressBarFill,
+              borderRadius: '2px',
+              transition: 'width 0.4s ease-out',
             }}
-          >
-            ALL CHANGES SAVED
-          </span>
+          />
         </div>
       </div>
 

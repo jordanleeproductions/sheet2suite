@@ -215,6 +215,11 @@
 - [x] **[DASH-5] Browser Back/Forward Tab History Navigation:** Integrated HTML5 History API for seamless browser back/forward navigation.
 - [x] **[DASH-6] Photography Summary Module:** Added dedicated Photography section in Summary with Cards, Donut Chart, and Progress Bar views.
 - [x] **[DASH-7] Edit Icon Summary Layout Control Shortcut:** Prominent `✏️ EDIT LAYOUT CONTROLS` shortcut button on executive summary header to configure visible modules.
+- [x] **[DASH-8] Distinct Theme Accent Styling for Planning Progress Card & Progress Bar (`DashboardMetrics.tsx`):**
+  - In `editorial` and `botanical-romance` themes, styled the top "PLANNING PROGRESS" card/bar with dedicated, distinct accent colors to stand out vibrantly from standard neutral surface panes (`#F8FAFC`).
+  - **Botanical Romance Theme**: Features rich earthen sage/forest green background (`#EAF2EC` in light, `rgba(45, 90, 67, 0.22)` in dark), eucalyptus borders (`#A1C4AA`), a prominent deep forest green left accent border (`#1B4332` / `#849B87`), structured badge (`#1B4332`), and high-contrast dark forest typography (`#142C21` / `#E2ECE5`).
+  - **Editorial Minimalist Theme**: Features refined executive royal navy / indigo background tint (`#EEF2FF` in light, `rgba(99, 102, 241, 0.14)` in dark), crisp indigo borders (`#C7D2FE`), deep indigo left accent border (`#4F46E5` / `#818CF8`), structured badge (`#4338CA` / `#C7D2FE`), and deep indigo-slate typography (`#1E1B4B` / `#EEF2FF`).
+  - **Integrated Planning Completion Progress Bar**: Integrated a sleek 3px progress bar track along the bottom of the Planning Progress card/bar reflecting overall completion (`overallPlanningPercent`), rendered with the theme-specific accent color (`#1B4332` for Botanical, `#4F46E5` for Editorial), and synchronized the operational progress bar fills in Tasks, Tables, and Photos briefings.
 
 ---
 
