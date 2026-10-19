@@ -2,7 +2,27 @@
 
 import React, { useState, useEffect } from 'react';
 import { Task, KanbanStage } from '@/lib/sheets/types';
-import { Plus, Edit2, ArrowRight, ArrowLeft, Trash2, Calendar, User, X, Clock, AlertTriangle, CheckCircle2, Circle, LayoutGrid, BarChart2, ChevronDown, Check } from 'lucide-react';
+import { 
+  Plus, 
+  Edit2, 
+  ArrowRight, 
+  ArrowLeft, 
+  Trash2, 
+  Calendar, 
+  User, 
+  X, 
+  Clock, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Circle, 
+  LayoutGrid, 
+  BarChart2, 
+  ChevronDown, 
+  Check,
+  Search,
+  Tag,
+  SlidersHorizontal
+} from 'lucide-react';
 import { formatDateConsistent, formatDateToMMDDYYYY } from '@/lib/currency';
 import MobileFAB from '@/components/MobileFAB';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
@@ -276,6 +296,238 @@ export const isDueDatePast = (dueDateStr?: string, stage?: KanbanStage): boolean
   return dueEndOfDay.getTime() < Date.now();
 };
 
+/**
+ * Jira-inspired priority left accent border colors
+ */
+export const getPriorityBorderColor = (priority?: string): string => {
+  switch ((priority || '').trim().toLowerCase()) {
+    case 'critical':
+    case 'urgent':
+    case 'high':
+      return 'var(--color-red, #EF4444)';
+    case 'medium':
+      return 'var(--color-amber, #F59E0B)';
+    case 'low':
+    case 'lowest':
+      return 'var(--color-green, #10B981)';
+    default:
+      return 'var(--color-border, #CBD5E1)';
+  }
+};
+
+/**
+ * Priority badge styling matching design system
+ */
+export const getPriorityBadgeStyles = (priority?: string) => {
+  switch ((priority || '').trim().toLowerCase()) {
+    case 'critical':
+    case 'urgent':
+    case 'high':
+      return { 
+        bg: 'rgba(239, 68, 68, 0.1)', 
+        text: '#DC2626', 
+        border: '1px solid rgba(239, 68, 68, 0.25)', 
+        label: 'HIGH' 
+      };
+    case 'medium':
+      return { 
+        bg: 'rgba(245, 158, 11, 0.1)', 
+        text: '#B45309', 
+        border: '1px solid rgba(245, 158, 11, 0.25)', 
+        label: 'MEDIUM' 
+      };
+    case 'low':
+    case 'lowest':
+      return { 
+        bg: 'rgba(16, 185, 129, 0.1)', 
+        text: '#059669', 
+        border: '1px solid rgba(16, 185, 129, 0.25)', 
+        label: 'LOW' 
+      };
+    default:
+      return { 
+        bg: 'var(--color-bg-pane, #F1F5F9)', 
+        text: 'var(--color-muted, #64748B)', 
+        border: '1px solid var(--color-border, #CBD5E1)', 
+        label: (priority || 'NORMAL').toUpperCase() 
+      };
+  }
+};
+
+/**
+ * Stage chip styles for interactive status switcher
+ */
+export const getStageStyle = (stage: KanbanStage) => {
+  switch (stage) {
+    case 'Done':
+      return {
+        bg: 'rgba(16, 185, 129, 0.12)',
+        color: '#059669',
+        border: 'rgba(16, 185, 129, 0.3)',
+        dot: '#10B981',
+      };
+    case 'In Progress':
+      return {
+        bg: 'rgba(245, 158, 11, 0.12)',
+        color: '#B45309',
+        border: 'rgba(245, 158, 11, 0.3)',
+        dot: '#F59E0B',
+      };
+    case 'To Do':
+    default:
+      return {
+        bg: 'rgba(59, 130, 246, 0.1)',
+        color: '#2563EB',
+        border: 'rgba(59, 130, 246, 0.25)',
+        dot: '#3B82F6',
+      };
+  }
+};
+
+/**
+ * Jira Mobile Smart Relative Due Date badge calculation
+ */
+export const getSmartDateBadge = (dueDateStr?: string, stage?: KanbanStage) => {
+  if (!dueDateStr || !dueDateStr.trim()) return null;
+  const ymd = formatDateConsistent(dueDateStr);
+  if (!ymd || ymd === '-') return null;
+
+  const isDone = stage === 'Done';
+  const isPast = isDueDatePast(dueDateStr, stage);
+  const formatted = formatDateToMMDDYYYY(dueDateStr);
+
+  try {
+    const parts = ymd.split('-').map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      const due = new Date(parts[0], parts[1] - 1, parts[2]);
+      due.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (isDone) {
+        return {
+          text: formatted,
+          isOverdue: false,
+          color: 'var(--color-muted, #64748B)',
+          bg: 'var(--color-bg-pane, #F1F5F9)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+        };
+      }
+
+      if (diffDays < 0) {
+        const absDays = Math.abs(diffDays);
+        return {
+          text: `Overdue ${absDays}d (${formatted})`,
+          isOverdue: true,
+          color: '#DC2626',
+          bg: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+        };
+      }
+      if (diffDays === 0) {
+        return {
+          text: 'Due Today',
+          isOverdue: false,
+          color: '#D97706',
+          bg: 'rgba(245, 158, 11, 0.14)',
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+        };
+      }
+      if (diffDays === 1) {
+        return {
+          text: 'Tomorrow',
+          isOverdue: false,
+          color: '#B45309',
+          bg: 'rgba(245, 158, 11, 0.1)',
+          border: '1px solid rgba(245, 158, 11, 0.22)',
+        };
+      }
+      if (diffDays <= 7) {
+        return {
+          text: `In ${diffDays}d (${formatted})`,
+          isOverdue: false,
+          color: 'var(--color-text, #0F172A)',
+          bg: 'var(--color-bg-pane, #F1F5F9)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+        };
+      }
+    }
+  } catch (_) {}
+
+  return {
+    text: formatted,
+    isOverdue: isPast,
+    color: isPast ? '#DC2626' : 'var(--color-muted, #64748B)',
+    bg: isPast ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-bg-pane, #F1F5F9)',
+    border: isPast ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--color-border, #E2E8F0)',
+  };
+};
+
+/**
+ * Assignee circular initials avatar helper
+ */
+export const getAssigneeAvatar = (assignee: string | undefined, p1: string, p2: string) => {
+  const trimmed = (assignee || '').trim();
+  if (!trimmed || trimmed.toLowerCase() === 'unassigned') {
+    return {
+      initials: '?',
+      name: 'Unassigned',
+      bg: 'var(--color-bg-pane, #F1F5F9)',
+      color: 'var(--color-muted, #64748B)',
+      border: '1px dashed var(--color-border, #CBD5E1)',
+    };
+  }
+
+  const isShared = trimmed.includes('&') || trimmed.toLowerCase().includes('shared') || trimmed.toLowerCase().includes('both');
+  if (isShared) {
+    return {
+      initials: '💍',
+      name: trimmed,
+      bg: 'rgba(16, 185, 129, 0.12)',
+      color: '#059669',
+      border: '1px solid rgba(16, 185, 129, 0.3)',
+    };
+  }
+
+  const isP1 = trimmed.toLowerCase() === p1.toLowerCase();
+  const isP2 = trimmed.toLowerCase() === p2.toLowerCase();
+
+  const parts = trimmed.split(/\s+/);
+  const initials = parts.length >= 2 
+    ? (parts[0][0] + parts[1][0]).toUpperCase() 
+    : parts[0].slice(0, 2).toUpperCase();
+
+  if (isP1) {
+    return {
+      initials,
+      name: trimmed,
+      bg: 'rgba(15, 23, 42, 0.08)',
+      color: 'var(--color-primary, #0F172A)',
+      border: '1px solid rgba(15, 23, 42, 0.2)',
+    };
+  }
+
+  if (isP2) {
+    return {
+      initials,
+      name: trimmed,
+      bg: 'rgba(99, 102, 241, 0.12)',
+      color: '#4F46E5',
+      border: '1px solid rgba(99, 102, 241, 0.3)',
+    };
+  }
+
+  return {
+    initials,
+    name: trimmed,
+    bg: 'var(--color-bg-pane, #F1F5F9)',
+    color: 'var(--color-text, #0F172A)',
+    border: '1px solid var(--color-border, #CBD5E1)',
+  };
+};
+
 export default function KanbanBoard({ 
   tasks, 
   onUpdate, 
@@ -322,6 +574,20 @@ export default function KanbanBoard({
   // Assignee Filter state ('ALL', 'UNASSIGNED', or specific assignee name)
   const [selectedAssignee, setSelectedAssignee] = useState<string>('ALL');
 
+  // Jira Mobile Quick Filters & Search state
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [filterPriority, setFilterPriority] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
+  const [filterOnlyOverdue, setFilterOnlyOverdue] = useState<boolean>(false);
+
+  // Jira Mobile Action Sheets state
+  const [activeStatusTask, setActiveStatusTask] = useState<Task | null>(null);
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState<boolean>(false);
+  const [isSortSheetOpen, setIsSortSheetOpen] = useState<boolean>(false);
+
+  // Touch Swipe Gesture State for Mobile Columns
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
   // Compute available categories from tasks, with empty/unspecified category mapping to 'General'
   const categoryOptions = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -358,9 +624,31 @@ export default function KanbanBoard({
     };
   }, [tasks]);
 
-  // Filter tasks based on category AND assignee selection
+  // Filter tasks based on category, assignee, search, priority, and overdue selections
   const filteredTasks = React.useMemo(() => {
     return tasks.filter(t => {
+      // Search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.trim().toLowerCase();
+        const matchName = (t.taskName || '').toLowerCase().includes(query);
+        const matchNotes = (t.notes || '').toLowerCase().includes(query);
+        const matchCat = (t.category || '').toLowerCase().includes(query);
+        if (!matchName && !matchNotes && !matchCat) return false;
+      }
+
+      // Priority filter chip
+      if (filterPriority !== 'ALL') {
+        const p = (t.priority || '').trim().toLowerCase();
+        if (filterPriority === 'HIGH' && p !== 'high' && p !== 'critical' && p !== 'urgent') return false;
+        if (filterPriority === 'MEDIUM' && p !== 'medium') return false;
+        if (filterPriority === 'LOW' && p !== 'low' && p !== 'lowest') return false;
+      }
+
+      // Overdue filter chip
+      if (filterOnlyOverdue) {
+        if (!isDueDatePast(t.dueDate, t.kanbanStage)) return false;
+      }
+
       // Category filter
       if (selectedCategory !== 'ALL') {
         if (getTaskCategory(t).toLowerCase() !== selectedCategory.toLowerCase()) {
@@ -383,7 +671,7 @@ export default function KanbanBoard({
 
       return true;
     });
-  }, [tasks, selectedCategory, selectedAssignee]);
+  }, [tasks, searchQuery, filterPriority, filterOnlyOverdue, selectedCategory, selectedAssignee]);
 
   // Compute dynamic suggestions for Categories & Assignees from existing tasks [TASK-AUTO-SUGGEST]
   const existingCategories = Array.from(new Set([
@@ -553,9 +841,45 @@ export default function KanbanBoard({
     switch (priority.toLowerCase()) {
       case 'high': return { bg: 'var(--color-red-muted)', text: 'var(--color-red)' };
       case 'medium': return { bg: 'var(--color-gold)', text: 'var(--color-on-light)' };
-    case 'low': return { bg: 'var(--color-green)', text: 'var(--color-on-light)' };
-    default: return { bg: 'var(--color-gold)', text: 'var(--color-on-light)' };
+      case 'low': return { bg: 'var(--color-green)', text: 'var(--color-on-light)' };
+      default: return { bg: 'var(--color-gold)', text: 'var(--color-on-light)' };
     }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches && e.touches.length > 0) {
+      setTouchStartX(e.touches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || !e.changedTouches || e.changedTouches.length === 0) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    const swipeThreshold = 50;
+
+    if (Math.abs(deltaX) > swipeThreshold) {
+      const currentIndex = stages.indexOf(activeMobileStage);
+      if (deltaX < 0) {
+        // Swiped left -> advance to next stage
+        if (currentIndex < stages.length - 1) {
+          const nextStage = stages[currentIndex + 1];
+          setActiveMobileStage(nextStage);
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try { navigator.vibrate(12); } catch (_) {}
+          }
+        }
+      } else {
+        // Swiped right -> go back to previous stage
+        if (currentIndex > 0) {
+          const prevStage = stages[currentIndex - 1];
+          setActiveMobileStage(prevStage);
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try { navigator.vibrate(12); } catch (_) {}
+          }
+        }
+      }
+    }
+    setTouchStartX(null);
   };
 
   return (
@@ -645,8 +969,188 @@ export default function KanbanBoard({
       })()}
 
       {/* Controls Bar: Category Filter, Assignee Filter & Sort Bar (Under Progress Metrics) */}
-      <div className="kanban-filter-sort-bar">
+      {/* Jira Mobile Quick Filter Chips Bar (Visible on mobile viewports <= 767px) */}
+      <div className="kanban-quick-chips-bar">
+        {/* Search chip / expandable input */}
+        <div className={`kanban-search-chip ${isSearchOpen || searchQuery ? 'open' : ''}`}>
+          <Search size={13} className="kanban-search-icon" />
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onFocus={() => setIsSearchOpen(true)}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="kanban-search-input"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setIsSearchOpen(false);
+              }}
+              className="kanban-search-clear"
+              title="Clear search"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+
+        {/* Priority Quick Filter */}
+        <button
+          type="button"
+          onClick={() => {
+            setFilterPriority(prev => prev === 'HIGH' ? 'ALL' : 'HIGH');
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              try { navigator.vibrate(10); } catch (_) {}
+            }
+          }}
+          className={`kanban-filter-chip ${filterPriority === 'HIGH' ? 'active' : ''}`}
+        >
+          <AlertTriangle size={12} style={{ color: filterPriority === 'HIGH' ? 'inherit' : '#EF4444' }} />
+          <span>High Priority</span>
+        </button>
+
+        {/* Overdue Quick Filter */}
+        <button
+          type="button"
+          onClick={() => {
+            setFilterOnlyOverdue(prev => !prev);
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              try { navigator.vibrate(10); } catch (_) {}
+            }
+          }}
+          className={`kanban-filter-chip ${filterOnlyOverdue ? 'active' : ''}`}
+        >
+          <Clock size={12} style={{ color: filterOnlyOverdue ? 'inherit' : '#DC2626' }} />
+          <span>Overdue</span>
+        </button>
+
+        {/* Partner 1 Filter */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedAssignee(prev => prev.toLowerCase() === p1.toLowerCase() ? 'ALL' : p1);
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              try { navigator.vibrate(10); } catch (_) {}
+            }
+          }}
+          className={`kanban-filter-chip ${selectedAssignee.toLowerCase() === p1.toLowerCase() ? 'active' : ''}`}
+        >
+          <User size={12} />
+          <span>{p1}</span>
+        </button>
+
+        {/* Partner 2 Filter (if partner2Name provided) */}
+        {partner2Name && (
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedAssignee(prev => prev.toLowerCase() === p2.toLowerCase() ? 'ALL' : p2);
+              if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                try { navigator.vibrate(10); } catch (_) {}
+              }
+            }}
+            className={`kanban-filter-chip ${selectedAssignee.toLowerCase() === p2.toLowerCase() ? 'active' : ''}`}
+          >
+            <User size={12} />
+            <span>{p2}</span>
+          </button>
+        )}
+
+        {/* Category Picker Sheet Trigger */}
+        <button
+          type="button"
+          onClick={() => setIsCategorySheetOpen(true)}
+          className={`kanban-filter-chip ${selectedCategory !== 'ALL' ? 'active' : ''}`}
+        >
+          <Tag size={12} />
+          <span>{selectedCategory === 'ALL' ? 'Category' : selectedCategory}</span>
+          <ChevronDown size={11} style={{ opacity: 0.7 }} />
+        </button>
+
+        {/* Sort Picker Sheet Trigger */}
+        <button
+          type="button"
+          onClick={() => setIsSortSheetOpen(true)}
+          className={`kanban-filter-chip ${sortField !== 'default' ? 'active' : ''}`}
+        >
+          <SlidersHorizontal size={12} />
+          <span>{sortField === 'default' ? 'Sort' : (sortField === 'priority' ? 'Priority' : 'Due Date')}</span>
+          <ChevronDown size={11} style={{ opacity: 0.7 }} />
+        </button>
+
+        {/* Reset All Filters chip */}
+        {(searchQuery.trim() !== '' || filterPriority !== 'ALL' || filterOnlyOverdue || selectedCategory !== 'ALL' || selectedAssignee !== 'ALL' || sortField !== 'default') && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setIsSearchOpen(false);
+              setFilterPriority('ALL');
+              setFilterOnlyOverdue(false);
+              setSelectedCategory('ALL');
+              setSelectedAssignee('ALL');
+              setSortField('default');
+              setSortDirection('asc');
+            }}
+            className="kanban-filter-chip reset"
+            title="Clear all active filters"
+          >
+            <X size={12} />
+            <span>Clear All</span>
+          </button>
+        )}
+      </div>
+
+      {/* Controls Bar: Category Filter, Assignee Filter & Sort Bar (Desktop Viewports >= 768px) */}
+      <div className="kanban-filter-sort-bar kanban-filter-sort-bar-desktop">
         <div className="kanban-filters-group">
+          {/* Desktop Search Input */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', position: 'relative' }}>
+            <span style={styles.sortLabel}>SEARCH:</span>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Search size={13} style={{ position: 'absolute', left: '8px', color: 'var(--color-muted)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: '0.4rem 1.6rem 0.4rem 1.7rem',
+                  fontSize: '0.72rem',
+                  fontFamily: 'var(--font-mono)',
+                  backgroundColor: 'var(--color-input-bg, #ffffff)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-muted)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  minHeight: '34px',
+                  width: '150px',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: '6px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-muted)',
+                    padding: 0,
+                  }}
+                  title="Clear search"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Category Filter Dropdown [TASK-CATEGORY-FILTER] */}
           <div style={styles.sortGroup} className="kanban-category-filter-bar">
             <span style={styles.sortLabel}>CATEGORY:</span>
@@ -780,7 +1284,7 @@ export default function KanbanBoard({
             <Clock size={13} style={{ marginRight: '0.25rem' }} />
             DUE DATE {sortField === 'dueDate' ? (sortDirection === 'asc' ? '↓' : '↑') : ''}
           </button>
-          {(sortField !== 'default' || selectedCategory !== 'ALL' || selectedAssignee !== 'ALL') && (
+          {(sortField !== 'default' || selectedCategory !== 'ALL' || selectedAssignee !== 'ALL' || filterPriority !== 'ALL' || filterOnlyOverdue || searchQuery) && (
             <button
               style={{ ...styles.clearSortBtn, minHeight: '34px' }}
               className="kanban-sort-reset"
@@ -788,6 +1292,9 @@ export default function KanbanBoard({
                 setSortField('default');
                 setSelectedCategory('ALL');
                 setSelectedAssignee('ALL');
+                setFilterPriority('ALL');
+                setFilterOnlyOverdue(false);
+                setSearchQuery('');
               }}
               title="Reset all filters and sorting"
             >
@@ -1132,30 +1639,286 @@ export default function KanbanBoard({
         </div>
       )}
 
-      {/* Mobile Tab Swapper */}
-      <div style={styles.mobileTabs}>
+      {/* JIRA MOBILE ACTION SHEET 1: Fast Status Switcher */}
+      {activeStatusTask && (
+        <div style={styles.actionSheetOverlay} onClick={() => setActiveStatusTask(null)}>
+          <div style={styles.actionSheetContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.actionSheetHandle} />
+            <div style={styles.actionSheetHeader}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>MOVE TASK STAGE</span>
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)' }}>
+                  {activeStatusTask.taskName}
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveStatusTask(null)}
+                style={styles.actionSheetCloseBtn}
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={styles.actionSheetOptions}>
+              {(['To Do', 'In Progress', 'Done'] as KanbanStage[]).map((stage) => {
+                const isCurrent = activeStatusTask.kanbanStage === stage;
+                const stageStyle = getStageStyle(stage);
+                return (
+                  <button
+                    key={stage}
+                    type="button"
+                    disabled={isSyncing}
+                    onClick={async () => {
+                      if (isCurrent) {
+                        setActiveStatusTask(null);
+                        return;
+                      }
+                      const target = activeStatusTask;
+                      setActiveStatusTask(null);
+                      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                        try { navigator.vibrate(15); } catch (_) {}
+                      }
+                      const updated = tasks.map(t => t.taskId === target.taskId ? { ...t, kanbanStage: stage } : t);
+                      if (stage === 'Done' && updated.length > 0 && updated.every(t => t.kanbanStage === 'Done')) {
+                        triggerConfetti({ particleCount: 90 });
+                      }
+                      await onUpdate(updated);
+                    }}
+                    style={{
+                      ...styles.actionSheetOptionBtn,
+                      backgroundColor: isCurrent ? 'var(--color-bg-hover, rgba(0,0,0,0.05))' : 'transparent',
+                      borderColor: isCurrent ? stageStyle.dot : 'var(--color-border)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <span
+                        style={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          backgroundColor: stageStyle.dot,
+                          display: 'inline-block',
+                        }}
+                      />
+                      <span style={{ fontSize: '0.85rem', fontWeight: isCurrent ? 700 : 500, color: 'var(--color-text)' }}>
+                        {stage.toUpperCase()}
+                      </span>
+                      {isCurrent && (
+                        <span style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', padding: '0.1rem 0.35rem', borderRadius: '3px', backgroundColor: 'var(--color-bg-pane)', color: 'var(--color-muted)' }}>
+                          CURRENT
+                        </span>
+                      )}
+                    </div>
+                    {isCurrent ? <Check size={16} style={{ color: stageStyle.dot }} /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JIRA MOBILE ACTION SHEET 2: Category Filter Selector */}
+      {isCategorySheetOpen && (
+        <div style={styles.actionSheetOverlay} onClick={() => setIsCategorySheetOpen(false)}>
+          <div style={styles.actionSheetContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.actionSheetHandle} />
+            <div style={styles.actionSheetHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Tag size={16} style={{ color: 'var(--color-primary)' }} />
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)' }}>
+                  FILTER BY CATEGORY
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCategorySheetOpen(false)}
+                style={styles.actionSheetCloseBtn}
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ ...styles.actionSheetOptions, maxHeight: '55vh', overflowY: 'auto' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('ALL');
+                  setIsCategorySheetOpen(false);
+                }}
+                style={{
+                  ...styles.actionSheetOptionBtn,
+                  backgroundColor: selectedCategory === 'ALL' ? 'var(--color-bg-hover, rgba(0,0,0,0.05))' : 'transparent',
+                  fontWeight: selectedCategory === 'ALL' ? 700 : 400,
+                }}
+              >
+                <span>ALL CATEGORIES ({tasks.length})</span>
+                {selectedCategory === 'ALL' && <Check size={16} style={{ color: 'var(--color-primary)' }} />}
+              </button>
+              {categoryOptions.map(cat => (
+                <button
+                  key={cat.name}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat.name);
+                    setIsCategorySheetOpen(false);
+                  }}
+                  style={{
+                    ...styles.actionSheetOptionBtn,
+                    backgroundColor: selectedCategory.toLowerCase() === cat.name.toLowerCase() ? 'var(--color-bg-hover, rgba(0,0,0,0.05))' : 'transparent',
+                    fontWeight: selectedCategory.toLowerCase() === cat.name.toLowerCase() ? 700 : 400,
+                  }}
+                >
+                  <span>{cat.name.toUpperCase()} ({cat.count})</span>
+                  {selectedCategory.toLowerCase() === cat.name.toLowerCase() && <Check size={16} style={{ color: 'var(--color-primary)' }} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JIRA MOBILE ACTION SHEET 3: Sort Selector */}
+      {isSortSheetOpen && (
+        <div style={styles.actionSheetOverlay} onClick={() => setIsSortSheetOpen(false)}>
+          <div style={styles.actionSheetContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.actionSheetHandle} />
+            <div style={styles.actionSheetHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <SlidersHorizontal size={16} style={{ color: 'var(--color-primary)' }} />
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontFamily: 'var(--font-serif)', color: 'var(--color-primary)' }}>
+                  SORT TASKS
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSortSheetOpen(false)}
+                style={styles.actionSheetCloseBtn}
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={styles.actionSheetOptions}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSortField('default');
+                  setIsSortSheetOpen(false);
+                }}
+                style={{
+                  ...styles.actionSheetOptionBtn,
+                  backgroundColor: sortField === 'default' ? 'var(--color-bg-hover, rgba(0,0,0,0.05))' : 'transparent',
+                  fontWeight: sortField === 'default' ? 700 : 400,
+                }}
+              >
+                <span>DEFAULT ORDER</span>
+                {sortField === 'default' && <Check size={16} style={{ color: 'var(--color-primary)' }} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSortField('priority');
+                  setSortDirection('asc');
+                  setIsSortSheetOpen(false);
+                }}
+                style={{
+                  ...styles.actionSheetOptionBtn,
+                  backgroundColor: sortField === 'priority' ? 'var(--color-bg-hover, rgba(0,0,0,0.05))' : 'transparent',
+                  fontWeight: sortField === 'priority' ? 700 : 400,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <AlertTriangle size={14} style={{ color: '#EF4444' }} />
+                  <span>PRIORITY (HIGH → LOW)</span>
+                </div>
+                {sortField === 'priority' && <Check size={16} style={{ color: 'var(--color-primary)' }} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSortField('dueDate');
+                  setSortDirection('asc');
+                  setIsSortSheetOpen(false);
+                }}
+                style={{
+                  ...styles.actionSheetOptionBtn,
+                  backgroundColor: sortField === 'dueDate' ? 'var(--color-bg-hover, rgba(0,0,0,0.05))' : 'transparent',
+                  fontWeight: sortField === 'dueDate' ? 700 : 400,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Clock size={14} style={{ color: '#3B82F6' }} />
+                  <span>DUE DATE (EARLIEST FIRST)</span>
+                </div>
+                {sortField === 'dueDate' && <Check size={16} style={{ color: 'var(--color-primary)' }} />}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Jira Mobile Segmented Stage Capsule Carousel (Visible on mobile viewports <= 767px) */}
+      <div className="kanban-mobile-stage-bar">
         {stages.map(stage => {
           const count = filteredTasks.filter(t => t.kanbanStage === stage).length;
           const isActive = activeMobileStage === stage;
+          const stageStyle = getStageStyle(stage);
           return (
             <button
               key={stage}
-              onClick={() => setActiveMobileStage(stage)}
+              type="button"
+              onClick={() => {
+                setActiveMobileStage(stage);
+                if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                  try { navigator.vibrate(12); } catch (_) {}
+                }
+              }}
+              className={`kanban-stage-capsule ${isActive ? 'active' : ''}`}
               style={{
-                ...styles.mobileTabButton,
-                borderBottomColor: isActive ? 'var(--color-primary)' : 'transparent',
-                fontWeight: isActive ? 700 : 400,
-                color: isActive ? 'var(--color-primary)' : 'var(--color-muted)'
+                backgroundColor: isActive ? stageStyle.bg : 'var(--color-surface, #ffffff)',
+                borderColor: isActive ? stageStyle.border : 'var(--color-border, #E2E8F0)',
+                color: isActive ? stageStyle.color : 'var(--color-muted, #64748B)',
               }}
             >
-              {stage.toUpperCase()} ({count})
+              <span
+                style={{
+                  width: '7px',
+                  height: '7px',
+                  borderRadius: '50%',
+                  backgroundColor: stageStyle.dot,
+                  display: 'inline-block',
+                  flexShrink: 0,
+                }}
+              />
+              <span className="kanban-stage-name">{stage.toUpperCase()}</span>
+              <span
+                className="kanban-stage-count"
+                style={{
+                  backgroundColor: isActive ? stageStyle.color : 'var(--color-bg-pane, #F1F5F9)',
+                  color: isActive ? '#FFFFFF' : 'var(--color-muted, #64748B)',
+                }}
+              >
+                {count}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {/* Desktop side-by-side Columns */}
-      <div style={styles.boardGrid} className="kanban-grid">
+      {/* Desktop side-by-side Columns & Mobile Swipeable Container */}
+      <div 
+        style={styles.boardGrid} 
+        className="kanban-grid"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {stages.map(stage => {
           const stageTasks = getSortedTasks(filteredTasks.filter(t => t.kanbanStage === stage));
           const isMobileVisible = activeMobileStage === stage;
@@ -1167,7 +1930,6 @@ export default function KanbanBoard({
                 ...styles.column,
                 // Hide inactive columns on mobile
                 display: 'flex',
-                // Keep showing all on desktop through media queries (handled by setting style class or inline conditionals)
               }}
               className={`kanban-column ${isMobileVisible ? 'mobile-visible' : 'mobile-hidden'}`}
             >
@@ -1183,139 +1945,224 @@ export default function KanbanBoard({
               <div style={styles.taskList}>
                 {stageTasks.length === 0 ? (
                   <div style={styles.emptyState}>
-                    {selectedCategory !== 'ALL' || selectedAssignee !== 'ALL' ? `No matching tasks in ${stage}.` : 'No tasks here.'}
+                    {selectedCategory !== 'ALL' || selectedAssignee !== 'ALL' || searchQuery || filterPriority !== 'ALL' || filterOnlyOverdue 
+                      ? `No matching tasks in ${stage}.` 
+                      : (stage === 'To Do' ? 'All caught up! No tasks in To Do.' : (stage === 'In Progress' ? 'No tasks actively in progress.' : 'No completed tasks yet.'))}
                   </div>
                 ) : (
                   stageTasks.map(task => {
-                    const priColors = getPriorityColor(task.priority);
+                    const priorityBorder = getPriorityBorderColor(task.priority);
+                    const priStyles = getPriorityBadgeStyles(task.priority);
+                    const dateBadge = getSmartDateBadge(task.dueDate, stage);
+                    const avatar = getAssigneeAvatar(task.assignedTo, p1, p2);
+                    const stageStyle = getStageStyle(task.kanbanStage);
+
                     return (
                       <div 
                         key={task.taskId} 
-                        style={{ ...styles.taskCard, cursor: 'pointer' }}
+                        style={{ 
+                          ...styles.taskCard, 
+                          borderLeft: `4px solid ${priorityBorder}`,
+                          cursor: 'pointer',
+                        }}
                         onClick={() => startEdit(task)}
-                        title="Click to edit task"
+                        title="Click to view details or edit"
+                        className="kanban-task-card"
                       >
+                        {/* Card Top Row: Category Badge + Smart Relative Due Date & Priority Tag */}
                         <div style={styles.cardHeader}>
-                          <span className="kanban-category-badge" style={{ ...styles.categoryBadge, backgroundColor: 'var(--color-muted)', color: 'var(--color-on-dark)' }}>{task.category.toUpperCase() || 'GENERAL'}</span>
-                          <span style={{ 
-                            ...styles.priorityBadge, 
-                            backgroundColor: priColors.bg, 
-                            color: priColors.text 
-                          }}>
-                            {task.priority.toUpperCase()}
+                          <span 
+                            className="kanban-category-badge" 
+                            style={{ 
+                              ...styles.categoryBadge, 
+                              backgroundColor: 'var(--color-bg-pane, #F1F5F9)', 
+                              color: 'var(--color-text, #0F172A)',
+                              border: '1px solid var(--color-border, #CBD5E1)',
+                            }}
+                          >
+                            {task.category?.toUpperCase() || 'GENERAL'}
                           </span>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            {dateBadge && (
+                              <span
+                                style={{
+                                  fontFamily: 'var(--font-mono)',
+                                  fontSize: '0.62rem',
+                                  fontWeight: dateBadge.isOverdue ? 700 : 500,
+                                  color: dateBadge.color,
+                                  backgroundColor: dateBadge.bg,
+                                  border: dateBadge.border,
+                                  padding: '0.12rem 0.45rem',
+                                  borderRadius: '3px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                }}
+                                title={`Due Date: ${formatDateToMMDDYYYY(task.dueDate)}`}
+                              >
+                                <Calendar size={11} style={{ flexShrink: 0 }} />
+                                <span>{dateBadge.text}</span>
+                              </span>
+                            )}
+
+                            {/* Priority Tag */}
+                            <span
+                              className="kanban-priority-badge-pill"
+                              style={{
+                                ...styles.priorityBadge,
+                                backgroundColor: priStyles.bg,
+                                color: priStyles.text,
+                                border: priStyles.border,
+                              }}
+                            >
+                              {priStyles.label}
+                            </span>
+                          </div>
                         </div>
                         
-                        <h4 style={styles.taskName}>{task.taskName}</h4>
+                        {/* Card Middle: 2-Line Clamped Title & Optional Notes Snippet */}
+                        <div>
+                          <h4 className="kanban-task-title" style={styles.taskName}>{task.taskName}</h4>
+                          {task.notes && (
+                            <p className="kanban-task-notes-preview" style={styles.taskNotes}>
+                              {task.notes}
+                            </p>
+                          )}
+                        </div>
 
-                        {task.notes && <p style={styles.taskNotes}>{task.notes}</p>}
-
+                        {/* Card Footer: 1-Tap Status Switcher Chip & Assignee Avatar */}
                         <div style={styles.cardFooter}>
-                          <div style={styles.metaRow}>
-                            {task.assignedTo && (() => {
-                              const isP1 = task.assignedTo.trim().toLowerCase() === p1.toLowerCase();
-                              const isP2 = task.assignedTo.trim().toLowerCase() === p2.toLowerCase();
-                              const isShared = task.assignedTo.toLowerCase().includes('&') || task.assignedTo.toLowerCase().includes('shared');
-                              return (
-                                <div 
-                                  style={{
-                                    ...styles.metaItem,
-                                    padding: '0.1rem 0.35rem',
-                                    borderRadius: '2px',
-                                    backgroundColor: isP1 
-                                      ? 'rgba(15, 23, 42, 0.08)' 
-                                      : isP2 
-                                        ? 'rgba(99, 102, 241, 0.1)' 
-                                        : isShared 
-                                          ? 'rgba(16, 185, 129, 0.1)' 
-                                          : 'transparent',
-                                    color: isP1 
-                                      ? 'var(--color-primary, #0F172A)' 
-                                      : isP2 
-                                        ? '#4F46E5' 
-                                        : isShared 
-                                          ? '#059669' 
-                                          : 'inherit',
-                                    fontWeight: isP1 || isP2 || isShared ? 600 : 400,
-                                  }}
-                                  title={`Assigned to ${task.assignedTo}`}
-                                >
-                                  <User size={11} style={styles.icon} />
-                                  <span>{task.assignedTo}</span>
-                                </div>
-                              );
-                            })()}
-                            {task.dueDate && (() => {
-                              const isPastDue = isDueDatePast(task.dueDate, stage);
-                              const formattedDate = formatDateToMMDDYYYY(task.dueDate);
-                              if (!formattedDate) return null;
-                              return (
-                                <div 
-                                  style={{
-                                    ...styles.metaItem,
-                                    color: isPastDue ? 'var(--color-red, #ef4444)' : 'var(--color-muted)',
-                                    fontWeight: isPastDue ? 600 : 400,
-                                  }}
-                                  title={isPastDue ? `Past due date (${formattedDate})` : `Due date: ${formattedDate}`}
-                                >
-                                  <Calendar 
-                                    size={12} 
-                                    style={{
-                                      ...styles.icon,
-                                      color: isPastDue ? 'var(--color-red, #ef4444)' : 'var(--color-muted)',
-                                    }} 
-                                  />
-                                  <span>{formattedDate}</span>
-                                </div>
-                              );
-                            })()}
-                          </div>
-
-                          {/* Quick movement controls */}
-                          <div 
-                            style={styles.quickMoves}
-                            onClick={(e) => e.stopPropagation()}
+                          {/* 1-Tap Quick Status Switcher Chip */}
+                          <button
+                            type="button"
+                            className="kanban-status-chip"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveStatusTask(task);
+                            }}
+                            title="Tap to change stage"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              padding: '0.25rem 0.55rem',
+                              borderRadius: '12px',
+                              fontSize: '0.66rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 600,
+                              backgroundColor: stageStyle.bg,
+                              color: stageStyle.color,
+                              border: `1px solid ${stageStyle.border}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
                           >
-                            <button 
-                              type="button"
-                              style={styles.cardActionBtn}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEdit(task);
+                            <span
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: stageStyle.dot,
+                                display: 'inline-block',
+                                flexShrink: 0,
                               }}
-                              title="Edit task"
+                            />
+                            <span>{task.kanbanStage.toUpperCase()}</span>
+                            <ChevronDown size={11} style={{ opacity: 0.7 }} />
+                          </button>
+
+                          {/* Right side: Assignee Avatar + Desktop Quick Controls */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                            <div 
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                              }}
+                              title={`Assigned to ${avatar.name}`}
                             >
-                              <Edit2 size={12} />
-                            </button>
-                            
-                            {stage !== 'To Do' && (
+                              <span
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  backgroundColor: avatar.bg,
+                                  color: avatar.color,
+                                  border: avatar.border,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.62rem',
+                                  fontWeight: 700,
+                                  fontFamily: 'var(--font-mono)',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {avatar.initials}
+                              </span>
+                              <span 
+                                className="kanban-assignee-text-desktop"
+                                style={{
+                                  fontSize: '0.68rem',
+                                  color: 'var(--color-muted, #64748B)',
+                                  maxWidth: '120px',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {avatar.name}
+                              </span>
+                            </div>
+
+                            {/* Desktop Quick Movement controls (Hidden on mobile) */}
+                            <div 
+                              className="kanban-desktop-quick-moves"
+                              style={styles.quickMoves}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button 
                                 type="button"
                                 style={styles.cardActionBtn}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  moveTask(task, 'backward');
+                                  startEdit(task);
                                 }}
-                                disabled={isSyncing}
-                                title="Move back"
+                                title="Edit task"
                               >
-                                <ArrowLeft size={12} />
+                                <Edit2 size={12} />
                               </button>
-                            )}
-                            {stage !== 'Done' && (
-                              <button 
-                                type="button"
-                                style={styles.cardActionBtn}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  moveTask(task, 'forward');
-                                }}
-                                disabled={isSyncing}
-                                title="Move forward"
-                              >
-                                <ArrowRight size={12} />
-                              </button>
-                            )}
+                              
+                              {stage !== 'To Do' && (
+                                <button 
+                                  type="button"
+                                  style={styles.cardActionBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    moveTask(task, 'backward');
+                                  }}
+                                  disabled={isSyncing}
+                                  title="Move back"
+                                >
+                                  <ArrowLeft size={12} />
+                                </button>
+                              )}
+                              {stage !== 'Done' && (
+                                <button 
+                                  type="button"
+                                  style={styles.cardActionBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    moveTask(task, 'forward');
+                                  }}
+                                  disabled={isSyncing}
+                                  title="Move forward"
+                                >
+                                  <ArrowRight size={12} />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1358,8 +2205,7 @@ export default function KanbanBoard({
         })}
       </div>
 
-      {/* CSS details to ensure columns, header, and delete modal switch properly on mobile */}
-      {/* CSS details to ensure columns, header, and delete modal switch properly on mobile */}
+      {/* CSS details to ensure columns, header, Jira mobile elements, and modals switch properly across screen sizes */}
       <style>{`
         .kanban-filter-sort-bar {
           display: flex;
@@ -1385,7 +2231,198 @@ export default function KanbanBoard({
           border-color: var(--color-primary) !important;
           transform: translateY(-1px);
         }
+
+        /* Scannable card text clamping */
+        .kanban-task-title {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: break-word;
+          margin: 0;
+          line-height: 1.35;
+        }
+        .kanban-task-notes-preview {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: break-word;
+          margin: 0.3rem 0 0 0;
+        }
+
+        /* Jira Mobile Quick Filter Chips */
+        .kanban-quick-chips-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 0.25rem 0.15rem 0.65rem 0.15rem;
+          margin-bottom: 0.5rem;
+          scrollbar-width: none;
+        }
+        .kanban-quick-chips-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .kanban-filter-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.38rem 0.7rem;
+          border-radius: 9999px;
+          font-size: 0.72rem;
+          font-family: var(--font-mono);
+          font-weight: 600;
+          white-space: nowrap;
+          background-color: var(--color-surface, #ffffff);
+          border: 1px solid var(--color-border, #CBD5E1);
+          color: var(--color-text, #1E293B);
+          cursor: pointer;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+          -webkit-tap-highlight-color: transparent;
+        }
+        .kanban-filter-chip:hover {
+          border-color: var(--color-primary);
+        }
+        .kanban-filter-chip.active {
+          background-color: var(--color-primary) !important;
+          color: var(--color-on-primary, #ffffff) !important;
+          border-color: var(--color-primary) !important;
+        }
+        .kanban-filter-chip.reset {
+          background-color: transparent;
+          border: 1px dashed var(--color-muted);
+          color: var(--color-muted);
+        }
+        .kanban-search-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.32rem 0.65rem;
+          border-radius: 9999px;
+          background-color: var(--color-surface, #ffffff);
+          border: 1px solid var(--color-border, #CBD5E1);
+          flex-shrink: 0;
+          transition: all 0.2s ease;
+        }
+        .kanban-search-chip.open {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 1px var(--color-primary);
+        }
+        .kanban-search-input {
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 0.72rem;
+          font-family: var(--font-sans);
+          color: var(--color-text);
+          width: 95px;
+          transition: width 0.2s ease;
+        }
+        .kanban-search-input:focus {
+          width: 130px;
+        }
+        .kanban-search-clear {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          color: var(--color-muted);
+          display: flex;
+          align-items: center;
+        }
+
+        /* Jira Mobile Segmented Stage Capsule Bar */
+        .kanban-mobile-stage-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          margin-bottom: 0.75rem;
+          background-color: var(--color-bg-subtle, rgba(0,0,0,0.03));
+          padding: 4px;
+          border-radius: var(--border-radius-md, 8px);
+          border: 1px solid var(--color-border, #E2E8F0);
+        }
+        .kanban-stage-capsule {
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.35rem;
+          padding: 0.5rem 0.35rem;
+          border-radius: var(--border-radius-sm, 6px);
+          border: 1px solid transparent;
+          cursor: pointer;
+          transition: all 0.18s ease;
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          font-weight: 600;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .kanban-stage-name {
+          letter-spacing: 0.02em;
+        }
+        .kanban-stage-count {
+          font-size: 0.65rem;
+          padding: 0.08rem 0.35rem;
+          border-radius: 9999px;
+          font-weight: 700;
+        }
+
+        .kanban-status-chip:hover {
+          filter: brightness(0.96);
+          transform: translateY(-1px);
+        }
+        .kanban-status-chip:active {
+          transform: scale(0.97);
+        }
+
+        /* Action Sheet Animation Keyframes */
+        @keyframes sheetSlideUp {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        @keyframes sheetFadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        /* Desktop vs Mobile Media Queries */
+        @media (min-width: 768px) {
+          .kanban-quick-chips-bar {
+            display: none !important;
+          }
+          .kanban-mobile-stage-bar {
+            display: none !important;
+          }
+          .mobile-hidden {
+            display: flex !important;
+          }
+        }
+
         @media (max-width: 767px) {
+          .kanban-filter-sort-bar-desktop {
+            display: none !important;
+          }
+          .kanban-desktop-quick-moves {
+            display: none !important;
+          }
+          .kanban-assignee-text-desktop {
+            display: none !important;
+          }
           .mobile-hidden {
             display: none !important;
           }
@@ -1896,5 +2933,76 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: 'var(--border-radius-sm)',
     cursor: 'pointer',
+  },
+  actionSheetOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    backdropFilter: 'blur(3px)',
+    WebkitBackdropFilter: 'blur(3px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    zIndex: 1100,
+  },
+  actionSheetContent: {
+    backgroundColor: 'var(--color-surface, #ffffff)',
+    borderTopLeftRadius: '20px',
+    borderTopRightRadius: '20px',
+    width: '100%',
+    maxWidth: '520px',
+    padding: '0.85rem 1.25rem 2rem 1.25rem',
+    boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.18)',
+    borderTop: '1px solid var(--color-border, #E2E8F0)',
+  },
+  actionSheetHandle: {
+    width: '38px',
+    height: '4px',
+    borderRadius: '2px',
+    backgroundColor: 'var(--color-muted, #94A3B8)',
+    margin: '0 auto 0.85rem auto',
+    opacity: 0.6,
+  },
+  actionSheetHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.85rem',
+    paddingBottom: '0.65rem',
+    borderBottom: '1px solid var(--color-border, #E2E8F0)',
+  },
+  actionSheetCloseBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-muted, #64748B)',
+    cursor: 'pointer',
+    padding: '0.35rem',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionSheetOptions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  actionSheetOptionBtn: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0.75rem 1rem',
+    borderRadius: 'var(--border-radius-sm, 6px)',
+    border: '1px solid var(--color-border, #CBD5E1)',
+    background: 'transparent',
+    cursor: 'pointer',
+    transition: 'var(--transition-smooth)',
+    width: '100%',
+    textAlign: 'left',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.8rem',
   }
 };

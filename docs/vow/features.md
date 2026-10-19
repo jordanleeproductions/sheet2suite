@@ -170,6 +170,19 @@
   - Added dedicated quick-add action buttons (`+ ADD TO DO TASK`, `+ ADD IN PROGRESS TASK`, `+ ADD DONE TASK`) pinned to the bottom of each column list (To Do, In Progress, Done) on desktop viewports.
   - Automatically pre-fills the stage in the task modal according to the clicked column, allowing users who have scrolled to the bottom of a long task list to rapidly create a new task without scrolling all the way back up to the top toolbar.
   - Features styled hover transitions with border color accents and background tinting matching the active design system.
+- [x] **[TASK-JIRA-MOBILE-REDESIGN] Jira Mobile-Inspired Mobile UX Redesign for Tasks & Checklist (`KanbanBoard.tsx`):**
+  - **Priority-Colored Left Border Accent:** Task cards feature a high-contrast 4px solid left border colored distinctly by priority level (Crimson `#EF4444` for High, Amber `#F59E0B` for Medium, Emerald `#10B981` for Low, Neutral Slate for General), mirroring Jira Mobile's scannable card layout.
+  - **Horizontal Quick Filter Chips Bar:** Replaces dense desktop dropdowns on mobile viewports ($\le 767\text{px}$) with an edge-to-edge touch-scrolling quick chips bar containing:
+    - Expandable inline Search chip with real-time text matching.
+    - Quick priority toggles (`High Priority` chip).
+    - Smart overdue toggle (`Overdue` chip).
+    - Partner collaborator chips (Partner 1 and Partner 2).
+    - 1-tap sheet triggers for Category and Sort.
+    - Dismissible "Clear All" reset chip when active filters are engaged.
+  - **Segmented Stage Capsule Bar & Touch Swipe Gestures:** Renders a clean segmented stage capsule bar (`TO DO`, `IN PROGRESS`, `DONE`) with real-time item count badges and active status indicators. Implemented horizontal touch swipe listeners (`handleTouchStart`, `handleTouchEnd`) with subtle haptic vibration (`navigator.vibrate(12)`), allowing users to swipe naturally left or right between Kanban workflow stages.
+  - **Interactive 1-Tap Status Switcher Bottom Sheet:** Replaced desktop directional arrow buttons (`<`, `>`) with an interactive status chip on the card footer. Tapping opens a smooth Jira-style bottom action sheet drawer with slide-up animation and stage options (`To Do`, `In Progress`, `Done`), triggering celebratory confetti if the final task is moved to `Done`.
+  - **Scannable Card Anatomy:** Refactored task cards with a dedicated category badge, smart relative due date chip (`Overdue by Xd`, `Today`, `Tomorrow`, `MM/DD`), 2-line clamped task titles, notes snippet preview, and circular assignee avatar initials.
+  - **Category & Sort Mobile Bottom Action Sheets:** Mobile sheet drawers for Category filtering and Sort order selection with full thumb accessibility and slide animations. Desktop layout and 3-column Kanban functionality remain completely intact.
 
 ---
 
