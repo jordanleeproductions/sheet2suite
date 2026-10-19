@@ -129,6 +129,7 @@ export default function ProUpgradeModal({
               fontFamily: 'var(--font-editorial-serif, serif)',
               fontSize: '1.4rem',
               fontWeight: 700,
+              color: '#FFFFFF',
               margin: 0,
               lineHeight: 1.2,
               letterSpacing: '-0.02em',
@@ -136,7 +137,7 @@ export default function ProUpgradeModal({
           >
             Upgrade for Unlimited Collaborators
           </h3>
-          <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.8rem', opacity: 0.85, lineHeight: 1.4 }}>
+          <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.9)', opacity: 0.95, lineHeight: 1.4 }}>
             Standard workspaces include 2 users (Primary + 1 Secondary). Upgrade to Pro to add wedding coordinators, wedding parties, and family planners.
           </p>
         </div>
