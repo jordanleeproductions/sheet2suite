@@ -7,6 +7,8 @@ import MobileFAB from '@/components/MobileFAB';
 import PageSearchInput from '@/components/PageSearchInput';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { DrawerSection, DrawerField, DrawerRow } from '@/components/vow/MonarchForm';
 
 type DeduplicatedSong = Song & { requestCount: number };
 
@@ -232,6 +234,20 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
     setITunesResults([]);
     setEditingItem(item);
     setIsAdding(false);
+  };
+
+  const currentEditingTrackIndex = useMemo(() => {
+    if (!editingItem) return -1;
+    return filteredMusic.findIndex(s => s.songId === editingItem.songId);
+  }, [editingItem, filteredMusic]);
+
+  const handleNavigateAdjacentTrack = (direction: 'prev' | 'next') => {
+    if (currentEditingTrackIndex === -1) return;
+    const targetIndex = direction === 'prev' ? currentEditingTrackIndex - 1 : currentEditingTrackIndex + 1;
+    if (targetIndex >= 0 && targetIndex < filteredMusic.length) {
+      const nextSong = filteredMusic[targetIndex];
+      startEdit(nextSong);
+    }
   };
 
   const closeModal = () => {
@@ -925,202 +941,359 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
         )}
       </div>
 
-      {/* ADD / EDIT SONG MODAL */}
-      {(isAdding || editingItem) && (
-        <div className="music-modal-overlay" style={styles.modalOverlay} onClick={closeModal}>
-          <div className="music-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAdding ? 'ADD NEW TRACK' : 'EDIT TRACK'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={closeModal}>
-                <X size={18} />
+      {/* MONARCH SLIDE-OVER DRAWER FOR ADD / EDIT TRACK */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAdding || editingItem)}
+        onClose={closeModal}
+        title={isAdding ? 'Add Track' : 'Edit Track'}
+        subtitle={
+          editingItem
+            ? `${editingItem.title || 'Track'} • ${editingItem.artist || 'Artist'}`
+            : 'Search iTunes catalog or add track manually'
+        }
+        badge={editingItem ? (editingItem.listType?.toUpperCase() || 'TRACK') : 'NEW TRACK'}
+        width="540px"
+        onPrev={
+          editingItem && currentEditingTrackIndex > 0
+            ? () => handleNavigateAdjacentTrack('prev')
+            : undefined
+        }
+        onNext={
+          editingItem && currentEditingTrackIndex < filteredMusic.length - 1
+            ? () => handleNavigateAdjacentTrack('next')
+            : undefined
+        }
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {editingItem ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSongToDelete(editingItem);
+                  closeModal();
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-red, #dc2626)',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                }}
+              >
+                <Trash2 size={15} />
+                Delete Track
+              </button>
+            ) : <div />}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
+              <button
+                type="button"
+                onClick={closeModal}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                }}
+              >
+                Cancel
+              </button>
+
+              {isAdding && (
+                <button
+                  type="button"
+                  disabled={isSyncing}
+                  onClick={(e) => saveItem(e, true)}
+                  style={{
+                    padding: '9px 16px',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--color-primary)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-primary)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  {isSyncing ? 'Saving...' : 'Save & Add Another'}
+                </button>
+              )}
+
+              <button
+                type="submit"
+                form="music-track-form"
+                disabled={isSyncing}
+                style={{
+                  padding: '9px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: 'var(--color-primary, #6366f1)',
+                  color: 'var(--color-on-primary, #ffffff)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                  minHeight: '44px',
+                  opacity: isSyncing ? 0.7 : 1,
+                }}
+              >
+                {isSyncing ? 'Saving...' : (isAdding ? 'Save Track' : 'Save Changes')}
               </button>
             </div>
-            <form onSubmit={saveItem} style={styles.modalForm}>
-              <div style={styles.formGrid} className="formGrid music-modal-body">
-                
-                {/* Auto-Search Row */}
-                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>
-                    🎵 Auto-Search iTunes Database (Auto-Fills Details)
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      style={{
-                        ...styles.input,
-                        padding: '0.55rem 2rem 0.55rem 0.75rem',
-                        fontSize: '0.8rem',
-                        borderColor: 'var(--color-muted)',
-                        backgroundColor: 'var(--color-bg)',
-                        width: '100%',
-                        boxSizing: 'border-box',
-                      }}
-                      type="text"
-                      placeholder="Type song or artist to auto-fill..."
-                      value={iTunesQuery}
-                      onChange={(e) => setITunesQuery(e.target.value)}
-                    />
-                    {iTunesQuery && (
-                      <button
-                        type="button"
-                        onClick={() => { setITunesQuery(''); setITunesResults([]); setShowResults(false); }}
+          </div>
+        }
+      >
+        <form id="music-track-form" onSubmit={saveItem} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Section 1: iTunes Catalog Search & Track Info */}
+          <DrawerSection title="Track Details" description="Search the iTunes catalog or enter artist & title manually">
+            <DrawerField label="Auto-Search iTunes Catalog" hint="Type song title or artist to auto-fill metadata">
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Type song or artist to auto-fill..."
+                  value={iTunesQuery}
+                  onChange={(e) => setITunesQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 36px 10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {iTunesQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setITunesQuery(''); setITunesResults([]); setShowResults(false); }}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-text-muted, #718096)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '4px',
+                    }}
+                    title="Clear search"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+
+                {showResults && iTunesResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    border: '2px solid var(--color-primary)',
+                    borderRadius: '8px',
+                    boxShadow: 'var(--box-shadow-large, 0 10px 25px rgba(0,0,0,0.15))',
+                    zIndex: 9999,
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                  }}>
+                    {iTunesResults.map(track => (
+                      <div
+                        key={track.trackId}
                         style={{
-                          position: 'absolute',
-                          right: '8px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--color-muted)',
+                          padding: '0.6rem 0.75rem',
+                          borderBottom: '1px solid var(--color-border, #e2e8f0)',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          padding: '2px',
+                          gap: '0.65rem',
+                          backgroundColor: 'var(--color-surface, #ffffff)',
                         }}
-                        title="Clear search"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectITunesTrack(track);
+                        }}
                       >
-                        <X size={14} />
-                      </button>
-                    )}
-
-                    {showResults && iTunesResults.length > 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'var(--color-surface)',
-                        border: '2px solid var(--color-primary)',
-                        borderRadius: '6px',
-                        boxShadow: 'var(--box-shadow-large)',
-                        zIndex: 9999,
-                        marginTop: '4px',
-                        maxHeight: '200px',
-                        overflowY: 'auto',
-                      }}>
-                        {iTunesResults.map(track => (
-                          <div
-                            key={track.trackId}
-                            style={{
-                              padding: '0.5rem 0.75rem',
-                              borderBottom: '1px solid var(--color-muted)',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.6rem',
-                              backgroundColor: 'var(--color-surface)',
-                            }}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              handleSelectITunesTrack(track);
-                            }}
-                          >
-                            {track.artworkUrl60 && (
-                              <img src={track.artworkUrl60} alt="" style={{ width: '28px', height: '28px', borderRadius: '4px' }} />
-                            )}
-                            <div style={{ flex: 1, overflow: 'hidden' }}>
-                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)' }}>{track.trackName}</div>
-                              <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>{track.artistName} • {track.collectionName || 'Single'}</div>
-                            </div>
-                            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>SELECT</span>
-                          </div>
-                        ))}
+                        {track.artworkUrl60 && (
+                          <img src={track.artworkUrl60} alt="" style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'cover' }} />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.trackName}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #718096)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.artistName} • {track.collectionName || 'Single'}</div>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>SELECT</span>
                       </div>
-                    )}
+                    ))}
                   </div>
-                  {isSearchingITunes && (
-                    <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem', display: 'block' }}>
-                      Searching iTunes catalog...
-                    </span>
-                  )}
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Song Title *</label>
-                  <input
-                    style={styles.input}
-                    value={formState.title || ''}
-                    onChange={(e) => handleFormChange('title', e.target.value)}
-                    required
-                    placeholder="e.g. Perfect"
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Artist *</label>
-                  <input
-                    style={styles.input}
-                    value={formState.artist || ''}
-                    onChange={(e) => handleFormChange('artist', e.target.value)}
-                    required
-                    placeholder="e.g. Ed Sheeran"
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Requested By</label>
-                  <input
-                    style={styles.input}
-                    value={formState.requestedBy || 'Admin'}
-                    onChange={(e) => handleFormChange('requestedBy', e.target.value)}
-                    placeholder="e.g. Admin, Guest, Aunt Sarah"
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Playlist Type</label>
-                  <select
-                    style={styles.select}
-                    value={formState.listType || 'Play List'}
-                    onChange={(e) => handleFormChange('listType', e.target.value)}
-                  >
-                    <option value="Play List">Play List (Must Play)</option>
-                    <option value="First Dance">First Dance</option>
-                    <option value="Ceremony">Ceremony</option>
-                    <option value="Reception">Reception</option>
-                    <option value="Special Moment">Special Moment</option>
-                    <option value="Banned">Banned (Do Not Play)</option>
-                  </select>
-                </div>
-                
-                <div className="music-field-span-2" style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Notes</label>
-                  <textarea
-                    style={styles.textarea}
-                    value={formState.notes || ''}
-                    onChange={(e) => handleFormChange('notes', e.target.value)}
-                    placeholder="e.g. First Dance, don't play the remix..."
-                    rows={2}
-                  />
-                </div>
-                
-              </div>
-              <div style={styles.modalFooter} className="music-modal-footer">
-                <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
-                {isAdding && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                    disabled={isSyncing}
-                    onClick={(e) => saveItem(e, true)}
-                  >
-                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
-                  </button>
                 )}
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE SONG' : 'SAVE CHANGES')}
-                </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              {isSearchingITunes && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #718096)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  Searching iTunes catalog...
+                </div>
+              )}
+            </DrawerField>
+
+            <DrawerRow columns={2}>
+              <DrawerField label="Song Title" required>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Perfect"
+                  value={formState.title || ''}
+                  onChange={(e) => handleFormChange('title', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </DrawerField>
+
+              <DrawerField label="Artist" required>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ed Sheeran"
+                  value={formState.artist || ''}
+                  onChange={(e) => handleFormChange('artist', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </DrawerField>
+            </DrawerRow>
+          </DrawerSection>
+
+          {/* Section 2: Playlist & Priority */}
+          <DrawerSection title="Playlist & Assignment" description="Which moment of the wedding day this song belongs to">
+            <DrawerRow columns={2}>
+              <DrawerField label="Playlist Type">
+                <select
+                  value={formState.listType || 'Play List'}
+                  onChange={(e) => handleFormChange('listType', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="Play List">Play List (Must Play)</option>
+                  <option value="First Dance">First Dance</option>
+                  <option value="Ceremony">Ceremony</option>
+                  <option value="Reception">Reception</option>
+                  <option value="Special Moment">Special Moment</option>
+                  <option value="Banned">Banned (Do Not Play)</option>
+                </select>
+              </DrawerField>
+
+              <DrawerField label="Requested By" hint="Bride, Groom, or Guest name">
+                <input
+                  type="text"
+                  placeholder="e.g. Admin, Guest, Aunt Sarah"
+                  value={formState.requestedBy || 'Admin'}
+                  onChange={(e) => handleFormChange('requestedBy', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </DrawerField>
+            </DrawerRow>
+          </DrawerSection>
+
+          {/* Section 3: Notes & Audio Link */}
+          <DrawerSection title="Notes & Links" description="Specific version, timing anchors, and streaming link">
+            <DrawerField label="Audio Preview / Streaming URL" hint="Spotify or Apple Music link">
+              <input
+                type="text"
+                placeholder="https://open.spotify.com/track/..."
+                value={formState.link || ''}
+                onChange={(e) => handleFormChange('link', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '0.9375rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </DrawerField>
+
+            <DrawerField label="DJ Notes & Special Instructions" hint="e.g. Fade out at 2:30, do not play the club remix">
+              <textarea
+                rows={3}
+                placeholder="e.g. First Dance, cue song when couple steps onto dance floor, don't play the remix..."
+                value={formState.notes || ''}
+                onChange={(e) => handleFormChange('notes', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit',
+                  lineHeight: '1.5',
+                }}
+              />
+            </DrawerField>
+          </DrawerSection>
+        </form>
+      </SlideOverDrawer>
 
       {/* TOAST ERROR NOTIFICATION FOR AUDIO PREVIEW */}
       {previewError && (

@@ -21,12 +21,15 @@ import {
   Check,
   Search,
   Tag,
-  SlidersHorizontal
+  SlidersHorizontal,
+  CheckSquare
 } from 'lucide-react';
 import { formatDateConsistent, formatDateToMMDDYYYY } from '@/lib/currency';
 import MobileFAB from '@/components/MobileFAB';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { DrawerSection, DrawerField, DrawerRow, PriorityPills, QuickDateChips, QuickAssignChips } from '@/components/vow/MonarchForm';
 import { triggerConfetti } from '@/lib/confetti';
 
 interface KanbanBoardProps {
@@ -781,6 +784,16 @@ export default function KanbanBoard({
     setEditingTask(null);
   };
 
+  const currentTaskIndex = editingTask ? filteredTasks.findIndex(t => t.taskId === editingTask.taskId) : -1;
+  const handleNavigateAdjacentTask = (offset: number) => {
+    if (currentTaskIndex < 0) return;
+    const targetIndex = currentTaskIndex + offset;
+    if (targetIndex >= 0 && targetIndex < filteredTasks.length) {
+      const nextTask = filteredTasks[targetIndex];
+      startEdit(nextTask);
+    }
+  };
+
   const handleInputChange = (field: keyof Task, value: string) => {
     setFormState(prev => ({ ...prev, [field]: value }));
   };
@@ -1304,268 +1317,183 @@ export default function KanbanBoard({
         </div>
       </div>
 
-      {/* Editor Modal */}
-      {(isAdding || editingTask) && (
-        <div className="task-modal-overlay" style={styles.modalOverlay}>
-          <style>{`
-            @media (max-width: 640px) {
-              .task-modal-overlay {
-                padding: 0.5rem !important;
-              }
-              .task-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-              }
-              .task-form-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-              .task-field-span-2 {
-                grid-column: span 1 !important;
-              }
-            }
-          `}</style>
-          <div className="task-modal-content" style={styles.modalContent}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAdding ? 'ADD TASK' : 'EDIT TASK'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAdding(false); setEditingTask(null); }}>
-                <X size={18} />
+      {/* Slide-Over Task Inspector [Monarch UX] */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAdding || editingTask)}
+        onClose={() => { setIsAdding(false); setEditingTask(null); }}
+        title={isAdding ? 'Add New Task' : (formState.taskName || 'Edit Task')}
+        subtitle={editingTask ? `${formState.kanbanStage || 'To Do'} · ${formState.priority || 'Medium'} Priority` : 'New wedding checklist task'}
+        badge="TASK INSPECTOR"
+        badgeColor={getPriorityBorderColor(formState.priority || 'Medium')}
+        hasPrevious={currentTaskIndex > 0}
+        hasNext={currentTaskIndex >= 0 && currentTaskIndex < filteredTasks.length - 1}
+        onPrevious={() => handleNavigateAdjacentTask(-1)}
+        onNext={() => handleNavigateAdjacentTask(1)}
+        width="520px"
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+            {!isAdding && editingTask ? (
+              <button
+                type="button"
+                style={styles.deleteBtn}
+                onClick={() => setTaskToDelete(editingTask)}
+                title="Delete task"
+              >
+                DELETE
               </button>
-            </div>
-            
-            <form onSubmit={saveTask} style={styles.form}>
-              <div className="task-form-grid" style={styles.formGrid}>
-                <div className="task-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>TASK NAME *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Call Florist to confirm delivery"
-                    value={formState.taskName || ''}
-                    onChange={(e) => handleInputChange('taskName', e.target.value)}
-                    style={styles.input}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>KANBAN STAGE</label>
-                  <select
-                    value={formState.kanbanStage || 'To Do'}
-                    onChange={(e) => handleInputChange('kanbanStage', e.target.value as KanbanStage)}
-                    style={styles.select}
-                  >
-                    <option value="To Do">To Do</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Done">Done</option>
-                  </select>
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>PRIORITY</label>
-                  <select
-                    value={formState.priority || 'Medium'}
-                    onChange={(e) => handleInputChange('priority', e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>CATEGORY</label>
-                  <TaskCombobox
-                    label="Category"
-                    fieldId="task-category-input"
-                    placeholder="e.g. Florals, Attire, Venue"
-                    value={formState.category || ''}
-                    onChange={(val) => handleInputChange('category', val)}
-                    options={existingCategories}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <label style={{ ...styles.label, marginBottom: 0 }}>ASSIGNED TO</label>
-                    <span style={{ fontSize: '0.62rem', color: 'var(--color-muted, #64748B)', fontFamily: 'var(--font-mono)' }}>
-                      Quick assign:
-                    </span>
-                  </div>
-
-                  {/* Partner Quick Assign Chips */}
-                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.45rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleInputChange('assignedTo', p1)}
-                      style={{
-                        padding: '0.2rem 0.5rem',
-                        fontSize: '0.72rem',
-                        fontFamily: 'var(--font-mono)',
-                        borderRadius: '2px',
-                        border: `1px solid ${formState.assignedTo === p1 ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
-                        backgroundColor: formState.assignedTo === p1 ? 'var(--color-primary, #0F172A)' : 'var(--color-surface, #FFFFFF)',
-                        color: formState.assignedTo === p1 ? '#FFFFFF' : 'var(--color-text, #0F172A)',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        fontWeight: formState.assignedTo === p1 ? 700 : 500,
-                      }}
-                      title={`Assign to ${p1}`}
-                    >
-                      <User size={10} />
-                      <span>{p1}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleInputChange('assignedTo', p2)}
-                      style={{
-                        padding: '0.2rem 0.5rem',
-                        fontSize: '0.72rem',
-                        fontFamily: 'var(--font-mono)',
-                        borderRadius: '2px',
-                        border: `1px solid ${formState.assignedTo === p2 ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
-                        backgroundColor: formState.assignedTo === p2 ? 'var(--color-primary, #0F172A)' : 'var(--color-surface, #FFFFFF)',
-                        color: formState.assignedTo === p2 ? '#FFFFFF' : 'var(--color-text, #0F172A)',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        fontWeight: formState.assignedTo === p2 ? 700 : 500,
-                      }}
-                      title={`Assign to ${p2}`}
-                    >
-                      <User size={10} />
-                      <span>{p2}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleInputChange('assignedTo', `${p1} & ${p2}`)}
-                      style={{
-                        padding: '0.2rem 0.5rem',
-                        fontSize: '0.72rem',
-                        fontFamily: 'var(--font-mono)',
-                        borderRadius: '2px',
-                        border: `1px solid ${formState.assignedTo === `${p1} & ${p2}` ? 'var(--color-primary, #0F172A)' : 'var(--color-border, #CBD5E1)'}`,
-                        backgroundColor: formState.assignedTo === `${p1} & ${p2}` ? 'var(--color-primary, #0F172A)' : 'var(--color-surface, #FFFFFF)',
-                        color: formState.assignedTo === `${p1} & ${p2}` ? '#FFFFFF' : 'var(--color-text, #0F172A)',
-                        cursor: 'pointer',
-                        fontWeight: formState.assignedTo === `${p1} & ${p2}` ? 700 : 500,
-                      }}
-                      title="Shared task"
-                    >
-                      <span>Shared ({p1} &amp; {p2})</span>
-                    </button>
-                    {formState.assignedTo && (
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange('assignedTo', '')}
-                        style={{
-                          padding: '0.2rem 0.4rem',
-                          fontSize: '0.72rem',
-                          fontFamily: 'var(--font-mono)',
-                          borderRadius: '2px',
-                          border: '1px solid var(--color-border, #CBD5E1)',
-                          backgroundColor: 'transparent',
-                          color: 'var(--color-muted, #64748B)',
-                          cursor: 'pointer',
-                        }}
-                        title="Clear assignee"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  <TaskCombobox
-                    label="Assigned To"
-                    fieldId="task-assignee-input"
-                    placeholder="e.g. John, Maid of Honor"
-                    value={formState.assignedTo || ''}
-                    onChange={(val) => handleInputChange('assignedTo', val)}
-                    options={existingAssignees}
-                  />
-                </div>
-
-                <div style={styles.fieldGroup}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={styles.label}>
-                      DUE DATE {formState.dueDate ? `(${formatDateToMMDDYYYY(formState.dueDate)})` : ''}
-                    </label>
-                    {isDueDatePast(formState.dueDate, formState.kanbanStage) && (
-                      <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-red, #ef4444)' }}>
-                        PAST DUE
-                      </span>
-                    )}
-                  </div>
-                  <input
-                    type="date"
-                    value={formatDateConsistent(formState.dueDate) === '-' ? '' : formatDateConsistent(formState.dueDate)}
-                    onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                    style={{
-                      ...styles.input,
-                      color: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'var(--color-red, #ef4444)' : undefined,
-                      borderColor: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'var(--color-red, #ef4444)' : undefined,
-                      fontWeight: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 600 : undefined,
-                    }}
-                  />
-                </div>
-
-                <div className="task-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>NOTES / LINKS</label>
-                  <textarea
-                    placeholder="Task details, links, or sub-checklist..."
-                    value={formState.notes || ''}
-                    rows={3}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
-                    style={styles.textarea}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formActions}>
-                {!isAdding && editingTask && (
-                  <button 
-                    type="button" 
-                    style={styles.deleteBtn}
-                    onClick={() => setTaskToDelete(editingTask)}
-                  >
-                    DELETE
-                  </button>
-                )}
-                <button 
-                  type="button" 
-                  style={styles.cancelBtn} 
+            ) : (
+              <button
+                type="button"
+                style={styles.cancelBtn}
+                onClick={() => { setIsAdding(false); setEditingTask(null); }}
+              >
+                CANCEL
+              </button>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {!isAdding && (
+                <button
+                  type="button"
+                  style={styles.cancelBtn}
                   onClick={() => { setIsAdding(false); setEditingTask(null); }}
                 >
                   CANCEL
                 </button>
-                {isAdding && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                    disabled={isSyncing}
-                    onClick={(e) => saveTask(e, true)}
-                  >
-                    {isSyncing ? 'SAVING...' : 'SAVE & ADD NEW'}
-                  </button>
-                )}
-                <button type="submit" style={styles.saveBtn} disabled={isSyncing}>
-                  {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE TASK' : 'SAVE CHANGES')}
+              )}
+              {isAdding && (
+                <button
+                  type="button"
+                  style={{
+                    ...styles.saveBtn,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-primary, #0F172A)',
+                    border: '1px solid var(--color-border, #CBD5E1)',
+                  }}
+                  disabled={isSyncing}
+                  onClick={(e) => saveTask(e, true)}
+                >
+                  SAVE & ADD NEW
                 </button>
-              </div>
-            </form>
+              )}
+              <button
+                type="button"
+                style={styles.saveBtn}
+                disabled={isSyncing}
+                onClick={(e) => saveTask(e)}
+              >
+                {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE TASK' : 'SAVE CHANGES')}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form onSubmit={saveTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          {/* SECTION 1: TASK DETAILS */}
+          <DrawerSection title="TASK DETAILS" icon={<CheckSquare size={13} style={{ color: 'var(--color-primary)' }} />}>
+            <DrawerField label="TASK NAME" required>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Call Florist to confirm delivery"
+                value={formState.taskName || ''}
+                onChange={(e) => handleInputChange('taskName', e.target.value)}
+                style={styles.input}
+              />
+            </DrawerField>
+
+            <DrawerRow columns={2}>
+              <DrawerField label="KANBAN STAGE">
+                <select
+                  value={formState.kanbanStage || 'To Do'}
+                  onChange={(e) => handleInputChange('kanbanStage', e.target.value as KanbanStage)}
+                  style={styles.select}
+                >
+                  <option value="To Do">To Do</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Done">Done</option>
+                </select>
+              </DrawerField>
+
+              <DrawerField label="CATEGORY">
+                <TaskCombobox
+                  label="Category"
+                  fieldId="task-category-input"
+                  placeholder="e.g. Florals, Attire, Venue"
+                  value={formState.category || ''}
+                  onChange={(val) => handleInputChange('category', val)}
+                  options={existingCategories}
+                />
+              </DrawerField>
+            </DrawerRow>
+          </DrawerSection>
+
+          {/* SECTION 2: PRIORITY & SCHEDULE */}
+          <DrawerSection title="PRIORITY & SCHEDULE" icon={<Clock size={13} style={{ color: '#F59E0B' }} />}>
+            <DrawerField label="PRIORITY LEVEL">
+              <PriorityPills
+                value={formState.priority || 'Medium'}
+                onChange={(val) => handleInputChange('priority', val)}
+              />
+            </DrawerField>
+
+            <DrawerField
+              label={`DUE DATE ${formState.dueDate ? `(${formatDateToMMDDYYYY(formState.dueDate)})` : ''}`}
+              hint={isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'PAST DUE' : undefined}
+              error={isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'This task deadline is past due' : undefined}
+            >
+              <input
+                type="date"
+                value={formatDateConsistent(formState.dueDate) === '-' ? '' : formatDateConsistent(formState.dueDate)}
+                onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                style={{
+                  ...styles.input,
+                  color: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'var(--color-red, #ef4444)' : undefined,
+                  borderColor: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 'var(--color-red, #ef4444)' : undefined,
+                  fontWeight: isDueDatePast(formState.dueDate, formState.kanbanStage) ? 600 : undefined,
+                }}
+              />
+              <QuickDateChips
+                currentDate={formatDateConsistent(formState.dueDate) === '-' ? '' : formatDateConsistent(formState.dueDate)}
+                onSelectDate={(d) => handleInputChange('dueDate', d)}
+                onClear={() => handleInputChange('dueDate', '')}
+              />
+            </DrawerField>
+          </DrawerSection>
+
+          {/* SECTION 3: ASSIGNMENT & NOTES */}
+          <DrawerSection title="ASSIGNMENT & NOTES" icon={<User size={13} style={{ color: '#0284C7' }} />}>
+            <DrawerField label="QUICK ASSIGN">
+              <QuickAssignChips
+                p1={p1}
+                p2={p2}
+                currentAssignee={formState.assignedTo}
+                onSelectAssignee={(asg) => handleInputChange('assignedTo', asg)}
+              />
+            </DrawerField>
+
+            <DrawerField label="ASSIGNED TO (OR CUSTOM COLLABORATOR)">
+              <TaskCombobox
+                label="Assigned To"
+                fieldId="task-assignee-input"
+                placeholder="e.g. John, Maid of Honor"
+                value={formState.assignedTo || ''}
+                onChange={(val) => handleInputChange('assignedTo', val)}
+                options={existingAssignees}
+              />
+            </DrawerField>
+
+            <DrawerField label="NOTES & CHECKLIST">
+              <textarea
+                placeholder="Task details, links, or sub-checklist..."
+                value={formState.notes || ''}
+                rows={3}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                style={styles.textarea}
+              />
+            </DrawerField>
+          </DrawerSection>
+        </form>
+      </SlideOverDrawer>
 
       {/* IN-APP DELETE TASK CONFIRMATION MODAL */}
       {taskToDelete && (

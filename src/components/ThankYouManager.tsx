@@ -29,6 +29,8 @@ import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { triggerConfetti } from '@/lib/confetti';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { DrawerSection, DrawerField, DrawerRow } from '@/components/vow/MonarchForm';
 
 const DEFAULT_GIFT_CATEGORIES = [
   'Kitchen & Dining',
@@ -473,6 +475,20 @@ export default function ThankYouManager({
     setIsAddingGift(false);
   };
 
+  const currentEditingGiftIndex = useMemo(() => {
+    if (!editingGift) return -1;
+    return filteredGifts.findIndex(g => g.giftId === editingGift.giftId);
+  }, [editingGift, filteredGifts]);
+
+  const handleNavigateAdjacentGift = (direction: 'prev' | 'next') => {
+    if (currentEditingGiftIndex === -1) return;
+    const targetIndex = direction === 'prev' ? currentEditingGiftIndex - 1 : currentEditingGiftIndex + 1;
+    if (targetIndex >= 0 && targetIndex < filteredGifts.length) {
+      const nextGift = filteredGifts[targetIndex];
+      startEditGift(nextGift);
+    }
+  };
+
   // Save Gift Handler
   const handleSaveGift = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
@@ -910,169 +926,320 @@ export default function ThankYouManager({
         </div>
       )}
 
-      {/* ADD / EDIT GIFT MODAL */}
-      {(isAddingGift || editingGift) && (
-        <div className="gift-modal-overlay" style={styles.modalOverlay} onClick={() => { setIsAddingGift(false); setEditingGift(null); }}>
-          <style>{`
-            @media (max-width: 640px) {
-              .gift-modal-overlay {
-                padding: 0.5rem !important;
-              }
-              .gift-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-              }
-              .gift-form-row {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-            }
-          `}</style>
-          <div className="gift-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAddingGift ? 'LOG RECEIVED GIFT' : 'EDIT GIFT RECORD'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAddingGift(false); setEditingGift(null); }}>
-                <X size={20} />
+      {/* MONARCH SLIDE-OVER DRAWER FOR ADD / EDIT GIFT RECORD */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAddingGift || editingGift)}
+        onClose={() => { setIsAddingGift(false); setEditingGift(null); }}
+        title={isAddingGift ? 'Log Received Gift' : 'Edit Gift Record'}
+        subtitle={
+          editingGift
+            ? `${editingGift.giftId || 'Gift'} • From ${editingGift.giverName || 'Guest'}`
+            : 'Track wedding gifts & thank-you notes'
+        }
+        badge={editingGift ? (editingGift.giftId || 'GIFT') : 'NEW GIFT'}
+        width="520px"
+        onPrev={
+          editingGift && currentEditingGiftIndex > 0
+            ? () => handleNavigateAdjacentGift('prev')
+            : undefined
+        }
+        onNext={
+          editingGift && currentEditingGiftIndex < filteredGifts.length - 1
+            ? () => handleNavigateAdjacentGift('next')
+            : undefined
+        }
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {editingGift ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setShotToDelete(editingGift);
+                  setIsAddingGift(false);
+                  setEditingGift(null);
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-red, #dc2626)',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                }}
+              >
+                <Trash2 size={15} />
+                Delete Gift
+              </button>
+            ) : <div />}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
+              <button
+                type="button"
+                onClick={() => { setIsAddingGift(false); setEditingGift(null); }}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                }}
+              >
+                Cancel
+              </button>
+
+              {isAddingGift && (
+                <button
+                  type="button"
+                  onClick={(e) => handleSaveGift(e, true)}
+                  style={{
+                    padding: '9px 16px',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--color-primary)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-primary)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Save & Add Another
+                </button>
+              )}
+
+              <button
+                type="submit"
+                form="gift-form"
+                style={{
+                  padding: '9px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: 'var(--color-primary, #6366f1)',
+                  color: 'var(--color-on-primary, #ffffff)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                  minHeight: '44px',
+                }}
+              >
+                {isAddingGift ? 'Save Gift' : 'Save Changes'}
               </button>
             </div>
-
-            <form onSubmit={handleSaveGift} style={styles.form}>
-              <div style={styles.modalBodyScroll}>
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>GIFT DESCRIPTION / ITEM NAME *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. KitchenAid Stand Mixer or $200 Cash Gift"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    style={styles.inputField}
-                  />
-                </div>
-
-                <div className="gift-form-row" style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>GIFT GIVER (FROM) *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Uncle Bob & Aunt Sarah"
-                      value={formData.giverName || ''}
-                      onChange={(e) => setFormData({ ...formData, giverName: e.target.value })}
-                      style={styles.inputField}
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>CATEGORY / STORE</label>
-                    <GiftCategoryCombobox
-                      value={formData.category || ''}
-                      onChange={(cat) => setFormData({ ...formData, category: cat })}
-                      categories={allCategories}
-                      inputStyle={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="gift-form-row" style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>ESTIMATED VALUE / CASH AMOUNT</label>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{
-                        position: 'absolute',
-                        left: '0.75rem',
-                        color: 'var(--color-muted)',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                      }}>
-                        {currencySymbol}
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={formData.amount !== undefined && formData.amount !== null && formData.amount !== '' ? formData.amount : ''}
-                        onFocus={() => {
-                          if (formData.amount === 0 || formData.amount === '0') {
-                            setFormData(prev => ({ ...prev, amount: '' }));
-                          }
-                        }}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '') {
-                            setFormData(prev => ({ ...prev, amount: '' }));
-                            return;
-                          }
-                          // Remove leading zero when followed by non-decimal digits, e.g. "0100" -> 100
-                          const clean = val.replace(/^0+(?=\d)/, '');
-                          const num = Number(clean);
-                          setFormData(prev => ({ ...prev, amount: isNaN(num) ? clean : num }));
-                        }}
-                        style={{ ...styles.inputField, paddingLeft: '1.75rem' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text)', marginTop: '1.25rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(formData.thankYouSent)}
-                        onChange={(e) => setFormData({ ...formData, thankYouSent: e.target.checked })}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
-                      />
-                      <span>Thank You Sent?</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>DELIVERY / POSING NOTES</label>
-                  <textarea
-                    rows={2}
-                    placeholder="e.g. Shipped via Amazon, include special note about trip to Italy"
-                    value={formData.notes || ''}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    style={{ ...styles.inputField, height: 'auto', resize: 'vertical' }}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formActions}>
-                <button 
-                  type="button" 
-                  style={styles.cancelBtn} 
-                  onClick={() => { setIsAddingGift(false); setEditingGift(null); }}
-                >
-                  CANCEL
-                </button>
-                {isAddingGift && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                    onClick={(e) => handleSaveGift(e, true)}
-                  >
-                    SAVE & ADD NEW
-                  </button>
-                )}
-                <button type="submit" style={styles.saveBtn} className="saveBtn">
-                  {isAddingGift ? 'SAVE GIFT RECORD' : 'SAVE CHANGES'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form id="gift-form" onSubmit={handleSaveGift} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Section 1: Item & Giver */}
+          <DrawerSection title="Gift & Giver" description="Who gave the gift and what was received">
+            <DrawerField label="Gift Description / Item Name" required hint="e.g. KitchenAid Stand Mixer or Cash Fund">
+              <input
+                type="text"
+                required
+                placeholder="e.g. KitchenAid Stand Mixer or $200 Cash Gift"
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </DrawerField>
+
+            <DrawerField label="Gift Giver (From)" required hint="Guest name or family group">
+              <div style={{ position: 'relative' }}>
+                <Users size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #718096)' }} />
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Uncle Bob & Aunt Sarah"
+                  value={formData.giverName || ''}
+                  onChange={(e) => setFormData({ ...formData, giverName: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px 10px 34px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </DrawerField>
+          </DrawerSection>
+
+          {/* Section 2: Category & Value */}
+          <DrawerSection title="Valuation & Category" description="Registry department and estimated monetary value">
+            <DrawerRow columns={2}>
+              <DrawerField label="Category / Store">
+                <GiftCategoryCombobox
+                  value={formData.category || ''}
+                  onChange={(cat) => setFormData({ ...formData, category: cat })}
+                  categories={allCategories}
+                  inputStyle={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </DrawerField>
+
+              <DrawerField label="Estimated Value / Amount">
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--color-text-muted, #718096)',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}>
+                    {currencySymbol}
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.amount !== undefined && formData.amount !== null && formData.amount !== '' ? formData.amount : ''}
+                    onFocus={() => {
+                      if (formData.amount === 0 || formData.amount === '0') {
+                        setFormData(prev => ({ ...prev, amount: '' }));
+                      }
+                    }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setFormData(prev => ({ ...prev, amount: '' }));
+                        return;
+                      }
+                      const clean = val.replace(/^0+(?=\d)/, '');
+                      const num = Number(clean);
+                      setFormData(prev => ({ ...prev, amount: isNaN(num) ? clean : num }));
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 28px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border, #e2e8f0)',
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-text, #1a202c)',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </DrawerField>
+            </DrawerRow>
+          </DrawerSection>
+
+          {/* Section 3: Thank You Note Status & Notes */}
+          <DrawerSection title="Thank You Card & Notes" description="Keep track of heartfelt notes and deliveries">
+            <DrawerField label="Thank You Status">
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, thankYouSent: false })}
+                  style={{
+                    flex: 1,
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: !formData.thankYouSent ? '2px solid var(--color-primary)' : '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: !formData.thankYouSent ? 'var(--color-primary-subtle, rgba(99, 102, 241, 0.08))' : 'var(--color-surface, #ffffff)',
+                    color: !formData.thankYouSent ? 'var(--color-primary)' : 'var(--color-text-muted, #718096)',
+                    fontSize: '0.875rem',
+                    fontWeight: !formData.thankYouSent ? 600 : 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    minHeight: '42px',
+                  }}
+                >
+                  <Circle size={15} />
+                  Pending Note
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, thankYouSent: true })}
+                  style={{
+                    flex: 1,
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: formData.thankYouSent ? '2px solid #10b981' : '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: formData.thankYouSent ? '#ecfdf5' : 'var(--color-surface, #ffffff)',
+                    color: formData.thankYouSent ? '#059669' : 'var(--color-text-muted, #718096)',
+                    fontSize: '0.875rem',
+                    fontWeight: formData.thankYouSent ? 600 : 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    minHeight: '42px',
+                  }}
+                >
+                  <CheckCircle2 size={15} />
+                  Card Sent
+                </button>
+              </div>
+            </DrawerField>
+
+            <DrawerField label="Delivery / Special Notes" hint="Personal anecdotes or shipping tracking">
+              <textarea
+                rows={3}
+                placeholder="e.g. Shipped via Amazon, include special note about trip to Italy"
+                value={formData.notes || ''}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit',
+                  lineHeight: '1.5',
+                }}
+              />
+            </DrawerField>
+          </DrawerSection>
+        </form>
+      </SlideOverDrawer>
 
       {/* IN-APP DELETE GIFT CONFIRMATION MODAL */}
       {giftToDelete && (

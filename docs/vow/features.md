@@ -183,6 +183,25 @@
   - **Interactive 1-Tap Status Switcher Bottom Sheet:** Replaced desktop directional arrow buttons (`<`, `>`) with an interactive status chip on the card footer. Tapping opens a smooth Jira-style bottom action sheet drawer with slide-up animation and stage options (`To Do`, `In Progress`, `Done`), triggering celebratory confetti if the final task is moved to `Done`.
   - **Scannable Card Anatomy:** Refactored task cards with a dedicated category badge, smart relative due date chip (`Overdue by Xd`, `Today`, `Tomorrow`, `MM/DD`), 2-line clamped task titles, notes snippet preview, and circular assignee avatar initials.
   - **Category & Sort Mobile Bottom Action Sheets:** Mobile sheet drawers for Category filtering and Sort order selection with full thumb accessibility and slide animations. Desktop layout and 3-column Kanban functionality remain completely intact.
+- [x] **[MONARCH-EDIT-SCREENS-REDESIGN] Universal Monarch UX Edit Screens & Slide-Over Inspector Redesign Across Web & Mobile:**
+  - **Universal Responsive Drawer Primitive (`SlideOverDrawer.tsx`):**
+    - **Desktop Viewports ($\ge 641\text{px}$):** Smooth right-hand slide-over inspector drawer with subtle frosted glass backdrop blur, Escape key and backdrop dismissal, uppercase monospace ID badge, editorial serif title, technical monospace subtitle, adjacent record pager navigation buttons (`↑` Previous / `↓` Next), and sticky bottom action footer.
+    - **Mobile Viewports ($\le 640\text{px}$):** Automatically reflows from a side drawer into a native iOS/Android slide-up **Bottom Sheet** (`slideUpMobile`) featuring a rounded top drag handle (`38px × 4.5px`), deep rounded top corners (`20px`), full-width layout, $16\text{px}$ font inputs (preventing iOS Safari viewport auto-zoom), and sticky bottom action buttons respecting hardware safe areas (`env(safe-area-inset-bottom, 0px)`).
+  - **Reusable Monarch Form System (`MonarchForm.tsx`):**
+    - `<DrawerSection>`: Inset grouped card container with uppercase technical monospace section title, subtitle description, and optional header action icon.
+    - `<DrawerField>`: Form field wrapper with label, required asterisk, optional right-aligned field hint, and standardized error messaging.
+    - `<DrawerRow>`: Responsive multi-column row layout (collapses to single column on mobile screens).
+    - `<PriorityPills>`: Tactile 1-tap priority selector with colored status dots, checkmark feedback, and customizable option sets.
+    - `<QuickDateChips>`: Fast date chips (`Today`, `Tomorrow`, `+1 Week`, `+2 Weeks`, `+1 Month`, `Wedding Date`).
+    - `<QuickAssignChips>`: 1-tap partner avatar chips for instant task delegation.
+  - **Comprehensive Module Upgrades:**
+    - **Tasks & Checklist (`KanbanBoard.tsx`):** Upgraded edit modal to SlideOverDrawer with adjacent task navigation (`handleNavigateAdjacentTask`), priority pills, quick date shortcuts, and partner assignment chips.
+    - **Timeline & Day-Of Schedule (`TimelineManager.tsx`):** Upgraded event edit modal to SlideOverDrawer with adjacent event navigation (`handleNavigateAdjacentEvent`), event timing anchors, role tags, and vendor links.
+    - **Menu & Catering (`MenuSetupManager.tsx`):** Upgraded dish edit modal to SlideOverDrawer with adjacent dish navigation (`handleNavigateAdjacentDish`), course selectors, dietary flags, and pricing inputs.
+    - **Photography Shot List (`PhotoShotListManager.tsx`):** Upgraded photo shot modal to SlideOverDrawer with adjacent shot navigation (`handleNavigateAdjacentShot`), priority pills, location/timing anchors, and VIP subjects.
+    - **Gifts & Thank You Tracker (`ThankYouManager.tsx`):** Upgraded gift modal to SlideOverDrawer with adjacent gift navigation (`handleNavigateAdjacentGift`), store combobox, zero-clearing currency, and thank-you status pills.
+    - **Music & DJ Playlists (`MusicManager.tsx`):** Upgraded track modal to SlideOverDrawer with adjacent track navigation (`handleNavigateAdjacentTrack`), iTunes live catalog search, playlist moments, and streaming links.
+    - **Guest List & Vendor Directory (`GuestListManager.tsx`, `VendorManager.tsx`):** Standardized and verified with universal SlideOverDrawer responsive bottom sheet architecture.
 
 ---
 

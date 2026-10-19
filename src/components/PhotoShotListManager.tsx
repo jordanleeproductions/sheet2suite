@@ -41,6 +41,14 @@ import type { GuestUploadRecord } from '@/lib/db/firestoreDb';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { triggerConfetti } from '@/lib/confetti';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { DrawerSection, DrawerField, DrawerRow, PriorityPills } from '@/components/vow/MonarchForm';
+
+const PHOTO_PRIORITY_OPTIONS = [
+  { label: 'Must Have', value: 'Must Have', color: '#c53030' },
+  { label: 'Nice To Have', value: 'Nice To Have', color: '#dd6b20' },
+  { label: 'Optional', value: 'Optional', color: '#718096' },
+];
 
 interface PhotoShotListManagerProps {
   photos: PhotoShot[];
@@ -197,6 +205,20 @@ export default function PhotoShotListManager({
     setFormData(shot);
     setEditingShot(shot);
     setIsAddingShot(false);
+  };
+
+  const currentEditingShotIndex = useMemo(() => {
+    if (!editingShot) return -1;
+    return filteredPhotos.findIndex(p => p.shotId === editingShot.shotId);
+  }, [editingShot, filteredPhotos]);
+
+  const handleNavigateAdjacentShot = (direction: 'prev' | 'next') => {
+    if (currentEditingShotIndex === -1) return;
+    const targetIndex = direction === 'prev' ? currentEditingShotIndex - 1 : currentEditingShotIndex + 1;
+    if (targetIndex >= 0 && targetIndex < filteredPhotos.length) {
+      const nextShot = filteredPhotos[targetIndex];
+      startEditShot(nextShot);
+    }
   };
 
   // Save Shot Handler
@@ -1741,152 +1763,286 @@ export default function PhotoShotListManager({
         </>
       )}
 
-      {/* ADD / EDIT SHOT MODAL */}
-      {(isAddingShot || editingShot) && (
-        <div className="photo-modal-overlay" style={styles.modalOverlay} onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
-          <style>{`
-            @media (max-width: 640px) {
-              .photo-modal-overlay {
-                padding: 0.5rem !important;
-              }
-              .photo-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-              }
-              .photo-form-row {
-                grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
-              }
-            }
-          `}</style>
-          <div className="photo-modal-content" style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAddingShot ? 'ADD PHOTO SHOT' : 'EDIT PHOTO SHOT'}
-              </h3>
-              <button style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }} className="closeBtn" onClick={() => { setIsAddingShot(false); setEditingShot(null); }}>
-                <X size={18} />
+      {/* MONARCH SLIDE-OVER DRAWER FOR ADD / EDIT PHOTO SHOT */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAddingShot || editingShot)}
+        onClose={() => { setIsAddingShot(false); setEditingShot(null); }}
+        title={isAddingShot ? 'Add Photo Shot' : 'Edit Photo Shot'}
+        subtitle={
+          editingShot
+            ? `${editingShot.shotId || 'Shot'} • ${editingShot.location || 'Venue'}`
+            : 'Capture meaningful wedding moments'
+        }
+        badge={editingShot ? (editingShot.shotId || 'SHOT') : 'NEW SHOT'}
+        width="540px"
+        onPrev={
+          editingShot && currentEditingShotIndex > 0
+            ? () => handleNavigateAdjacentShot('prev')
+            : undefined
+        }
+        onNext={
+          editingShot && currentEditingShotIndex < filteredPhotos.length - 1
+            ? () => handleNavigateAdjacentShot('next')
+            : undefined
+        }
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {editingShot ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setShotToDelete(editingShot);
+                  setIsAddingShot(false);
+                  setEditingShot(null);
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-red, #dc2626)',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                }}
+              >
+                <Trash2 size={15} />
+                Delete Shot
+              </button>
+            ) : <div />}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
+              <button
+                type="button"
+                onClick={() => { setIsAddingShot(false); setEditingShot(null); }}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                }}
+              >
+                Cancel
+              </button>
+
+              {isAddingShot && (
+                <button
+                  type="button"
+                  onClick={(e) => handleSaveShot(e, true)}
+                  style={{
+                    padding: '9px 16px',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--color-primary)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-primary)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Save & Add Another
+                </button>
+              )}
+
+              <button
+                type="submit"
+                form="photo-shot-form"
+                style={{
+                  padding: '9px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: 'var(--color-primary, #6366f1)',
+                  color: 'var(--color-on-primary, #ffffff)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                  minHeight: '44px',
+                }}
+              >
+                {isAddingShot ? 'Save Shot' : 'Save Changes'}
               </button>
             </div>
+          </div>
+        }
+      >
+        <form id="photo-shot-form" onSubmit={handleSaveShot} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Section 1: Shot Details */}
+          <DrawerSection title="Shot Details" description="Core description and priority level for the photographer">
+            <DrawerField label="Shot Description" required hint="Specific pose or family grouping">
+              <input
+                type="text"
+                required
+                placeholder="e.g. Bride & Groom with Bride's Grandparents"
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </DrawerField>
 
-            <form onSubmit={handleSaveShot} style={styles.form}>
-              <div style={styles.modalBodyScroll}>
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>SHOT DESCRIPTION / DETAILS *</label>
+            <DrawerField label="Priority Level">
+              <PriorityPills
+                options={PHOTO_PRIORITY_OPTIONS}
+                value={formData.priority || 'Must Have'}
+                onChange={(val) => setFormData({ ...formData, priority: val as any })}
+              />
+            </DrawerField>
+
+            <DrawerField label="Capture Status">
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {(['Pending', 'Captured'] as const).map((st) => {
+                  const isActive = (formData.status || 'Pending') === st;
+                  return (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, status: st })}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border, #e2e8f0)',
+                        backgroundColor: isActive ? 'var(--color-primary-subtle, rgba(99, 102, 241, 0.08))' : 'var(--color-surface, #ffffff)',
+                        color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted, #718096)',
+                        fontSize: '0.875rem',
+                        fontWeight: isActive ? 600 : 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        minHeight: '40px',
+                      }}
+                    >
+                      {st === 'Captured' ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                      {st}
+                    </button>
+                  );
+                })}
+              </div>
+            </DrawerField>
+          </DrawerSection>
+
+          {/* Section 2: Location & Timing */}
+          <DrawerSection title="Timing & Location" description="Where and when the photographer should be ready">
+            <DrawerRow columns={2}>
+              <DrawerField label="Location" hint="Where the shot takes place">
+                <div style={{ position: 'relative' }}>
+                  <MapPin size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #718096)' }} />
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Bride & Groom with Bride's Grandparents"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    style={styles.inputField}
-                  />
-                </div>
-
-                <div className="photo-form-row" style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>LOCATION</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Main Chapel Altar"
-                      value={formData.location || ''}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      style={styles.inputField}
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>ESTIMATED TIME</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 03:30 PM (Post-Ceremony)"
-                      value={formData.shotTime || ''}
-                      onChange={(e) => setFormData({ ...formData, shotTime: e.target.value })}
-                      style={styles.inputField}
-                    />
-                  </div>
-                </div>
-
-                <div className="photo-form-row" style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>INCLUDED PEOPLE / VIPS</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Sarah, John, Grandma Mary"
-                      value={formData.people || ''}
-                      onChange={(e) => setFormData({ ...formData, people: e.target.value })}
-                      style={styles.inputField}
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.fieldLabel}>PRIORITY</label>
-                    <select
-                      value={formData.priority || 'Must Have'}
-                      onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                      style={styles.selectInput}
-                    >
-                      <option value="Must Have">Must Have</option>
-                      <option value="Nice To Have">Nice To Have</option>
-                      <option value="Optional">Optional</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>STATUS</label>
-                  <select
-                    value={formData.status || 'Pending'}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    style={styles.selectInput}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Captured">Captured</option>
-                  </select>
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.fieldLabel}>POSING / LIGHTING NOTES</label>
-                  <textarea
-                    rows={2}
-                    placeholder="e.g. Golden hour lighting preferred, wide-angle lens"
-                    value={formData.notes || ''}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    style={{ ...styles.inputField, height: 'auto', resize: 'vertical' }}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formActions}>
-                <button 
-                  type="button" 
-                  style={styles.cancelBtn} 
-                  onClick={() => { setIsAddingShot(false); setEditingShot(null); }}
-                >
-                  CANCEL
-                </button>
-                {isAddingShot && (
-                  <button
-                    type="button"
+                    placeholder="e.g. Main Chapel Altar"
+                    value={formData.location || ''}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     style={{
-                      ...styles.saveBtn,
+                      width: '100%',
+                      padding: '10px 12px 10px 34px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border, #e2e8f0)',
                       backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
+                      color: 'var(--color-text, #1a202c)',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      boxSizing: 'border-box',
                     }}
-                    onClick={(e) => handleSaveShot(e, true)}
-                  >
-                    SAVE & ADD NEW
-                  </button>
-                )}
-                <button type="submit" style={styles.saveBtn} className="saveBtn">
-                  {isAddingShot ? 'SAVE SHOT' : 'SAVE CHANGES'}
-                </button>
+                  />
+                </div>
+              </DrawerField>
+
+              <DrawerField label="Estimated Time" hint="Schedule anchor">
+                <div style={{ position: 'relative' }}>
+                  <Clock size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #718096)' }} />
+                  <input
+                    type="text"
+                    placeholder="e.g. 03:30 PM (Post-Ceremony)"
+                    value={formData.shotTime || ''}
+                    onChange={(e) => setFormData({ ...formData, shotTime: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 34px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border, #e2e8f0)',
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-text, #1a202c)',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </DrawerField>
+            </DrawerRow>
+          </DrawerSection>
+
+          {/* Section 3: VIPs & Notes */}
+          <DrawerSection title="Subjects & Instructions" description="People to round up and framing requirements">
+            <DrawerField label="Included People / VIPs" hint="Names of relatives or bridal party members">
+              <div style={{ position: 'relative' }}>
+                <Users size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #718096)' }} />
+                <input
+                  type="text"
+                  placeholder="e.g. Sarah, John, Grandma Mary"
+                  value={formData.people || ''}
+                  onChange={(e) => setFormData({ ...formData, people: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px 10px 34px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border, #e2e8f0)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-text, #1a202c)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </DrawerField>
+
+            <DrawerField label="Posing / Lighting Notes" hint="Special instructions for camera crew">
+              <textarea
+                rows={3}
+                placeholder="e.g. Golden hour lighting preferred, wide-angle lens, bride's veil flowing"
+                value={formData.notes || ''}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text, #1a202c)',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit',
+                  lineHeight: '1.5',
+                }}
+              />
+            </DrawerField>
+          </DrawerSection>
+        </form>
+      </SlideOverDrawer>
 
       {/* IN-APP DELETE SHOT CONFIRMATION MODAL */}
       {shotToDelete && (

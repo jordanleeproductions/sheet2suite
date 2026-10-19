@@ -8,6 +8,7 @@ import TimeDialPicker from '@/components/TimeDialPicker';
 import PageSearchInput from '@/components/PageSearchInput';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import { parseTimeOrSerial } from '@/lib/currency';
 
 export function formatTimeDisplay(timeStr: string | undefined | null, format?: '12h' | '24h'): string {
@@ -234,6 +235,19 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
     });
     setCustomRoleInput('');
     setIsAdding(false);
+  };
+
+  const currentFilteredEventIndex = editingIndex !== null
+    ? filteredEventsWithIndex.findIndex(item => item.originalIndex === editingIndex)
+    : -1;
+
+  const handleNavigateAdjacentEvent = (offset: number) => {
+    if (currentFilteredEventIndex < 0) return;
+    const targetIdx = currentFilteredEventIndex + offset;
+    if (targetIdx >= 0 && targetIdx < filteredEventsWithIndex.length) {
+      const target = filteredEventsWithIndex[targetIdx];
+      startEdit(target.event, target.originalIndex);
+    }
   };
 
   const startAdd = () => {
@@ -644,796 +658,592 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
         </div>
       </div>
 
-      {/* Editor Modal */}
-      {(isAdding || editingIndex !== null) && (
-        <div className="timeline-modal-overlay" style={styles.modalOverlay}>
-          <style>{`
-            .timeline-modal-overlay {
-              position: fixed !important;
-              top: 0 !important;
-              left: 0 !important;
-              right: 0 !important;
-              bottom: 0 !important;
-              background-color: rgba(13, 27, 42, 0.65) !important;
-              backdrop-filter: blur(4px) !important;
-              display: flex !important;
-              justify-content: center !important;
-              align-items: center !important;
-              z-index: 1000 !important;
-              padding: 1.5rem !important;
-            }
-            .timeline-modal-content {
-              width: 100% !important;
-              max-width: 820px !important;
-              max-height: 90vh !important;
-              border-radius: 16px !important;
-              display: flex !important;
-              flex-direction: column !important;
-              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-              overflow: hidden !important;
-              background-color: var(--color-bg, #fcfbf9) !important;
-              border: 1.5px solid var(--color-primary) !important;
-            }
-            .timeline-form-scroll-body {
-              flex: 1 !important;
-              overflow-y: auto !important;
-              padding: 1.5rem !important;
-              display: flex !important;
-              flex-direction: column !important;
-              gap: 1.15rem !important;
-            }
-            .timeline-section-card {
-              background-color: var(--color-surface, #ffffff);
-              border: 1px solid var(--color-border, #e5e7eb);
-              border-radius: 12px;
-              padding: 1.15rem 1.25rem;
-              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-              display: flex;
-              flex-direction: column;
-              gap: 0.85rem;
-            }
-            .timeline-section-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding-bottom: 0.6rem;
-              border-bottom: 1px solid var(--color-border, #f1f5f9);
-            }
-            .timeline-section-title {
-              font-family: var(--font-mono);
-              font-size: 0.72rem;
-              font-weight: 800;
-              letter-spacing: 0.05em;
-              color: var(--color-primary);
-              display: flex;
-              align-items: center;
-              gap: 0.45rem;
-              margin: 0;
-            }
-            .timeline-timing-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 1.25rem;
-              align-items: flex-start;
-            }
-            .timeline-details-grid {
-              display: grid;
-              grid-template-columns: 1.2fr 1fr;
-              gap: 1.25rem;
-            }
-            .timeline-role-pill {
-              display: inline-flex;
-              align-items: center;
-              gap: 0.35rem;
-              font-size: 0.75rem;
-              font-family: var(--font-sans);
-              font-weight: 600;
-              padding: 0.35rem 0.65rem;
-              border-radius: 20px;
-              cursor: pointer;
-              transition: all 0.15s ease;
-              border: 1px solid var(--color-border, #d1d5db);
-              background-color: transparent;
-              color: var(--color-text);
-              touch-action: manipulation;
-            }
-            .timeline-role-pill:hover {
-              border-color: var(--color-primary);
-              background-color: rgba(205, 162, 80, 0.08);
-            }
-            .timeline-role-pill.selected {
-              background-color: var(--color-primary) !important;
-              color: var(--color-on-primary, #ffffff) !important;
-              border-color: var(--color-primary) !important;
-              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
-            }
-            .midnight-alert-box {
-              width: 100% !important;
-              box-sizing: border-box !important;
-            }
-            .midnight-toggle-group {
-              display: grid !important;
-              grid-template-columns: 1fr 1fr !important;
-              gap: 0.5rem !important;
-              width: 100% !important;
-              box-sizing: border-box !important;
-            }
-            .midnight-toggle-btn {
-              width: 100% !important;
-              box-sizing: border-box !important;
-              text-align: center !important;
-              white-space: normal !important;
-              word-break: break-word !important;
-            }
-            @media (max-width: 768px) {
-              .timeline-modal-overlay {
-                padding: 0 !important;
-                align-items: flex-end !important;
-              }
-              .timeline-modal-content {
-                width: 100% !important;
-                max-height: 92vh !important;
-                border-radius: 20px 20px 0 0 !important;
-                border-bottom: none !important;
-              }
-              .timeline-form-scroll-body {
-                padding: 1rem !important;
-                gap: 1rem !important;
-              }
-              .timeline-form-scroll-body input,
-              .timeline-form-scroll-body select,
-              .timeline-form-scroll-body textarea {
-                min-height: 48px !important;
-                font-size: 16px !important;
-                box-sizing: border-box !important;
-              }
-              .timeline-timing-grid {
-                grid-template-columns: 1fr !important;
-                gap: 1rem !important;
-              }
-              .timeline-details-grid {
-                grid-template-columns: 1fr !important;
-                gap: 0.85rem !important;
-              }
-              .timeline-role-pill {
-                min-height: 44px !important;
-                padding: 0.5rem 0.85rem !important;
-                font-size: 0.82rem !important;
-              }
-              .midnight-toggle-btn {
-                min-height: 44px !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-              }
-              .timeline-footer-actions {
-                padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
-                flex-wrap: wrap !important;
-                gap: 0.5rem !important;
-              }
-              .timeline-footer-actions button {
-                min-height: 48px !important;
-                font-size: 0.82rem !important;
-              }
-              .timeline-footer-right {
-                flex-wrap: wrap !important;
-                width: 100% !important;
-                justify-content: flex-end !important;
-                gap: 0.5rem !important;
-              }
-            }
-          `}</style>
-
-          <div className="timeline-modal-content" style={styles.modalContent}>
-            {/* Header */}
-            <div style={styles.modalHeader} className="modalHeader">
-              <div>
-                <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)', margin: 0 }} className="modalTitle">
-                  {isAdding ? 'ADD TIMELINE MOMENT' : 'EDIT TIMELINE MOMENT'}
-                </h3>
-                <p style={{ margin: '0.2rem 0 0', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'var(--font-sans)' }}>
-                  {isAdding ? 'Schedule a new itinerary moment, location, and assign responsible roles.' : 'Refine schedule times, moment details, venue location, and assignees.'}
-                </p>
-              </div>
-              <button
-                style={{
-                  ...styles.closeBtn,
-                  color: 'var(--color-on-primary, #ffffff)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'background-color 0.15s ease',
-                }}
-                className="closeBtn"
-                onClick={() => { setIsAdding(false); setEditingIndex(null); }}
-                title="Close modal"
+      {/* Slide-Over Timeline Moment Inspector [Monarch UX] */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAdding || editingIndex !== null)}
+        onClose={() => { setIsAdding(false); setEditingIndex(null); }}
+        title={isAdding ? 'Add Timeline Moment' : (formState.eventMoment || 'Edit Moment')}
+        subtitle={editingIndex !== null ? `${formatTimeDisplay(formState.startTime, timeFormat)} - ${formatTimeDisplay(formState.endTime, timeFormat) || 'End TBD'} · ${formState.responsibility || 'Unassigned Role'}` : 'Schedule a new wedding itinerary moment'}
+        badge="TIMELINE MOMENT"
+        badgeColor="#F59E0B"
+        hasPrevious={currentFilteredEventIndex > 0}
+        hasNext={currentFilteredEventIndex >= 0 && currentFilteredEventIndex < filteredEventsWithIndex.length - 1}
+        onPrevious={() => handleNavigateAdjacentEvent(-1)}
+        onNext={() => handleNavigateAdjacentEvent(1)}
+        width="540px"
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+            {editingIndex !== null ? (
+              <button 
+                type="button" 
+                style={styles.deleteBtn}
+                onClick={() => setEventToDeleteIndex(editingIndex)}
               >
-                <X size={18} />
+                <Trash2 size={13} style={{ marginRight: '4px' }} />
+                DELETE
+              </button>
+            ) : <div />}
+
+            <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+              <button 
+                type="button" 
+                style={styles.cancelBtn} 
+                onClick={() => { setIsAdding(false); setEditingIndex(null); }}
+              >
+                CANCEL
+              </button>
+              {isAdding && (
+                <button
+                  type="button"
+                  style={{
+                    ...styles.saveBtn,
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    color: 'var(--color-primary)',
+                    border: '1.5px solid var(--color-primary)',
+                  }}
+                  disabled={isSyncing}
+                  onClick={(e) => saveEvent(e, true)}
+                >
+                  SAVE & ADD NEXT
+                </button>
+              )}
+              <button
+                type="button"
+                style={{
+                  ...styles.saveBtn,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+                disabled={isSyncing}
+                onClick={(e) => saveEvent(e)}
+              >
+                <Check size={14} />
+                <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}</span>
               </button>
             </div>
-            
-            {/* Form */}
-            <form onSubmit={saveEvent} style={styles.form}>
-              <div className="timeline-form-scroll-body">
-                
-                {/* SECTION 1: TIMING & DURATION */}
-                <div className="timeline-section-card">
-                  <div className="timeline-section-header">
-                    <h4 className="timeline-section-title">
-                      <Clock size={15} />
-                      <span>TIMING & DURATION</span>
-                    </h4>
-                    {durationText && (
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        backgroundColor: 'rgba(245, 158, 11, 0.14)',
-                        color: 'var(--color-gold-dark, #92400e)',
-                        border: '1px solid rgba(217, 119, 6, 0.4)',
-                        padding: '0.2rem 0.65rem',
-                        borderRadius: '12px',
-                        fontSize: '0.72rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 800,
-                        letterSpacing: '0.02em',
-                      }}>
-                        <Clock size={12} style={{ color: '#b45309', flexShrink: 0 }} />
-                        <span>EST. DURATION: {durationText}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="timeline-timing-grid">
-                    <div style={styles.fieldGroup}>
-                      <TimeDialPicker
-                        label="START TIME"
-                        required
-                        placeholder="e.g. 04:00 PM"
-                        value={formState.startTime || ''}
-                        onChange={(val) => handleInputChange('startTime', val)}
-                      />
-                    </div>
-
-                    <div style={styles.fieldGroup}>
-                      <TimeDialPicker
-                        label="END TIME"
-                        placeholder="e.g. 04:30 PM"
-                        value={formState.endTime || ''}
-                        onChange={(val) => handleInputChange('endTime', val)}
-                        referenceStartTime={formState.startTime}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Overnight / Past Midnight Alert */}
-                  {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '') || formState.isAfterMidnight) && (
-                    <div style={{ width: '100%', marginTop: '0.25rem' }}>
-                      <div className="midnight-alert-box" style={styles.midnightAlertBox}>
-                        <div style={styles.midnightAlertHeader}>
-                          <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem', flexShrink: 0 }} />
-                          <span style={styles.midnightAlertTitle}>EVENT RUNS PAST MIDNIGHT?</span>
-                        </div>
-                        <p style={styles.midnightAlertDesc}>
-                          Selected time is between 12:00 AM – 4:00 AM. Is this moment at the end of the wedding night (e.g. after-party) or early morning prep?
-                        </p>
-                        <div className="midnight-toggle-group" style={styles.midnightToggleGroup}>
-                          <button
-                            type="button"
-                            className="midnight-toggle-btn"
-                            style={{
-                              ...styles.midnightToggleBtn,
-                              backgroundColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#ffffff',
-                              color: formState.isAfterMidnight !== false ? '#ffffff' : '#4c1d95',
-                              borderColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#a78bfa',
-                              fontWeight: 700
-                            }}
-                            onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: true, eventDate: 'Next Day (+1)' }))}
-                          >
-                            🌙 YES — OVERNIGHT (+1 DAY)
-                          </button>
-                          <button
-                            type="button"
-                            className="midnight-toggle-btn"
-                            style={{
-                              ...styles.midnightToggleBtn,
-                              backgroundColor: formState.isAfterMidnight === false ? '#0d9488' : '#ffffff',
-                              color: formState.isAfterMidnight === false ? '#ffffff' : '#4c1d95',
-                              borderColor: formState.isAfterMidnight === false ? '#0d9488' : '#a78bfa',
-                              fontWeight: 700
-                            }}
-                            onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: false, eventDate: 'Main Wedding Day' }))}
-                          >
-                            ☀️ NO — EARLY MORNING
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+          </div>
+        }
+      >
+        <form onSubmit={saveEvent} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* SECTION 1: TIMING & DURATION */}
+          <div className="timeline-section-card">
+            <div className="timeline-section-header">
+              <h4 className="timeline-section-title">
+                <Clock size={15} />
+                <span>TIMING & DURATION</span>
+              </h4>
+              {durationText && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  backgroundColor: 'rgba(245, 158, 11, 0.14)',
+                  color: 'var(--color-gold-dark, #92400e)',
+                  border: '1px solid rgba(217, 119, 6, 0.4)',
+                  padding: '0.2rem 0.65rem',
+                  borderRadius: '12px',
+                  fontSize: '0.72rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                }}>
+                  <Clock size={12} style={{ color: '#b45309', flexShrink: 0 }} />
+                  <span>EST. DURATION: {durationText}</span>
                 </div>
+              )}
+            </div>
 
-                {/* SECTION 2: MOMENT & VENUE LOCATION */}
-                <div className="timeline-section-card">
-                  <div className="timeline-section-header">
-                    <h4 className="timeline-section-title">
-                      <Sparkles size={15} />
-                      <span>MOMENT & VENUE LOCATION</span>
-                    </h4>
-                  </div>
-
-                  <div className="timeline-details-grid">
-                    <div style={styles.fieldGroup}>
-                      <label style={styles.label}>EVENT MOMENT NAME *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Ceremony Service, Groomsmen Prep, First Dance"
-                        value={formState.eventMoment || ''}
-                        onChange={(e) => handleInputChange('eventMoment', e.target.value)}
-                        style={styles.input}
-                      />
-                    </div>
-
-                    <div style={styles.fieldGroup}>
-                      <label style={styles.label}>LOCATION / VENUE</label>
-                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                        <MapPin size={15} style={{ position: 'absolute', left: '10px', color: 'var(--color-muted)' }} />
-                        <input
-                          type="text"
-                          placeholder="e.g. Courtyard Lawn, Main Ballroom"
-                          value={formState.location || ''}
-                          onChange={(e) => handleInputChange('location', e.target.value)}
-                          style={{
-                            ...styles.input,
-                            paddingLeft: '2.1rem',
-                            width: '100%',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 3: RESPONSIBILITY & ASSIGNED ROLES */}
-                <div className="timeline-section-card">
-                  <div className="timeline-section-header">
-                    <h4 className="timeline-section-title">
-                      <Users size={15} />
-                      <span>ASSIGNED ROLES & VENDORS</span>
-                    </h4>
-                    {selectedRoles.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={clearAllRoles}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#ef4444',
-                          fontSize: '0.7rem',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                        }}
-                      >
-                        <Trash2 size={12} /> CLEAR ALL ({selectedRoles.length})
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Selected Roles Chips Box */}
-                  {selectedRoles.length > 0 ? (
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '0.4rem',
-                      padding: '0.65rem 0.85rem',
-                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
-                      borderRadius: '8px',
-                      border: '1px solid var(--color-border, #e2e8f0)',
-                    }}>
-                      {selectedRoles.map((role) => (
-                        <span
-                          key={role}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            padding: '0.25rem 0.65rem',
-                            borderRadius: '999px',
-                            backgroundColor: 'var(--color-primary)',
-                            color: 'var(--color-on-primary, #ffffff)',
-                            fontSize: '0.78rem',
-                            fontWeight: 600,
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                          }}
-                        >
-                          <User size={12} />
-                          <span>{role}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeRole(role)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: 'inherit',
-                              padding: '0',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              marginLeft: '2px',
-                              opacity: 0.85,
-                            }}
-                            title={`Remove ${role}`}
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{
-                      padding: '0.65rem 0.85rem',
-                      backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
-                      borderRadius: '8px',
-                      border: '1px dashed var(--color-border, #cbd5e1)',
-                      fontSize: '0.76rem',
-                      color: 'var(--color-muted)',
-                      fontFamily: 'var(--font-sans)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                    }}>
-                      <Users size={14} style={{ color: 'var(--color-muted)' }} />
-                      <span>No assignees added yet. Tap quick tags below or search to assign wedding party or vendors.</span>
-                    </div>
-                  )}
-
-                  {/* Search & Custom Input Bar */}
-                  <div ref={roleDropdownRef} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
-                    <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-                      <Search size={15} style={{ position: 'absolute', left: '10px', color: 'var(--color-muted)', pointerEvents: 'none' }} />
-                      <input
-                        type="text"
-                        placeholder="Search roles & vendors or type custom assignee..."
-                        value={customRoleInput}
-                        onChange={(e) => {
-                          setCustomRoleInput(e.target.value);
-                          setIsRoleDropdownOpen(true);
-                        }}
-                        onFocus={() => setIsRoleDropdownOpen(true)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ',') {
-                            e.preventDefault();
-                            if (customRoleInput.trim()) addCustomRole(customRoleInput);
-                          }
-                        }}
-                        style={{
-                          ...styles.input,
-                          paddingLeft: '2.2rem',
-                          paddingRight: customRoleInput ? '2.2rem' : '0.75rem',
-                          width: '100%',
-                        }}
-                      />
-                      {customRoleInput && (
-                        <button
-                          type="button"
-                          onClick={() => setCustomRoleInput('')}
-                          style={{
-                            position: 'absolute',
-                            right: '8px',
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-muted)',
-                            cursor: 'pointer',
-                            padding: '3px',
-                          }}
-                          title="Clear input"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-
-                    {customRoleInput.trim() && (
-                      <button
-                        type="button"
-                        onClick={() => addCustomRole(customRoleInput)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.3rem',
-                          padding: '0.55rem 0.95rem',
-                          fontSize: '0.75rem',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 700,
-                          borderRadius: 'var(--border-radius-sm, 6px)',
-                          backgroundColor: 'var(--color-primary)',
-                          color: 'var(--color-on-primary, #ffffff)',
-                          border: 'none',
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                        }}
-                      >
-                        <Plus size={14} /> ADD
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => setIsRoleDropdownOpen(prev => !prev)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                        padding: '0.55rem 0.85rem',
-                        fontSize: '0.75rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 700,
-                        borderRadius: 'var(--border-radius-sm, 6px)',
-                        backgroundColor: isRoleDropdownOpen ? 'var(--color-primary)' : 'var(--color-bg, #ffffff)',
-                        color: isRoleDropdownOpen ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
-                        border: '1px solid var(--color-border, #d1d5db)',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                      }}
-                      title="Toggle full roles catalog"
-                    >
-                      <Tag size={13} />
-                      <span>{isRoleDropdownOpen ? 'HIDE ROLES' : 'ALL ROLES'}</span>
-                      {isRoleDropdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-
-                    {/* Expandable Role Drawer / Popover */}
-                    {isRoleDropdownOpen && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 'calc(100% + 6px)',
-                          left: 0,
-                          right: 0,
-                          maxHeight: '220px',
-                          overflowY: 'auto',
-                          backgroundColor: 'var(--color-surface, #ffffff)',
-                          border: '1px solid var(--color-border, #cbd5e1)',
-                          borderRadius: '8px',
-                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
-                          zIndex: 60,
-                        }}
-                      >
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '0.5rem 0.85rem',
-                          borderBottom: '1px solid var(--color-border, #f1f5f9)',
-                          backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 1,
-                        }}>
-                          <span style={{ fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
-                            DIRECTORY ROLES & VENDORS ({previousResponsibilities.length})
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setIsRoleDropdownOpen(false)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              fontSize: '0.72rem',
-                              fontWeight: 700,
-                              color: 'var(--color-primary)',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            DONE ✓
-                          </button>
-                        </div>
-
-                        {customRoleInput.trim() && (
-                          <button
-                            type="button"
-                            onClick={() => addCustomRole(customRoleInput)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              width: '100%',
-                              padding: '0.6rem 0.85rem',
-                              textAlign: 'left',
-                              fontSize: '0.8rem',
-                              fontFamily: 'var(--font-sans)',
-                              backgroundColor: 'rgba(205, 162, 80, 0.12)',
-                              color: 'var(--color-primary)',
-                              fontWeight: 700,
-                              border: 'none',
-                              borderBottom: '1px solid var(--color-border)',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <Plus size={14} /> Add custom assignee: &ldquo;{customRoleInput.trim()}&rdquo;
-                          </button>
-                        )}
-
-                        {previousResponsibilities
-                          .filter(role =>
-                            !customRoleInput.trim() ||
-                            role.toLowerCase().includes(customRoleInput.trim().toLowerCase())
-                          )
-                          .map((role) => {
-                            const isSelected = selectedRoles.some(r => r.toLowerCase() === role.toLowerCase());
-                            return (
-                              <button
-                                key={role}
-                                type="button"
-                                onClick={() => toggleRole(role)}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  width: '100%',
-                                  padding: '0.55rem 0.85rem',
-                                  textAlign: 'left',
-                                  fontSize: '0.8rem',
-                                  fontFamily: 'var(--font-sans)',
-                                  backgroundColor: isSelected ? 'rgba(205, 162, 80, 0.08)' : 'transparent',
-                                  color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
-                                  fontWeight: isSelected ? 700 : 500,
-                                  border: 'none',
-                                  borderBottom: '1px solid var(--color-border, #f8fafc)',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                                  <span style={{
-                                    width: '16px',
-                                    height: '16px',
-                                    borderRadius: '3px',
-                                    border: `1.5px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-muted)'}`,
-                                    backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}>
-                                    {isSelected && <Check size={12} style={{ color: 'var(--color-on-primary, #ffffff)' }} />}
-                                  </span>
-                                  {role}
-                                </span>
-                                {isSelected && (
-                                  <span style={{ fontSize: '0.675rem', color: 'var(--color-primary)', fontWeight: 700 }}>
-                                    ADDED
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quick-Pick Popular Suggestion Badges */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
-                    <span style={{ fontSize: '0.675rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-muted)' }}>
-                      QUICK TOGGLE POPULAR ROLES:
-                    </span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                      {[
-                        'Photographer',
-                        'Videographer',
-                        'Bridal Party',
-                        'Groomsmen',
-                        'Planner / Coordinator',
-                        'DJ / MC',
-                        'Caterer / Staff',
-                        'Officiant',
-                        'Bride',
-                        'Groom',
-                        'Florist',
-                        'Glam Team (Hair & Makeup)'
-                      ].map(sug => {
-                        const isSelected = selectedRoles.some(r => r.toLowerCase() === sug.toLowerCase());
-                        return (
-                          <button
-                            key={sug}
-                            type="button"
-                            onClick={() => toggleRole(sug)}
-                            className={`timeline-role-pill ${isSelected ? 'selected' : ''}`}
-                            title={isSelected ? `Remove ${sug}` : `Add ${sug}`}
-                          >
-                            {isSelected ? <Check size={11} /> : <Plus size={11} />}
-                            <span>{sug}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 4: NOTES & CUES */}
-                <div className="timeline-section-card">
-                  <div className="timeline-section-header">
-                    <h4 className="timeline-section-title">
-                      <FileText size={15} />
-                      <span>NOTES / DETAILS & VENDOR GUIDELINES</span>
-                    </h4>
-                  </div>
-
-                  <div style={styles.fieldGroup}>
-                    <textarea
-                      placeholder="Provide specific guidelines, audio/lighting cues, setup instructions, or VIP coordination notes..."
-                      value={formState.notes || ''}
-                      rows={3}
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
-                      style={styles.textarea}
-                    />
-                  </div>
-                </div>
-
+            <div className="timeline-timing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
+              <div style={styles.fieldGroup}>
+                <TimeDialPicker
+                  label="START TIME"
+                  required
+                  placeholder="e.g. 04:00 PM"
+                  value={formState.startTime || ''}
+                  onChange={(val) => handleInputChange('startTime', val)}
+                />
               </div>
 
-              {/* Sticky Footer Action Bar */}
-              <div style={styles.formActions} className="timeline-footer-actions">
-                {editingIndex !== null ? (
-                  <button 
-                    type="button" 
-                    style={styles.deleteBtn}
-                    onClick={() => setEventToDeleteIndex(editingIndex)}
-                  >
-                    <Trash2 size={13} style={{ marginRight: '4px' }} />
-                    DELETE
-                  </button>
-                ) : <div />}
+              <div style={styles.fieldGroup}>
+                <TimeDialPicker
+                  label="END TIME"
+                  placeholder="e.g. 04:30 PM"
+                  value={formState.endTime || ''}
+                  onChange={(val) => handleInputChange('endTime', val)}
+                  referenceStartTime={formState.startTime}
+                />
+              </div>
+            </div>
 
-                <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }} className="timeline-footer-right">
-                  <button 
-                    type="button" 
-                    style={styles.cancelBtn} 
-                    onClick={() => { setIsAdding(false); setEditingIndex(null); }}
-                  >
-                    CANCEL
-                  </button>
-                  {isAdding && (
+            {/* Overnight / Past Midnight Alert */}
+            {(isLateNightTime(formState.startTime || '') || isLateNightTime(formState.endTime || '') || formState.isAfterMidnight) && (
+              <div style={{ width: '100%', marginTop: '0.25rem' }}>
+                <div className="midnight-alert-box" style={styles.midnightAlertBox}>
+                  <div style={styles.midnightAlertHeader}>
+                    <Moon size={14} style={{ color: '#8b5cf6', marginRight: '0.35rem', flexShrink: 0 }} />
+                    <span style={styles.midnightAlertTitle}>EVENT RUNS PAST MIDNIGHT?</span>
+                  </div>
+                  <p style={styles.midnightAlertDesc}>
+                    Selected time is between 12:00 AM – 4:00 AM. Is this moment at the end of the wedding night (e.g. after-party) or early morning prep?
+                  </p>
+                  <div className="midnight-toggle-group" style={styles.midnightToggleGroup}>
                     <button
                       type="button"
+                      className="midnight-toggle-btn"
                       style={{
-                        ...styles.saveBtn,
-                        backgroundColor: 'var(--color-surface, #ffffff)',
-                        color: 'var(--color-primary)',
-                        border: '1.5px solid var(--color-primary)',
+                        ...styles.midnightToggleBtn,
+                        backgroundColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#ffffff',
+                        color: formState.isAfterMidnight !== false ? '#ffffff' : '#4c1d95',
+                        borderColor: formState.isAfterMidnight !== false ? '#7c3aed' : '#a78bfa',
+                        fontWeight: 700
                       }}
-                      disabled={isSyncing}
-                      onClick={(e) => saveEvent(e, true)}
+                      onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: true, eventDate: 'Next Day (+1)' }))}
                     >
-                      {isSyncing ? 'SAVING...' : 'SAVE & ADD NEXT'}
+                      🌙 YES — OVERNIGHT (+1 DAY)
                     </button>
-                  )}
-                  <button
-                    type="submit"
+                    <button
+                      type="button"
+                      className="midnight-toggle-btn"
+                      style={{
+                        ...styles.midnightToggleBtn,
+                        backgroundColor: formState.isAfterMidnight === false ? '#0d9488' : '#ffffff',
+                        color: formState.isAfterMidnight === false ? '#ffffff' : '#4c1d95',
+                        borderColor: formState.isAfterMidnight === false ? '#0d9488' : '#a78bfa',
+                        fontWeight: 700
+                      }}
+                      onClick={() => setFormState(prev => ({ ...prev, isAfterMidnight: false, eventDate: 'Main Wedding Day' }))}
+                    >
+                      ☀️ NO — EARLY MORNING
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 2: MOMENT & VENUE LOCATION */}
+          <div className="timeline-section-card">
+            <div className="timeline-section-header">
+              <h4 className="timeline-section-title">
+                <Sparkles size={15} />
+                <span>MOMENT & VENUE LOCATION</span>
+              </h4>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>EVENT MOMENT NAME *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ceremony Service, Groomsmen Prep, First Dance"
+                  value={formState.eventMoment || ''}
+                  onChange={(e) => handleInputChange('eventMoment', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>LOCATION / VENUE</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <MapPin size={15} style={{ position: 'absolute', left: '10px', color: 'var(--color-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="e.g. Courtyard Lawn, Main Ballroom"
+                    value={formState.location || ''}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
                     style={{
-                      ...styles.saveBtn,
+                      ...styles.input,
+                      paddingLeft: '2.1rem',
+                      width: '100%',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: RESPONSIBILITY & ASSIGNED ROLES */}
+          <div className="timeline-section-card">
+            <div className="timeline-section-header">
+              <h4 className="timeline-section-title">
+                <Users size={15} />
+                <span>ASSIGNED ROLES & VENDORS</span>
+              </h4>
+              {selectedRoles.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllRoles}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ef4444',
+                    fontSize: '0.7rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                >
+                  <Trash2 size={12} /> CLEAR ALL ({selectedRoles.length})
+                </button>
+              )}
+            </div>
+
+            {/* Selected Roles Chips Box */}
+            {selectedRoles.length > 0 ? (
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.4rem',
+                padding: '0.65rem 0.85rem',
+                backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border, #e2e8f0)',
+              }}>
+                {selectedRoles.map((role) => (
+                  <span
+                    key={role}
+                    style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.35rem',
+                      padding: '0.25rem 0.65rem',
+                      borderRadius: '999px',
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-on-primary, #ffffff)',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                     }}
-                    disabled={isSyncing}
                   >
-                    <Check size={14} />
-                    <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}</span>
-                  </button>
-                </div>
+                    <User size={12} />
+                    <span>{role}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeRole(role)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        padding: '0',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginLeft: '2px',
+                        opacity: 0.85,
+                      }}
+                      title={`Remove ${role}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
               </div>
-            </form>
+            ) : (
+              <div style={{
+                padding: '0.65rem 0.85rem',
+                backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                borderRadius: '8px',
+                border: '1px dashed var(--color-border, #cbd5e1)',
+                fontSize: '0.76rem',
+                color: 'var(--color-muted)',
+                fontFamily: 'var(--font-sans)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}>
+                <Users size={14} style={{ color: 'var(--color-muted)' }} />
+                <span>No assignees added yet. Tap quick tags below or search to assign wedding party or vendors.</span>
+              </div>
+            )}
+
+            {/* Search & Custom Input Bar */}
+            <div ref={roleDropdownRef} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
+              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                <Search size={15} style={{ position: 'absolute', left: '10px', color: 'var(--color-muted)', pointerEvents: 'none' }} />
+                <input
+                  type="text"
+                  placeholder="Search roles & vendors or type custom assignee..."
+                  value={customRoleInput}
+                  onChange={(e) => {
+                    setCustomRoleInput(e.target.value);
+                    setIsRoleDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsRoleDropdownOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      if (customRoleInput.trim()) addCustomRole(customRoleInput);
+                    }
+                  }}
+                  style={{
+                    ...styles.input,
+                    paddingLeft: '2.2rem',
+                    paddingRight: customRoleInput ? '2.2rem' : '0.75rem',
+                    width: '100%',
+                  }}
+                />
+                {customRoleInput && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomRoleInput('')}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-muted)',
+                      cursor: 'pointer',
+                      padding: '3px',
+                    }}
+                    title="Clear input"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {customRoleInput.trim() && (
+                <button
+                  type="button"
+                  onClick={() => addCustomRole(customRoleInput)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    padding: '0.55rem 0.95rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    borderRadius: 'var(--border-radius-sm, 6px)',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-on-primary, #ffffff)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <Plus size={14} /> ADD
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsRoleDropdownOpen(prev => !prev)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.55rem 0.85rem',
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  borderRadius: 'var(--border-radius-sm, 6px)',
+                  backgroundColor: isRoleDropdownOpen ? 'var(--color-primary)' : 'var(--color-bg, #ffffff)',
+                  color: isRoleDropdownOpen ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
+                  border: '1px solid var(--color-border, #d1d5db)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+                title="Toggle full roles catalog"
+              >
+                <Tag size={13} />
+                <span>{isRoleDropdownOpen ? 'HIDE ROLES' : 'ALL ROLES'}</span>
+                {isRoleDropdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+
+              {/* Expandable Role Drawer / Popover */}
+              {isRoleDropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 6px)',
+                    left: 0,
+                    right: 0,
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    border: '1px solid var(--color-border, #cbd5e1)',
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+                    zIndex: 60,
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.5rem 0.85rem',
+                    borderBottom: '1px solid var(--color-border, #f1f5f9)',
+                    backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
+                  }}>
+                    <span style={{ fontSize: '0.675rem', fontWeight: 800, color: 'var(--color-muted)', letterSpacing: '0.05em' }}>
+                      DIRECTORY ROLES & VENDORS ({previousResponsibilities.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsRoleDropdownOpen(false)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: 'var(--color-primary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      DONE ✓
+                    </button>
+                  </div>
+
+                  {customRoleInput.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => addCustomRole(customRoleInput)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        width: '100%',
+                        padding: '0.6rem 0.85rem',
+                        textAlign: 'left',
+                        fontSize: '0.8rem',
+                        fontFamily: 'var(--font-sans)',
+                        backgroundColor: 'rgba(205, 162, 80, 0.12)',
+                        color: 'var(--color-primary)',
+                        fontWeight: 700,
+                        border: 'none',
+                        borderBottom: '1px solid var(--color-border)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Plus size={14} /> Add custom assignee: &ldquo;{customRoleInput.trim()}&rdquo;
+                    </button>
+                  )}
+
+                  {previousResponsibilities
+                    .filter(role =>
+                      !customRoleInput.trim() ||
+                      role.toLowerCase().includes(customRoleInput.trim().toLowerCase())
+                    )
+                    .map((role) => {
+                      const isSelected = selectedRoles.some(r => r.toLowerCase() === role.toLowerCase());
+                      return (
+                        <button
+                          key={role}
+                          type="button"
+                          onClick={() => toggleRole(role)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            padding: '0.55rem 0.85rem',
+                            textAlign: 'left',
+                            fontSize: '0.8rem',
+                            fontFamily: 'var(--font-sans)',
+                            backgroundColor: isSelected ? 'rgba(205, 162, 80, 0.08)' : 'transparent',
+                            color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+                            fontWeight: isSelected ? 700 : 500,
+                            border: 'none',
+                            borderBottom: '1px solid var(--color-border, #f8fafc)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                            <span style={{
+                              width: '16px',
+                              height: '16px',
+                              borderRadius: '3px',
+                              border: `1.5px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-muted)'}`,
+                              backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                              {isSelected && <Check size={12} style={{ color: 'var(--color-on-primary, #ffffff)' }} />}
+                            </span>
+                            {role}
+                          </span>
+                          {isSelected && (
+                            <span style={{ fontSize: '0.675rem', color: 'var(--color-primary)', fontWeight: 700 }}>
+                              ADDED
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* Quick-Pick Popular Suggestion Badges */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+              <span style={{ fontSize: '0.675rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-muted)' }}>
+                QUICK TOGGLE POPULAR ROLES:
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                {[
+                  'Photographer',
+                  'Videographer',
+                  'Bridal Party',
+                  'Groomsmen',
+                  'Planner / Coordinator',
+                  'DJ / MC',
+                  'Caterer / Staff',
+                  'Officiant',
+                  'Bride',
+                  'Groom',
+                  'Florist',
+                  'Glam Team (Hair & Makeup)'
+                ].map(sug => {
+                  const isSelected = selectedRoles.some(r => r.toLowerCase() === sug.toLowerCase());
+                  return (
+                    <button
+                      key={sug}
+                      type="button"
+                      onClick={() => toggleRole(sug)}
+                      className={`timeline-role-pill ${isSelected ? 'selected' : ''}`}
+                      title={isSelected ? `Remove ${sug}` : `Add ${sug}`}
+                    >
+                      {isSelected ? <Check size={11} /> : <Plus size={11} />}
+                      <span>{sug}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* SECTION 4: NOTES & CUES */}
+          <div className="timeline-section-card">
+            <div className="timeline-section-header">
+              <h4 className="timeline-section-title">
+                <FileText size={15} />
+                <span>NOTES / DETAILS & VENDOR GUIDELINES</span>
+              </h4>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <textarea
+                placeholder="Provide specific guidelines, audio/lighting cues, setup instructions, or VIP coordination notes..."
+                value={formState.notes || ''}
+                rows={3}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                style={styles.textarea}
+              />
+            </div>
+          </div>
+        </form>
+      </SlideOverDrawer>
 
       {/* IN-APP DELETE TIMELINE EVENT CONFIRMATION MODAL */}
       {eventToDeleteIndex !== null && schedule[eventToDeleteIndex] && (

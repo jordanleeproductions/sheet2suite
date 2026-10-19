@@ -225,6 +225,20 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Tactile Micro-Interactions (`globals.css`):**
   - Includes `@keyframes springCheck` for milestone checkmark springs and `.btn-pressable` active scale feedback (`scale(0.97)`).
 
+### 2.16 Universal Monarch UX Edit Screens & Slide-Over Inspector Architecture (`SlideOverDrawer.tsx`, `MonarchForm.tsx`)
+- **Universal Responsive Drawer Primitive (`src/components/vow/SlideOverDrawer.tsx`):**
+  - **Desktop Slide-Over ($\ge 641\text{px}$):** Replaces legacy centered popup modals (`modalOverlay`) with right-hand sliding inspector panels. Features subtle frosted glass backdrop blur, Escape key and backdrop dismissal, uppercase monospace ID badge, editorial serif title, technical monospace subtitle, adjacent record pager navigation buttons (`↑` Previous / `↓` Next), and sticky bottom action footer.
+  - **Mobile Bottom Sheet ($\le 640\text{px}$):** Automatically reflows from a side drawer into a native slide-up bottom sheet with `slideUpMobile` animation, top drag handle (`38px × 4.5px`), rounded 20px top corners, $16\text{px}$ input fonts (preventing iOS Safari viewport auto-zoom), full-width layout, and sticky bottom action buttons honoring hardware safe areas (`env(safe-area-inset-bottom, 0px)`).
+- **Reusable Monarch Form System (`src/components/vow/MonarchForm.tsx`):**
+  - `<DrawerSection>`: Inset grouped card container with uppercase technical monospace section title, subtitle description, and optional header action icon.
+  - `<DrawerField>`: Form field wrapper with label, required asterisk, optional right-aligned field hint, and standardized error messaging.
+  - `<DrawerRow>`: Responsive multi-column row layout (collapses to single column on mobile screens).
+  - `<PriorityPills>`: Tactile 1-tap priority selector with colored status dots, checkmark feedback, and configurable option sets.
+  - `<QuickDateChips>`: Fast date chips (`Today`, `Tomorrow`, `+1 Week`, `+2 Weeks`, `+1 Month`, `Wedding Date`).
+  - `<QuickAssignChips>`: 1-tap partner avatar chips for instant task delegation.
+- **Cross-Module Implementation Parity:**
+  - Tasks & Checklist (`KanbanBoard.tsx`), Timeline & Day-Of Schedule (`TimelineManager.tsx`), Menu & Catering (`MenuSetupManager.tsx`), Photography Shot List (`PhotoShotListManager.tsx`), Gifts & Thank You Tracker (`ThankYouManager.tsx`), Music & DJ Playlists (`MusicManager.tsx`), Guest List (`GuestListManager.tsx`), and Vendor Directory (`VendorManager.tsx`).
+
 ---
 
 ## 4. Native Sheet2Suite License & Entitlement Architecture

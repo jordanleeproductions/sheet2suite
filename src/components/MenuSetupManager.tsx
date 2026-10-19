@@ -8,6 +8,8 @@ import MobileFAB from '@/components/MobileFAB';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
+import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { DrawerSection, DrawerField, DrawerRow } from '@/components/vow/MonarchForm';
 
 interface MenuSetupManagerProps {
   guests: Guest[];
@@ -176,6 +178,16 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
   };
 
   const filteredItems = menuItems.filter(item => activeCategory === 'all' || item.category === activeCategory);
+
+  const currentDishIndex = editingItem ? filteredItems.findIndex(i => i.id === editingItem.id) : -1;
+  const handleNavigateAdjacentDish = (offset: number) => {
+    if (currentDishIndex < 0) return;
+    const targetIdx = currentDishIndex + offset;
+    if (targetIdx >= 0 && targetIdx < filteredItems.length) {
+      const nextDish = filteredItems[targetIdx];
+      startEdit(nextDish);
+    }
+  };
 
   const entrees = menuItems.filter(i => i.category === 'entree');
   const appetizers = menuItems.filter(i => i.category === 'appetizer');
@@ -587,144 +599,164 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
         )}
       </div>
 
-      {/* ADD / EDIT MENU ITEM MODAL */}
-      {(isAdding || editingItem) && (
-        <div style={styles.modalOverlay} onClick={() => { setIsAdding(false); setEditingItem(null); }}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader} className="modalHeader">
-              <h3 style={{ ...styles.modalTitle, color: 'var(--color-on-primary, #ffffff)' }} className="modalTitle">
-                {isAdding ? 'ADD MENU ITEM' : `EDIT ITEM: ${editingItem?.name}`}
-              </h3>
+      {/* Slide-Over Menu Item Inspector [Monarch UX] */}
+      <SlideOverDrawer
+        isOpen={Boolean(isAdding || editingItem)}
+        onClose={() => { setIsAdding(false); setEditingItem(null); }}
+        title={isAdding ? 'Add Menu Offering' : (formState.name || 'Edit Menu Item')}
+        subtitle={editingItem ? `${(formState.category || 'entree').toUpperCase()} · ${formState.isGuestChoice !== false ? 'Guest Choice Dish' : 'Buffet / Shared'}` : 'Configure wedding menu offering'}
+        badge="MENU ITEM"
+        badgeColor="#10B981"
+        hasPrevious={currentDishIndex > 0}
+        hasNext={currentDishIndex >= 0 && currentDishIndex < filteredItems.length - 1}
+        onPrevious={() => handleNavigateAdjacentDish(-1)}
+        onNext={() => handleNavigateAdjacentDish(1)}
+        width="520px"
+        footer={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+            {!isAdding && editingItem ? (
               <button
-                style={{ ...styles.closeBtn, color: 'var(--color-on-primary, #ffffff)' }}
-                className="closeBtn"
+                type="button"
+                style={styles.deleteBtn}
+                onClick={() => handleDeleteClick(editingItem)}
+                title="Delete menu item"
+              >
+                DELETE
+              </button>
+            ) : (
+              <button
+                type="button"
+                style={styles.cancelBtn}
                 onClick={() => { setIsAdding(false); setEditingItem(null); }}
               >
-                <X size={18} />
+                CANCEL
+              </button>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {!isAdding && (
+                <button
+                  type="button"
+                  style={styles.cancelBtn}
+                  onClick={() => { setIsAdding(false); setEditingItem(null); }}
+                >
+                  CANCEL
+                </button>
+              )}
+              {isAdding && (
+                <button
+                  type="button"
+                  onClick={(e) => handleSave(e, true)}
+                  style={{
+                    ...styles.submitBtn,
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-primary, #0F172A)',
+                    border: '1px solid var(--color-border, #CBD5E1)',
+                  }}
+                  disabled={isSyncing}
+                >
+                  SAVE & ADD NEW
+                </button>
+              )}
+              <button type="submit" form="menu-inspector-form" style={styles.submitBtn} disabled={isSyncing}>
+                <Check size={14} style={{ marginRight: '4px' }} />
+                <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MENU ITEM' : 'SAVE CHANGES')}</span>
               </button>
             </div>
-
-            <form onSubmit={handleSave} style={styles.form}>
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>COURSE CATEGORY *</label>
+          </div>
+        }
+      >
+        <form id="menu-inspector-form" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          {/* SECTION 1: COURSE & DISH DETAILS */}
+          <DrawerSection title="COURSE & DISH DETAILS" icon={<Utensils size={13} style={{ color: 'var(--color-primary)' }} />}>
+            <DrawerRow columns={2}>
+              <DrawerField label="COURSE CATEGORY" required>
                 <select
                   value={formState.category || 'entree'}
                   onChange={(e) => setFormState(prev => ({ ...prev, category: e.target.value as any }))}
                   style={styles.select}
                 >
                   <option value="entree">Entree (Main Course)</option>
-                  <option value="appetizer">Appetizer / Hors d'oeuvre</option>
+                  <option value="appetizer">Appetizer / Hors d&apos;oeuvre</option>
                   <option value="dessert">Dessert / Sweet Treat</option>
                 </select>
-              </div>
+              </DrawerField>
 
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>DISH NAME *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Pan-Seared Salmon, Ribeye Steak"
-                  value={formState.name || ''}
-                  onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
-                  style={styles.input}
-                />
-              </div>
-
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>DESCRIPTION / INGREDIENTS</label>
-                <textarea
-                  rows={3}
-                  placeholder="e.g. Atlantic salmon served with lemon herb butter sauce and roasted asparagus..."
-                  value={formState.description || ''}
-                  onChange={(e) => setFormState(prev => ({ ...prev, description: e.target.value }))}
-                  style={styles.textarea}
-                />
-              </div>
-
-              {/* Guest Choice Option Toggle */}
-              <div style={{ ...styles.fieldGroup, backgroundColor: 'var(--color-bg-subtle)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)' }}>
-                <label style={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={formState.isGuestChoice !== false}
-                    onChange={(e) => setFormState(prev => ({ ...prev, isGuestChoice: e.target.checked }))}
-                  />
-                  <strong>GUEST CHOICE OPTION</strong>
-                </label>
-                <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem', display: 'block' }}>
-                  Enable for individual plated guest choices. Uncheck for buffet-style or shared dishes where guests do not pick individually.
-                </span>
-              </div>
-
-              {/* Dietary Restriction Tags Checkboxes */}
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>DIETARY & ALLERGEN TAGS</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.35rem' }}>
-                  <label style={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={!!formState.isVegetarian}
-                      onChange={(e) => setFormState(prev => ({ ...prev, isVegetarian: e.target.checked }))}
-                    />
-                    🌱 Vegetarian
-                  </label>
-                  <label style={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={!!formState.isVegan}
-                      onChange={(e) => setFormState(prev => ({ ...prev, isVegan: e.target.checked }))}
-                    />
-                    🌿 Vegan
-                  </label>
-                  <label style={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={!!formState.isGlutenFree}
-                      onChange={(e) => setFormState(prev => ({ ...prev, isGlutenFree: e.target.checked }))}
-                    />
-                    🌾 Gluten Free
-                  </label>
-                  <label style={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={!!formState.isNutFree}
-                      onChange={(e) => setFormState(prev => ({ ...prev, isNutFree: e.target.checked }))}
-                    />
-                    🥜 Nut Free
-                  </label>
-                </div>
-              </div>
-
-              <div style={styles.modalActions}>
-                <button
-                  type="button"
-                  onClick={() => { setIsAdding(false); setEditingItem(null); }}
-                  style={styles.cancelBtn}
+              <DrawerField label="OFFERING TYPE">
+                <select
+                  value={formState.isGuestChoice !== false ? 'choice' : 'buffet'}
+                  onChange={(e) => setFormState(prev => ({ ...prev, isGuestChoice: e.target.value === 'choice' }))}
+                  style={styles.select}
                 >
-                  CANCEL
-                </button>
-                {isAdding && (
-                  <button
-                    type="button"
-                    onClick={(e) => handleSave(e, true)}
-                    style={{
-                      ...styles.submitBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                  >
-                    SAVE & ADD NEW
-                  </button>
-                )}
-                <button type="submit" style={styles.submitBtn}>
-                  <Check size={16} style={{ marginRight: '4px' }} /> {isAdding ? 'SAVE MENU ITEM' : 'SAVE CHANGES'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  <option value="choice">Guest Choice (Plated RSVP)</option>
+                  <option value="buffet">Buffet / Shared Course</option>
+                </select>
+              </DrawerField>
+            </DrawerRow>
+
+            <DrawerField label="DISH NAME" required>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Pan-Seared Salmon, Ribeye Steak"
+                value={formState.name || ''}
+                onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                style={styles.input}
+              />
+            </DrawerField>
+
+            <DrawerField label="DESCRIPTION & INGREDIENTS">
+              <textarea
+                rows={3}
+                placeholder="e.g. Atlantic salmon served with lemon herb butter sauce and roasted asparagus..."
+                value={formState.description || ''}
+                onChange={(e) => setFormState(prev => ({ ...prev, description: e.target.value }))}
+                style={styles.textarea}
+              />
+            </DrawerField>
+          </DrawerSection>
+
+          {/* SECTION 2: DIETARY & ALLERGEN TAGS */}
+          <DrawerSection title="DIETARY & ALLERGEN TAGS" icon={<Leaf size={13} style={{ color: '#10B981' }} />}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+              <label style={{ ...styles.checkboxLabel, padding: '0.45rem 0.65rem', border: '1px solid var(--color-border)', borderRadius: '6px', backgroundColor: formState.isVegetarian ? 'rgba(16, 185, 129, 0.08)' : 'transparent' }}>
+                <input
+                  type="checkbox"
+                  checked={!!formState.isVegetarian}
+                  onChange={(e) => setFormState(prev => ({ ...prev, isVegetarian: e.target.checked }))}
+                />
+                <span>🌱 Vegetarian</span>
+              </label>
+
+              <label style={{ ...styles.checkboxLabel, padding: '0.45rem 0.65rem', border: '1px solid var(--color-border)', borderRadius: '6px', backgroundColor: formState.isVegan ? 'rgba(16, 185, 129, 0.08)' : 'transparent' }}>
+                <input
+                  type="checkbox"
+                  checked={!!formState.isVegan}
+                  onChange={(e) => setFormState(prev => ({ ...prev, isVegan: e.target.checked }))}
+                />
+                <span>🌿 Vegan</span>
+              </label>
+
+              <label style={{ ...styles.checkboxLabel, padding: '0.45rem 0.65rem', border: '1px solid var(--color-border)', borderRadius: '6px', backgroundColor: formState.isGlutenFree ? 'rgba(245, 158, 11, 0.08)' : 'transparent' }}>
+                <input
+                  type="checkbox"
+                  checked={!!formState.isGlutenFree}
+                  onChange={(e) => setFormState(prev => ({ ...prev, isGlutenFree: e.target.checked }))}
+                />
+                <span>🌾 Gluten Free</span>
+              </label>
+
+              <label style={{ ...styles.checkboxLabel, padding: '0.45rem 0.65rem', border: '1px solid var(--color-border)', borderRadius: '6px', backgroundColor: formState.isNutFree ? 'rgba(59, 130, 246, 0.08)' : 'transparent' }}>
+                <input
+                  type="checkbox"
+                  checked={!!formState.isNutFree}
+                  onChange={(e) => setFormState(prev => ({ ...prev, isNutFree: e.target.checked }))}
+                />
+                <span>🥜 Nut Free</span>
+              </label>
+            </div>
+          </DrawerSection>
+        </form>
+      </SlideOverDrawer>
 
       {/* IN-APP DELETE MENU ITEM CONFIRMATION MODAL */}
       {itemToDelete && (
