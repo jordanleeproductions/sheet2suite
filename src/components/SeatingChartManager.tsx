@@ -183,10 +183,51 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
   };
 
   // Helper to check if a guest belongs to a given table (supporting tableId or legacy tableName)
-  const isGuestAtTable = (guest: Guest, table: TableConfig): boolean => {
-    if (!guest.tableAssignment) return false;
+  const isGuestAtTable = (guest: Guest, table?: Partial<TableConfig> | null): boolean => {
+    if (!guest || !guest.tableAssignment || !table) return false;
     const assignment = guest.tableAssignment.trim().toLowerCase();
-    return assignment === table.tableId.toLowerCase() || assignment === table.tableName.toLowerCase();
+    const tableId = (table.tableId || '').trim().toLowerCase();
+    const tableName = (table.tableName || '').trim().toLowerCase();
+    return (Boolean(tableId) && assignment === tableId) || (Boolean(tableName) && assignment === tableName);
+  };
+
+  // Helper to stably resolve physical seat numbers (1..capacity) for all guests at a table
+  const getResolvedGuestSeatsForTable = (table: TableConfig, tableGuests: Guest[]): Map<string, number> => {
+    const result = new Map<string, number>();
+    const takenSeats = new Set<number>();
+    const unplacedGuests: Guest[] = [];
+
+    // Step 1: Retain guests who already have valid physical seat numbers (1..capacity) without duplicates
+    tableGuests.forEach((g) => {
+      if (
+        typeof g.seatNumber === 'number' &&
+        g.seatNumber >= 1 &&
+        g.seatNumber <= table.capacity &&
+        !takenSeats.has(g.seatNumber)
+      ) {
+        takenSeats.add(g.seatNumber);
+        result.set(g.guestId, g.seatNumber);
+      } else {
+        unplacedGuests.push(g);
+      }
+    });
+
+    // Step 2: Identify all open physical seat slots in ascending order
+    const openSlots: number[] = [];
+    for (let s = 1; s <= table.capacity; s++) {
+      if (!takenSeats.has(s)) {
+        openSlots.push(s);
+      }
+    }
+
+    // Step 3: Allocate open slots to unplaced guests in a stable, predictable order
+    unplacedGuests.forEach((g, idx) => {
+      if (idx < openSlots.length) {
+        result.set(g.guestId, openSlots[idx]);
+      }
+    });
+
+    return result;
   };
 
   // Helper to resolve table display name for a guest
@@ -260,43 +301,154 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
   // Helper to assign a guest to a table (by tableId or tableName) and specific seat number
   const assignGuestToTable = async (guestId: string, tableIdOrName: string, seatNumber?: number, isCeremonyMode = false) => {
     if (isSyncing) return;
-    
-    // If not Unassigned, resolve the canonical tableId if available
+
+    // 1. Resolve canonical tableId and TableConfig if assigning to a table
     let targetAssignment = tableIdOrName;
+    let targetTable: TableConfig | undefined;
     if (!isCeremonyMode && tableIdOrName !== 'Unassigned') {
-      const foundTable = tables.find(t => t.tableId === tableIdOrName || t.tableName === tableIdOrName);
-      if (foundTable) {
-        targetAssignment = foundTable.tableId;
+      targetTable = tables.find(
+        (t) =>
+          t.tableId.toLowerCase() === tableIdOrName.toLowerCase() ||
+          t.tableName.toLowerCase() === tableIdOrName.toLowerCase()
+      );
+      if (targetTable) {
+        targetAssignment = targetTable.tableId;
       }
     }
 
-    const updated = guests.map(g => {
-      // Prevent duplicate seat collisions: if another guest is already at this specific seat at this table, clear their seat number
-      if (!isCeremonyMode && tableIdOrName !== 'Unassigned' && typeof seatNumber === 'number') {
-        if (g.guestId !== guestId && isGuestAtTable(g, { tableId: targetAssignment } as any) && g.seatNumber === seatNumber) {
-          return { ...g, seatNumber: undefined };
+    // Special handling for Ceremony mode
+    if (isCeremonyMode) {
+      const updated = guests.map((g) => {
+        if (g.guestId === guestId) {
+          return {
+            ...g,
+            ceremonySeating: tableIdOrName === 'Unassigned' ? '' : tableIdOrName,
+            seatNumber: tableIdOrName === 'Unassigned' ? undefined : seatNumber,
+          };
+        }
+        return g;
+      });
+      await onUpdateGuests(updated);
+      setSelectedGuest(null);
+      setAssignSeatTable(null);
+      setTargetSeatIndex(null);
+      setAssignSearch('');
+      return;
+    }
+
+    // 2. Lock in currently displayed physical seat numbers across all tables
+    // so removing or reassigning any guest never causes other guests to shift!
+    const guestSeatUpdates = new Map<string, { tableAssignment: string; seatNumber?: number }>();
+
+    tables.forEach((tbl) => {
+      const seated = guests.filter((g) => isGuestAtTable(g, tbl));
+      const resolvedSeats = getResolvedGuestSeatsForTable(tbl, seated);
+      seated.forEach((g) => {
+        const resolvedSeat = resolvedSeats.get(g.guestId);
+        guestSeatUpdates.set(g.guestId, {
+          tableAssignment: tbl.tableId,
+          seatNumber: resolvedSeat,
+        });
+      });
+    });
+
+    // 3. Determine target seat number for the guest being assigned/unassigned
+    let finalSeatNumber = seatNumber;
+
+    if (tableIdOrName !== 'Unassigned' && targetTable) {
+      if (
+        typeof finalSeatNumber === 'number' &&
+        finalSeatNumber >= 1 &&
+        finalSeatNumber <= targetTable.capacity
+      ) {
+        // Specific seat requested: check for collision at targetTable
+        guests.forEach((g) => {
+          if (g.guestId !== guestId) {
+            const currentUpdate = guestSeatUpdates.get(g.guestId);
+            const currentTable = currentUpdate?.tableAssignment || g.tableAssignment;
+            const currentSeat = currentUpdate?.seatNumber ?? g.seatNumber;
+            if (
+              (currentTable === targetTable!.tableId || isGuestAtTable(g, targetTable!)) &&
+              currentSeat === finalSeatNumber
+            ) {
+              // Vacate the seat from the previous occupant
+              guestSeatUpdates.set(g.guestId, {
+                tableAssignment: targetTable!.tableId,
+                seatNumber: undefined,
+              });
+            }
+          }
+        });
+      } else {
+        // No specific seatNumber requested (e.g. from table dropdown): find first available slot
+        const taken = new Set<number>();
+        guests.forEach((g) => {
+          if (g.guestId !== guestId) {
+            const currentUpdate = guestSeatUpdates.get(g.guestId);
+            const currentTable = currentUpdate?.tableAssignment || g.tableAssignment;
+            const currentSeat = currentUpdate?.seatNumber ?? g.seatNumber;
+            if (
+              (currentTable === targetTable!.tableId || isGuestAtTable(g, targetTable!)) &&
+              typeof currentSeat === 'number' &&
+              currentSeat >= 1 &&
+              currentSeat <= targetTable!.capacity
+            ) {
+              taken.add(currentSeat);
+            }
+          }
+        });
+
+        for (let s = 1; s <= targetTable.capacity; s++) {
+          if (!taken.has(s)) {
+            finalSeatNumber = s;
+            break;
+          }
         }
       }
-      if (g.guestId !== guestId) return g;
-      if (isCeremonyMode) {
-        return { ...g, ceremonySeating: tableIdOrName === 'Unassigned' ? '' : tableIdOrName };
+    }
+
+    // 4. Update the target guest's record
+    if (tableIdOrName === 'Unassigned') {
+      guestSeatUpdates.set(guestId, {
+        tableAssignment: 'Unassigned',
+        seatNumber: undefined,
+      });
+    } else {
+      guestSeatUpdates.set(guestId, {
+        tableAssignment: targetAssignment,
+        seatNumber: finalSeatNumber,
+      });
+    }
+
+    // 5. Construct updated guests array
+    const updated = guests.map((g) => {
+      const update = guestSeatUpdates.get(g.guestId);
+      if (update) {
+        return {
+          ...g,
+          tableAssignment: update.tableAssignment,
+          seatNumber: update.seatNumber,
+        };
       }
-      return { ...g, tableAssignment: targetAssignment, seatNumber: tableIdOrName === 'Unassigned' ? undefined : seatNumber };
+      return g;
     });
+
     await onUpdateGuests(updated);
 
-    const remainingUnassigned = updated.filter(g => 
-      (g.rsvpStatus === 'Attending' || g.rsvpStatus === 'No Response') && 
-      (!g.tableAssignment || g.tableAssignment.trim() === '' || g.tableAssignment === 'Unassigned')
+    const remainingUnassigned = updated.filter(
+      (g) =>
+        (g.rsvpStatus === 'Attending' || g.rsvpStatus === 'No Response') &&
+        (!g.tableAssignment || g.tableAssignment.trim() === '' || g.tableAssignment === 'Unassigned')
     );
     if (remainingUnassigned.length === 0 && updated.length > 0) {
       triggerConfetti({ particleCount: 90 });
     }
-    
+
     // Reset all popups cleanly
     setSelectedGuest(null);
     setAssignSeatTable(null);
     setTargetSeatIndex(null);
+    setAssignSearch('');
   };
 
   // Open Add Table Modal
@@ -848,22 +1000,17 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
           const isOverCapacity = seatedGuests.length > table.capacity;
 
           // Helper to resolve specific guest at physical seat number (1..capacity)
-          const takenSeats = new Set(
-            seatedGuests
-              .map(g => g.seatNumber)
-              .filter((n): n is number => typeof n === 'number' && n >= 1 && n <= table.capacity)
-          );
-          const openSeatSlots = Array.from({ length: table.capacity }, (_, i) => i + 1).filter(s => !takenSeats.has(s));
-          const unnumberedGuests = seatedGuests.filter(g => typeof g.seatNumber !== 'number' || g.seatNumber < 1 || g.seatNumber > table.capacity);
+          const seatMap = getResolvedGuestSeatsForTable(table, seatedGuests);
+          const seatToGuest = new Map<number, Guest>();
+          seatedGuests.forEach((g) => {
+            const s = seatMap.get(g.guestId);
+            if (typeof s === 'number') {
+              seatToGuest.set(s, g);
+            }
+          });
 
           const getGuestAtSeat = (seatNum: number): Guest | undefined => {
-            const exact = seatedGuests.find(g => g.seatNumber === seatNum);
-            if (exact) return exact;
-            const openIdx = openSeatSlots.indexOf(seatNum);
-            if (openIdx !== -1 && openIdx < unnumberedGuests.length) {
-              return unnumberedGuests[openIdx];
-            }
-            return undefined;
+            return seatToGuest.get(seatNum);
           };
 
           // Helper to handle seat clicks cleanly
@@ -873,7 +1020,7 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
             if (guest) {
               setAssignSeatTable(null);
               setTargetSeatIndex(null);
-              setSelectedGuest(guest);
+              setSelectedGuest({ ...guest, seatNumber: seatNum });
             } else {
               setSelectedGuest(null);
               setAssignSeatTable(table);
@@ -1169,7 +1316,9 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                 <label style={styles.fieldLabel}>SEATING ASSIGNMENT</label>
                 <select
                   value={getTableForGuest(selectedGuest)?.tableId || selectedGuest.tableAssignment || 'Unassigned'}
-                  onChange={(e) => assignGuestToTable(selectedGuest.guestId, e.target.value)}
+                  onChange={async (e) => {
+                    await assignGuestToTable(selectedGuest.guestId, e.target.value);
+                  }}
                   style={styles.selectInput}
                   disabled={isSyncing}
                 >
@@ -1180,6 +1329,15 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                     </option>
                   ))}
                 </select>
+
+                {selectedGuest.tableAssignment && selectedGuest.tableAssignment !== 'Unassigned' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.45rem', padding: '0.35rem 0.5rem', backgroundColor: 'var(--color-bg)', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>PHYSICAL SEAT:</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>
+                      {selectedGuest.seatNumber ? `Seat #${selectedGuest.seatNumber}` : 'Assigned (Open Seat)'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Meal Selection & Dietary Restrictions */}
@@ -1226,8 +1384,8 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                     justifyContent: 'center',
                     gap: '0.5rem'
                   }}
-                  onClick={() => {
-                    assignGuestToTable(selectedGuest.guestId, 'Unassigned');
+                  onClick={async () => {
+                    await assignGuestToTable(selectedGuest.guestId, 'Unassigned');
                     setSelectedGuest(null);
                   }}
                 >
@@ -1330,11 +1488,14 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                           cursor: isAlreadyHere ? 'default' : 'pointer',
                           transition: 'var(--transition-smooth)'
                         }}
-                        onClick={() => {
+                        onClick={async () => {
                           if (!isAlreadyHere) {
-                            assignGuestToTable(guest.guestId, assignSeatTable.tableId, targetSeatIndex || undefined);
-                            setAssignSeatTable(null);
-                            setTargetSeatIndex(null);
+                            await assignGuestToTable(
+                              guest.guestId,
+                              assignSeatTable.tableId || assignSeatTable.tableName,
+                              targetSeatIndex || undefined,
+                              seatingMode === 'ceremony'
+                            );
                             setAssignSearch('');
                           }
                         }}

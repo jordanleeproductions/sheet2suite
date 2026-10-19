@@ -11,11 +11,25 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
-    version: 'v1.12.1',
-    title: 'Interactive Release Notes & Navigation Badges',
+    version: 'v1.12.2',
+    title: 'Seating Chart Flow & Stable Seat Position Fix',
     date: 'Oct 19, 2026',
     badge: 'Latest',
     badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Fixed seat assignment modal crash by making table lookup null-safe when assigning guests.',
+      'Eliminated seat shifting and accidental reassignments when unassigning or removing guests from tables.',
+      'Implemented getResolvedGuestSeatsForTable to lock in stable physical seat numbers permanently.',
+    ],
+    details: 'Resolved critical issues in the table assignment flow where assigning guests threw a TypeError and unassigning a guest caused other seated guests to shift positions.',
+  },
+  {
+    version: 'v1.12.1',
+    title: 'Interactive Release Notes & Navigation Badges',
+    date: 'Oct 19, 2026',
+    badge: 'Navigation',
+    badgeColor: '#059669',
     category: 'feature',
     highlights: [
       'Tappable version badge in desktop sidebar and mobile drawer to inspect release summaries.',
