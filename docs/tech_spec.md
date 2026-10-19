@@ -516,13 +516,21 @@ src/
 - **Clean Off-Screen Transitions:** Slide-up entry translates from `translateY(calc(100% + 120px))` to `translateY(0)` with smooth cubic-bezier easing.
 - **Z-Index Layering:** Backdrop at `z-index: 110`, bottom sheet at `z-index: 140`, and bottom nav bar at `z-index: 150` ensure seamless tap targets and no visual clipping.
 
-### 3.9 Admin Database Inspector & Firebase Record Editor (`[ADMIN-FIREBASE-RECORD-EDITOR]`)
-- **Direct Database Record Editing (`src/app/admin/page.tsx`):** Provides a comprehensive database inspector and editor for Sheet2Suite administrators at `/admin`. Table rows for both Active Spreadsheet Workspaces and Registered Entitlement Licenses include inline `"✏️ EDIT"` buttons alongside `"👁️ JSON"` view and `"Delete"` actions.
-- **Dual-Mode Interactive Editor Modal:**
-  - **Structured Form Mode:** Dedicated input controls for editing critical properties:
-    - *Workspaces*: `spreadsheetName`, `spreadsheetId` (modifies Google Sheet linkage), `userEmail`, `partnerEmail`, `coPlanners` (comma-separated collaboration list), `orderId`, `orderVerified` (verified / unverified toggle), `driveFolderPath`, `webViewLink`, `productName`.
-    - *Licenses*: `licenseKey`, `orderId`, `purchaserEmail`, `sku`, `status` (`active`, `revoked`, `expired`), `licenseTier` (`standard`, `pro`, `unlimited`), `maxWorkspaces`, `entitledProducts`.
+### 3.9 Admin Database Inspector & Monarch Operations Portal (`[ADMIN-MONARCH-UX-REDESIGN]`)
+- **Monarch Operations Architecture (`src/app/admin/page.tsx`):** Provides a comprehensive database inspector and entitlements management portal for Sheet2Suite administrators at `/admin`, completely modernized to conform with the Monarch design language:
+  - **Monarch Masthead & Live Status:** Editorial serif display typography (*"Database & Entitlements Inspector"*), technical uppercase monospace badge (`MONARCH ADMIN`), and real-time pulse dot indicator (`FIRESTORE LIVE` vs `LOCAL DISK MOCK`).
+  - **Hero Operational Metric Strip:** 4-card KPI summary displaying *Active Workspaces*, *Registered Licenses*, *Master Template Schema* health, and *Database Mode* with live status pills and 1-tap tab navigation.
+  - **Monarch Segmented Capsule Tab Switcher:** Clean capsule navigation bar switching seamlessly between *Workspaces (N)*, *Licenses (N)*, and *Schema Engine*.
+  - **Real-Time Filtering & Instant Search:** Global in-page search bar instantly filtering across workspace titles, emails, spreadsheet IDs, order IDs, and license keys.
+- **Dual Responsive Layout Architecture:**
+  - **Desktop High-Density Ledger ($\ge 768\text{px}$):** Clean tabular layout with monospace IDs, 1-click clipboard copy buttons, status pills, and grouped action buttons (`Edit`, `JSON`, `Sheet`, `Delete`).
+  - **Mobile Inset Grouped Record Cards ($\le 767\text{px}$):** Automatically reflows tabular rows into scannable Monarch grouped cards with bold titles, copyable ID pills, multi-user counters, and full-width touch targets ($\ge 44\text{px}$).
+- **Universal Responsive Drawer Inspector (`<SlideOverDrawer>` + `<MonarchForm>`):**
+  - Replaces raw popup dialogs with the application's universal `<SlideOverDrawer>`, rendering as a right slide-over panel on desktop and an ergonomic slide-up bottom sheet on mobile devices.
+  - **Structured Form Mode:** Organized into `<DrawerSection>`, `<DrawerRow>`, and `<DrawerField>` components for editing workspaces (`spreadsheetName`, `spreadsheetId`, `userEmail`, `partnerEmail`, `coPlanners`, `orderId`, `orderVerified`, `driveFolderPath`, `webViewLink`, `productName`) and licenses (`licenseKey`, `orderId`, `purchaserEmail`, `sku`, `status`, `licenseTier`, `maxWorkspaces`, `entitledProducts`).
   - **Raw JSON Editor Mode:** Full-fidelity direct document JSON editor with real-time JSON syntax error validation, allowing administrators to modify arbitrary custom fields or metadata attributes with instant validation before submission.
+- **Administrative Safety Confirmation Dialogs:** Dedicated confirmation modals with destructive amber/red styling for record deletions and test session purging.
+- **Route Visibility & Unauthenticated Access Protection:** Removed public links to `/admin` from the unauthenticated landing page (`src/app/page.tsx`) footer, preventing public visitors from discovering admin endpoints while maintaining direct authenticated URL access.
 - **Asynchronous Cloud Firestore Persistence (`PUT /api/admin/db` & `src/lib/db/licensingDb.ts`):** Supports `PUT` requests that directly invoke `LocalLicensingDb.saveWorkspaceAsync()` and `LocalLicensingDb.saveLicenseAsync()`, ensuring writes are fully awaited on Cloud Firestore and persisted across serverless container scale-downs.
 - **Asynchronous Admin Queries & Deletions:** `GET /api/admin/db` resolves all active records across Cloud Firestore via `getAllWorkspacesAsync()` and `getAllLicensesAsync()`, and `DELETE /api/admin/db` utilizes `deleteWorkspaceAsync()` and `deleteLicenseAsync()`.
 

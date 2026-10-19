@@ -409,8 +409,6 @@ export default function Sheet2SuiteParentHub() {
           <Link href="/activate" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Activation Portal</Link>
           <span>•</span>
           <Link href="/vow" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Sheet2Vow Application</Link>
-          <span>•</span>
-          <Link href="/admin" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Admin DB</Link>
         </div>
       </footer>
     </div>
