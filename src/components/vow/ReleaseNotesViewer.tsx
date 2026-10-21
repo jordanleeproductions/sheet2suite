@@ -77,13 +77,26 @@ export default function ReleaseNotesViewer({
   if (!mounted || !isOpen) return null;
 
   const latestRelease = RELEASE_NOTES[0];
-  // Match current active version or fallback to the latest
-  const activeRelease =
-    RELEASE_NOTES.find(
-      (r) =>
-        r.version.toLowerCase() === currentVersion.toLowerCase() ||
-        r.version.toLowerCase() === `v${currentVersion}`.toLowerCase()
-    ) || latestRelease;
+  // Match current active version or fallback to a synthesized card matching currentVersion
+  const exactMatch = RELEASE_NOTES.find(
+    (r) =>
+      r.version.toLowerCase() === currentVersion.toLowerCase() ||
+      r.version.toLowerCase() === `v${currentVersion}`.toLowerCase()
+  );
+
+  const activeRelease: ReleaseNoteItem = exactMatch || {
+    version: currentVersion.startsWith('v') ? currentVersion : `v${currentVersion}`,
+    title: latestRelease?.title || 'Continuous Improvements & Refinements',
+    date: latestRelease?.date || 'Recent Update',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: latestRelease?.highlights || [
+      'Platform stability enhancements and performance optimizations.',
+      'User interface refinements and responsive design polish.',
+    ],
+    details: latestRelease?.details,
+  };
 
   const pastReleases = RELEASE_NOTES.filter((r) => r.version !== activeRelease.version);
 

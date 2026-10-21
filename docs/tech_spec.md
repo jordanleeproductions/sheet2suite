@@ -593,6 +593,15 @@ src/
 - **Production Error Boundaries & 404 Pages:**
   - Added branded Next.js global error boundary (`src/app/error.tsx`) and 404 page (`src/app/not-found.tsx`) with Monarch typography, reassuring guidance, and 1-click recovery actions.
 
+### 3.13 Release Notes Version Synchronization & Non-Technical Governance (`[RELEASE-NOTES-SYNC-AUTOMATION]`)
+- **Centralized Release Notes Registry (`src/lib/releaseNotes.ts`):** Maintains structured version release records (`version`, `title`, `date`, `badge`, `badgeColor`, `category`, `highlights`, `details`) aligned with semantic versioning.
+- **Automated Bump Synchronization (`scripts/bumpVersion.ts`):** Running version bump scripts automatically checks and prepends an active version entry into `src/lib/releaseNotes.ts`, demoting previous entries to `Update` and guaranteeing that release notes never fall out of sync with `package.json` and `src/lib/buildInfo.ts`.
+- **Defensive Version Fallback (`ReleaseNotesViewer.tsx`):** If an exact version match is missing, dynamically synthesizes an active release card matching the active client version and build timestamp, preventing stale version badges from displaying.
+- **Strict Non-Technical & Security-Safe Content Governance:**
+  - Release notes must be written in user-friendly, plain language focused on couple/planner experience benefits and visual/functional refinements.
+  - **Zero Code Leakage**: Strict prohibition against code method names, function identifiers, error classes, variable names, and code snippets.
+  - **Zero Security Jargon**: Strict prohibition against vulnerability attack surface disclosures, internal file paths, or sensitive authorization details (e.g. replacing vulnerability specifics with reassuring, high-level terms like *"Platform security and access safeguards"* or *"Strengthened account connection and authentication flow"*).
+
 ---
 
 ## 4. Data Storage & Schema Mapping
