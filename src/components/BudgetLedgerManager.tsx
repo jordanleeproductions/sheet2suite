@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BudgetItem, ExpenseItem } from '@/lib/sheets/types';
 import { 
   Plus, 
@@ -21,7 +21,8 @@ import {
   X,
   ExternalLink,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
@@ -61,6 +62,28 @@ const STANDARD_BUDGET_CATEGORIES = [
   'Rehearsal & Events',
   'Miscellaneous & Contingency',
 ];
+
+const DEFAULT_CONTRIBUTORS = ['Couple', 'Parents', 'In-Laws', 'Self', 'Partner'];
+
+const getContributorBadgeColors = (contributor?: string) => {
+  const norm = (contributor || 'Couple').trim().toLowerCase();
+  if (norm === 'couple') {
+    return { bg: 'rgba(15, 23, 42, 0.08)', color: 'var(--color-primary, #0F172A)', border: 'rgba(15, 23, 42, 0.2)' };
+  }
+  if (norm.includes('parent')) {
+    return { bg: 'rgba(59, 130, 246, 0.1)', color: '#2563EB', border: 'rgba(59, 130, 246, 0.25)' };
+  }
+  if (norm.includes('in-law') || norm.includes('inlaw')) {
+    return { bg: 'rgba(139, 92, 246, 0.1)', color: '#7C3AED', border: 'rgba(139, 92, 246, 0.25)' };
+  }
+  if (norm === 'partner' || norm === 'groom' || norm === 'bride') {
+    return { bg: 'rgba(236, 72, 153, 0.1)', color: '#DB2777', border: 'rgba(236, 72, 153, 0.25)' };
+  }
+  if (norm === 'self') {
+    return { bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: 'rgba(16, 185, 129, 0.25)' };
+  }
+  return { bg: 'rgba(100, 116, 139, 0.1)', color: '#475569', border: 'rgba(100, 116, 139, 0.25)' };
+};
 
 export default function BudgetLedgerManager({
   budget,
@@ -126,6 +149,7 @@ export default function BudgetLedgerManager({
 
   // Ledger Filter & Selection State
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedPaidByFilter, setSelectedPaidByFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Overdue' | 'Pending' | 'Paid' | 'OverBudget'>('All');
   const [sortField, setSortField] = useState<'category' | 'projected' | 'actual' | 'variance' | 'dueDate'>('category');
@@ -355,6 +379,7 @@ export default function BudgetLedgerManager({
         amount: dueAmount,
         actualCost: dueAmount,
         amountPaid: dueAmount,
+        paidBy: 'Couple',
         purchaseDate: todayStr,
         notes: `Reconciled from 30-day milestone`,
       };
@@ -367,9 +392,41 @@ export default function BudgetLedgerManager({
     ? categoryLedgerRows.find(r => r.category.toLowerCase() === selectedCategoryId.toLowerCase())
     : null;
 
-  const itemizedExpensesForSelected = selectedCategoryId
+  // Contributor / Family breakdown analytics
+  const contributorBreakdown = useMemo(() => {
+    const totals: Record<string, number> = {};
+    let grandTotal = 0;
+    expenses.forEach(e => {
+      const payer = (e.paidBy || 'Couple').trim();
+      const amt = e.actualCost ?? e.amount ?? e.amountPaid ?? 0;
+      totals[payer] = (totals[payer] || 0) + amt;
+      grandTotal += amt;
+    });
+    const entries = Object.entries(totals).map(([contributor, amount]) => ({
+      contributor,
+      amount,
+      percentage: grandTotal > 0 ? Math.round((amount / grandTotal) * 100) : 0,
+    })).sort((a, b) => b.amount - a.amount);
+    return { grandTotal, entries };
+  }, [expenses]);
+
+  // Unique contributors across all logged expenses for suggestions
+  const existingContributors = useMemo(() => {
+    const set = new Set<string>(DEFAULT_CONTRIBUTORS);
+    expenses.forEach(e => {
+      if (e.paidBy?.trim()) set.add(e.paidBy.trim());
+    });
+    return Array.from(set);
+  }, [expenses]);
+
+  const itemizedExpensesForSelected = (selectedCategoryId
     ? expenses.filter(e => (e.category || '').toLowerCase().trim() === selectedCategoryId.toLowerCase().trim())
-    : expenses;
+    : expenses
+  ).filter(e => {
+    if (selectedPaidByFilter === 'All') return true;
+    const payer = (e.paidBy || 'Couple').trim();
+    return payer.toLowerCase() === selectedPaidByFilter.toLowerCase();
+  });
 
   // Modal Handlers
   const startAddBudget = async (presetCategory?: string) => {
@@ -487,6 +544,7 @@ export default function BudgetLedgerManager({
       amount: '' as any,
       actualCost: 0,
       amountPaid: 0,
+      paidBy: selectedPaidByFilter !== 'All' ? selectedPaidByFilter : 'Couple',
       purchaseDate: new Date().toISOString().split('T')[0],
       notes: '',
     });
@@ -497,7 +555,11 @@ export default function BudgetLedgerManager({
   const startEditExpense = async (item: ExpenseItem) => {
     if (!(await verifyActiveSession())) return;
     const amt = item.amount ?? item.actualCost ?? item.amountPaid ?? 0;
-    setExpenseFormState({ ...item, amount: amt > 0 ? amt : ('' as any) });
+    setExpenseFormState({
+      ...item,
+      paidBy: item.paidBy || 'Couple',
+      amount: amt > 0 ? amt : ('' as any),
+    });
     setEditingExpense(item);
     setIsAddingExpense(false);
   };
@@ -514,6 +576,7 @@ export default function BudgetLedgerManager({
 
     const targetCategory = (expenseFormState.category || '').trim();
     const numAmount = Number(expenseFormState.amount ?? expenseFormState.actualCost ?? expenseFormState.amountPaid) || 0;
+    const payer = (expenseFormState.paidBy || 'Couple').trim();
 
     if (!expenseFormState.description || !targetCategory) {
       alert('Please provide Description and Category');
@@ -526,6 +589,7 @@ export default function BudgetLedgerManager({
         ...i,
         ...expenseFormState,
         category: targetCategory,
+        paidBy: payer,
         amount: numAmount,
         actualCost: numAmount,
         amountPaid: numAmount,
@@ -535,6 +599,7 @@ export default function BudgetLedgerManager({
         itemId: `exp-${Date.now()}`,
         description: expenseFormState.description || 'New Expense Item',
         category: targetCategory,
+        paidBy: payer,
         amount: numAmount,
         actualCost: numAmount,
         amountPaid: numAmount,
@@ -553,6 +618,7 @@ export default function BudgetLedgerManager({
         amount: '' as any,
         actualCost: 0,
         amountPaid: 0,
+        paidBy: payer,
         purchaseDate: new Date().toISOString().split('T')[0],
         notes: '',
       });
@@ -1376,6 +1442,118 @@ export default function BudgetLedgerManager({
                 </button>
               </div>
             )}
+
+            {/* Contributor / Family Breakdown & Filter Bar */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.45rem',
+                padding: '0.55rem 0.75rem',
+                backgroundColor: 'var(--color-bg-pane, #F8FAFC)',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                borderRadius: '3px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 800, color: 'var(--color-muted, #64748B)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <User size={12} />
+                  <span>CONTRIBUTOR BREAKDOWN &amp; FILTERS</span>
+                </div>
+                {selectedPaidByFilter !== 'All' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPaidByFilter('All')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.62rem',
+                      fontWeight: 700,
+                      color: 'var(--color-primary, #0F172A)',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      padding: 0,
+                    }}
+                  >
+                    RESET FILTER (SHOW ALL)
+                  </button>
+                )}
+              </div>
+
+              {/* Scrollable Pills Strip */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  overflowX: 'auto',
+                  paddingBottom: '0.2rem',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaidByFilter('All')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    padding: '0.25rem 0.55rem',
+                    borderRadius: '3px',
+                    fontFamily: 'var(--font-technical-mono, monospace)',
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    border: selectedPaidByFilter === 'All' ? '1px solid var(--color-primary, #0F172A)' : '1px solid var(--color-border, #E2E8F0)',
+                    backgroundColor: selectedPaidByFilter === 'All' ? 'var(--color-primary, #0F172A)' : '#FFFFFF',
+                    color: selectedPaidByFilter === 'All' ? '#FFFFFF' : 'var(--color-text, #0F172A)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span>ALL</span>
+                  <span style={{ opacity: selectedPaidByFilter === 'All' ? 0.85 : 0.65, fontSize: '0.62rem' }}>
+                    {formatCurrency(contributorBreakdown.grandTotal, currency)}
+                  </span>
+                </button>
+
+                {contributorBreakdown.entries.map(entry => {
+                  const isSelected = selectedPaidByFilter.toLowerCase() === entry.contributor.toLowerCase();
+                  const colors = getContributorBadgeColors(entry.contributor);
+                  return (
+                    <button
+                      key={entry.contributor}
+                      type="button"
+                      onClick={() => setSelectedPaidByFilter(isSelected ? 'All' : entry.contributor)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.25rem 0.55rem',
+                        borderRadius: '3px',
+                        fontFamily: 'var(--font-technical-mono, monospace)',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        border: isSelected ? `2px solid ${colors.color}` : `1px solid ${colors.border}`,
+                        backgroundColor: isSelected ? colors.color : colors.bg,
+                        color: isSelected ? '#FFFFFF' : colors.color,
+                        boxShadow: isSelected ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <User size={11} />
+                      <span>{entry.contributor}:</span>
+                      <span>{formatCurrency(entry.amount, currency)}</span>
+                      <span style={{ fontSize: '0.6rem', opacity: isSelected ? 0.9 : 0.75, fontWeight: 600 }}>
+                        ({entry.percentage}%)
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Desktop Tabular Purchases Table */}
@@ -1397,6 +1575,7 @@ export default function BudgetLedgerManager({
                     {!selectedCategoryId && (
                       <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', width: '110px' }}>CATEGORY</th>
                     )}
+                    <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', width: '105px' }}>PAID BY</th>
                     <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '100px' }}>AMOUNT PAID</th>
                     <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', textAlign: 'right', width: '100px' }}>TOTAL COST</th>
                     <th style={{ padding: '0.5rem 0.65rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--color-muted, #64748B)', textAlign: 'center', width: '65px' }}>ACTIONS</th>
@@ -1405,7 +1584,7 @@ export default function BudgetLedgerManager({
                 <tbody>
                   {itemizedExpensesForSelected.length === 0 ? (
                     <tr>
-                      <td colSpan={selectedCategoryId ? 5 : 6} style={{ padding: '2rem 1rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
+                      <td colSpan={selectedCategoryId ? 6 : 7} style={{ padding: '2rem 1rem', textAlign: 'center', fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #64748B)' }}>
                         No purchase items logged yet for this selection. Click &quot;ADD EXPENSE&quot; to log vendor receipts.
                       </td>
                     </tr>
@@ -1431,6 +1610,33 @@ export default function BudgetLedgerManager({
                               {exp.category}
                             </td>
                           )}
+                          <td style={{ padding: '0.5rem 0.65rem' }}>
+                            {(() => {
+                              const payer = exp.paidBy || 'Couple';
+                              const colors = getContributorBadgeColors(payer);
+                              return (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    padding: '0.15rem 0.45rem',
+                                    borderRadius: '3px',
+                                    fontSize: '0.65rem',
+                                    fontFamily: 'var(--font-technical-mono, monospace)',
+                                    fontWeight: 700,
+                                    backgroundColor: colors.bg,
+                                    color: colors.color,
+                                    border: `1px solid ${colors.border}`,
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  <User size={10} />
+                                  {payer}
+                                </span>
+                              );
+                            })()}
+                          </td>
                           <td style={{ padding: '0.5rem 0.65rem', textAlign: 'right', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text, #0F172A)' }}>
                             {formatCurrency(paid, currency)}
                           </td>
@@ -1518,7 +1724,7 @@ export default function BudgetLedgerManager({
                       <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary, #0F172A)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {exp.description}
                       </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.68rem', color: 'var(--color-muted, #64748B)' }}>
                         <span>{exp.category}</span>
                         {exp.purchaseDate && (
                           <>
@@ -1526,6 +1732,29 @@ export default function BudgetLedgerManager({
                             <span>{exp.purchaseDate}</span>
                           </>
                         )}
+                        {(() => {
+                          const payer = exp.paidBy || 'Couple';
+                          const colors = getContributorBadgeColors(payer);
+                          return (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.2rem',
+                                padding: '0.1rem 0.35rem',
+                                borderRadius: '2px',
+                                fontSize: '0.62rem',
+                                fontWeight: 700,
+                                backgroundColor: colors.bg,
+                                color: colors.color,
+                                border: `1px solid ${colors.border}`,
+                              }}
+                            >
+                              <User size={9} />
+                              {payer}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -1727,6 +1956,73 @@ export default function BudgetLedgerManager({
                 style={{ padding: '0.45rem 0.55rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.75rem' }}
               />
             </div>
+          </div>
+
+          {/* Contributor / Paid By Selection with 1-tap quick pills and custom entry */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted, #64748B)' }}>
+                PAID BY / CONTRIBUTOR
+              </label>
+              <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6rem', color: 'var(--color-muted, #94A3B8)' }}>
+                Preset or type custom
+              </span>
+            </div>
+
+            {/* Quick 1-tap Presets */}
+            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+              {DEFAULT_CONTRIBUTORS.map(preset => {
+                const isSelected = (expenseFormState.paidBy || 'Couple').trim().toLowerCase() === preset.toLowerCase();
+                const colors = getContributorBadgeColors(preset);
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setExpenseFormState(prev => ({ ...prev, paidBy: preset }))}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '3px',
+                      fontSize: '0.68rem',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      border: isSelected ? `2px solid ${colors.color}` : `1px solid ${colors.border}`,
+                      backgroundColor: isSelected ? colors.color : colors.bg,
+                      color: isSelected ? '#FFFFFF' : colors.color,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <User size={10} />
+                    <span>{preset}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <input
+              type="text"
+              list="contributor-suggestions"
+              value={expenseFormState.paidBy || 'Couple'}
+              onChange={(e) => setExpenseFormState(prev => ({ ...prev, paidBy: e.target.value }))}
+              placeholder="e.g. Couple, Parents, Groom's Family"
+              style={{
+                padding: '0.45rem 0.55rem',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                borderRadius: '2px',
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontSize: '0.75rem',
+                marginTop: '0.2rem',
+              }}
+              required
+            />
+            <datalist id="contributor-suggestions">
+              {existingContributors.map(c => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>

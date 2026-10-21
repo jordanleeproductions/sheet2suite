@@ -332,12 +332,13 @@ export default function CommandPalette({
       for (const e of expenses) {
         const desc = e.description || '';
         const cat = e.category || '';
-        if (desc.toLowerCase().includes(q) || cat.toLowerCase().includes(q)) {
+        const payer = e.paidBy || '';
+        if (desc.toLowerCase().includes(q) || cat.toLowerCase().includes(q) || payer.toLowerCase().includes(q)) {
           matchedBudget.push({
             id: `exp-${e.itemId || e.description}`,
             type: 'budget',
             title: desc || 'Expense',
-            subtitle: `${cat} · ${formatCurrency(e.actualCost ?? e.amountPaid ?? 0, currency)}`,
+            subtitle: `${cat}${payer ? ` · Paid by ${payer}` : ''} · ${formatCurrency(e.actualCost ?? e.amountPaid ?? 0, currency)}`,
             badge: 'Expense',
             badgeColor: '#059669',
             icon: DollarSign,

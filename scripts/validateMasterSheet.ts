@@ -16,7 +16,7 @@ export const EXPECTED_SCHEMA: Record<string, string[]> = {
   ],
   EXPENSES: [
     'Item ID', 'Description', 'Category', 'Actual Cost', 
-    'Amount Paid', 'Purchase Date', 'Notes'
+    'Amount Paid', 'Purchase Date', 'Notes', 'Paid By'
   ],
   SCHEDULE: [
     'Start Time', 'End Time', 'Event Moment', 'Location', 

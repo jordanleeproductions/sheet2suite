@@ -85,14 +85,19 @@ export function runTests() {
 
   // 3. Test Expense Mapping & Date Serial Parsing (Google Sheets numeric serials)
   const mockExpenseHeaders = [
-    'Expense ID', 'Description', 'Category', 'Amount', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'
+    'Expense ID', 'Description', 'Category', 'Amount', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes', 'Paid By'
   ];
   const mockExpenseRowWithNumericSerial = [
-    'EXP-001', 'Florist deposit', 'Florals & Decor', '140', '140', '140', 46276, 'Deposit payment'
+    'EXP-001', 'Florist deposit', 'Florals & Decor', '140', '140', '140', 46276, 'Deposit payment', 'In-Laws'
   ];
   const expenseItem = expenseMapper.fromRow(mockExpenseHeaders, mockExpenseRowWithNumericSerial);
   if (expenseItem.itemId !== 'EXP-001') throw new Error('Expense ID mapping failed');
+  if (expenseItem.paidBy !== 'In-Laws') throw new Error(`Expense paidBy mapping failed: expected In-Laws, got "${expenseItem.paidBy}"`);
   if (expenseItem.purchaseDate !== '2026-09-11') throw new Error(`Expense purchase date serial conversion failed: expected 2026-09-11, got ${expenseItem.purchaseDate}`);
+
+  // Test Expense back to row
+  const outputExpenseRow = expenseMapper.toRow(mockExpenseHeaders, expenseItem);
+  if (outputExpenseRow[8] !== 'In-Laws') throw new Error(`Expense back-to-row failed at Paid By: expected In-Laws, got "${outputExpenseRow[8]}"`);
 
   // Test String Serial conversion
   const mockExpenseRowWithStringSerial = [

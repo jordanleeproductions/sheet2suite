@@ -26,7 +26,7 @@ const HEADERS_MAP = {
   guests: ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Meal Choice', 'Reception Table', 'Ceremony Seating', 'Email Address', 'Phone Number', 'Mailing Address', 'Thanked', 'Seat Number'],
   tables: ['Table ID', 'Table Name', 'Table Shape', 'Max Seats', 'Include End Seats', 'Single Side Seating'],
   budget: ['Category ID', 'Category', 'Target Budget', 'Total Spent', 'Remaining', 'Notes'],
-  expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes'],
+  expenses: ['Item ID', 'Description', 'Category', 'Actual Cost', 'Amount Paid', 'Purchase Date', 'Notes', 'Paid By'],
   schedule: ['Start Time', 'End Time', 'Event Moment', 'Location', 'Responsibility / Vendors', 'Notes / Details'],
   vendors: ['Vendor ID', 'Vendor Name', 'Category', 'Contact Name', 'Email Address', 'Phone Number', 'Total Contract Value', 'Deposit Paid', 'Balance Owing', 'Payment Due Date', 'Contract Link', 'Staff Meals Required'],
   tasks: ['Task ID', 'Task Name', 'Kanban Stage', 'Category', 'Priority', 'Assigned To', 'Due Date', 'Notes / Links'],
@@ -172,7 +172,7 @@ export async function GET(req: NextRequest) {
     registerRange('settingsTable', settingsTitle, 'A1:B10');
     registerRange('guests', guestsTitle, 'A1:O1000');
     registerRange('budget', budgetTitle, 'A1:H1000');
-    registerRange('expenses', expensesTitle, 'A1:G1000');
+    registerRange('expenses', expensesTitle, 'A1:H1000');
     registerRange('schedule', scheduleTitle, 'A1:F1000');
     registerRange('vendors', vendorsTitle, 'A1:L1000');
     registerRange('tasks', tasksTitle, 'A1:H1000');
@@ -678,7 +678,7 @@ export async function POST(req: NextRequest) {
         });
       } else if (sheetType === 'expenses') {
         targetTitle = findTitle(['EXPENSES', 'Expenses', 'Expense List']);
-        range = `'${targetTitle}'!A1:G1000`;
+        range = `'${targetTitle}'!A1:H1000`;
         (data as ExpenseItem[]).forEach(item => {
           values.push(expenseMapper.toRow(headers, item));
         });

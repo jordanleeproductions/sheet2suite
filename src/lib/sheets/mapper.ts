@@ -74,6 +74,10 @@ export const EXPENSE_HEADERS: Record<string, keyof ExpenseItem> = {
   'Purchase Date': 'purchaseDate',
   'Date': 'purchaseDate',
   'Notes': 'notes',
+  'Paid By': 'paidBy',
+  'Paid by': 'paidBy',
+  'Payer': 'paidBy',
+  'Contributed By': 'paidBy',
 };
 
 export const SCHEDULE_HEADERS: Record<string, keyof ScheduleEvent> = {
@@ -279,6 +283,7 @@ export const expenseMapper = {
       amountPaid: parsedAmount,
       purchaseDate: parseDateOrSerial(obj.purchaseDate),
       notes: String(obj.notes || ''),
+      paidBy: String(obj.paidBy || '').trim(),
     };
   },
   toRow(headers: string[], item: ExpenseItem): any[] {
@@ -289,6 +294,7 @@ export const expenseMapper = {
       actualCost: amt,
       amountPaid: amt,
       purchaseDate: parseDateOrSerial(item.purchaseDate),
+      paidBy: item.paidBy ? String(item.paidBy).trim() : '',
     };
     return mapObjectToRow(headers, normalizedItem, EXPENSE_HEADERS);
   }

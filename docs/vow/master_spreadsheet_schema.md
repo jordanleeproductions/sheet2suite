@@ -109,10 +109,13 @@ This document defines the authoritative tab structure and column header contract
 | `Item ID` | `itemId` | Text (Primary Key, Hidden in UI) | e.g. `EXP1`, `EXP2` |
 | `Description` | `description` | Text | Purchase / item description |
 | `Category` | `category` | Dropdown | Expense category (linked to `=SETTINGS!$K$2:$K$50`) |
-| `Amount` | `amount` | Currency ($) | Purchase amount |
+| `Actual Cost` | `actualCost` | Currency ($) | Total cost of purchase item / receipt |
+| `Amount Paid` | `amountPaid` | Currency ($) | Amount paid to date |
 | `Purchase Date` | `purchaseDate` | Date | Date of purchase |
 | `Notes` | `notes` | Text | Payment method or receipt details |
-| `Paid By` | `paidBy` | Text / Dropdown *(Planned `[EXPENSE-PAID-BY]`)* | Contributor name (e.g. `Couple`, `In-Laws`, `Parents`, `Self`, `Partner`) |
+| `Paid By` | `paidBy` | Text / Dropdown (`[EXPENSE-PAID-BY]`) | Contributor name (e.g. `Couple`, `In-Laws`, `Parents`, `Self`, `Partner`) |
+
+> **Schema Change Notice (`[EXPENSE-PAID-BY]`):** Column H `Paid By` tracks who funded or contributed each purchase item (`Couple`, `Parents`, `In-Laws`, `Self`, `Partner`, or custom contributor name). Powers interactive family contribution breakdown analytics and ledger filters. Existing spreadsheets without Column H default seamlessly to `Couple`.
 
 ---
 

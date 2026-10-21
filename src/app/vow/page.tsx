@@ -1540,13 +1540,14 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
       csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
       filename = `sheet2vow_guests_${(weddingName || 'wedding').toLowerCase().replace(/\s+/g, '_')}.csv`;
     } else if (activeTab === 'budget') {
-      const headers = ['Category', 'Description', 'Actual Cost', 'Paid', 'Purchase Date', 'Notes'];
+      const headers = ['Category', 'Description', 'Actual Cost', 'Paid', 'Purchase Date', 'Paid By', 'Notes'];
       const rows = (weddingData.expenses || []).map(e => [
         `"${e.category || ''}"`,
         `"${e.description || ''}"`,
         `"${e.actualCost || 0}"`,
         `"${e.amountPaid || 0}"`,
         `"${e.purchaseDate || ''}"`,
+        `"${e.paidBy || 'Couple'}"`,
         `"${e.notes || ''}"`
       ]);
       csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

@@ -307,6 +307,13 @@
   - Added a dedicated bottom action bar beneath the Desktop detail expense table displaying recorded expense count and a prominent `+ ADD EXPENSE` button.
   - Enables users who have scrolled through a long list of category receipts and invoices to immediately log a new purchase without scrolling back to the top of the detail ledger card.
   - Pre-populates the modal's category dropdown with the currently selected budget category for instant entry.
+- [x] **[EXPENSE-PAID-BY] Contributor Tracking & Family Contribution Breakdown (`BudgetLedgerManager.tsx`, `types/wedding.ts`, `mapper.ts`, `sync/route.ts`, `master_spreadsheet_schema.md`):**
+  - **Expense Contributor Attribution**: Tracks who paid for or contributed to each logged expense receipt (`paidBy` string: `Couple`, `Parents`, `In-Laws`, `Self`, `Partner`, or custom contributor name).
+  - **Quick Preset Pills & Custom Combo Input**: In the SlideOverDrawer expense entry modal, provides 1-tap quick contributor pills (`Couple`, `Parents`, `In-Laws`, `Self`, `Partner`) alongside a custom text input with autocomplete suggestions (`<datalist>`) across all existing contributors.
+  - **Color-Coded Contributor Badges**: Renders distinctive color-coded contributor badges (`User` icon + contributor name) on both desktop tabular purchase rows and mobile payment cards.
+  - **Interactive Family Contribution Breakdown & Filter Bar**: Features a responsive, horizontal-scrolling contribution breakdown strip above the expenses ledger displaying aggregate amounts and percentage shares for each contributor (e.g. `Couple: $12,400 (62%)`, `Parents: $5,000 (25%)`, `In-Laws: $2,600 (13%)`). Clicking any pill dynamically filters the purchases ledger to that specific contributor, with an instant 1-tap "Reset Filter" trigger.
+  - **Full Google Sheets 2-Way Sync (Column H)**: Synchronizes `Paid By` as Column H of the `EXPENSES` spreadsheet tab with backward compatibility for legacy spreadsheets defaulting missing values to `Couple`.
+  - **Command Palette & CSV Integration**: Enables instant search filtering by contributor name in the global Command Palette (`⌘K` / `Ctrl+K`) and exports `Paid By` in Financials CSV downloads.
 
 ---
 

@@ -144,6 +144,7 @@ export interface ExpenseItem {
   amountPaid: number;
   purchaseDate: string;
   notes?: string;
+  paidBy?: string;
 }
 
 export interface MenuItem {

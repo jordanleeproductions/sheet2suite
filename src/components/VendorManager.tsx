@@ -551,6 +551,9 @@ export default function VendorManager({
           amount: depositVal,
           actualCost: depositVal,
           amountPaid: depositVal,
+          paidBy: (existingExpenseIdx >= 0 && expenses[existingExpenseIdx].paidBy)
+            ? expenses[existingExpenseIdx].paidBy
+            : 'Couple',
           purchaseDate: (existingExpenseIdx >= 0 && expenses[existingExpenseIdx].purchaseDate)
             ? expenses[existingExpenseIdx].purchaseDate
             : todayStr,
