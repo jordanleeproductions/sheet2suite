@@ -725,6 +725,25 @@
   - **Kanban Partner Assignment**: Quick attribution chips (`[Partner 1]`, `[Partner 2]`, `[Shared]`, `[Clear]`) in task editor modal, dynamic partner name suggestions in assignee combobox, and styled partner attribution tags on Kanban task cards.
 
 ---
+
+## 🌈 22. Inclusive Terminology & Ceremony Seating Redesign (`SeatingChartManager.tsx`, `TimelineManager.tsx`, `GuestListManager.tsx`, `VowSetupWizard.tsx`, `PhotoShotListManager.tsx`, `KanbanBoard.tsx`, `PrintTemplatesModal.tsx`, `taskPresets.ts`, `mockDb.ts`)
+- [x] **[INCLUSIVE-TERMINOLOGY-CEREMONY-AISLE-REDESIGN] Modern Inclusive Ceremony Seating & Terminology Across Sheet2Vow:**
+  - **Dynamic Couple Name Personalization (`partner1Name`, `partner2Name`)**: Couple names seamlessly flow into ceremony aisle defaults (`${p1}'s Side (Left)` and `${p2}'s Side (Right)`), guest registry datalists (`${p1} Family` and `${p2} Family`), timeline responsibility suggestions, and task assignees, defaulting to `Partner 1` & `Partner 2`.
+  - **1-Click Ceremony Aisle Label Presets (`SeatingChartManager.tsx`)**: Integrated an Aisle Presets dropdown in Ceremony Settings (available on both desktop and mobile) offering 6 instantaneous configurations:
+    1. *Couple Names*: `${p1}'s Side (Left) / ${p2}'s Side (Right)`
+    2. *Partner 1 & Partner 2*: `Partner 1's Side (Left) / Partner 2's Side (Right)`
+    3. *Two Brides*: `Bride 1's Side (Left) / Bride 2's Side (Right)`
+    4. *Two Grooms*: `Groom 1's Side (Left) / Groom 2's Side (Right)`
+    5. *Modern Inclusive / Open Seating*: `Left Aisle / Right Aisle` (subtitle: *"Choose a seat, not a side — we're all family"*)
+    6. *Traditional*: `Bride's Side (Left) / Groom's Side (Right)`
+  - **Universal Gender-Neutral Iconography**: Replaced hardcoded gendered emojis (`👰`, `🤵`) with polished, neutral Lucide icons (`Heart`, `Users`, `Sparkles`, `Ring`).
+  - **Setup Wizard Modernization (`VowSetupWizard.tsx`)**: Rebranded Step 2 from `BRIDE & GROOM PROFILES` to `COUPLE & PARTNER PROFILES`, modernized section subheadings to `PARTNER 1 (NAME & CONTACT)` and `PARTNER 2 (NAME & CONTACT)`, and updated Sweetheart Table callout.
+  - **Timeline Responsibilities (`TimelineManager.tsx`)**: Added `Couple`, `p1`, `p2`, `Wedding Party`, and `Attendants` to responsibility autocomplete and quick-toggle chips; updated placeholder to `"e.g. Ceremony Service, Wedding Party Prep, First Dance"`.
+  - **Photo Shot List & Kanban Alignment (`PhotoShotListManager.tsx`, `KanbanBoard.tsx`)**: Updated shot description placeholders from `"Bride & Groom with Grandparents"` to `"Couple with Grandparents & VIPs"` and notes hints from `"bridal party"` to `"wedding party"`; added `"Couple"`, `"Wedding Party"`, `"Person of Honor"`, and `"Best Person"` to Kanban assignees.
+  - **Print Studio Templates (`PrintTemplatesModal.tsx`)**: Standardized aisle labels and row descriptions to `"Wedding Party, Person of Honor, & VIP Attendants"` and `"✨ MAIN AISLE WALKWAY ✨"`.
+  - **Presets & Mock Data Alignment (`taskPresets.ts`, `mockDb.ts`)**: Updated preset tasks to `"Schedule Wedding Attire & Fittings"`, assigned to `'Couple'`, and updated mock table name to `'Sweetheart Table (Couple)'`.
+
+---
 ---
 
 

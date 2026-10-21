@@ -106,9 +106,23 @@ interface TimelineManagerProps {
   isSyncing: boolean;
   timeFormat?: '12h' | '24h';
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
+  partner1Name?: string;
+  partner2Name?: string;
 }
 
-export default function TimelineManager({ schedule, vendors = [], onUpdate, isSyncing, timeFormat = '12h', onOpenPrintStudio }: TimelineManagerProps) {
+export default function TimelineManager({
+  schedule,
+  vendors = [],
+  onUpdate,
+  isSyncing,
+  timeFormat = '12h',
+  onOpenPrintStudio,
+  partner1Name,
+  partner2Name,
+}: TimelineManagerProps) {
+  const p1 = partner1Name?.trim() || 'Partner 1';
+  const p2 = partner2Name?.trim() || 'Partner 2';
+
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // expand first by default
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -166,6 +180,11 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
     }
 
     [
+      'Couple',
+      p1,
+      p2,
+      'Wedding Party',
+      'Attendants',
       'Photographer',
       'Videographer',
       'Bridal Party',
@@ -183,7 +202,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
     ].forEach(r => addRole(r));
 
     return list;
-  }, [schedule, vendors]);
+  }, [schedule, vendors, p1, p2]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -837,7 +856,7 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ceremony Service, Groomsmen Prep, First Dance"
+                  placeholder="e.g. Ceremony Service, Wedding Party Prep, First Dance"
                   value={formState.eventMoment || ''}
                   onChange={(e) => handleInputChange('eventMoment', e.target.value)}
                   style={styles.input}
@@ -1192,16 +1211,20 @@ export default function TimelineManager({ schedule, vendors = [], onUpdate, isSy
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
                 {[
+                  'Couple',
+                  p1,
+                  p2,
+                  'Wedding Party',
                   'Photographer',
                   'Videographer',
-                  'Bridal Party',
-                  'Groomsmen',
                   'Planner / Coordinator',
                   'DJ / MC',
                   'Caterer / Staff',
                   'Officiant',
                   'Bride',
                   'Groom',
+                  'Bridal Party',
+                  'Groomsmen',
                   'Florist',
                   'Glam Team (Hair & Makeup)'
                 ].map(sug => {

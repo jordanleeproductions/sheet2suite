@@ -1882,7 +1882,7 @@ export default function PhotoShotListManager({
               <input
                 type="text"
                 required
-                placeholder="e.g. Bride & Groom with Bride's Grandparents"
+                placeholder="e.g. Couple with Grandparents & VIPs"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 style={{
@@ -1995,7 +1995,7 @@ export default function PhotoShotListManager({
 
           {/* Section 3: VIPs & Notes */}
           <DrawerSection title="Subjects & Instructions" description="People to round up and framing requirements">
-            <DrawerField label="Included People / VIPs" hint="Names of relatives or bridal party members">
+            <DrawerField label="Included People / VIPs" hint="Names of relatives or wedding party members">
               <div style={{ position: 'relative' }}>
                 <Users size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #718096)' }} />
                 <input
@@ -2021,7 +2021,7 @@ export default function PhotoShotListManager({
             <DrawerField label="Posing / Lighting Notes" hint="Special instructions for camera crew">
               <textarea
                 rows={3}
-                placeholder="e.g. Golden hour lighting preferred, wide-angle lens, bride's veil flowing"
+                placeholder="e.g. Golden hour lighting preferred, wide-angle lens, couple portrait"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 style={{

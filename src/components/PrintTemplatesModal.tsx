@@ -920,7 +920,7 @@ export default function PrintTemplatesModal({
                           </span>
                         </div>
                         <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600, color: '#111827' }}>
-                          Bridal Party, Maid of Honor, & Officiant Family
+                          Wedding Party, Person of Honor, & VIP Attendants
                         </p>
                       </div>
 
@@ -948,11 +948,11 @@ export default function PrintTemplatesModal({
                       textAlign: 'center'
                     }}>
                       <div style={{ writingMode: 'vertical-rl', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 800, color: '#4b5563', letterSpacing: '0.1em' }}>
-                        🚶‍♂️ MAIN AISLE WALKWAY 🚶‍♀️
+                        ✨ MAIN AISLE WALKWAY ✨
                       </div>
                     </div>
 
-                    {/* Right Aisle (Partner 2 / Groom Side) */}
+                    {/* Right Aisle (Partner 2 Side) */}
                     <div style={{ border: '2px solid #111827', borderRadius: '6px', padding: '0.85rem', backgroundColor: '#ffffff' }}>
                       <div style={{ borderBottom: '2px solid #111827', paddingBottom: '0.4rem', marginBottom: '0.65rem', textAlign: 'center' }}>
                         <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1rem', margin: 0, color: '#111827' }}>
@@ -989,7 +989,7 @@ export default function PrintTemplatesModal({
                           </span>
                         </div>
                         <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600, color: '#111827' }}>
-                          Groomsmen, Best Man, & Reader Family
+                          Wedding Party, Best Person, & VIP Attendants
                         </p>
                       </div>
 

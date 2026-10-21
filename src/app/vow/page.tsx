@@ -2644,6 +2644,8 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   initialRsvpFilter={guestInitialFilter}
                   initialMealFilter={guestInitialMealFilter}
                   initialDietFilter={guestInitialDietFilter}
+                  partner1Name={partner1Name || googleUserName}
+                  partner2Name={partner2Name}
                 />
               )}
 
@@ -2665,6 +2667,8 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   onUpdateGuests={(data) => syncUpdate('guests', data)}
                   onUpdateTables={(data) => syncUpdate('tables', data)}
                   isSyncing={isSyncing}
+                  partner1Name={partner1Name || googleUserName}
+                  partner2Name={partner2Name}
                 />
               )}
 
@@ -2706,6 +2710,8 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   onUpdate={(data) => syncUpdate('schedule', data)}
                   isSyncing={isSyncing}
                   timeFormat={timeFormat}
+                  partner1Name={partner1Name || googleUserName}
+                  partner2Name={partner2Name}
                 />
               )}
 

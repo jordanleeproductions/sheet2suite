@@ -105,7 +105,7 @@ export let mockDatabase: WeddingData = {
     { id: 'M106', category: 'dessert', name: 'Vanilla Almond Wedding Cake', description: '3-tier vanilla sponge cake with almond buttercream and gold leaf accents', isGuestChoice: false, isVegetarian: true, isVegan: false, isGlutenFree: false, isNutFree: false },
   ],
   tables: [
-    { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Bride & Groom)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
+    { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Couple)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
     { tableId: 'table-1', tableName: 'Table 1 - Head Table', shape: 'circle', capacity: 8 },
     { tableId: 'table-2', tableName: 'Table 2 - Family VIP', shape: 'circle', capacity: 8 },
   ],

@@ -683,9 +683,13 @@ export default function KanbanBoard({
   ])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
   const existingAssignees = Array.from(new Set([
+    'Couple',
     p1,
     p2,
     `${p1} & ${p2}`,
+    'Wedding Party',
+    'Person of Honor',
+    'Best Person',
     'Wedding Planner',
     'Maid of Honor',
     'Best Man',

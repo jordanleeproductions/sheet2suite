@@ -440,7 +440,7 @@ export default function VowSetupWizard({
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
               STEP {guidedStep} OF 5 &bull; {
                 guidedStep === 1 ? 'WEDDING TITLE & DATE' :
-                guidedStep === 2 ? 'BRIDE & GROOM PROFILES' :
+                guidedStep === 2 ? 'COUPLE & PARTNER PROFILES' :
                 guidedStep === 3 ? 'ENABLED PLANNING MODULES' :
                 guidedStep === 4 ? 'FINANCIALS & TASK PRESETS' :
                 'THEME & NAVIGATION LAYOUT'
@@ -515,24 +515,24 @@ export default function VowSetupWizard({
                   onClick={() => setGuidedStep(2)}
                   style={styles.nextBtn}
                 >
-                  <span>NEXT: BRIDE & GROOM PROFILES</span>
+                  <span>NEXT: COUPLE & PARTNER PROFILES</span>
                   <ArrowRight size={16} />
                 </button>
               </div>
             </div>
           )}
 
-          {/* GUIDED STEP 2: Bride & Groom Profiles [ONBOARD-7] */}
+          {/* GUIDED STEP 2: Couple & Partner Profiles [ONBOARD-7] */}
           {guidedStep === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div style={{ backgroundColor: 'var(--color-bg-subtle)', padding: '0.75rem 1rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.78rem', color: 'var(--color-text)' }}>
-                👰🤵 <strong>Sweetheart Table Guest Entry:</strong> Partner profiles entered below are automatically added as the first 2 guests in your Guest Registry under <em>&quot;Sweetheart Table&quot;</em>!
+                💍 <strong>Sweetheart Table Guest Entry:</strong> Partner profiles entered below are automatically added as the first 2 guests in your Guest Registry under <em>&quot;Sweetheart Table&quot;</em>!
               </div>
 
               {/* Partner 1 Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  PARTNER 1 (BRIDE / SPOUSE A)
+                  PARTNER 1 (NAME & CONTACT)
                 </span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
                   <input
@@ -571,7 +571,7 @@ export default function VowSetupWizard({
               {/* Partner 2 Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  PARTNER 2 (GROOM / SPOUSE B)
+                  PARTNER 2 (NAME & CONTACT)
                 </span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
                   <input

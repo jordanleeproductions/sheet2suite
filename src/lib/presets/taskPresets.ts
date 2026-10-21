@@ -31,11 +31,11 @@ export const TASK_PRESETS: Record<string, TaskPreset> = {
       },
       {
         taskId: 'T2',
-        taskName: 'Schedule Bridal & Groom Attire Fittings',
+        taskName: 'Schedule Wedding Attire & Fittings',
         kanbanStage: 'To Do',
         category: 'Attire',
         priority: 'High',
-        assignedTo: 'Bride & Groom',
+        assignedTo: 'Couple',
         dueDate: '2026-09-01',
         notes: 'Book first alteration appointment 3 months prior to wedding date.'
       },
@@ -65,7 +65,7 @@ export const TASK_PRESETS: Record<string, TaskPreset> = {
         kanbanStage: 'Done',
         category: 'Media',
         priority: 'High',
-        assignedTo: 'Groom',
+        assignedTo: 'Partner 2',
         dueDate: '2026-07-10',
         notes: 'Contract signed; shot list provided for ceremony and reception.'
       },
@@ -75,7 +75,7 @@ export const TASK_PRESETS: Record<string, TaskPreset> = {
         kanbanStage: 'To Do',
         category: 'Decor',
         priority: 'Medium',
-        assignedTo: 'Bride',
+        assignedTo: 'Partner 1',
         dueDate: '2026-10-15',
         notes: 'Group guests by party and family ties.'
       },
@@ -87,7 +87,7 @@ export const TASK_PRESETS: Record<string, TaskPreset> = {
         priority: 'Low',
         assignedTo: 'Couple',
         dueDate: '2026-10-25',
-        notes: 'Reserve private dining room for bridal party and immediate family.'
+        notes: 'Reserve private dining room for wedding party and immediate family.'
       }
     ]
   },
@@ -135,7 +135,7 @@ export const TASK_PRESETS: Record<string, TaskPreset> = {
         kanbanStage: 'To Do',
         category: 'Catering',
         priority: 'Medium',
-        assignedTo: 'Bride',
+        assignedTo: 'Partner 1',
         dueDate: '2026-09-10',
         notes: 'Single or 2-tier signature cake with floral accents.'
       },
@@ -145,7 +145,7 @@ export const TASK_PRESETS: Record<string, TaskPreset> = {
         kanbanStage: 'To Do',
         category: 'Guests',
         priority: 'Medium',
-        assignedTo: 'Groom',
+        assignedTo: 'Partner 2',
         dueDate: '2026-09-15',
         notes: 'Use digital RSVP link for fast headcount.'
       }

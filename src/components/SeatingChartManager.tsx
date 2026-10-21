@@ -43,11 +43,13 @@ interface SeatingChartManagerProps {
   onUpdateTables?: (updatedTables: TableConfig[]) => Promise<void>;
   isSyncing?: boolean;
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
+  partner1Name?: string;
+  partner2Name?: string;
 }
 
 // Default Table Configurations if none exist (Only sweetheart table)
 const INITIAL_TABLES: TableConfig[] = [
-  { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Bride & Groom)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
+  { tableId: 'table-sweetheart', tableName: 'Sweetheart Table (Couple)', shape: 'rectangle', capacity: 2, singleSideSeating: true },
 ];
 
 // Generate clean, human-readable, sequence-based table IDs (e.g. table-1, table-2, table-sweetheart)
@@ -137,7 +139,28 @@ export function getNextSuggestedTableNumber(existingTables: TableConfig[]): numb
   return candidate;
 }
 
-export default function SeatingChartManager({ guests, tables: tablesProp, onUpdateGuests, onUpdateTables, isSyncing, onOpenPrintStudio }: SeatingChartManagerProps) {
+export default function SeatingChartManager({
+  guests,
+  tables: tablesProp,
+  onUpdateGuests,
+  onUpdateTables,
+  isSyncing,
+  onOpenPrintStudio,
+  partner1Name,
+  partner2Name,
+}: SeatingChartManagerProps) {
+  const p1 = partner1Name?.trim() || 'Partner 1';
+  const p2 = partner2Name?.trim() || 'Partner 2';
+
+  const AISLE_LABEL_PRESETS = [
+    { id: 'names', label: `Couple Names (${p1} & ${p2})`, left: `${p1}'s Side (Left)`, right: `${p2}'s Side (Right)` },
+    { id: 'inclusive', label: "Partner 1 & Partner 2", left: "Partner 1's Side (Left)", right: "Partner 2's Side (Right)" },
+    { id: 'brides', label: `Two Brides (${p1} & ${p2})`, left: `Bride ${p1}'s Side (Left)`, right: `Bride ${p2}'s Side (Right)` },
+    { id: 'grooms', label: `Two Grooms (${p1} & ${p2})`, left: `Groom ${p1}'s Side (Left)`, right: `Groom ${p2}'s Side (Right)` },
+    { id: 'open', label: "Open Seating (No Sides)", left: "Left Aisle (Open)", right: "Right Aisle (Open)" },
+    { id: 'traditional', label: "Traditional (Bride & Groom)", left: "Bride's Side (Left)", right: "Groom's Side (Right)" },
+  ];
+
   // Filter out any ghost/empty records with no tableId
   const sanitizeTables = (raw?: TableConfig[]): TableConfig[] => {
     if (!raw) return [];
@@ -267,12 +290,12 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
   const [seatingMode, setSeatingMode] = useState<'reception' | 'ceremony'>('reception');
 
   // Ceremony Aisle Config State
-  const [ceremonyConfig, setCeremonyConfig] = useState({
+  const [ceremonyConfig, setCeremonyConfig] = useState(() => ({
     rowsCount: 7,
     chairsPerSide: 6,
-    leftLabel: "Bride's Side (Left)",
-    rightLabel: "Groom's Side (Right)",
-  });
+    leftLabel: `${p1}'s Side (Left)`,
+    rightLabel: `${p2}'s Side (Right)`,
+  }));
 
   // Ceremony Mobile & View States
   const [ceremonyMobileView, setCeremonyMobileView] = useState<'aisle' | 'roster'>('aisle');
@@ -873,8 +896,35 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                   </button>
                 </div>
 
-                {/* Inputs: Left / Right Labels */}
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {/* Inputs: Left / Right Labels & Presets Dropdown */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <select
+                    aria-label="Aisle Presets"
+                    value=""
+                    onChange={(e) => {
+                      const preset = AISLE_LABEL_PRESETS.find(p => p.id === e.target.value);
+                      if (preset) {
+                        setCeremonyConfig(prev => ({
+                          ...prev,
+                          leftLabel: preset.left,
+                          rightLabel: preset.right,
+                        }));
+                      }
+                    }}
+                    style={{
+                      ...styles.inputField,
+                      padding: '0.4rem 0.5rem',
+                      fontSize: '0.72rem',
+                      fontFamily: 'var(--font-mono)',
+                      cursor: 'pointer',
+                      maxWidth: '160px',
+                    }}
+                  >
+                    <option value="" disabled>Aisle Presets...</option>
+                    {AISLE_LABEL_PRESETS.map(p => (
+                      <option key={p.id} value={p.id}>{p.label}</option>
+                    ))}
+                  </select>
                   <input
                     type="text"
                     value={ceremonyConfig.leftLabel}
@@ -944,21 +994,50 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                     </button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <input
-                    type="text"
-                    value={ceremonyConfig.leftLabel}
-                    onChange={(e) => setCeremonyConfig(prev => ({ ...prev, leftLabel: e.target.value }))}
-                    style={{ ...styles.inputField, flex: 1, minWidth: '130px', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
-                    placeholder="Left Side Label"
-                  />
-                  <input
-                    type="text"
-                    value={ceremonyConfig.rightLabel}
-                    onChange={(e) => setCeremonyConfig(prev => ({ ...prev, rightLabel: e.target.value }))}
-                    style={{ ...styles.inputField, flex: 1, minWidth: '130px', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
-                    placeholder="Right Side Label"
-                  />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                  <select
+                    aria-label="Aisle Presets"
+                    value=""
+                    onChange={(e) => {
+                      const preset = AISLE_LABEL_PRESETS.find(p => p.id === e.target.value);
+                      if (preset) {
+                        setCeremonyConfig(prev => ({
+                          ...prev,
+                          leftLabel: preset.left,
+                          rightLabel: preset.right,
+                        }));
+                      }
+                    }}
+                    style={{
+                      ...styles.inputField,
+                      padding: '0.45rem 0.6rem',
+                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-mono)',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    <option value="" disabled>Choose Aisle Preset...</option>
+                    {AISLE_LABEL_PRESETS.map(p => (
+                      <option key={p.id} value={p.id}>{p.label}</option>
+                    ))}
+                  </select>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      value={ceremonyConfig.leftLabel}
+                      onChange={(e) => setCeremonyConfig(prev => ({ ...prev, leftLabel: e.target.value }))}
+                      style={{ ...styles.inputField, flex: 1, minWidth: '130px', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
+                      placeholder="Left Side Label"
+                    />
+                    <input
+                      type="text"
+                      value={ceremonyConfig.rightLabel}
+                      onChange={(e) => setCeremonyConfig(prev => ({ ...prev, rightLabel: e.target.value }))}
+                      style={{ ...styles.inputField, flex: 1, minWidth: '130px', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
+                      placeholder="Right Side Label"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -1522,9 +1601,14 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                     cursor: 'pointer',
                     color: rosterSideTab === 'left' ? 'var(--color-primary)' : 'var(--color-muted)',
                     transition: 'var(--transition-smooth)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
                   }}
                 >
-                  👰 {ceremonyConfig.leftLabel}
+                  <Heart size={13} style={{ flexShrink: 0 }} />
+                  <span>{ceremonyConfig.leftLabel}</span>
                 </button>
                 <button
                   type="button"
@@ -1540,9 +1624,14 @@ export default function SeatingChartManager({ guests, tables: tablesProp, onUpda
                     cursor: 'pointer',
                     color: rosterSideTab === 'right' ? 'var(--color-primary)' : 'var(--color-muted)',
                     transition: 'var(--transition-smooth)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
                   }}
                 >
-                  🤵 {ceremonyConfig.rightLabel}
+                  <Heart size={13} style={{ flexShrink: 0 }} />
+                  <span>{ceremonyConfig.rightLabel}</span>
                 </button>
               </div>
 

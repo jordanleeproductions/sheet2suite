@@ -22,9 +22,27 @@ interface GuestListManagerProps {
   initialRsvpFilter?: RSVPStatus | 'All';
   initialMealFilter?: string;
   initialDietFilter?: string;
+  partner1Name?: string;
+  partner2Name?: string;
 }
 
-export default function GuestListManager({ guests, catering, tables = [], onUpdate, isSyncing, availableTables, onOpenPrintStudio, initialRsvpFilter, initialMealFilter, initialDietFilter }: GuestListManagerProps) {
+export default function GuestListManager({
+  guests,
+  catering,
+  tables = [],
+  onUpdate,
+  isSyncing,
+  availableTables,
+  onOpenPrintStudio,
+  initialRsvpFilter,
+  initialMealFilter,
+  initialDietFilter,
+  partner1Name,
+  partner2Name,
+}: GuestListManagerProps) {
+  const p1 = partner1Name?.trim() || 'Partner 1';
+  const p2 = partner2Name?.trim() || 'Partner 2';
+
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [rsvpFilter, setRsvpFilter] = useState<RSVPStatus | 'All'>(initialRsvpFilter || 'All');
@@ -1773,8 +1791,8 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                 {groups.map(grp => (
                   <option key={grp} value={grp} />
                 ))}
-                <option value="Bride Family" />
-                <option value="Groom Family" />
+                <option value={`${p1} Family`} />
+                <option value={`${p2} Family`} />
                 <option value="Wedding Party" />
                 <option value="Mutual Friends" />
                 <option value="Co-Workers" />
@@ -1856,7 +1874,7 @@ export default function GuestListManager({ guests, catering, tables = [], onUpda
                 value={formState.rsvpStatus === 'Declined' ? '' : (formState.ceremonySeating || '')}
                 onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
                 disabled={formState.rsvpStatus === 'Declined'}
-                placeholder={formState.rsvpStatus === 'Declined' ? 'Not Applicable (Declined)' : 'e.g. Row 1 - Bride Side, Front Aisle'}
+                placeholder={formState.rsvpStatus === 'Declined' ? 'Not Applicable (Declined)' : 'e.g. Row 1 - Left Aisle, Front Aisle'}
                 style={{
                   ...styles.input,
                   opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,

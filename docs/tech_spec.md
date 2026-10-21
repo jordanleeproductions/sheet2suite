@@ -109,6 +109,11 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 - **Declined RSVP Seating Exclusion (`[SEAT-DECLINED-EXCLUSION]`):** Seated Guests KPI card (`seatedGuestsCount / eligibleSeatingGuests.length`) and Unassigned Guests KPI counter strictly account for guests with Accepted (Attending) or Pending RSVP. Declined guests are excluded from the seating totals, unassigned counts, and the unassigned guest drawer.
 - **Table Card Visuals & Numbering Offset (`[SEAT-SHAPE-COLOR-AND-SWEETHEART-NUMBERING-OFFSET]`):** Table shape icons match the Table Name color (`var(--color-text, currentColor)`). `getNextSuggestedTableNumber` recognizes Sweetheart and Head tables, subtracting 1 so that the first table after Sweetheart/Head defaults to "Table 1" rather than "Table 2".
 - Navigation button uses dedicated chair icon (`Armchair`) across mobile drawer, sidebar, and module selectors.
+- **Ceremony Aisle Seating & Inclusive Layout Presets (`[INCLUSIVE-TERMINOLOGY-CEREMONY-AISLE-REDESIGN]`):**
+  - Interactive dual-aisle ceremony seating layout (*Left Aisle* and *Right Aisle*) with reserved front-row VIP tiers and general open seating.
+  - Dynamically customizes aisle headers using partner names (`partner1Name`, `partner2Name`) with graceful fallback to `Partner 1` / `Partner 2`.
+  - 1-Click Aisle Label Presets dropdown in Ceremony Settings (Desktop and Mobile): *Couple Names*, *Partner 1 & Partner 2*, *Two Brides*, *Two Grooms*, *Modern Inclusive / Open Seating*, and *Traditional*.
+  - Replaced hardcoded gendered emojis (`👰`, `🤵`) with neutral Lucide icons (`Heart`, `Users`).
 
 ### 2.5 Structured Financial Ledger (`BudgetLedgerManager.tsx`)
 - **Desktop Split-Screen Ledger Architecture (`[FINANCIALS-DESKTOP-SPLIT-SCREEN]`):**
