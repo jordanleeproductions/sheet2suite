@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auditMasterSpreadsheet, repairGoogleSheetHeaders } from '../../../../../scripts/validateMasterSheet';
+import { requireAdminAuth } from '@/lib/auth/adminAuth';
 
 export async function GET(req: NextRequest) {
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(req.url);
     const customSheetId = searchParams.get('spreadsheetId') || undefined;
@@ -21,6 +25,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const spreadsheetId = body.spreadsheetId;

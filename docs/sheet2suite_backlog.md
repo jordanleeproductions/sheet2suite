@@ -20,7 +20,7 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
 ### 🔐 Security Vulnerabilities & Hardening Backlog
 | Task ID | Severity | Vulnerability Summary | Target File(s) | Status |
 |---|---|---|---|---|
-| **`[SEC-1]`** | 🔴 **CRITICAL** | Unauthenticated Admin Database Endpoints & UI | `src/app/api/admin/db/route.ts`, `src/app/admin/page.tsx` | 📝 Open |
+| **`[SEC-1]`** | 🔴 **CRITICAL** | Unauthenticated Admin Database Endpoints & UI | `src/app/api/admin/db/route.ts`, `src/app/admin/page.tsx` | ✅ Resolved |
 | **`[SEC-2]`** | 🔴 **CRITICAL** | Insecure `postMessage` Wildcard (`*`) Leaking OAuth Access Tokens | `src/app/api/auth/google/callback/route.ts` | ✅ Resolved |
 | **`[SEC-3]`** | 🔴 **CRITICAL** | BOLA / IDOR via Firestore Stored Token Substitution | `src/lib/sheets/client.ts`, `src/app/api/sync/route.ts`, `src/app/api/auth/session/route.ts` | 📝 Open |
 | **`[SEC-4]`** | 🟠 **HIGH** | Unauthenticated Refresh Token Harvesting via Cookie Injection | `src/app/api/auth/register-token/route.ts` | 📝 Open |
@@ -37,6 +37,7 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
   - **Summary**: Both the admin UI (`/admin`) and API route (`/api/admin/db`) lack authentication, authorization, or API key validation.
   - **Risk**: Any unauthenticated public user can dump all workspace records, spreadsheet IDs, and customer emails (`GET`), modify records (`PUT`), or permanently wipe the entire database (`DELETE /api/admin/db?all=true`).
   - **Suggested Fix**: Implement admin authentication middleware or gate (`x-admin-secret` header or server-side verified admin session) matching `process.env.ADMIN_SECRET_KEY` / `process.env.ADMIN_EMAILS`. Return `401 Unauthorized` / `403 Forbidden` on unauthorized requests.
+  - **Resolution (v1.15.2)**: Implemented `src/lib/auth/adminAuth.ts` with constant-time secret comparison (`validateAdminKey`, `verifyAdminAuth`, `requireAdminAuth`). Added `POST /api/admin/auth` session route. Protected `/api/admin/db` and `/api/admin/validate-schema` across all HTTP methods. Built dedicated Monarch Admin Lock Screen in `src/app/admin/page.tsx` with session key management, protected headers, and lock/logout functionality.
 
 - **`[SEC-2]` [CRITICAL] Insecure `window.opener.postMessage(..., '*')` Wildcard Leaking Google Access Tokens**:
   - **Summary**: Following successful Google OAuth consent, `callback/route.ts` posts the user's raw Google OAuth `accessToken`, user email, and provisioned spreadsheet ID back to `window.opener` using target origin `'*'`.

@@ -27,7 +27,10 @@ import {
   Users, 
   FolderOpen, 
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { WorkspaceRecord } from '@/lib/db/licensingDb';
 import { Sheet2SuiteLicense } from '@/lib/sheets/types';
@@ -41,6 +44,80 @@ export default function AdminDatabasePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [rawJsonRecord, setRawJsonRecord] = useState<any | null>(null);
+
+  // Authentication & Security State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminKeyInput, setAdminKeyInput] = useState<string>('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
+  const [showKeyText, setShowKeyText] = useState<boolean>(false);
+
+  const getAdminKey = () => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('s2s_admin_key') || '';
+    }
+    return '';
+  };
+
+  const getAdminHeaders = (extraHeaders: Record<string, string> = {}) => {
+    const key = getAdminKey();
+    const headers: Record<string, string> = { ...extraHeaders };
+    if (key) {
+      headers['x-admin-key'] = key;
+    }
+    return headers;
+  };
+
+  const handleAdminLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = adminKeyInput.trim();
+    if (!trimmed) {
+      setAuthError('Please enter an admin secret key.');
+      return;
+    }
+
+    setIsAuthenticating(true);
+    setAuthError(null);
+
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: trimmed }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('s2s_admin_key', trimmed);
+        }
+        setIsAuthenticated(true);
+        setAdminKeyInput('');
+        fetchRecords(trimmed);
+      } else {
+        setAuthError(data.error || 'Invalid admin secret key.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed. Please verify server connection.');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleAdminLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', { method: 'DELETE' });
+    } catch {
+      // Ignore network errors during logout
+    }
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('s2s_admin_key');
+    }
+    setIsAuthenticated(false);
+    setWorkspaces([]);
+    setLicenses([]);
+    setSchemaReport(null);
+  };
 
   // Active Sub-Tab: 'workspaces' | 'licenses' | 'schema'
   const [activeTab, setActiveTab] = useState<'workspaces' | 'licenses' | 'schema'>('workspaces');
@@ -223,12 +300,17 @@ export default function AdminDatabasePage() {
 
       const res = await fetch('/api/admin/db', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           type: editType,
           record: finalRecord,
         }),
       });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setSuccessMsg(data.message || `Record successfully updated on Firebase!`);
@@ -254,7 +336,14 @@ export default function AdminDatabasePage() {
     setIsAuditingSchema(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/admin/validate-schema?spreadsheetId=${encodeURIComponent(auditSpreadsheetId)}`);
+      const res = await fetch(`/api/admin/validate-schema?spreadsheetId=${encodeURIComponent(auditSpreadsheetId)}`, {
+        headers: getAdminHeaders(),
+      });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setSchemaReport(data.report);
@@ -274,9 +363,14 @@ export default function AdminDatabasePage() {
     try {
       const res = await fetch('/api/admin/validate-schema', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ spreadsheetId: auditSpreadsheetId }),
       });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setSuccessMsg(`Successfully repaired ${data.repairedTabs?.length || 0} tabs on Google Sheet!`);
@@ -291,11 +385,20 @@ export default function AdminDatabasePage() {
     }
   };
 
-  const fetchRecords = async () => {
+  const fetchRecords = async (overrideKey?: string) => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch('/api/admin/db');
+      const key = overrideKey || getAdminKey();
+      const headers: Record<string, string> = {};
+      if (key) headers['x-admin-key'] = key;
+
+      const res = await fetch('/api/admin/db', { headers });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired or invalid credentials.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setWorkspaces(data.workspaces || []);
@@ -314,14 +417,42 @@ export default function AdminDatabasePage() {
     if (typeof document !== 'undefined') {
       document.title = 'Sheet2Suite Admin Inspector';
     }
-    fetchRecords();
+
+    const checkInitialAuth = async () => {
+      const storedKey = typeof window !== 'undefined' ? sessionStorage.getItem('s2s_admin_key') : null;
+      try {
+        const headers: Record<string, string> = {};
+        if (storedKey) headers['x-admin-key'] = storedKey;
+
+        const res = await fetch('/api/admin/auth', { headers });
+        const data = await res.json();
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+          fetchRecords(storedKey || undefined);
+        } else {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+        }
+      } catch {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+      }
+    };
+
+    checkInitialAuth();
   }, []);
 
   const confirmDeleteWorkspace = async (targetId: string) => {
     try {
       const res = await fetch(`/api/admin/db?workspaceId=${encodeURIComponent(targetId)}`, {
         method: 'DELETE',
+        headers: getAdminHeaders(),
       });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         if (typeof window !== 'undefined') {
@@ -348,7 +479,13 @@ export default function AdminDatabasePage() {
     try {
       const res = await fetch(`/api/admin/db?licenseKey=${encodeURIComponent(licenseKey)}`, {
         method: 'DELETE',
+        headers: getAdminHeaders(),
       });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setSuccessMsg(`Deleted license: ${licenseKey}`);
@@ -365,7 +502,15 @@ export default function AdminDatabasePage() {
 
   const handleResetAllTestSession = async () => {
     try {
-      const res = await fetch('/api/admin/db?all=true', { method: 'DELETE' });
+      const res = await fetch('/api/admin/db?all=true', {
+        method: 'DELETE',
+        headers: getAdminHeaders(),
+      });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
       const data = await res.json();
 
       if (typeof window !== 'undefined') {
@@ -415,6 +560,232 @@ export default function AdminDatabasePage() {
   // KPIs
   const verifiedWorkspacesCount = workspaces.filter(w => w.orderVerified !== false).length;
   const activeLicensesCount = licenses.filter(l => l.status === 'active').length;
+
+  if (isAuthenticated === null) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#090D16',
+        backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(30, 41, 59, 0.5) 0%, rgba(9, 13, 22, 1) 75%)',
+        color: '#F8FAFC',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'var(--font-interface-sans, system-ui, -apple-system, sans-serif)',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <RefreshCw size={28} style={{ color: '#818CF8', animation: 'spin 1s linear infinite' }} />
+          <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'var(--font-technical-mono, monospace)' }}>
+            Verifying administrative access...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated === false) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#090D16',
+        backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(9, 13, 22, 1) 75%)',
+        color: '#F8FAFC',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
+        boxSizing: 'border-box',
+        fontFamily: 'var(--font-interface-sans, system-ui, -apple-system, sans-serif)',
+      }}>
+        <div style={{
+          maxWidth: '460px',
+          width: '100%',
+          backgroundColor: '#111827',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+          borderRadius: '16px',
+          padding: '2.25rem 2rem',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15)',
+          boxSizing: 'border-box',
+          textAlign: 'center',
+        }}>
+          {/* Lock Icon Emblem */}
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            border: '1px solid rgba(99, 102, 241, 0.4)',
+            color: '#818CF8',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.25rem auto',
+            boxShadow: '0 0 20px rgba(99, 102, 241, 0.25)',
+          }}>
+            <Lock size={26} />
+          </div>
+
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#A5B4FC', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
+            RESTRICTED ADMIN ZONE
+          </div>
+
+          <h1 style={{
+            fontSize: '1.35rem',
+            fontWeight: 700,
+            margin: '0 0 0.5rem 0',
+            color: '#FFFFFF',
+            fontFamily: 'var(--font-editorial-serif, Georgia, serif)',
+            letterSpacing: '-0.02em',
+          }}>
+            Sheet2Suite Admin Inspector
+          </h1>
+
+          <p style={{
+            fontSize: '0.8125rem',
+            color: '#94A3B8',
+            lineHeight: 1.5,
+            margin: '0 0 1.5rem 0',
+          }}>
+            Internal database inspection and mutation controls require master administrative key authentication.
+          </p>
+
+          {authError && (
+            <div style={{
+              padding: '0.75rem 1rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: '#FCA5A5',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              textAlign: 'left',
+            }}>
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ position: 'relative', textAlign: 'left' }}>
+              <div style={{
+                position: 'absolute',
+                left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#64748B',
+                pointerEvents: 'none',
+                display: 'flex',
+                alignItems: 'center',
+              }}>
+                <Key size={16} />
+              </div>
+
+              <input
+                type={showKeyText ? 'text' : 'password'}
+                value={adminKeyInput}
+                onChange={(e) => setAdminKeyInput(e.target.value)}
+                placeholder="Enter Admin Secret Key..."
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '11px 40px 11px 38px',
+                  borderRadius: '10px',
+                  border: '1px solid #1E293B',
+                  backgroundColor: '#090D16',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  transition: 'border-color 0.15s ease',
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowKeyText(!showKeyText)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748B',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                title={showKeyText ? 'Hide key' : 'Show key'}
+              >
+                {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isAuthenticating}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                backgroundColor: '#6366F1',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                transition: 'opacity 0.15s ease',
+                opacity: isAuthenticating ? 0.7 : 1,
+              }}
+            >
+              {isAuthenticating ? (
+                <>
+                  <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Verifying Key...</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={15} />
+                  <span>Unlock Admin Console</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+            <Link
+              href="/vow"
+              style={{
+                color: '#94A3B8',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                transition: 'color 0.15s ease',
+              }}
+            >
+              <ArrowLeft size={14} />
+              <span>Back to App</span>
+            </Link>
+
+            <span style={{ color: '#475569', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6875rem' }}>
+              SEC-1 ZERO-TRUST
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -557,6 +928,31 @@ export default function AdminDatabasePage() {
           {/* Action Buttons */}
           <div className="admin-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
             <button
+              onClick={handleAdminLogout}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '8px',
+                padding: '0.55rem 0.85rem',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.45rem',
+                minHeight: '40px',
+                transition: 'all 0.15s ease',
+              }}
+              title="Lock admin console and terminate session"
+            >
+              <Lock size={14} />
+              <span>LOCK</span>
+            </button>
+
+            <button
               onClick={() => setShowPurgeConfirm(true)}
               style={{
                 backgroundColor: 'rgba(239, 68, 68, 0.12)',
@@ -582,7 +978,7 @@ export default function AdminDatabasePage() {
             </button>
 
             <button
-              onClick={fetchRecords}
+              onClick={() => fetchRecords()}
               disabled={isLoading}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.06)',

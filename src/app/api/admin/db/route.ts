@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LocalLicensingDb } from '@/lib/db/licensingDb';
+import { requireAdminAuth } from '@/lib/auth/adminAuth';
 
 /**
  * GET /api/admin/db
  * Returns all database records (workspaces & licenses) across Cloud Firestore and local storage.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
+
   try {
     const workspaces = await LocalLicensingDb.getAllWorkspacesAsync();
     const rawLicenses = await LocalLicensingDb.getAllLicensesAsync();
@@ -48,6 +52,9 @@ export async function GET() {
  * Updates an existing workspace or license record on Firebase / local database.
  */
 export async function PUT(req: NextRequest) {
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const { type, record } = body;
@@ -106,6 +113,9 @@ export async function PUT(req: NextRequest) {
  * Deletes a workspace record or license record by ID.
  */
 export async function DELETE(req: NextRequest) {
+  const authError = requireAdminAuth(req);
+  if (authError) return authError;
+
   try {
     const url = req.nextUrl;
     const workspaceId = url.searchParams.get('workspaceId');
