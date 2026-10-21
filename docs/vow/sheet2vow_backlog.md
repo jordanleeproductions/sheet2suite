@@ -58,3 +58,32 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 |---|---|---|---|---|---|
 | **`[SYS-UPDATE-TOAST]`** | Persistent "New Version Available" Update Toast (Monarch-Style) — When a new production release is deployed, display a persistent, sticky toast notification pinned to the bottom-right corner notifying users that an update is ready. Does not auto-dismiss. Features an update icon, descriptive message, snooze/close option, and a 1-click **"Refresh App"** button (`window.location.reload()`). Powered by background version polling (`/api/version` or build metadata comparison on window visibility change / 10m interval) comparing the loaded client build timestamp/ID with the server. Mobile-responsive, floating cleanly above mobile navigation bars. | `src/components/AppUpdateToast.tsx`, `src/hooks/useAppVersionCheck.ts`, `src/app/api/version/route.ts`, `src/app/vow/page.tsx`, `src/lib/buildInfo.ts` | 🟢 Low to 🟡 Med | ⚡ Minimal (0 Google Sheets quota) | ✅ Completed |
 
+---
+
+## 🔐 Sheet2Vow Security Vulnerabilities & Hardening Backlog
+
+### 🛡️ Product Security Tasks
+| Task ID | Severity | Vulnerability Summary | Target File(s) | Status |
+|---|---|---|---|---|
+| **`[SEC-VOW-1]`** | 🟠 **HIGH** | Vendor Contracts Automatically Set to Public (`anyoneWithLink: reader`) in Google Drive | `src/app/api/upload/contract/route.ts` | 📝 Open |
+| **`[SEC-VOW-2]`** | 🟠 **HIGH** | Google Sheets Formula Injection (CSV / Formula Injection) via Public Guest Photo Uploads | `src/app/api/upload/[token]/route.ts` | 📝 Open |
+| **`[SEC-VOW-3]`** | 🟡 **MEDIUM** | Unrestricted File Upload Types in Contract Uploader & Lack of File Size/DoS Guardrails | `src/app/api/upload/contract/route.ts`, `src/app/api/upload/[token]/route.ts` | 📝 Open |
+
+#### Vulnerability Details & Remediation Specifications
+
+- **`[SEC-VOW-1]` [HIGH] Vendor Contracts Automatically Set to Public (`anyoneWithLink: reader`) in Google Drive**:
+  - **Summary**: In `upload/contract/route.ts` lines 114-124, after uploading a vendor contract to Google Drive, the endpoint calls `drive.permissions.create({ fileId, requestBody: { role: 'reader', type: 'anyone' } })`.
+  - **Risk**: Vendor contracts contain sensitive personal information (PII), signatures, bank/payment details, phone numbers, and pricing. Making them public allows anyone with the link to view and download them.
+  - **Suggested Fix**: Remove the public permission creation call. Store contracts privately inside the user's `Contracts` subfolder in Google Drive, inheriting the user's private folder permissions.
+
+- **`[SEC-VOW-2]` [HIGH] Google Sheets Formula Injection (CSV / Formula Injection) via Public Guest Photo Uploads**:
+  - **Summary**: In `upload/[token]/route.ts` lines 380-435, guest photo submissions append `uploaderName` and `caption` directly to the `GUESTBOOK` sheet tab using `valueInputOption: 'USER_ENTERED'` without sanitization via `CellGuard`.
+  - **Risk**: If a guest enters `=IMPORTXML(...)`, `=IMAGE(...)`, or `=WEBSERVICE(...)` in their name or caption, Google Sheets will execute it as an active formula when opened by the couple, potentially exfiltrating spreadsheet data or executing untrusted formulas.
+  - **Suggested Fix**: Pass `rowValues` through `CellGuard.sanitizePayload()` before calling `sheets.spreadsheets.values.append()`.
+
+- **`[SEC-VOW-3]` [MEDIUM] Unrestricted File Upload Types in Contract Uploader & Lack of File Size/DoS Guardrails**:
+  - **Summary**: `upload/contract/route.ts` does not validate file extensions or MIME types (unlike `upload/[token]`), and neither route enforces a maximum file size or total payload limit before buffering files into Node memory (`file.arrayBuffer()`).
+  - **Risk**: Attackers can upload unexpected file types (executables, scripts) or upload multiple multi-hundred-megabyte files to cause memory exhaustion / Denial of Service.
+  - **Suggested Fix**: Restrict contract upload extensions to `.pdf`, `.jpg`, `.jpeg`, `.png`, `.docx`. Enforce a maximum file size (e.g. 25MB) and limit total batch files.
+
+

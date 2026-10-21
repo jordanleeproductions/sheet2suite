@@ -36,13 +36,29 @@ export async function GET(req: NextRequest) {
       : 'consent';
     const spreadsheetIdParam = url.searchParams.get('spreadsheetId') || undefined;
 
+    const clientOrigin = req.headers.get('origin') || req.headers.get('referer');
+    let callerOrigin: string | undefined;
+    if (clientOrigin) {
+      try {
+        const parsed = new URL(clientOrigin);
+        callerOrigin = `${parsed.protocol}//${parsed.host}`;
+      } catch (_) {}
+    }
+    if (!callerOrigin) {
+      callerOrigin = `${protocol}://${host}`;
+    }
+
+    const statePayload: Record<string, string> = {};
+    if (spreadsheetIdParam) statePayload.spreadsheetId = spreadsheetIdParam;
+    if (callerOrigin) statePayload.origin = callerOrigin;
+
     const oauth2Client = getOAuth2Client(redirectUri);
 
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
       prompt: effectivePrompt,
-      state: spreadsheetIdParam ? JSON.stringify({ spreadsheetId: spreadsheetIdParam }) : undefined,
+      state: Object.keys(statePayload).length > 0 ? JSON.stringify(statePayload) : undefined,
     });
 
     return NextResponse.json({

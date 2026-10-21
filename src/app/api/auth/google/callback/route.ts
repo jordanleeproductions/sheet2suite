@@ -11,6 +11,29 @@ function getOAuth2Client(redirectUri: string) {
 }
 
 /**
+ * Validates that a target origin belongs to an authorized Sheet2Suite domain or local development.
+ */
+function isValidAppOrigin(originStr?: string | null): boolean {
+  if (!originStr) return false;
+  try {
+    const url = new URL(originStr);
+    const host = url.hostname.toLowerCase();
+    return (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === 'sheet2suite.com' ||
+      host.endsWith('.sheet2suite.com') ||
+      host.endsWith('.web.app') ||
+      host.endsWith('.firebaseapp.com') ||
+      host.endsWith('.run.app') ||
+      host.endsWith('.hosted.app')
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * GET /api/auth/google/callback
  * Handles Google OAuth 2.0 redirect callback, exchanges authorization code for tokens,
  * provisions the user's Google Drive folder & Master Spreadsheet, and closes popup.
@@ -21,16 +44,33 @@ export async function GET(req: NextRequest) {
     const code = url.searchParams.get('code');
     const error = url.searchParams.get('error');
 
+    // Extract state to securely identify caller targetOrigin [SEC-2]
+    const stateParam = url.searchParams.get('state');
+    let stateSpreadsheetId: string | undefined;
+    let stateOrigin: string | undefined;
+    if (stateParam) {
+      try {
+        const parsed = JSON.parse(stateParam);
+        stateSpreadsheetId = parsed.spreadsheetId;
+        if (isValidAppOrigin(parsed.origin)) {
+          stateOrigin = parsed.origin;
+        }
+      } catch (_) {}
+    }
+
+    const targetOriginExpr = stateOrigin ? JSON.stringify(stateOrigin) : 'window.location.origin';
+
     if (error) {
+      const safeError = String(error).replace(/[^a-zA-Z0-9_\-\s]/g, '');
       return new NextResponse(
-        `<html><body><script>window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: '${error}' }, '*'); window.close();</script></body></html>`,
+        `<html><body><script>try { window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: '${safeError}' }, ${targetOriginExpr}); } catch(e){} window.close();</script></body></html>`,
         { headers: { 'Content-Type': 'text/html' } }
       );
     }
 
     if (!code) {
       return new NextResponse(
-        `<html><body><script>window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: 'No authorization code returned' }, '*'); window.close();</script></body></html>`,
+        `<html><body><script>try { window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: 'No authorization code returned' }, ${targetOriginExpr}); } catch(e){} window.close();</script></body></html>`,
         { headers: { 'Content-Type': 'text/html' } }
       );
     }
@@ -171,15 +211,6 @@ export async function GET(req: NextRequest) {
       }
     } catch (pErr) {
       console.error('Provisioning step error:', pErr);
-    }
-
-    const stateParam = url.searchParams.get('state');
-    let stateSpreadsheetId: string | undefined;
-    if (stateParam) {
-      try {
-        const parsed = JSON.parse(stateParam);
-        stateSpreadsheetId = parsed.spreadsheetId;
-      } catch (e) {}
     }
 
     // If partner/co-planner arrived via invite link carrying spreadsheetId, link them to the workspace
@@ -353,7 +384,11 @@ export async function GET(req: NextRequest) {
           <script>
             try {
               if (window.opener) {
-                window.opener.postMessage(${payload}, '*');
+                const targetOrigin = ${stateOrigin ? JSON.stringify(stateOrigin) : 'window.location.origin'};
+                window.opener.postMessage(${payload}, targetOrigin);
+                if (window.location.origin !== targetOrigin) {
+                  try { window.opener.postMessage(${payload}, window.location.origin); } catch (_) {}
+                }
               }
             } catch (e) { console.error(e); }
             setTimeout(() => { window.close(); }, 900);

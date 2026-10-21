@@ -130,6 +130,17 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         const top = window.screen.height / 2 - height / 2;
 
         const handleAuthMessage = (event: MessageEvent) => {
+          // Security: Validate origin matches current domain, local development, or official sheet2suite domains [SEC-2]
+          const origin = event.origin || '';
+          const isAllowedOrigin = 
+            origin === window.location.origin ||
+            origin.endsWith('sheet2suite.com') ||
+            origin.endsWith('.web.app') ||
+            origin.endsWith('.firebaseapp.com') ||
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1');
+          if (!isAllowedOrigin) return;
+
           if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
             const { user, accessToken, provision } = event.data;
             window.removeEventListener('message', handleAuthMessage);
@@ -323,6 +334,17 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         const top = window.screen.height / 2 - height / 2;
 
         const handleReauthMessage = (event: MessageEvent) => {
+          // Security: Validate origin matches current domain, local development, or official sheet2suite domains [SEC-2]
+          const origin = event.origin || '';
+          const isAllowedOrigin = 
+            origin === window.location.origin ||
+            origin.endsWith('sheet2suite.com') ||
+            origin.endsWith('.web.app') ||
+            origin.endsWith('.firebaseapp.com') ||
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1');
+          if (!isAllowedOrigin) return;
+
           if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
             const { user, accessToken } = event.data;
             window.removeEventListener('message', handleReauthMessage);
