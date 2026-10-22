@@ -162,9 +162,13 @@ export default function OnboardingWizard({
         const provData = await provRes.json();
         if (provData.provisioned) {
           // Step 2: Register workspace mapping in Sheet2Suite database
+          const localToken = typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null;
           await fetch('/api/workspaces', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(localToken ? { 'Authorization': `Bearer ${localToken}` } : {}),
+            },
             body: JSON.stringify({
               userEmail: googleUserEmail || 'user@sheet2suite.com',
               partnerEmail: spouseEmail || undefined,

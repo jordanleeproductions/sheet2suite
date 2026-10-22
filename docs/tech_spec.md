@@ -627,6 +627,12 @@ src/
 
 ## 5. Security & Risk Audit Guidelines
 
-1. **OAuth Scope Isolation:** Access restricted strictly to Google Drive files created/selected by Sheet2Vow (`drive.file`).
+1. **OAuth Scope Isolation & Origin Validation (`[SEC-2]`):** Access restricted strictly to Google Drive files created/selected by Sheet2Vow (`drive.file`). Google OAuth popup messaging strictly validates origins (`window.location.origin`, official Sheet2Suite domains) and eliminates wildcard (`*`) postMessage targets.
 2. **Formula Injection Defense:** User input fields sanitized against leading `=`, `+`, `-`, `@` string characters to prevent spreadsheet formula injection.
-3. **Stateless Token Integrity:** HMAC-SHA256 signed vendor tokens prevent URL parameter tampering without storing keys in external databases.
+3. **Stateless Token Integrity & Dynamic Secret Generation (`[SEC-5]`):** HMAC-SHA256 signed vendor tokens prevent URL parameter tampering without storing keys in external databases. Dynamic cryptographically secure secrets generated if `SHARE_JWT_SECRET` is unset.
+4. **Administrative Protection & Constant-Time Verification (`[SEC-1]`):** Dedicated Monarch Admin lock screen (`/admin`) and API routes (`/api/admin/db`, `/api/admin/validate-schema`) gated by `verifyAdminAuth` using constant-time string comparisons (`crypto.timingSafeEqual`) to prevent timing attacks.
+5. **IDOR & Token Substitution Prevention (`[SEC-3]`, `[SEC-4]`):** Google authentication routines (`getGoogleAuthAsync`) strictly refuse unauthenticated stored refresh token retrieval unless explicitly delegated by verified server-side signed tokens. Long-lived refresh token cookies are never injected for unverified callers.
+6. **Workspace & Account Privacy Safeguards (`[SEC-6]`):** Workspace endpoints (`/api/workspaces` GET and POST) strictly authenticate callers via admin credentials, verified Google Bearer tokens, or active HTTP-only session cookies (`s2s_user_email`). Rejects unauthenticated callers with `401 Unauthorized` and cross-account lookups with `403 Forbidden`, preventing account enumeration and spreadsheet ID leakage.
+7. **Vendor Document Privacy & Upload Limits (`[SEC-VOW-1]`, `[SEC-VOW-3]`):** Vendor contracts uploaded to Google Drive remain strictly private (zero `anyoneWithLink` public permissions) with a 25MB file size ceiling and allowed extension whitelist (`.pdf`, `.jpg`, `.jpeg`, `.png`, `.docx`).
+8. **Local Database Git Exclusion (`[SEC-8]`):** All local JSON and Firestore database files (`data/*.json`, `data/firestore/`) are excluded in `.gitignore` to prevent accidental staging or leakage of sensitive PII.
+

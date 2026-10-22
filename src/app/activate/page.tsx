@@ -73,8 +73,10 @@ export default function ActivationPage() {
 
       // Check if user already has an active or co-planned workspace
       const lookupEmail = emailParam || savedEmail;
-      if (lookupEmail) {
-        fetch(`/api/workspaces?email=${encodeURIComponent(lookupEmail)}`)
+      if (lookupEmail && savedToken) {
+        fetch(`/api/workspaces?email=${encodeURIComponent(lookupEmail)}`, {
+          headers: { 'Authorization': `Bearer ${savedToken}` },
+        })
           .then(res => res.json())
           .then(data => {
             if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
@@ -105,7 +107,9 @@ export default function ActivationPage() {
             setIsGoogleConnected(true);
             localStorage.setItem('s2v_google_email', user.email);
 
-            fetch(`/api/workspaces?email=${encodeURIComponent(user.email)}`)
+            fetch(`/api/workspaces?email=${encodeURIComponent(user.email)}`, {
+              headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined,
+            })
               .then(res => res.json())
               .then(data => {
                 if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
@@ -243,7 +247,10 @@ export default function ActivationPage() {
       // Step 2: Register workspace in Sheet2Suite database
       await fetch('/api/workspaces', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(googleToken ? { 'Authorization': `Bearer ${googleToken}` } : {}),
+        },
         body: JSON.stringify({
           userEmail: userEmailToSave,
           partnerEmail: resolvedPartnerEmail,

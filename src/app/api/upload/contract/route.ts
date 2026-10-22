@@ -109,7 +109,6 @@ export async function POST(req: NextRequest) {
     stream.push(null);
 
     const sanitizedVendorSlug = vendorName.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
-    const originalExt = file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '.pdf';
     const fileName = `${sanitizedVendorSlug}_Contract_${Date.now()}${originalExt}`;
 
     const uploadRes = await drive.files.create({

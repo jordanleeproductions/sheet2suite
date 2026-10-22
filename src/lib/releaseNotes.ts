@@ -11,11 +11,25 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.15.5',
+    title: 'Workspace Privacy Protection & Identity Verification',
+    date: 'Oct 22, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Reinforced workspace privacy controls to ensure account data and spreadsheets are only accessible to verified owners and partners.',
+      'Streamlined workspace auto-discovery and reconnection when switching between devices.',
+      'Improved account onboarding verification for reliable setup and partner collaboration.',
+    ],
+    details: 'Enhanced workspace privacy controls and session verification to ensure your wedding planning spreadsheets and files remain completely private and accessible only to authorized planners.',
+  },
+  {
     version: 'v1.15.3',
     title: 'Release Notes Viewer & Version Synchronization',
     date: 'Oct 21, 2026',
-    badge: 'Latest',
-    badgeColor: '#10B981',
+    badge: 'Update',
+    badgeColor: '#6B7280',
     category: 'enhancement',
     highlights: [
       'Interactive release notes now always reflect the latest application version and deployment date.',
