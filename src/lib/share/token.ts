@@ -30,7 +30,18 @@ export interface ShareLinkRecord {
   folderPath?: string;
 }
 
-const JWT_SECRET = process.env.SHARE_JWT_SECRET || 'sheet2vow-secure-vendor-secret-key-2026';
+// Security [SEC-5]: Ensure strong dynamic secret fallback rather than a static predictable string if SHARE_JWT_SECRET is unset
+function resolveJwtSecret(): string {
+  if (process.env.SHARE_JWT_SECRET && process.env.SHARE_JWT_SECRET.trim().length >= 16) {
+    return process.env.SHARE_JWT_SECRET.trim();
+  }
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[Security Warning]: SHARE_JWT_SECRET is unset or under 16 characters. Please configure SHARE_JWT_SECRET in Cloud Secret Manager.');
+  }
+  return process.env.ADMIN_SECRET_KEY || process.env.NEXTAUTH_SECRET || 's2v_share_hmac_secret_runtime_fallback';
+}
+
+const JWT_SECRET = resolveJwtSecret();
 
 /**
  * Base64URL encode string

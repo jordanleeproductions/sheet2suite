@@ -57,6 +57,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No contract file uploaded.' }, { status: 400 });
     }
 
+    // Security & DoS Safeguards: Enforce max 25MB file size limit [SEC-VOW-3]
+    const MAX_FILE_SIZE = 25 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: 'Contract file exceeds the 25MB maximum size limit.' },
+        { status: 400 }
+      );
+    }
+
+    // Security: Restrict allowed document & image extensions [SEC-VOW-3]
+    const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png', '.docx'];
+    const originalExt = file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')).toLowerCase() : '.pdf';
+    if (!ALLOWED_EXTS.includes(originalExt)) {
+      return NextResponse.json(
+        { success: false, error: `Unsupported file type (${originalExt}). Only PDF, JPG, PNG, and DOCX contracts are allowed.` },
+        { status: 400 }
+      );
+    }
+
     // Determine auth token
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
@@ -108,20 +127,9 @@ export async function POST(req: NextRequest) {
     const fileId = uploadRes.data.id;
     const webViewLink = uploadRes.data.webViewLink || (fileId ? `https://drive.google.com/file/d/${fileId}/view` : undefined);
 
-    // Grant link-sharing reader permissions if authorized
-    if (fileId) {
-      try {
-        await drive.permissions.create({
-          fileId,
-          requestBody: {
-            role: 'reader',
-            type: 'anyone',
-          },
-        });
-      } catch (permErr) {
-        console.warn('[Contract Upload] Could not set public reader permission on file:', permErr);
-      }
-    }
+    // Security [SEC-VOW-1]: Vendor contracts are strictly preserved as PRIVATE.
+    // They inherit the private Google Drive permissions of the couple's folder.
+    // Public 'anyoneWithLink' access is deliberately NOT granted to prevent leaking PII or payment terms.
 
     return NextResponse.json({
       success: true,

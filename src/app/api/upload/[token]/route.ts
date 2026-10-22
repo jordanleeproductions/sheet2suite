@@ -3,6 +3,7 @@ import { verifyShareToken } from '@/lib/share/token';
 import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { getGoogleAuthAsync } from '@/lib/sheets/client';
+import { CellGuard } from '@/lib/core/CellGuard';
 
 async function getOrCreateFolder(drive: any, folderName: string, parentId?: string): Promise<string> {
   const queryParts = [
@@ -423,6 +424,9 @@ export async function POST(
             }
           }
 
+          // Security [SEC-VOW-2]: Sanitize user-submitted name & caption against formula injection (=, +, -, @)
+          const sanitizedRowValues = CellGuard.sanitizePayload(rowValues);
+
           // Append new entry row to GUESTBOOK tab
           await sheets.spreadsheets.values.append({
             spreadsheetId,
@@ -430,7 +434,7 @@ export async function POST(
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
             requestBody: {
-              values: [rowValues],
+              values: [sanitizedRowValues],
             },
           });
           console.log(`[Upload Route] Appended guestbook entry "${entryId}" for "${uploaderName}" to GUESTBOOK tab`);
