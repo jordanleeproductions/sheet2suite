@@ -24,21 +24,8 @@ export async function POST(req: NextRequest) {
     const userEmail = body.userEmail || req.nextUrl.searchParams.get('userEmail') || req.cookies.get('s2s_user_email')?.value || undefined;
     let refreshToken = req.cookies.get('s2s_refresh_token')?.value || body.refreshToken;
 
-    // If not directly in cookie, look up in Firestore via spreadsheetId or userEmail
-    if (!refreshToken) {
-      if (userEmail) {
-        const userDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
-        refreshToken = userDoc?.refreshToken;
-      }
-      if (!refreshToken && spreadsheetId) {
-        const sheetDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetId);
-        refreshToken = sheetDoc?.refreshToken;
-      }
-      if (!refreshToken) {
-        const fallbackDoc = await LocalFirestore.findAuthTokenDocAsync('global_fallback');
-        refreshToken = fallbackDoc?.refreshToken;
-      }
-    }
+    // SECURITY FIX (SEC-3): Only refresh using the caller's verified refresh token.
+    // Never harvest or substitute another user's stored refresh token by spreadsheetId.
 
     if (!refreshToken) {
       return NextResponse.json(

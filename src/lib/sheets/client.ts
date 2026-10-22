@@ -2,17 +2,26 @@ import { google } from 'googleapis';
 
 export const DEFAULT_MASTER_SHEET_ID = '1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI';
 
+export interface GoogleAuthOptions {
+  /**
+   * Only true for cryptographically verified server-side delegation (e.g. verified signed share JWTs or OAuth callback).
+   * Prevents BOLA / IDOR attacks where unauthenticated callers request victim spreadsheet IDs.
+   */
+  allowStoredFallback?: boolean;
+}
+
 /**
  * Returns an authorized Google Auth client.
  * It will try to use the provided access token from the client request first.
- * If not provided or expired, it looks up the stored refresh_token in Firestore / Local storage.
- * If not found, falls back to GOOGLE_ACCESS_TOKEN or service account.
+ * If not provided or expired, it uses the caller's verified refresh token.
+ * Only falls back to Firestore token lookup if allowStoredFallback is explicitly granted.
  */
 export async function getGoogleAuthAsync(
   accessToken?: string, 
   spreadsheetIdOrEmail?: string,
   userEmail?: string,
-  refreshTokenParam?: string
+  refreshTokenParam?: string,
+  options?: GoogleAuthOptions
 ) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
@@ -21,29 +30,50 @@ export async function getGoogleAuthAsync(
   let resolvedRefreshToken = refreshTokenParam;
   let tokenDoc: any = null;
 
-  // If a refresh token is stored in Firestore for this spreadsheet or user, configure credentials
-  if (spreadsheetIdOrEmail || userEmail) {
-    try {
-      const { LocalFirestore } = await import('@/lib/db/firestoreDb');
-      if (spreadsheetIdOrEmail) {
-        tokenDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetIdOrEmail);
+  // SECURITY FIX (SEC-3): Only look up stored refresh tokens from Firestore if:
+  // 1. Explicitly authorized server-side delegation (options.allowStoredFallback === true, e.g. verified signed share JWT)
+  // OR
+  // 2. Caller is authenticated, and we are looking up the caller's OWN refresh token by verified userEmail.
+  // NEVER perform stored token substitution for unauthenticated requests or arbitrary spreadsheet IDs.
+  const isAnonymousCaller = !accessToken && !refreshTokenParam;
+
+  if (options?.allowStoredFallback) {
+    if (spreadsheetIdOrEmail || userEmail) {
+      try {
+        const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+        if (spreadsheetIdOrEmail) {
+          tokenDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetIdOrEmail);
+        }
+        if (!tokenDoc?.refreshToken && userEmail) {
+          tokenDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
+        }
+        if (tokenDoc?.refreshToken) {
+          resolvedRefreshToken = resolvedRefreshToken || tokenDoc.refreshToken;
+        }
+      } catch (e) {
+        console.warn('[Google Auth] Stored token lookup error:', e);
       }
-      if (!tokenDoc?.refreshToken && userEmail) {
+    }
+  } else if (!isAnonymousCaller) {
+    // Authenticated caller: use caller's provided refresh token or look up caller's own token by userEmail
+    if (!resolvedRefreshToken && userEmail) {
+      try {
+        const { LocalFirestore } = await import('@/lib/db/firestoreDb');
         tokenDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
+        if (tokenDoc?.refreshToken) {
+          resolvedRefreshToken = tokenDoc.refreshToken;
+        }
+      } catch (e) {
+        console.warn('[Google Auth] User email token lookup error:', e);
       }
-      if (tokenDoc?.refreshToken) {
-        resolvedRefreshToken = resolvedRefreshToken || tokenDoc.refreshToken;
-      }
-    } catch (e) {
-      console.warn('[Google Auth] Could not lookup refresh token:', e);
     }
   }
 
   if (resolvedRefreshToken) {
     oauth2Client.setCredentials({
-      access_token: accessToken || tokenDoc?.accessToken,
+      access_token: accessToken || (options?.allowStoredFallback ? tokenDoc?.accessToken : undefined),
       refresh_token: resolvedRefreshToken,
-      expiry_date: tokenDoc?.expiryDate,
+      expiry_date: options?.allowStoredFallback ? tokenDoc?.expiryDate : undefined,
     });
 
     // Auto-persist new tokens whenever Google refreshes them
@@ -110,7 +140,7 @@ export async function getGoogleAuthAsync(
     return oauth2Client;
   }
 
-  if (accessToken || tokenDoc?.accessToken) {
+  if (accessToken || (options?.allowStoredFallback && tokenDoc?.accessToken)) {
     oauth2Client.setCredentials({
       access_token: accessToken || tokenDoc?.accessToken,
       expiry_date: tokenDoc?.expiryDate,

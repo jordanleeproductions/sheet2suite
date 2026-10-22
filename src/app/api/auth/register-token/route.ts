@@ -14,20 +14,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing spreadsheetId or userEmail' }, { status: 400 });
     }
 
-    // Lookup existing refreshToken from cookie, userEmail, or spreadsheetId
-    let existingRefreshToken: string | undefined = req.cookies.get('s2s_refresh_token')?.value;
-    if (!existingRefreshToken && userEmail) {
-      const userDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
-      existingRefreshToken = userDoc?.refreshToken;
-    }
-    if (!existingRefreshToken && spreadsheetId) {
-      const sheetDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetId);
-      existingRefreshToken = sheetDoc?.refreshToken;
-    }
-    if (!existingRefreshToken) {
-      const fallbackDoc = await LocalFirestore.findAuthTokenDocAsync('global_fallback');
-      existingRefreshToken = fallbackDoc?.refreshToken;
-    }
+    // Lookup existing refreshToken strictly from the caller's cookie or authenticated request body
+    let existingRefreshToken: string | undefined = req.cookies.get('s2s_refresh_token')?.value || body.refreshToken;
 
     const tokenData: any = {
       userEmail: userEmail || undefined,

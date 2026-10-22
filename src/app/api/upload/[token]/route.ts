@@ -132,14 +132,14 @@ export async function POST(
     try {
       if (payload.spreadsheetId) {
         try {
-          auth = await getGoogleAuthAsync(undefined, payload.spreadsheetId);
+          auth = await getGoogleAuthAsync(undefined, payload.spreadsheetId, undefined, undefined, { allowStoredFallback: true });
         } catch (err) {
           console.warn(`[Upload Route] Could not get Google Auth client with spreadsheetId "${payload.spreadsheetId}":`, err);
         }
       }
       if (!auth && payload.userEmail) {
         try {
-          auth = await getGoogleAuthAsync(undefined, payload.userEmail);
+          auth = await getGoogleAuthAsync(undefined, payload.userEmail, undefined, undefined, { allowStoredFallback: true });
         } catch (err) {
           console.warn(`[Upload Route] Could not get Google Auth client with userEmail "${payload.userEmail}":`, err);
         }
@@ -150,7 +150,7 @@ export async function POST(
           const { LocalFirestore } = await import('@/lib/db/firestoreDb');
           const fallbackDoc = await LocalFirestore.findAuthTokenDocAsync('global_fallback');
           if (fallbackDoc?.refreshToken) {
-            auth = await getGoogleAuthAsync(undefined, fallbackDoc.spreadsheetId || fallbackDoc.userEmail);
+            auth = await getGoogleAuthAsync(undefined, fallbackDoc.spreadsheetId || fallbackDoc.userEmail, undefined, undefined, { allowStoredFallback: true });
           }
         } catch (fbErr) {
           console.warn('[Upload Route] Global fallback lookup warning:', fbErr);
@@ -158,7 +158,7 @@ export async function POST(
       }
       if (!auth) {
         // Fallback to environment tokens or service account if available
-        auth = await getGoogleAuthAsync(undefined);
+        auth = await getGoogleAuthAsync(undefined, undefined, undefined, undefined, { allowStoredFallback: true });
       }
       drive = google.drive({ version: 'v3', auth });
     } catch (authErr) {

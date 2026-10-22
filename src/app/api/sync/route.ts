@@ -77,6 +77,15 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // SECURITY CHECK (SEC-3): Require valid Google authentication credentials
+    if (!hasAuth) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized: Google authentication credentials (access token or session cookie) required.',
+        requiresLogin: true,
+      }, { status: 401 });
+    }
+
     let auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
       effectiveToken, 
       spreadsheetId, 
@@ -500,6 +509,15 @@ export async function POST(req: NextRequest) {
         data: mockDatabase,
         isMock: true
       });
+    }
+
+    // SECURITY CHECK (SEC-3): Require valid Google authentication credentials
+    if (!hasAuth) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized: Google authentication credentials (access token or session cookie) required.',
+        requiresLogin: true,
+      }, { status: 401 });
     }
 
     let auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(

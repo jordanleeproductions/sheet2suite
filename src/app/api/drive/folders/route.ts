@@ -16,13 +16,23 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
     const cookieToken = req.cookies.get('s2s_access_token')?.value;
+    const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
+    const userEmail = req.cookies.get('s2s_user_email')?.value;
     const token = bearerToken || cookieToken || process.env.GOOGLE_ACCESS_TOKEN;
+
+    if (!token && !cookieRefreshToken) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized: Google authentication required to list folders.',
+        files: [],
+      }, { status: 401 });
+    }
 
     const sheetId = spreadsheetId || req.cookies.get('s2v_spreadsheet_id')?.value;
 
     let auth: any;
     try {
-      auth = await getGoogleAuthAsync(token, sheetId);
+      auth = await getGoogleAuthAsync(token, sheetId, userEmail, cookieRefreshToken);
     } catch (authErr: any) {
       console.warn('[Drive Folders] Auth error, returning empty list:', authErr);
       return NextResponse.json({ success: true, files: [] });

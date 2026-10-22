@@ -30,7 +30,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ valid: true, localOnly: true });
     }
 
-    // Verify Google client credentials
+    // SECURITY CHECK (SEC-3): If a spreadsheet is requested, caller MUST supply an active token or refresh cookie
+    if (!token && !refreshTokenCookie) {
+      return NextResponse.json(
+        { 
+          valid: false, 
+          isAuthError: true, 
+          error: 'Google OAuth session expired or missing. Please sign in.' 
+        },
+        { status: 401 }
+      );
+    }
+
+    // Verify Google client credentials using caller's tokens
     let auth = await getGoogleAuthAsync(token, spreadsheetId, userEmail, refreshTokenCookie);
     let sheetsClient = google.sheets({ version: 'v4', auth });
     let freshAccessToken: string | undefined;

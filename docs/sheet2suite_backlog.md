@@ -22,8 +22,8 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
 |---|---|---|---|---|
 | **`[SEC-1]`** | 🔴 **CRITICAL** | Unauthenticated Admin Database Endpoints & UI | `src/app/api/admin/db/route.ts`, `src/app/admin/page.tsx` | ✅ Resolved |
 | **`[SEC-2]`** | 🔴 **CRITICAL** | Insecure `postMessage` Wildcard (`*`) Leaking OAuth Access Tokens | `src/app/api/auth/google/callback/route.ts` | ✅ Resolved |
-| **`[SEC-3]`** | 🔴 **CRITICAL** | BOLA / IDOR via Firestore Stored Token Substitution | `src/lib/sheets/client.ts`, `src/app/api/sync/route.ts`, `src/app/api/auth/session/route.ts` | 📝 Open |
-| **`[SEC-4]`** | 🟠 **HIGH** | Unauthenticated Refresh Token Harvesting via Cookie Injection | `src/app/api/auth/register-token/route.ts` | 📝 Open |
+| **`[SEC-3]`** | 🔴 **CRITICAL** | BOLA / IDOR via Firestore Stored Token Substitution | `src/lib/sheets/client.ts`, `src/app/api/sync/route.ts`, `src/app/api/auth/session/route.ts` | ✅ Resolved |
+| **`[SEC-4]`** | 🟠 **HIGH** | Unauthenticated Refresh Token Harvesting via Cookie Injection | `src/app/api/auth/register-token/route.ts` | ✅ Resolved |
 | **`[SEC-5]`** | 🟠 **HIGH** | Hardcoded Fallback JWT Secret for Vendor Share & Upload Links | `src/lib/share/token.ts` | 📝 Open |
 | **`[SEC-6]`** | 🟡 **MEDIUM** | Unauthenticated Workspace & User Email Enumeration | `src/app/api/workspaces/route.ts` | 📝 Open |
 | **`[SEC-7]`** | 🟡 **MEDIUM** | Missing CSRF State Nonce in Google OAuth Authorization | `src/app/api/auth/google/route.ts` | 📝 Open |
@@ -43,16 +43,19 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
   - **Summary**: Following successful Google OAuth consent, `callback/route.ts` posts the user's raw Google OAuth `accessToken`, user email, and provisioned spreadsheet ID back to `window.opener` using target origin `'*'`.
   - **Risk**: Any malicious site or script that opened or navigated the OAuth popup can intercept the `postMessage` event and steal the user's active Google OAuth credentials.
   - **Suggested Fix**: Replace `'*'` with `window.location.origin` or verified authorized application origin.
+  - **Resolution (v1.15.1)**: Added `isValidAppOrigin()` in `src/app/api/auth/google/callback/route.ts`, eliminated wildcard `'*'`, captured origin in OAuth state, and verified `event.origin` in all frontend postMessage listeners.
 
 - **`[SEC-3]` [CRITICAL] Broken Object Level Authorization (BOLA / IDOR) via Stored Token Substitution**:
   - **Summary**: In `getGoogleAuthAsync`, when an incoming request provides a `spreadsheetId` without a valid caller access token, the server automatically queries Firestore for `tokenDoc` matching `spreadsheetId` and uses the stored `refreshToken` to execute Google API calls. In `/api/auth/session`, it even returns this freshly minted access token in cleartext JSON.
   - **Risk**: Any attacker who discovers or guesses a victim's `spreadsheetId` can read the entire spreadsheet via `GET /api/sync`, overwrite it via `POST /api/sync`, or extract the victim's raw Google access token via `GET /api/auth/session`.
   - **Suggested Fix**: Validate that the requesting user's session (verified via session cookie or bearer token) actually owns or is an authorized collaborator on that `spreadsheetId` before looking up tokens from Firestore. Refuse unauthenticated token retrieval.
+  - **Resolution (v1.15.4)**: Restricted `getGoogleAuthAsync` in `src/lib/sheets/client.ts` to strictly refuse stored refresh token substitution for unauthenticated callers unless explicit `allowStoredFallback` is passed by verified server-side delegation (e.g. verified signed share JWTs). Enforced authentication checks across `/api/sync` (GET & POST), `/api/auth/session`, `/api/auth/refresh`, `/api/drive/folders`, and `/api/drive/create-folder`. Eliminated unauthenticated token reflection in `/api/auth/session`.
 
 - **`[SEC-4]` [HIGH] Unauthenticated Refresh Token Harvesting via Cookie Injection in `/api/auth/register-token`**:
   - **Summary**: When `POST /api/auth/register-token` is called with `{ spreadsheetId: "..." }`, if the caller has no refresh token cookie, it looks up the victim's refresh token from Firestore and sets `response.cookies.set('s2s_refresh_token', existingRefreshToken)`.
   - **Risk**: An attacker can obtain the victim's long-lived Google OAuth refresh token set directly into their own browser cookies, granting persistent offline access to the victim's Google Drive and Sheets.
   - **Suggested Fix**: Restrict `/api/auth/register-token` to authenticated callers. Never set `s2s_refresh_token` cookies to a caller based on an unverified lookup of an untrusted `spreadsheetId`.
+  - **Resolution (v1.15.4)**: Removed unauthenticated fallback lookups by `spreadsheetId` and `global_fallback` in `src/app/api/auth/register-token/route.ts` and `src/app/api/auth/refresh/route.ts`. Refresh token cookies are strictly set only when the caller already possesses a verified refresh token.
 
 - **`[SEC-5]` [HIGH] Hardcoded Default JWT Secret Fallback for Vendor Share & Upload Links**:
   - **Summary**: `src/lib/share/token.ts` falls back to `'sheet2vow-secure-vendor-secret-key-2026'` when `process.env.SHARE_JWT_SECRET` is unset.

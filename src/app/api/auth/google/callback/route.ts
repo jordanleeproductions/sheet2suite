@@ -223,7 +223,7 @@ export async function GET(req: NextRequest) {
 
       // Automatically grant Google Drive edit permissions using workspace owner / server credentials
       try {
-        const driveAuth = await getGoogleAuthAsync(undefined, stateSpreadsheetId);
+        const driveAuth = await getGoogleAuthAsync(undefined, stateSpreadsheetId, undefined, undefined, { allowStoredFallback: true });
         const driveClient = google.drive({ version: 'v3', auth: driveAuth });
         await driveClient.permissions.create({
           fileId: stateSpreadsheetId,
