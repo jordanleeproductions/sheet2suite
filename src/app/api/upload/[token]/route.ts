@@ -131,30 +131,22 @@ export async function POST(
     let drive: any = null;
     let auth: any = null;
     try {
-      if (payload.spreadsheetId) {
+      if (payload.userEmail) {
         try {
-          auth = await getGoogleAuthAsync(undefined, payload.spreadsheetId, undefined, undefined, { allowStoredFallback: true });
-        } catch (err) {
-          console.warn(`[Upload Route] Could not get Google Auth client with spreadsheetId "${payload.spreadsheetId}":`, err);
-        }
-      }
-      if (!auth && payload.userEmail) {
-        try {
-          auth = await getGoogleAuthAsync(undefined, payload.userEmail, undefined, undefined, { allowStoredFallback: true });
+          auth = await getGoogleAuthAsync(undefined, undefined, payload.userEmail);
         } catch (err) {
           console.warn(`[Upload Route] Could not get Google Auth client with userEmail "${payload.userEmail}":`, err);
         }
       }
-      if (!auth) {
-        // Fallback: Check if ANY valid refresh token is recorded in Firestore
+      if (!auth && payload.spreadsheetId) {
         try {
-          const { LocalFirestore } = await import('@/lib/db/firestoreDb');
-          const fallbackDoc = await LocalFirestore.findAuthTokenDocAsync('global_fallback');
-          if (fallbackDoc?.refreshToken) {
-            auth = await getGoogleAuthAsync(undefined, fallbackDoc.spreadsheetId || fallbackDoc.userEmail, undefined, undefined, { allowStoredFallback: true });
+          const { LocalLicensingDb } = await import('@/lib/db/licensingDb');
+          const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(payload.spreadsheetId);
+          if (ws?.userEmail) {
+            auth = await getGoogleAuthAsync(undefined, undefined, ws.userEmail);
           }
-        } catch (fbErr) {
-          console.warn('[Upload Route] Global fallback lookup warning:', fbErr);
+        } catch (wsErr) {
+          console.warn(`[Upload Route] Could not resolve workspace owner for spreadsheetId "${payload.spreadsheetId}":`, wsErr);
         }
       }
       if (!auth) {

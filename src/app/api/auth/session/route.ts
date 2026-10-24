@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuthAsync } from '@/lib/sheets/client';
+import { verifyWorkspaceAuthorization, isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
 
 /**
  * GET /api/auth/session
  * Verifies whether the current user session / Google OAuth token is still active and valid.
+ * Enforces workspace authorization to prevent BOLA/IDOR (SEC-3).
  * Used before opening Add/Edit/Delete modals to prevent data loss due to expired sessions.
  */
 export async function GET(req: NextRequest) {
@@ -18,32 +20,47 @@ export async function GET(req: NextRequest) {
     // In mock or demo mode, sessions never expire
     const isMock = url.searchParams.get('isMock') === 'true' || 
       req.headers.get('x-is-mock') === 'true' || 
-      spreadsheetId?.startsWith('mock-') || 
-      spreadsheetId?.includes('mock');
+      isMockSpreadsheet(spreadsheetId);
     const isDemo = url.searchParams.get('isDemo') === 'true' || req.headers.get('x-is-demo') === 'true';
     if (isMock || isDemo) {
       return NextResponse.json({ valid: true, isMock: true });
     }
 
     // If completely offline or no spreadsheet connected, allow local edits
-    if (!spreadsheetId && !token && !refreshTokenCookie) {
+    if (!spreadsheetId && !token && !refreshTokenCookie && !userEmail) {
       return NextResponse.json({ valid: true, localOnly: true });
     }
 
-    // SECURITY CHECK (SEC-3): If a spreadsheet is requested, caller MUST supply an active token or refresh cookie
-    if (!token && !refreshTokenCookie) {
+    // SEC-3 Hardening: Authorize caller before accessing stored credentials or testing sheet
+    let targetUserEmail = userEmail;
+    if (spreadsheetId) {
+      const authResult = await verifyWorkspaceAuthorization(req, spreadsheetId);
+      if (!authResult.authorized) {
+        const status = authResult.isUnauthenticated ? 401 : 403;
+        return NextResponse.json(
+          {
+            valid: false,
+            isAuthError: Boolean(authResult.isUnauthenticated),
+            isForbidden: Boolean(authResult.isForbidden),
+            error: authResult.error || 'Access denied to this workspace.',
+          },
+          { status }
+        );
+      }
+      targetUserEmail = authResult.targetUserEmail || authResult.userEmail || userEmail;
+    } else if (!token && !refreshTokenCookie && !userEmail) {
       return NextResponse.json(
-        { 
-          valid: false, 
-          isAuthError: true, 
-          error: 'Google OAuth session expired or missing. Please sign in.' 
+        {
+          valid: false,
+          isAuthError: true,
+          error: 'Authentication required. No active session found.',
         },
         { status: 401 }
       );
     }
 
-    // Verify Google client credentials using caller's tokens
-    let auth = await getGoogleAuthAsync(token, spreadsheetId, userEmail, refreshTokenCookie);
+    // Verify Google client credentials using strictly verified identity
+    let auth = await getGoogleAuthAsync(token, undefined, targetUserEmail, refreshTokenCookie);
     let sheetsClient = google.sheets({ version: 'v4', auth });
     let freshAccessToken: string | undefined;
 
@@ -61,7 +78,7 @@ export async function GET(req: NextRequest) {
             const tokenRes = await (auth as any).getAccessToken();
             if (tokenRes?.token) {
               freshAccessToken = tokenRes.token;
-              auth = await getGoogleAuthAsync(freshAccessToken, spreadsheetId, userEmail, refreshTokenCookie);
+              auth = await getGoogleAuthAsync(freshAccessToken, undefined, targetUserEmail, refreshTokenCookie);
               sheetsClient = google.sheets({ version: 'v4', auth });
               await sheetsClient.spreadsheets.get({
                 spreadsheetId,
@@ -104,14 +121,21 @@ export async function GET(req: NextRequest) {
       errorMsg.includes('invalid_grant') ||
       errorMsg.includes('unauthorized');
 
+    const isForbidden = error?.code === 403 || error?.status === 403 || errorMsg.includes('forbidden');
+
     // Only fail session validation if it is an actual authentication/authorization failure
     return NextResponse.json(
       { 
-        valid: !isAuthError, 
-        isAuthError: Boolean(isAuthError), 
-        error: isAuthError ? 'Google OAuth session expired. Please re-authenticate.' : error?.message || 'Session validation passed with warning' 
+        valid: !(isAuthError || isForbidden), 
+        isAuthError: Boolean(isAuthError),
+        isForbidden: Boolean(isForbidden),
+        error: isAuthError 
+          ? 'Google OAuth session expired. Please re-authenticate.' 
+          : isForbidden 
+          ? 'Forbidden: Access denied to this spreadsheet.' 
+          : (error?.message || 'Session validation passed with warning')
       },
-      { status: isAuthError ? 401 : 200 }
+      { status: isForbidden ? 403 : (isAuthError ? 401 : 200) }
     );
   }
 }

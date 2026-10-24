@@ -20,6 +20,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'spreadsheetId query parameter is required.' }, { status: 400 });
     }
 
+    const { verifyWorkspaceAuthorization } = await import('@/lib/auth/workspaceAuth');
+    const authResult = await verifyWorkspaceAuthorization(req, spreadsheetId);
+    if (!authResult.authorized) {
+      const status = authResult.isUnauthenticated ? 401 : 403;
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Access denied.' },
+        { status }
+      );
+    }
+
     // 1. Fetch workspace document from Cloud Firestore / Local store
     const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
 
@@ -36,9 +46,9 @@ export async function GET(req: NextRequest) {
       const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
       const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
       const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
-      const userEmail = req.cookies.get('s2s_user_email')?.value || ws?.userEmail;
+      const targetUserEmail = authResult.targetUserEmail || authResult.userEmail;
 
-      const auth = await getGoogleAuthAsync(bearerToken || cookieToken, spreadsheetId, userEmail, refreshToken);
+      const auth = await getGoogleAuthAsync(bearerToken || cookieToken, undefined, targetUserEmail, refreshToken);
       if (auth) {
         const drive = google.drive({ version: 'v3', auth });
         const listRes = await drive.permissions.list({
@@ -171,14 +181,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 1b. Verify Workspace Authorization (Caller must be authorized on this workspace)
+    const { verifyWorkspaceAuthorization } = await import('@/lib/auth/workspaceAuth');
+    const authResult = await verifyWorkspaceAuthorization(req, spreadsheetId);
+    if (!authResult.authorized) {
+      const status = authResult.isUnauthenticated ? 401 : 403;
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Access denied to this workspace.' },
+        { status }
+      );
+    }
+
     // 2. Obtain Auth Token & Drive Client
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
     const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
     const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
-    const userEmail = req.cookies.get('s2s_user_email')?.value || ws?.userEmail;
+    const targetUserEmail = authResult.targetUserEmail || authResult.userEmail;
 
-    const auth = await getGoogleAuthAsync(accessToken || bearerToken || cookieToken, spreadsheetId, userEmail, refreshToken);
+    const auth = await getGoogleAuthAsync(accessToken || bearerToken || cookieToken, undefined, targetUserEmail, refreshToken);
     if (!auth) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Google connection required to manage Google Drive permissions.' },
@@ -268,17 +289,28 @@ export async function DELETE(req: NextRequest) {
 
     const cleanEmail = String(partnerEmail).trim().toLowerCase();
 
-    // 1. Obtain Auth Token & Drive Client
+    // 1. Verify caller workspace authorization
+    const { verifyWorkspaceAuthorization } = await import('@/lib/auth/workspaceAuth');
+    const authResult = await verifyWorkspaceAuthorization(req, spreadsheetId);
+    if (!authResult.authorized) {
+      const status = authResult.isUnauthenticated ? 401 : 403;
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Access denied to this workspace.' },
+        { status }
+      );
+    }
+
+    // 1b. Obtain Auth Token & Drive Client
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
     const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
     const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
     const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
-    const userEmail = req.cookies.get('s2s_user_email')?.value || ws?.userEmail;
+    const targetUserEmail = authResult.targetUserEmail || authResult.userEmail;
 
     try {
-      const auth = await getGoogleAuthAsync(bearerToken || cookieToken, spreadsheetId, userEmail, refreshToken);
+      const auth = await getGoogleAuthAsync(bearerToken || cookieToken, undefined, targetUserEmail, refreshToken);
       if (auth) {
         const drive = google.drive({ version: 'v3', auth });
 

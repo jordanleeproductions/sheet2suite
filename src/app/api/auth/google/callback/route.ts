@@ -221,9 +221,11 @@ export async function GET(req: NextRequest) {
         console.warn('[OAuth] Could not automatically link co-planner in workspace:', cpErr);
       }
 
-      // Automatically grant Google Drive edit permissions using workspace owner / server credentials
+      // Automatically grant Google Drive edit permissions using workspace owner credentials
       try {
-        const driveAuth = await getGoogleAuthAsync(undefined, stateSpreadsheetId, undefined, undefined, { allowStoredFallback: true });
+        const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(stateSpreadsheetId);
+        const ownerEmail = ws?.userEmail;
+        const driveAuth = await getGoogleAuthAsync(undefined, undefined, ownerEmail, undefined, { allowStoredFallback: true });
         const driveClient = google.drive({ version: 'v3', auth: driveAuth });
         await driveClient.permissions.create({
           fileId: stateSpreadsheetId,

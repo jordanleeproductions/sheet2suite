@@ -318,6 +318,7 @@ export const LocalFirestore = {
   async findAuthTokenDocAsync(lookupKey: string): Promise<AuthTokenDocument | null> {
     if (!lookupKey) return null;
     const cleanKey = lookupKey.trim();
+    if (cleanKey === 'global_fallback') return null;
     const cloudDb = getCloudFirestore();
 
     // 1. Direct document lookup by docId
@@ -340,7 +341,7 @@ export const LocalFirestore = {
       }
     }
 
-    // 2. Query Cloud Firestore
+    // 2. Query Cloud Firestore strictly for matching spreadsheetId or userEmail
     if (cloudDb) {
       try {
         // Query by spreadsheetId
@@ -374,25 +375,12 @@ export const LocalFirestore = {
           }
           if (doc?.accessToken) direct = direct || doc;
         }
-
-        // Global fallback: Look for ANY active token document in auth_tokens with a valid refreshToken
-        const activeTokens = await cloudDb
-          .collection('auth_tokens')
-          .where('refreshToken', '!=', null)
-          .limit(1)
-          .get();
-        if (!activeTokens.empty) {
-          const activeDoc = activeTokens.docs[0].data() as AuthTokenDocument;
-          if (activeDoc?.refreshToken) {
-            return direct ? { ...direct, refreshToken: activeDoc.refreshToken } : activeDoc;
-          }
-        }
       } catch (err: any) {
         console.warn('[Firestore] Error querying auth_tokens by field:', err?.message);
       }
     }
 
-    // 4. Local file fallback search
+    // 3. Local file search strictly for matching spreadsheetId, userEmail, or id
     try {
       const dirPath = ensureCollectionDir('auth_tokens');
       const files = fs.readdirSync(dirPath);
@@ -408,18 +396,6 @@ export const LocalFirestore = {
           ) {
             if (doc.refreshToken) return doc;
             if (doc.accessToken) direct = direct || doc;
-          }
-        } catch (e) {}
-      }
-
-      // Local fallback for any document with a refreshToken
-      for (const file of files) {
-        if (!file.endsWith('.json')) continue;
-        try {
-          const raw = fs.readFileSync(path.join(dirPath, file), 'utf-8');
-          const doc = JSON.parse(raw) as AuthTokenDocument;
-          if (doc.refreshToken) {
-            return direct ? { ...direct, refreshToken: doc.refreshToken } : doc;
           }
         } catch (e) {}
       }

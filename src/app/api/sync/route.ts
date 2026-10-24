@@ -49,14 +49,14 @@ export async function GET(req: NextRequest) {
     const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
     const effectiveToken = (accessToken && accessToken !== 'mock-token') ? accessToken : cookieToken;
-    const hasAuth = Boolean(effectiveToken || cookieRefreshToken);
+    const hasAuth = Boolean(effectiveToken || cookieRefreshToken || cookieEmail);
 
     if (!spreadsheetId) {
       return NextResponse.json({ success: false, error: 'spreadsheetId is required' }, { status: 400 });
     }
 
     // Mock Mode
-    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
+    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345' || spreadsheetId.startsWith('mock-') || spreadsheetId.includes('mock')) {
       // Dynamically calculate metrics for consistency in mock mode
       const estimatedCost = mockDatabase.budget.reduce((sum, item) => sum + item.estimatedCost, 0);
       const actualCost = mockDatabase.budget.reduce((sum, item) => sum + item.actualCost, 0);
@@ -77,19 +77,38 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // SECURITY CHECK (SEC-3): Require valid Google authentication credentials
+    // SEC-3 Hardening: Enforce authentication and verify caller owns or collaborates on workspace
     if (!hasAuth) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized: Google authentication credentials (access token or session cookie) required.',
-        requiresLogin: true,
-      }, { status: 401 });
+      return NextResponse.json(
+        { 
+          success: false, 
+          isAuthError: true, 
+          error: 'Authentication required. Please sign in with your Google account.' 
+        }, 
+        { status: 401 }
+      );
     }
 
+    const { verifyWorkspaceAuthorization } = await import('@/lib/auth/workspaceAuth');
+    const authResult = await verifyWorkspaceAuthorization(req, spreadsheetId);
+    if (!authResult.authorized) {
+      const status = authResult.isUnauthenticated ? 401 : 403;
+      return NextResponse.json(
+        { 
+          success: false, 
+          isAuthError: Boolean(authResult.isUnauthenticated),
+          isForbidden: Boolean(authResult.isForbidden),
+          error: authResult.error || 'Access denied to this workspace.' 
+        }, 
+        { status }
+      );
+    }
+
+    const targetUserEmail = authResult.targetUserEmail || authResult.userEmail || cookieEmail;
     let auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
       effectiveToken, 
-      spreadsheetId, 
-      cookieEmail, 
+      undefined, 
+      targetUserEmail, 
       cookieRefreshToken
     );
     let sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
@@ -107,8 +126,8 @@ export async function GET(req: NextRequest) {
               freshAccessToken = tokenRes.token;
               auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
                 freshAccessToken,
-                spreadsheetId,
-                cookieEmail,
+                undefined,
+                targetUserEmail,
                 cookieRefreshToken
               );
               sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
@@ -397,7 +416,8 @@ export async function GET(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Error fetching sheet data in /api/sync:', error);
-    const isAuthError = error?.code === 401 || error?.status === 401 || String(error?.message).toLowerCase().includes('invalid authentication credentials');
+    const isAuthError = error?.code === 401 || error?.status === 401 || String(error?.message).toLowerCase().includes('invalid authentication credentials') || String(error?.message).toLowerCase().includes('unauthorized');
+    const isForbidden = error?.code === 403 || error?.status === 403 || String(error?.message).toLowerCase().includes('forbidden');
     const isNotFoundError = error?.code === 404 || error?.status === 404 || String(error?.message).toLowerCase().includes('requested entity was not found');
     let replacementSpreadsheetId: string | undefined;
 
@@ -423,15 +443,18 @@ export async function GET(req: NextRequest) {
       {
         success: false,
         isAuthError: Boolean(isAuthError),
+        isForbidden: Boolean(isForbidden),
         isNotFoundError: Boolean(isNotFoundError),
         replacementSpreadsheetId,
-        error: isAuthError 
+        error: isForbidden
+          ? 'Forbidden: Access denied to this spreadsheet.'
+          : isAuthError 
           ? 'Google OAuth access token expired or invalid. Please sign in again to refresh your session.' 
           : isNotFoundError 
           ? 'Requested entity was not found. The spreadsheet ID may be stale, moved, or deleted.' 
           : (error.message || 'Sync load failed')
       },
-      { status: isAuthError ? 401 : (isNotFoundError ? 404 : 500) }
+      { status: isForbidden ? 403 : (isAuthError ? 401 : (isNotFoundError ? 404 : 500)) }
     );
   }
 }
@@ -448,7 +471,7 @@ export async function POST(req: NextRequest) {
     const { spreadsheetId, sheetType, data } = body;
 
     const effectiveToken = (accessToken && accessToken !== 'mock-token') ? accessToken : cookieToken;
-    const hasAuth = Boolean(effectiveToken || cookieRefreshToken);
+    const hasAuth = Boolean(effectiveToken || cookieRefreshToken || cookieEmail);
 
     if (!spreadsheetId) {
       return NextResponse.json({ success: false, error: 'spreadsheetId is required' }, { status: 400 });
@@ -458,7 +481,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Mock Mode Update
-    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345') {
+    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345' || spreadsheetId.startsWith('mock-') || spreadsheetId.includes('mock')) {
       if (sheetType === 'dashboard') {
         const newBudgetVal = data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : mockDatabase.dashboard.totalBudget);
         mockDatabase.dashboard.totalBudget = isNaN(newBudgetVal) ? mockDatabase.dashboard.totalBudget : newBudgetVal;
@@ -511,19 +534,38 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // SECURITY CHECK (SEC-3): Require valid Google authentication credentials
+    // SEC-3 Hardening: Enforce authentication and verify caller owns or collaborates on workspace
     if (!hasAuth) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized: Google authentication credentials (access token or session cookie) required.',
-        requiresLogin: true,
-      }, { status: 401 });
+      return NextResponse.json(
+        { 
+          success: false, 
+          isAuthError: true, 
+          error: 'Authentication required. Please sign in with your Google account.' 
+        }, 
+        { status: 401 }
+      );
     }
 
+    const { verifyWorkspaceAuthorization } = await import('@/lib/auth/workspaceAuth');
+    const authResult = await verifyWorkspaceAuthorization(req, spreadsheetId);
+    if (!authResult.authorized) {
+      const status = authResult.isUnauthenticated ? 401 : 403;
+      return NextResponse.json(
+        { 
+          success: false, 
+          isAuthError: Boolean(authResult.isUnauthenticated),
+          isForbidden: Boolean(authResult.isForbidden),
+          error: authResult.error || 'Access denied to this workspace.' 
+        }, 
+        { status }
+      );
+    }
+
+    const targetUserEmail = authResult.targetUserEmail || authResult.userEmail || cookieEmail;
     let auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
       effectiveToken, 
-      spreadsheetId, 
-      cookieEmail, 
+      undefined, 
+      targetUserEmail, 
       cookieRefreshToken
     );
     let sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });
@@ -541,8 +583,8 @@ export async function POST(req: NextRequest) {
               freshAccessToken = tokenRes.token;
               auth = await (await import('@/lib/sheets/client')).getGoogleAuthAsync(
                 freshAccessToken,
-                spreadsheetId,
-                cookieEmail,
+                undefined,
+                targetUserEmail,
                 cookieRefreshToken
               );
               sheetsClient = (await import('googleapis')).google.sheets({ version: 'v4', auth });

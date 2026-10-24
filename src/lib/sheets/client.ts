@@ -30,42 +30,42 @@ export async function getGoogleAuthAsync(
   let resolvedRefreshToken = refreshTokenParam;
   let tokenDoc: any = null;
 
-  // SECURITY FIX (SEC-3): Only look up stored refresh tokens from Firestore if:
-  // 1. Explicitly authorized server-side delegation (options.allowStoredFallback === true, e.g. verified signed share JWT)
-  // OR
-  // 2. Caller is authenticated, and we are looking up the caller's OWN refresh token by verified userEmail.
-  // NEVER perform stored token substitution for unauthenticated requests or arbitrary spreadsheet IDs.
-  const isAnonymousCaller = !accessToken && !refreshTokenParam;
+  // SEC-3 Hardening: Prevent unauthenticated BOLA / IDOR token substitution
+  const isEmail = (str?: string) => Boolean(str && str.includes('@'));
+  const isSheetId = (str?: string) => Boolean(str && !str.includes('@'));
 
-  if (options?.allowStoredFallback) {
-    if (spreadsheetIdOrEmail || userEmail) {
-      try {
-        const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+  // If caller passes a spreadsheetId without an authenticated user session, token, or explicit delegation,
+  // refuse to query Firestore for the spreadsheet owner's stored credentials.
+  if (isSheetId(spreadsheetIdOrEmail) && !accessToken && !refreshTokenParam && !userEmail && !options?.allowStoredFallback) {
+    throw new Error(
+      'Unauthorized: Google OAuth credentials cannot be retrieved for a spreadsheetId without an authenticated user session.'
+    );
+  }
+
+  // Lookup stored tokens strictly for verified identities or explicit authorized delegation
+  if (
+    options?.allowStoredFallback ||
+    userEmail ||
+    isEmail(spreadsheetIdOrEmail) ||
+    (isSheetId(spreadsheetIdOrEmail) && (accessToken || refreshTokenParam || userEmail))
+  ) {
+    try {
+      const { LocalFirestore } = await import('@/lib/db/firestoreDb');
+      const targetEmail = userEmail || (isEmail(spreadsheetIdOrEmail) ? spreadsheetIdOrEmail : undefined);
+      if (targetEmail) {
+        tokenDoc = await LocalFirestore.findAuthTokenDocAsync(targetEmail);
+      }
+      if (!tokenDoc?.refreshToken && (options?.allowStoredFallback || (isSheetId(spreadsheetIdOrEmail) && (userEmail || refreshTokenParam)))) {
         if (spreadsheetIdOrEmail) {
           tokenDoc = await LocalFirestore.findAuthTokenDocAsync(spreadsheetIdOrEmail);
         }
-        if (!tokenDoc?.refreshToken && userEmail) {
-          tokenDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
-        }
-        if (tokenDoc?.refreshToken) {
-          resolvedRefreshToken = resolvedRefreshToken || tokenDoc.refreshToken;
-        }
-      } catch (e) {
-        console.warn('[Google Auth] Stored token lookup error:', e);
       }
-    }
-  } else if (!isAnonymousCaller) {
-    // Authenticated caller: use caller's provided refresh token or look up caller's own token by userEmail
-    if (!resolvedRefreshToken && userEmail) {
-      try {
-        const { LocalFirestore } = await import('@/lib/db/firestoreDb');
-        tokenDoc = await LocalFirestore.findAuthTokenDocAsync(userEmail);
-        if (tokenDoc?.refreshToken) {
-          resolvedRefreshToken = tokenDoc.refreshToken;
-        }
-      } catch (e) {
-        console.warn('[Google Auth] User email token lookup error:', e);
+      if (tokenDoc?.refreshToken) {
+        resolvedRefreshToken = resolvedRefreshToken || tokenDoc.refreshToken;
       }
+    } catch (e: any) {
+      if (e?.message?.startsWith('Unauthorized:')) throw e;
+      console.warn('[Google Auth] Could not lookup refresh token:', e);
     }
   }
 

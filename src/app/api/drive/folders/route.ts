@@ -29,10 +29,24 @@ export async function GET(req: NextRequest) {
     }
 
     const sheetId = spreadsheetId || req.cookies.get('s2v_spreadsheet_id')?.value;
+    let targetUserEmail: string | undefined;
+
+    if (sheetId) {
+      const { verifyWorkspaceAuthorization } = await import('@/lib/auth/workspaceAuth');
+      const authResult = await verifyWorkspaceAuthorization(req, sheetId);
+      if (!authResult.authorized) {
+        const status = authResult.isUnauthenticated ? 401 : 403;
+        return NextResponse.json(
+          { success: false, error: authResult.error || 'Access denied.' },
+          { status }
+        );
+      }
+      targetUserEmail = authResult.targetUserEmail || authResult.userEmail;
+    }
 
     let auth: any;
     try {
-      auth = await getGoogleAuthAsync(token, sheetId, userEmail, cookieRefreshToken);
+      auth = await getGoogleAuthAsync(token, undefined, targetUserEmail, cookieRefreshToken);
     } catch (authErr: any) {
       console.warn('[Drive Folders] Auth error, returning empty list:', authErr);
       return NextResponse.json({ success: true, files: [] });

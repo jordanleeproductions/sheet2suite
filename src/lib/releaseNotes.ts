@@ -10,11 +10,25 @@ export interface ReleaseNoteItem {
 }
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
-    {
+  {
+    version: 'v1.18.2',
+    title: 'Workspace Data Protection & Access Safeguards',
+    date: 'Oct 29, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Reinforced workspace authorization and privacy controls across all connected spreadsheets.',
+      'Enhanced account session security and background verification.',
+      'Strengthened multi-planner data synchronization and collaborative safeguards.',
+    ],
+    details: 'Upgraded workspace privacy and access controls to ensure your wedding planning data is always securely protected and only accessible to authorized planners.',
+  },
+  {
     version: 'v1.18.1',
     title: 'Modern Style Aesthetic Polish & High-Contrast Light Mode Support',
     date: 'Oct 29, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [
@@ -146,6 +160,20 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
       'Clear, focused workspace launch experience designed specifically for wedding couples and planners.',
     ],
     details: 'Introduces automated Google Drive folder organization, streamlined setup workflows, least-privilege cloud access protection, and published data privacy guidelines.',
+  },
+  {
+    version: 'v1.15.6',
+    title: 'Workspace Data Protection & Access Safeguards',
+    date: 'Oct 23, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Reinforced workspace authorization and privacy controls across all connected spreadsheets.',
+      'Enhanced account session security and background verification.',
+      'Strengthened multi-planner data synchronization and collaborative safeguards.',
+    ],
+    details: 'Upgraded workspace privacy and access controls to ensure your wedding planning data is always securely protected and only accessible to authorized planners.',
   },
   {
     version: 'v1.15.5',
