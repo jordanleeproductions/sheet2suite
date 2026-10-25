@@ -53,6 +53,14 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 |---|---|---|---|---|---|
 | **`[EXPENSE-PAID-BY]`** | Expense "Paid By" Contributor Tracking & Family Contribution Breakdown — Track who paid for each logged expense item (e.g. `Couple`, `In-Laws`, `Parents`, `Self`, `Partner`, or custom contributor name). Adds Column H: `Paid By` (`paidBy`: string) to the `EXPENSES` spreadsheet tab. Features an interactive combobox with quick contributor suggestion pills in the Add/Edit Expense modal, color-coded contributor badges on purchase ledger rows and mobile cards, and a dedicated "Paid By" filter and contribution breakdown summary (e.g. Couple: $X (Y%), In-Laws: $X (Y%), Parents: $X (Y%)) in the Financials ledger. | `src/components/BudgetLedgerManager.tsx`, `src/types/wedding.ts`, `src/lib/sheets/mapper.ts`, `src/app/api/sync/route.ts`, `docs/vow/master_spreadsheet_schema.md` | 🟡 Medium | ⚡ Med (~2-3 turns) | ✅ Completed |
 
+### 🚀 Launch Readiness & Google Verification
+| Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
+|---|---|---|---|---|---|
+| **`[LAUNCH-OAUTH-SCOPE]`** | OAuth Scope Minimization — Replaced restricted `drive` scope with non-sensitive `drive.file` and `spreadsheets` scopes for instant, free Google Cloud OAuth verification without third-party CASA audit. | `src/app/api/auth/google/route.ts`, `src/lib/sheets/client.ts` | 🟢 Low | ⚡ Minimal | ✅ Completed |
+| **`[LAUNCH-AUTO-DRIVE-PATH]`** | Automated Fixed Google Drive Storage Path — Removed user-facing folder browsing and selection UI. Locked destination to `My Drive / Sheet2Suite / Sheet2Vow` with clean, informative status card. | `src/app/activate/page.tsx` | 🟢 Low | ⚡ Minimal | ✅ Completed |
+| **`[LAUNCH-LEGAL-PAGES]`** | Public Legal Compliance Pages — Created Monarch-styled Privacy Policy (`/privacy`) and Terms of Service (`/terms`) with full Google API Services User Data Policy / Limited Use disclosures. Linked across Hub footer, activation portal, and in-app settings. | `src/app/privacy/page.tsx`, `src/app/terms/page.tsx`, `src/app/page.tsx`, `src/components/AdvancedSettingsModal.tsx` | 🟡 Medium | ⚡ None | ✅ Completed |
+| **`[LAUNCH-COMING-SOON]`** | Multi-Product Roadmap Focus — Marked `Sheet2Build` and `Sheet2Finance` as disabled "Coming Soon" cards on the parent hub to focus commercial launch exclusively on Sheet2Vow. | `src/app/page.tsx` | 🟢 Low | ⚡ None | ✅ Completed |
+
 ### 🔔 Versioning, Notifications & App Lifecycle
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
@@ -65,9 +73,9 @@ Authoritative feature backlog tracking pending roadmap items, feature enhancemen
 ### 🛡️ Product Security Tasks
 | Task ID | Severity | Vulnerability Summary | Target File(s) | Status |
 |---|---|---|---|---|
-| **`[SEC-VOW-1]`** | 🟠 **HIGH** | Vendor Contracts Automatically Set to Public (`anyoneWithLink: reader`) in Google Drive | `src/app/api/upload/contract/route.ts` | 📝 Open |
-| **`[SEC-VOW-2]`** | 🟠 **HIGH** | Google Sheets Formula Injection (CSV / Formula Injection) via Public Guest Photo Uploads | `src/app/api/upload/[token]/route.ts` | 📝 Open |
-| **`[SEC-VOW-3]`** | 🟡 **MEDIUM** | Unrestricted File Upload Types in Contract Uploader & Lack of File Size/DoS Guardrails | `src/app/api/upload/contract/route.ts`, `src/app/api/upload/[token]/route.ts` | 📝 Open |
+| **`[SEC-VOW-1]`** | 🟠 **HIGH** | Vendor Contracts Automatically Set to Public (`anyoneWithLink: reader`) in Google Drive | `src/app/api/upload/contract/route.ts` | ✅ Resolved |
+| **`[SEC-VOW-2]`** | 🟠 **HIGH** | Google Sheets Formula Injection (CSV / Formula Injection) via Public Guest Photo Uploads | `src/app/api/upload/[token]/route.ts` | ✅ Resolved |
+| **`[SEC-VOW-3]`** | 🟡 **MEDIUM** | Unrestricted File Upload Types in Contract Uploader & Lack of File Size/DoS Guardrails | `src/app/api/upload/contract/route.ts`, `src/app/api/upload/[token]/route.ts` | ✅ Resolved |
 
 #### Vulnerability Details & Remediation Specifications
 

@@ -11,10 +11,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import OfficialGoogleButton from '@/components/OfficialGoogleButton';
-import GoogleDrivePickerModal from '@/components/GoogleDrivePickerModal';
 import InfoDisclosure from '@/components/InfoDisclosure';
 import StepOrderVerification from '@/components/activate/StepOrderVerification';
-import { openGoogleDriveNativePicker } from '@/lib/google/googlePicker';
 import { ProductSetupPluginRenderer } from '@/lib/core/activation/pluginRegistry';
 import { SUITE_PRODUCTS, VerifiedOrder } from '@/lib/core/activation/types';
 
@@ -36,7 +34,6 @@ export default function ActivationPage() {
   const [googleEmail, setGoogleEmail] = useState<string>('');
   const [googleToken, setGoogleToken] = useState<string>('');
   const [isGoogleConnected, setIsGoogleConnected] = useState<boolean>(false);
-  const [showDrivePickerModal, setShowDrivePickerModal] = useState<boolean>(false);
   const [driveFolder, setDriveFolder] = useState('My Drive / Sheet2Suite / Sheet2Vow');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [provisionError, setProvisionError] = useState<string>('');
@@ -138,6 +135,12 @@ export default function ActivationPage() {
 
   const activeProduct = SUITE_PRODUCTS[targetProductCode] || SUITE_PRODUCTS.SHEET2VOW;
 
+  // Keep target Drive folder locked to the standard automated product path
+  useEffect(() => {
+    const defaultFolder = activeProduct.defaultDriveFolder || `My Drive / Sheet2Suite / ${activeProduct.name}`;
+    setDriveFolder(defaultFolder);
+  }, [activeProduct.defaultDriveFolder, activeProduct.name]);
+
   // Step 0: License & Order Verification
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,31 +176,6 @@ export default function ActivationPage() {
     } catch (err: any) {
       setIsVerifying(false);
       setVerifyError('Network error while verifying order. Please try again.');
-    }
-  };
-
-  // Launch Official Google Drive Native Picker (with graceful fallback to in-app modal)
-  const handleBrowseGoogleDrive = async () => {
-    const token = googleToken || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null);
-    if (token) {
-      const opened = await openGoogleDriveNativePicker({
-        accessToken: token,
-        onSelect: (folder) => {
-          setDriveFolder(folder.path);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('s2v_drive_folder', folder.path);
-          }
-        },
-        onError: (err) => {
-          console.warn('Native Google Picker failed, opening in-app modal fallback:', err);
-          setShowDrivePickerModal(true);
-        },
-      });
-      if (!opened) {
-        setShowDrivePickerModal(true);
-      }
-    } else {
-      setShowDrivePickerModal(true);
     }
   };
 
@@ -534,128 +512,75 @@ export default function ActivationPage() {
               )}
             </div>
 
-            {/* Google Drive Target Directory Selector */}
+            {/* Automated Google Drive Target Directory */}
             <div style={{
               backgroundColor: 'var(--color-bg-subtle)',
-              border: '2px solid var(--color-border)',
+              border: '1.5px solid var(--color-border)',
               borderRadius: 'var(--border-radius-md)',
               padding: '1.25rem',
               marginBottom: '1.25rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem',
+              gap: '0.75rem',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <label style={{ ...styles.fieldLabel, margin: 0, fontSize: '0.825rem', fontWeight: 800 }}>
-                    GOOGLE DRIVE TARGET DIRECTORY *
+                    GOOGLE DRIVE STORAGE DESTINATION
                   </label>
-                  <InfoDisclosure title="Google Drive Storage Location">
-                    Choose where in your Google Drive to save your new {activeProduct.name} spreadsheet. You can select a preset location or browse existing Drive folders.
+                  <InfoDisclosure title="Automated Google Drive Organization">
+                    To keep your Google Drive organized and secure, your spreadsheet is automatically provisioned into a dedicated Sheet2Suite folder. You have 100% private ownership and can open, edit, or move it anytime.
                   </InfoDisclosure>
                 </div>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: '#15803d',
+                  backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(22, 163, 74, 0.2)'
+                }}>
+                  🔒 AUTOMATED & SECURE
+                </span>
               </div>
 
-              <div>
-                <div style={{ position: 'relative', width: '100%', marginBottom: '0.5rem' }}>
-                  <input
-                    type="text"
-                    value={driveFolder}
-                    onChange={(e) => setDriveFolder(e.target.value)}
-                    placeholder="e.g. My Drive / Sheet2Suite / Sheet2Vow"
-                    style={{
-                      ...styles.inputField,
-                      width: '100%',
-                      margin: 0,
-                      paddingLeft: '2.5rem',
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.95rem',
-                      border: '2px solid var(--color-primary)',
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                    }}
-                    required
-                  />
-                  <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1.1rem', pointerEvents: 'none' }}>
-                    📁
-                  </span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                backgroundColor: 'var(--color-surface, #ffffff)',
+                border: '1.5px solid var(--color-border)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.75rem 1rem',
+              }}>
+                <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>📁</span>
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-text)' }}>
+                    My Drive / Sheet2Suite / {activeProduct.name}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)', marginTop: '2px' }}>
+                    Dedicated application folder automatically created in your personal Google Drive
+                  </div>
                 </div>
-
-                <button
-                  type="button"
-                  disabled={!isGoogleConnected}
-                  onClick={handleBrowseGoogleDrive}
-                  style={{
-                    backgroundColor: isGoogleConnected ? '#0f172a' : 'var(--color-bg-subtle)',
-                    color: isGoogleConnected ? '#ffffff' : 'var(--color-muted)',
-                    border: isGoogleConnected ? '2px solid var(--color-primary)' : '1.5px dashed var(--color-border)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    padding: '0.75rem 1rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    cursor: isGoogleConnected ? 'pointer' : 'not-allowed',
-                    opacity: isGoogleConnected ? 1 : 0.65,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    width: '100%',
-                  }}
-                >
-                  <span>
-                    {isGoogleConnected ? '📁 BROWSE GOOGLE DRIVE FOLDERS...' : '📁 CONNECT GOOGLE DRIVE TO BROWSE'}
-                  </span>
-                </button>
               </div>
 
-              {/* Preselected Folder Shortcuts */}
-              <div style={{ borderTop: '1px dashed var(--color-border)', paddingTop: '0.85rem' }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.725rem', fontWeight: 800, color: 'var(--color-text)', marginBottom: '0.4rem' }}>
-                  ⚡ PRESELECTED SHORTCUTS:
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem' }}>
-                  {[
-                    { path: `My Drive / Sheet2Suite / ${activeProduct.name}`, name: 'Default App Folder' },
-                    { path: 'My Drive / Workspace', name: 'General Workspace' },
-                    { path: 'My Drive (Root)', name: 'My Drive Root' }
-                  ].map((folder) => {
-                    const isSelected = driveFolder === folder.path;
-                    return (
-                      <div
-                        key={folder.path}
-                        onClick={() => setDriveFolder(folder.path)}
-                        style={{
-                          border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                          backgroundColor: isSelected ? 'var(--color-surface, #ffffff)' : 'var(--color-bg)',
-                          borderRadius: 'var(--border-radius-sm)',
-                          padding: '0.65rem 0.75rem',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.775rem', fontWeight: isSelected ? 800 : 600 }}>
-                          {folder.name}
-                        </div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {folder.path}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', lineHeight: 1.45 }}>
+                ✨ <strong>Zero Manual Setup:</strong> We will automatically create this folder and duplicate the master template directly into your Google Drive.
               </div>
             </div>
 
             {/* Next Step Action */}
             <button
               type="button"
-              disabled={!isGoogleConnected || !driveFolder.trim()}
+              disabled={!isGoogleConnected}
               onClick={() => setStep(2)}
               style={{
                 ...styles.primaryBtn,
                 width: '100%',
-                opacity: (!isGoogleConnected || !driveFolder.trim()) ? 0.5 : 1,
-                cursor: (!isGoogleConnected || !driveFolder.trim()) ? 'not-allowed' : 'pointer',
+                opacity: !isGoogleConnected ? 0.5 : 1,
+                cursor: !isGoogleConnected ? 'not-allowed' : 'pointer',
               }}
             >
               <span>{isGoogleConnected ? `PROCEED TO ${activeProduct.name.toUpperCase()} SETUP` : 'CONNECT GOOGLE DRIVE TO CONTINUE'}</span>
@@ -673,7 +598,7 @@ export default function ActivationPage() {
             orderId={orderId}
             driveFolder={driveFolder}
             isGoogleConnected={isGoogleConnected}
-            onBrowseGoogleDrive={handleBrowseGoogleDrive}
+            onBrowseGoogleDrive={() => {}}
             onChangeDriveFolder={setDriveFolder}
             onComplete={handleSetupComplete}
             onBack={() => setStep(1)}
@@ -681,7 +606,7 @@ export default function ActivationPage() {
           />
         )}
 
-        {/* STEP 3: Provisioning & Launch Complete */}
+        {/* Step 3 */}
         {step === 3 && (
           <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'var(--color-green, #16a34a)', color: '#ffffff', marginBottom: '1.25rem' }}>
@@ -696,21 +621,16 @@ export default function ActivationPage() {
             <div style={{ display: 'inline-block', width: '28px', height: '28px', border: '3px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           </div>
         )}
-      </div>
 
-      {/* In-App Google Drive Picker Modal Fallback */}
-      <GoogleDrivePickerModal
-        isOpen={showDrivePickerModal}
-        accessToken={googleToken}
-        onClose={() => setShowDrivePickerModal(false)}
-        onSelectFolder={(folder) => {
-          setDriveFolder(folder.path);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('s2v_drive_folder', folder.path);
-          }
-          setShowDrivePickerModal(false);
-        }}
-      />
+        {/* Legal & Compliance Footer */}
+        <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px dashed var(--color-border)', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--color-muted)', display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-muted)', textDecoration: 'underline' }}>Privacy Policy</a>
+          <span>•</span>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-muted)', textDecoration: 'underline' }}>Terms of Service</a>
+          <span>•</span>
+          <span>Google drive.file scope enforced</span>
+        </div>
+      </div>
     </div>
   );
 }

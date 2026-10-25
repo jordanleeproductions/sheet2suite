@@ -368,19 +368,16 @@ The Activation Engine (`src/app/activate/page.tsx` & `activate.sheet2suite.com`)
 - Accepts orderId, email, and target productCode (e.g. 'SHEET2VOW', 'SHEET2BUILD', 'MASTER_PASS').
 - Verifies entitlement and resolves purchased product tier.
 
-[ Step 1: Google OAuth Connection & Trust ]
-- Connects user's personal Google Account with `drive.file` scope.
-- Displays Pre-Auth Trust Card and Data Protection guarantees.
+[ Step 1: Google OAuth Connection & Automated Drive Path ]
+- Connects user's personal Google Account with non-sensitive `drive.file` and `spreadsheets` scopes (zero CASA audit overhead).
+- Automatically assigns locked destination path (`My Drive / Sheet2Suite / Sheet2Vow`) with clear, reassuring security card.
+- Displays Data Sovereignty guarantees and links to public Privacy Policy (`/privacy`) and Terms of Service (`/terms`).
 
-[ Step 2: Target Drive Directory Resolution ]
-- Prompts user to select or create their destination Drive folder (e.g., `My Drive/Sheet2Suite/Sheet2Vow`).
-- Uses Google Picker API (`openGoogleDriveNativePicker`) or in-app modal.
-
-[ Step 3: Pluggable Product Setup Plugin (<ProductSetupPlugin />) ]
+[ Step 2: Pluggable Product Setup Plugin (<ProductSetupPluginRenderer />) ]
 - Dynamically mounts the target product's setup wizard:
   - 💍 Sheet2Vow: `<VowSetupWizard />` (Couple Names, Wedding Date, Presets, Active Modules).
-  - 🏗️ Sheet2Build: `<BuildSetupWizard />` (Project Title, Address, Milestones, Trade Contractors).
-  - 💰 Sheet2Finance: `<FinanceSetupWizard />` (Fiscal Year, Accounts, Budget Categories).
+  - 🏗️ Sheet2Build: `<BuildSetupWizard />` (Project Title, Address, Milestones, Trade Contractors) [Roadmap].
+  - 💰 Sheet2Finance: `<FinanceSetupWizard />` (Fiscal Year, Accounts, Budget Categories) [Roadmap].
 
 [ Step 4: Automated Provisioning & Workspace Launch ]
 - Calls `/api/provision` with `{ productCode, driveFolderId, customMetadata }`.
@@ -457,11 +454,10 @@ src/
         └── types/
 ```
 
-#### 3.8.1 Mobile Google Drive Picker & Action Ergonomics (`src/components/GoogleDrivePickerModal.tsx`)
-- **Full-Width Mobile Shortcuts:** Responsive `.preselected-shortcuts-grid` transforming 3-column desktop shortcuts into full-width touch cards on mobile screens.
-- **Authentication-Gated Browse Picker:** Enforces Google OAuth connection before the Drive picker modal can be opened; displays `📁 CONNECT GOOGLE DRIVE TO BROWSE` with disabled state when unauthenticated.
-- **High-Contrast Action Button Palette:** Clear visual separation between interactive action buttons (bold `#0f172a` obsidian backgrounds, 2px borders, vibrant primary buttons) and background cards/inputs.
-- **Responsive In-App Drive Picker Modal:** Adapts dynamically to mobile viewports with horizontal scrollable scope pills (`My Drive`, `Shared with me`, `Starred`), 48px+ folder rows, and stacked confirmation footer.
+#### 3.8.1 Automated Google Drive Storage Destination & Setup Optimization
+- **Zero-Friction Destination Path:** Removed manual folder picker, directory inputs, and shortcuts from the activation onboarding flow. Automatically locks the spreadsheet target path to `My Drive / Sheet2Suite / [Product Name]` (e.g. `My Drive / Sheet2Suite / Sheet2Vow`), eliminating user configuration friction and path errors.
+- **Privacy & Sovereignty Reassurance:** Displays an informative, high-contrast security badge confirming that the spreadsheet will be safely created in a dedicated app folder in their private Google Drive with 100% user data sovereignty.
+- **In-App Media Picker Preservation:** The responsive in-app Google Drive picker modal (`src/components/GoogleDrivePickerModal.tsx`) remains available for secondary user workflows such as photo shot list album linking.
 
 #### 3.8.2 First-Time Workspace Welcome & UX Education Info Card (`src/components/WelcomeGuideCard.tsx`)
 - **Standout Visual Presence:** Rendered with a high-contrast royal indigo/violet gradient card (`#1e1b4b` to `#4f46e5`) with radiant borders, replacing the Executive Summary header bar on newly created or non-dismissed workspaces.

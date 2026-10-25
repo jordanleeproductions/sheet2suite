@@ -11,10 +11,25 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.16.0',
+    title: 'Streamlined Setup & Data Sovereignty Architecture',
+    date: 'Oct 24, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Automated Google Drive workspace setup: your wedding spreadsheet is now automatically organized into a dedicated, private folder with zero manual configuration.',
+      'Least-privilege cloud data protection: simplified permissions ensuring the application only accesses files created specifically for your wedding.',
+      'Dedicated legal compliance and data protection guidelines accessible directly across the app.',
+      'Clear, focused workspace launch experience designed specifically for wedding couples and planners.',
+    ],
+    details: 'Introduces automated Google Drive folder organization, streamlined setup workflows, least-privilege cloud access protection, and published data privacy guidelines.',
+  },
+  {
     version: 'v1.15.5',
     title: 'Workspace Privacy Protection & Identity Verification',
     date: 'Oct 22, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'fix',
     highlights: [

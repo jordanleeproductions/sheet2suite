@@ -172,7 +172,6 @@ export async function getGoogleAuthAsync(
       key: privateKey,
       scopes: [
         'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive',
         'https://www.googleapis.com/auth/drive.file'
       ]
     });
@@ -212,7 +211,6 @@ export function getGoogleAuth(accessToken?: string) {
       key: privateKey,
       scopes: [
         'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive',
         'https://www.googleapis.com/auth/drive.file'
       ]
     });

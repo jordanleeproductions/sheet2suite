@@ -62,8 +62,8 @@ export default function Sheet2SuiteParentHub() {
       id: 'build',
       name: 'Sheet2Build',
       tagline: 'Construction, Renovation & Contractor Ledger',
-      status: 'beta',
-      version: 'v0.8 Beta Access',
+      status: 'roadmap',
+      version: 'Coming Soon',
       icon: Building2,
       iconColor: '#f59e0b',
       desc: 'Professional construction and home renovation management canvas: Contractor bids, change order logs, payment milestone tracking, material expense ledger, and site timeline.',
@@ -74,17 +74,16 @@ export default function Sheet2SuiteParentHub() {
         'Material & Supply Chain Expense Tracker',
         'Gantt Project Timeline & Site Photos',
       ],
-      primaryCtaText: 'LAUNCH SHEET2BUILD',
-      primaryHref: '/activate?product=build',
-      secondaryCtaText: 'Quick Setup',
-      secondaryHref: '/activate?product=build&step=guided',
+      primaryCtaText: 'COMING SOON',
+      primaryHref: '',
+      disabled: true,
     },
     {
       id: 'finance',
       name: 'Sheet2Finance',
       tagline: 'Personal Finance & Cashflow Engine',
-      status: 'beta',
-      version: 'v0.8 Beta Access',
+      status: 'roadmap',
+      version: 'Coming Soon',
       icon: TrendingUp,
       iconColor: '#10b981',
       desc: 'Zero-based monthly budget ledger, cashflow forecasting, debt payoff snowball calculator, asset allocation, and personal net worth tracker.',
@@ -95,10 +94,9 @@ export default function Sheet2SuiteParentHub() {
         'Asset Allocation & Net Worth Meter',
         'Emergency Fund Savings Goal Ticker',
       ],
-      primaryCtaText: 'LAUNCH SHEET2FINANCE',
-      primaryHref: '/activate?product=finance',
-      secondaryCtaText: 'Quick Setup',
-      secondaryHref: '/activate?product=finance&step=guided',
+      primaryCtaText: 'COMING SOON',
+      primaryHref: '',
+      disabled: true,
     },
     {
       id: 'home',
@@ -405,10 +403,14 @@ export default function Sheet2SuiteParentHub() {
       {/* Footer */}
       <footer style={styles.footer}>
         <p style={{ margin: 0 }}>© 2026 Sheet2Suite Platform • Built for Google Sheets Purists</p>
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/activate" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Activation Portal</Link>
           <span>•</span>
           <Link href="/vow" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Sheet2Vow Application</Link>
+          <span>•</span>
+          <Link href="/privacy" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Privacy Policy</Link>
+          <span>•</span>
+          <Link href="/terms" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Terms of Service</Link>
         </div>
       </footer>
     </div>

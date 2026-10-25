@@ -47,7 +47,7 @@ export const PreAuthTrustCard: React.FC<PreAuthTrustCardProps> = ({ onConsent, o
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
         {[
-          'Enforces restricted scope: https://www.googleapis.com/auth/drive.file',
+          'Restricts access strictly to files created by this app (drive.file scope)',
           'Zero external database risk — your data stays in your personal Google Drive',
           'Move or rename your Google Sheet file anytime without breaking sync'
         ].map((item, idx) => (

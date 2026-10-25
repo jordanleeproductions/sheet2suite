@@ -116,8 +116,9 @@ ${highlightsStr}
     details: 'Continuous platform enhancements to make your wedding planning experience smoother and more reliable.',
   },\n`;
 
-    const marker = 'export const RELEASE_NOTES: ReleaseNoteItem[] = [\n';
-    if (releaseNotesContent.includes(marker)) {
+    const markerMatch = releaseNotesContent.match(/export const RELEASE_NOTES: ReleaseNoteItem\[\] = \[\r?\n/);
+    if (markerMatch) {
+      const marker = markerMatch[0];
       releaseNotesContent = releaseNotesContent.replace(marker, marker + newEntry);
       fs.writeFileSync(releaseNotesPath, releaseNotesContent, 'utf8');
       console.log(`✓ Synchronized src/lib/releaseNotes.ts with ${versionTag} entry.`);

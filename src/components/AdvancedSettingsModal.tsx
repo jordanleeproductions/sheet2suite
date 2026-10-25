@@ -11,6 +11,7 @@ import {
   HardDrive, 
   ExternalLink, 
   ShieldAlert, 
+  ShieldCheck,
   Key, 
   Check, 
   Bug, 
@@ -1328,6 +1329,50 @@ export default function AdvancedSettingsModal({
                       </div>
                     );
                   })()}
+                </div>
+
+                {/* Privacy & Legal Policies */}
+                <div style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-muted)', borderRadius: 'var(--border-radius-sm)', padding: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                    <ShieldCheck size={18} style={{ color: 'var(--color-primary)' }} />
+                    <h5 style={{ margin: 0, fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                      DATA PRIVACY & LEGAL POLICIES
+                    </h5>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0 0 0.75rem 0' }}>
+                    Sheet2Vow strictly enforces Google&apos;s isolated <code>drive.file</code> scope. We never store, process, or sell your personal records on external database servers.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--color-primary)',
+                        textDecoration: 'underline',
+                        fontWeight: 700,
+                      }}
+                    >
+                      📄 Privacy Policy ↗
+                    </a>
+                    <span style={{ color: 'var(--color-muted)' }}>•</span>
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--color-primary)',
+                        textDecoration: 'underline',
+                        fontWeight: 700,
+                      }}
+                    >
+                      📜 Terms of Service ↗
+                    </a>
+                  </div>
                 </div>
 
                 {/* Disconnect Workspace */}
