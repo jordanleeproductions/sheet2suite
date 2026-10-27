@@ -36,6 +36,7 @@ export default function ActivationPage() {
   const [isGoogleConnected, setIsGoogleConnected] = useState<boolean>(false);
   const [driveFolder, setDriveFolder] = useState('My Drive / Sheet2Suite / Sheet2Vow');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [provisionStage, setProvisionStage] = useState<number>(0);
   const [provisionError, setProvisionError] = useState<string>('');
   const [lastProductConfig, setLastProductConfig] = useState<any | null>(null);
   const [detectedWorkspace, setDetectedWorkspace] = useState<any | null>(null);
@@ -184,8 +185,13 @@ export default function ActivationPage() {
     setIsSubmitting(true);
     setProvisionError('');
     setLastProductConfig(productConfig);
+    setStep(3);
+    setProvisionStage(1);
 
     try {
+      await new Promise(r => setTimeout(r, 400));
+      setProvisionStage(2);
+
       const currentGoogleToken = googleToken || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_token') : null);
       const provHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
       if (currentGoogleToken) provHeaders['Authorization'] = `Bearer ${currentGoogleToken}`;
@@ -216,11 +222,16 @@ export default function ActivationPage() {
         throw new Error(provData.error || 'Failed to provision Google Drive spreadsheet.');
       }
 
+      setProvisionStage(3);
+      await new Promise(r => setTimeout(r, 400));
+
       const createdSpreadsheetId = provData.provisioned.spreadsheetId;
       const userEmailToSave = email || googleEmail || 'user@sheet2suite.com';
 
       const resolvedPartnerEmail = productConfig.admin2Email || productConfig.partner2?.email || undefined;
       const coPlannersToSave = resolvedPartnerEmail ? [resolvedPartnerEmail] : [];
+
+      setProvisionStage(4);
 
       // Step 2: Register workspace in Sheet2Suite database
       await fetch('/api/workspaces', {
@@ -262,15 +273,16 @@ export default function ActivationPage() {
         if (productConfig.selectedTaskIds) localStorage.setItem('s2v_selected_task_ids', JSON.stringify(productConfig.selectedTaskIds));
       }
 
+      setProvisionStage(5);
       setIsSubmitting(false);
-      setStep(3); // Success step
 
       setTimeout(() => {
         router.push(`/${activeProduct.id}#home`);
-      }, 1200);
+      }, 1400);
     } catch (err: any) {
       console.error('Universal activation submit error:', err);
       setIsSubmitting(false);
+      setStep(2);
       setProvisionError(err?.message || 'Failed to create your spreadsheet in Google Drive. Please verify your Google account permissions and try again.');
     }
   };
@@ -281,6 +293,72 @@ export default function ActivationPage() {
       <div style={styles.glowBg} />
 
       <div className="activation-content-card">
+        {/* Top-Level Monarch 3-Step Stepper */}
+        {step < 3 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1.75rem',
+            paddingBottom: '1.25rem',
+            borderBottom: '1px solid var(--color-border)',
+            position: 'relative',
+          }}>
+            {[
+              { num: 1, label: 'Order License', active: step === 0, done: step > 0 },
+              { num: 2, label: 'Google Drive', active: step === 1, done: step > 1 },
+              { num: 3, label: 'Wedding Setup', active: step === 2, done: step > 2 },
+            ].map((s, idx) => (
+              <React.Fragment key={s.num}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  opacity: s.active || s.done ? 1 : 0.5,
+                  transition: 'opacity 0.2s ease',
+                }}>
+                  <div style={{
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    fontFamily: 'var(--font-mono)',
+                    backgroundColor: s.done ? '#16a34a' : s.active ? 'var(--color-primary)' : 'var(--color-bg-subtle)',
+                    color: s.done || s.active ? '#ffffff' : 'var(--color-muted)',
+                    border: s.active ? '2px solid var(--color-primary)' : s.done ? '2px solid #16a34a' : '1px solid var(--color-border)',
+                    boxShadow: s.active ? '0 0 0 3px rgba(79, 70, 229, 0.2)' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}>
+                    {s.done ? <CheckCircle2 size={16} /> : s.num}
+                  </div>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.78rem',
+                    fontWeight: s.active ? 800 : s.done ? 700 : 500,
+                    color: s.active ? 'var(--color-text)' : s.done ? 'var(--color-text)' : 'var(--color-muted)',
+                    display: 'inline-block',
+                  }}>
+                    {s.label}
+                  </span>
+                </div>
+                {idx < 2 && (
+                  <div style={{
+                    flex: 1,
+                    height: '2px',
+                    margin: '0 0.75rem',
+                    backgroundColor: step > idx ? '#16a34a' : 'var(--color-border)',
+                    transition: 'background-color 0.3s ease',
+                  }} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
         {/* Header Branding */}
         <div className="activation-brand-header">
           <div style={styles.logoBadge}>
@@ -289,10 +367,10 @@ export default function ActivationPage() {
           </div>
           <h1 className="activation-main-title">{activeProduct.tagline}</h1>
           <p className="activation-sub-title">
-            {step === 0 && 'Product Activation & Order Verification'}
-            {step === 1 && 'Connect Google Drive & Target Directory'}
+            {step === 0 && 'Etsy Order & License Verification'}
+            {step === 1 && 'Connect Google Drive & Verify Storage'}
             {step === 2 && `${activeProduct.name} Custom Setup`}
-            {step === 3 && 'Setup Complete! Launching your canvas...'}
+            {step === 3 && (provisionStage === 5 ? 'Setup Complete! Launching your canvas...' : 'Provisioning Your Wedding Canvas...')}
           </p>
         </div>
 
@@ -477,6 +555,9 @@ export default function ActivationPage() {
                 <div style={{ fontSize: '0.75rem', color: isGoogleConnected ? '#166534' : 'var(--color-muted)', marginTop: '0.2rem' }}>
                   {isGoogleConnected ? 'Spreadsheets will be saved directly into your personal Google Drive.' : 'Authorize Google to save your spreadsheet in your personal Google Drive.'}
                 </div>
+                <div style={{ fontSize: '0.72rem', color: isGoogleConnected ? '#166534' : 'var(--color-muted)', marginTop: '0.4rem', lineHeight: 1.4 }}>
+                  ℹ️ <strong>Account flexibility:</strong> Your Google account does not need to match your Etsy purchase email. Your lifetime license will be linked to this Google Drive.
+                </div>
               </div>
 
               {!isGoogleConnected ? (
@@ -606,19 +687,112 @@ export default function ActivationPage() {
           />
         )}
 
-        {/* Step 3 */}
+        {/* Step 3: Sequential Provisioning Animation & Launch */}
         {step === 3 && (
-          <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'var(--color-green, #16a34a)', color: '#ffffff', marginBottom: '1.25rem' }}>
-              <CheckCircle2 size={36} />
+          <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: provisionStage === 5 ? 'var(--color-green, #16a34a)' : 'rgba(79, 70, 229, 0.1)',
+              color: provisionStage === 5 ? '#ffffff' : 'var(--color-primary)',
+              marginBottom: '1.25rem',
+              boxShadow: 'var(--box-shadow-subtle)',
+              transition: 'all 0.3s ease',
+            }}>
+              {provisionStage === 5 ? (
+                <CheckCircle2 size={36} />
+              ) : (
+                <div style={{
+                  width: '28px',
+                  height: '28px',
+                  border: '3px solid var(--color-primary)',
+                  borderTopColor: 'transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }} />
+              )}
             </div>
+
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 0.5rem 0', fontFamily: 'var(--font-mono)' }}>
-              Setup Complete!
+              {provisionStage === 5 ? '🎉 Setup Complete!' : 'Provisioning Your Wedding Canvas...'}
             </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', marginBottom: '1.5rem' }}>
-              Your {activeProduct.name} spreadsheet has been provisioned directly into your Google Drive. Launching your digital canvas now...
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)', marginBottom: '1.75rem' }}>
+              {provisionStage === 5
+                ? `Your ${activeProduct.name} spreadsheet is provisioned. Launching your digital canvas now...`
+                : 'Setting up your private Google Drive spreadsheet and personal wedding workspace.'}
             </p>
-            <div style={{ display: 'inline-block', width: '28px', height: '28px', border: '3px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+
+            {/* 5-Stage Live Provisioning Checklist */}
+            <div style={{
+              maxWidth: '460px',
+              margin: '0 auto 1.5rem auto',
+              backgroundColor: 'var(--color-bg-subtle)',
+              border: '1.5px solid var(--color-border)',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '1.25rem',
+              textAlign: 'left',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+            }}>
+              {[
+                { stage: 1, label: 'Verifying Google Drive account & permissions' },
+                { stage: 2, label: `Duplicating master template into ${activeProduct.name} folder` },
+                { stage: 3, label: 'Initializing financial budget, guest lists & settings' },
+                { stage: 4, label: 'Registering secure multi-device workspace session' },
+                { stage: 5, label: 'Workspace ready! Launching your planning canvas' },
+              ].map(item => {
+                const isPassed = provisionStage > item.stage;
+                const isCurrent = provisionStage === item.stage;
+                const isPending = provisionStage < item.stage;
+
+                return (
+                  <div
+                    key={item.stage}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      fontSize: '0.825rem',
+                      fontWeight: isCurrent ? 700 : 500,
+                      color: isPassed ? '#16a34a' : isCurrent ? 'var(--color-text)' : 'var(--color-muted)',
+                      transition: 'all 0.2s ease',
+                      opacity: isPending ? 0.45 : 1,
+                    }}
+                  >
+                    <div style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      backgroundColor: isPassed ? '#dcfce7' : isCurrent ? 'rgba(79, 70, 229, 0.15)' : 'var(--color-border)',
+                      color: isPassed ? '#16a34a' : isCurrent ? 'var(--color-primary)' : 'var(--color-muted)',
+                    }}>
+                      {isPassed ? (
+                        <CheckCircle2 size={16} />
+                      ) : isCurrent ? (
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--color-primary)',
+                        }} />
+                      ) : (
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800 }}>{item.stage}</span>
+                      )}
+                    </div>
+                    <span>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

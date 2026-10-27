@@ -517,6 +517,20 @@ src/
 - **Clean Off-Screen Transitions:** Slide-up entry translates from `translateY(calc(100% + 120px))` to `translateY(0)` with smooth cubic-bezier easing.
 - **Z-Index Layering:** Backdrop at `z-index: 110`, bottom sheet at `z-index: 140`, and bottom nav bar at `z-index: 150` ensure seamless tap targets and no visual clipping.
 
+#### 3.8.9 Setup Flow, Guided Onboarding Ergonomics & Live Provisioning Stepper (`[LAUNCH-SETUP-FLOW-UX-REDESIGN]`)
+- **Top-Level 3-Stage Progress Stepper (`src/app/activate/page.tsx`):** Monarch-branded 3-step progress bar (`1. Order License` ➔ `2. Google Drive` ➔ `3. Wedding Setup`) with active accent halos, completed emerald checkmark badges, and connecting milestone rules.
+- **Smart Celebration Naming & Contact Setup (`VowSetupWizard.tsx`):** Solves name entry redundancy by collecting Partner 1 and Partner 2 first/last names directly on Step 1 of the guided wizard, automatically computing the celebration title (e.g. *"Jordan & Taylor's Wedding"*) with an optional custom override toggle. Step 2 cleanly focuses on primary email/phone contact details and sweetheart table seating.
+- **Dynamic Future Wedding Date Calculation:** Replaced static hardcoded date defaults with a dynamic calendar calculation automatically selecting the nearest future Saturday approximately 180 days ahead.
+- **Animated 5-Stage Sequential Provisioning Stepper:** Replaces static loading spinners with an animated 5-stage sequential checklist during the 4–8 second spreadsheet duplication and setup phase:
+  1. *Verifying Google Drive account & permissions*
+  2. *Duplicating master template into Sheet2Vow folder*
+  3. *Initializing financial budget, guest lists & settings*
+  4. *Registering secure multi-device workspace session*
+  5. *Workspace ready! Launching your planning canvas*
+- **Etsy Receipt Helper & Auto-Fill Pill (`StepOrderVerification.tsx`):** Provides an explicit `⚡ AUTO-FILLED` indicator badge when URL query parameters pre-populate credentials, and provides guidance for finding the 10-digit Etsy order receipt number.
+- **Google Account Discrepancy Reassurance:** Clarifies that the user's Google account does not need to match their Etsy purchase email, preventing user hesitation.
+- **iOS Mobile Anti-Zoom Sizing:** Enforces `minHeight: 46px` and `fontSize: 1rem` (16px) across form input styles to eliminate unwanted automatic mobile viewport zooming on iOS Safari.
+
 ### 3.9 Admin Database Inspector & Monarch Operations Portal (`[ADMIN-MONARCH-UX-REDESIGN]`)
 - **Monarch Operations Architecture (`src/app/admin/page.tsx`):** Provides a comprehensive database inspector and entitlements management portal for Sheet2Suite administrators at `/admin`, completely modernized to conform with the Monarch design language:
   - **Monarch Masthead & Live Status:** Editorial serif display typography (*"Database & Entitlements Inspector"*), technical uppercase monospace badge (`MONARCH ADMIN`), and real-time pulse dot indicator (`FIRESTORE LIVE` vs `LOCAL DISK MOCK`).

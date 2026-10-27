@@ -72,6 +72,15 @@ export interface VowSetupConfig {
   selectedTaskIds: string[];
 }
 
+function getDefaultWeddingDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 180);
+  const day = d.getDay();
+  const diff = (6 - day + 7) % 7; // advance to upcoming Saturday
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().split('T')[0];
+}
+
 export default function VowSetupWizard({
   productCode,
   productName,
@@ -90,7 +99,8 @@ export default function VowSetupWizard({
 
   // Setup Form State: Wedding Details & Co-Admins
   const [weddingName, setWeddingName] = useState('');
-  const [weddingDate, setWeddingDate] = useState('2026-09-20');
+  const [isCustomTitle, setIsCustomTitle] = useState(false);
+  const [weddingDate, setWeddingDate] = useState<string>(getDefaultWeddingDate);
   const [location, setLocation] = useState('');
   const [admin1Name, setAdmin1Name] = useState('');
   const [admin1Email, setAdmin1Email] = useState('');
@@ -101,7 +111,7 @@ export default function VowSetupWizard({
   // Bride & Groom / Couple Profiles [ONBOARD-7]
   const [partner1FirstName, setPartner1FirstName] = useState('');
   const [partner1LastName, setPartner1LastName] = useState('');
-  const [partner1Email, setPartner1Email] = useState('');
+  const [partner1Email, setPartner1Email] = useState(userEmail || '');
   const [partner1Phone, setPartner1Phone] = useState('');
 
   const [partner2FirstName, setPartner2FirstName] = useState('');
@@ -110,8 +120,39 @@ export default function VowSetupWizard({
   const [partner2Phone, setPartner2Phone] = useState('');
   const [grantPartner2Admin, setGrantPartner2Admin] = useState(true);
 
+  // Helper sync for partner names -> wedding celebration title
+  const updatePartner1FirstName = (val: string) => {
+    setPartner1FirstName(val);
+    if (!isCustomTitle) {
+      if (val.trim() && partner2FirstName.trim()) {
+        setWeddingName(`${val.trim()} & ${partner2FirstName.trim()}'s Wedding`);
+      } else if (val.trim()) {
+        setWeddingName(`${val.trim()}'s Wedding`);
+      } else if (partner2FirstName.trim()) {
+        setWeddingName(`${partner2FirstName.trim()}'s Wedding`);
+      } else {
+        setWeddingName('');
+      }
+    }
+  };
+
+  const updatePartner2FirstName = (val: string) => {
+    setPartner2FirstName(val);
+    if (!isCustomTitle) {
+      if (partner1FirstName.trim() && val.trim()) {
+        setWeddingName(`${partner1FirstName.trim()} & ${val.trim()}'s Wedding`);
+      } else if (val.trim()) {
+        setWeddingName(`${val.trim()}'s Wedding`);
+      } else if (partner1FirstName.trim()) {
+        setWeddingName(`${partner1FirstName.trim()}'s Wedding`);
+      } else {
+        setWeddingName('');
+      }
+    }
+  };
+
   // Setup Form State: Feature Details
-  const [budget, setBudget] = useState<number | string>(0);
+  const [budget, setBudget] = useState<number | string>('');
   const [currency, setCurrency] = useState('USD');
   const [taskMode, setTaskMode] = useState<'preset' | 'clean_slate'>('preset');
   const [selectedPresetKey, setSelectedPresetKey] = useState<string>('TRADITIONAL');
@@ -253,7 +294,7 @@ export default function VowSetupWizard({
             }}
           >
             <Sliders size={14} />
-            <span>GUIDED WIZARD ({guidedStep}/4)</span>
+            <span>GUIDED WIZARD ({guidedStep}/5)</span>
           </button>
         </div>
 
@@ -343,17 +384,9 @@ export default function VowSetupWizard({
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <input
                   type="number"
-                  required
                   min="0"
-                  placeholder="0"
+                  placeholder="e.g. 35,000"
                   value={budget}
-                  onFocus={(e) => {
-                    if (budget === 0 || budget === '0' || budget === '') {
-                      setBudget('');
-                    } else {
-                      e.target.select();
-                    }
-                  }}
                   onChange={(e) => setBudget(e.target.value)}
                   style={{ ...styles.inputField, flex: 1 }}
                 />
@@ -439,8 +472,8 @@ export default function VowSetupWizard({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
               STEP {guidedStep} OF 5 &bull; {
-                guidedStep === 1 ? 'WEDDING TITLE & DATE' :
-                guidedStep === 2 ? 'COUPLE & PARTNER PROFILES' :
+                guidedStep === 1 ? 'COUPLE & WEDDING DETAILS' :
+                guidedStep === 2 ? 'CO-PLANNING & PARTNER ACCESS' :
                 guidedStep === 3 ? 'ENABLED PLANNING MODULES' :
                 guidedStep === 4 ? 'FINANCIALS & TASK PRESETS' :
                 'THEME & NAVIGATION LAYOUT'
@@ -472,41 +505,137 @@ export default function VowSetupWizard({
             </div>
           </div>
 
-          {/* GUIDED STEP 1: Details */}
+          {/* GUIDED STEP 1: Couple Names & Wedding Details */}
           {guidedStep === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={styles.fieldLabel}>WEDDING TITLE / COUPLE NAMES *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Sarah & Mark's Wedding"
-                  value={weddingName}
-                  onChange={(e) => setWeddingName(e.target.value)}
-                  style={styles.inputField}
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+              {/* Couple's Names Section */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+                  COUPLE&apos;S NAMES *
+                </span>
+                
+                {/* Partner 1 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.6rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-muted)', display: 'block', marginBottom: '0.25rem', fontFamily: 'var(--font-mono)' }}>PARTNER 1 FIRST NAME *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Sarah"
+                      value={partner1FirstName}
+                      onChange={(e) => updatePartner1FirstName(e.target.value)}
+                      style={styles.inputField}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-muted)', display: 'block', marginBottom: '0.25rem', fontFamily: 'var(--font-mono)' }}>PARTNER 1 LAST NAME</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Connor"
+                      value={partner1LastName}
+                      onChange={(e) => setPartner1LastName(e.target.value)}
+                      style={styles.inputField}
+                    />
+                  </div>
+                </div>
+
+                {/* Partner 2 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.6rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-muted)', display: 'block', marginBottom: '0.25rem', fontFamily: 'var(--font-mono)' }}>PARTNER 2 FIRST NAME *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mark"
+                      value={partner2FirstName}
+                      onChange={(e) => updatePartner2FirstName(e.target.value)}
+                      style={styles.inputField}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--color-muted)', display: 'block', marginBottom: '0.25rem', fontFamily: 'var(--font-mono)' }}>PARTNER 2 LAST NAME</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Connor"
+                      value={partner2LastName}
+                      onChange={(e) => setPartner2LastName(e.target.value)}
+                      style={styles.inputField}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label style={styles.fieldLabel}>WEDDING DATE *</label>
-                <input
-                  type="date"
-                  required
-                  value={weddingDate}
-                  onChange={(e) => setWeddingDate(e.target.value)}
-                  style={styles.inputField}
-                />
+              {/* Dynamic Celebration Title Preview / Customizer */}
+              <div style={{
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '1.5px solid var(--color-border)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.85rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.4rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.35rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-muted)' }}>
+                    WEDDING CELEBRATION TITLE
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomTitle(!isCustomTitle)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      padding: 0,
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    {isCustomTitle ? 'Auto-Generate Title' : '✏️ Customize Title'}
+                  </button>
+                </div>
+                {isCustomTitle ? (
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Sarah & Mark's Wedding"
+                    value={weddingName}
+                    onChange={(e) => setWeddingName(e.target.value)}
+                    style={{ ...styles.inputField, padding: '0.5rem 0.75rem', fontSize: '0.9rem' }}
+                  />
+                ) : (
+                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                    {weddingName || (partner1FirstName || partner2FirstName ? `${partner1FirstName || 'Partner 1'} & ${partner2FirstName || 'Partner 2'}'s Wedding` : 'Our Wedding')}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label style={styles.fieldLabel}>LOCATION / VENUE DETAILS</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Grand Ballroom, Toronto ON"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  style={styles.inputField}
-                />
+              {/* Date & Location Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                <div>
+                  <label style={styles.fieldLabel}>WEDDING DATE *</label>
+                  <input
+                    type="date"
+                    required
+                    value={weddingDate}
+                    onChange={(e) => setWeddingDate(e.target.value)}
+                    style={styles.inputField}
+                  />
+                </div>
+
+                <div>
+                  <label style={styles.fieldLabel}>LOCATION / VENUE DETAILS</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Grand Ballroom, Toronto ON"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    style={styles.inputField}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
@@ -515,52 +644,36 @@ export default function VowSetupWizard({
                   onClick={() => setGuidedStep(2)}
                   style={styles.nextBtn}
                 >
-                  <span>NEXT: COUPLE & PARTNER PROFILES</span>
+                  <span>NEXT: CO-PLANNING & PARTNER ACCESS</span>
                   <ArrowRight size={16} />
                 </button>
               </div>
             </div>
           )}
 
-          {/* GUIDED STEP 2: Couple & Partner Profiles [ONBOARD-7] */}
+          {/* GUIDED STEP 2: Co-Planning & Partner Access */}
           {guidedStep === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ backgroundColor: 'var(--color-bg-subtle)', padding: '0.75rem 1rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.78rem', color: 'var(--color-text)' }}>
-                💍 <strong>Sweetheart Table Guest Entry:</strong> Partner profiles entered below are automatically added as the first 2 guests in your Guest Registry under <em>&quot;Sweetheart Table&quot;</em>!
+              <div style={{ backgroundColor: 'var(--color-bg-subtle)', padding: '0.85rem 1rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.8rem', color: 'var(--color-text)', lineHeight: 1.45 }}>
+                💍 <strong>Sweetheart Table Guest Entry:</strong> {partner1FirstName || 'Partner 1'} &amp; {partner2FirstName || 'Partner 2'} will automatically be assigned as the first two guests seated at your <em>&quot;Sweetheart Table&quot;</em> in your Guest Registry!
               </div>
 
-              {/* Partner 1 Section */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {/* Partner 1 Contact */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  PARTNER 1 (NAME & CONTACT)
+                  {partner1FirstName ? partner1FirstName.toUpperCase() : 'PARTNER 1'} (PRIMARY PLANNER CONTACT)
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-                  <input
-                    type="text"
-                    placeholder="First Name e.g. Sarah"
-                    value={partner1FirstName}
-                    onChange={(e) => setPartner1FirstName(e.target.value)}
-                    style={styles.inputField}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last Name e.g. Connor"
-                    value={partner1LastName}
-                    onChange={(e) => setPartner1LastName(e.target.value)}
-                    style={styles.inputField}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.6rem' }}>
                   <input
                     type="email"
-                    placeholder="Email (Optional)"
+                    placeholder="Primary Email"
                     value={partner1Email}
                     onChange={(e) => setPartner1Email(e.target.value)}
                     style={styles.inputField}
                   />
                   <input
                     type="tel"
-                    placeholder="Phone (Optional)"
+                    placeholder="Phone Number (Optional)"
                     value={partner1Phone}
                     onChange={(e) => setPartner1Phone(e.target.value)}
                     style={styles.inputField}
@@ -568,31 +681,15 @@ export default function VowSetupWizard({
                 </div>
               </div>
 
-              {/* Partner 2 Section */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+              {/* Partner 2 Contact */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  PARTNER 2 (NAME & CONTACT)
+                  {partner2FirstName ? partner2FirstName.toUpperCase() : 'PARTNER 2'} (CO-PLANNER CONTACT)
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-                  <input
-                    type="text"
-                    placeholder="First Name e.g. Mark"
-                    value={partner2FirstName}
-                    onChange={(e) => setPartner2FirstName(e.target.value)}
-                    style={styles.inputField}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last Name e.g. Connor"
-                    value={partner2LastName}
-                    onChange={(e) => setPartner2LastName(e.target.value)}
-                    style={styles.inputField}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.6rem' }}>
                   <input
                     type="email"
-                    placeholder="Email (Optional for RSVPs & Admin)"
+                    placeholder="Partner 2 Email (Optional)"
                     value={partner2Email}
                     onChange={(e) => {
                       setPartner2Email(e.target.value);
@@ -602,7 +699,7 @@ export default function VowSetupWizard({
                   />
                   <input
                     type="tel"
-                    placeholder="Phone (Optional)"
+                    placeholder="Phone Number (Optional)"
                     value={partner2Phone}
                     onChange={(e) => setPartner2Phone(e.target.value)}
                     style={styles.inputField}
@@ -610,7 +707,7 @@ export default function VowSetupWizard({
                 </div>
 
                 {/* Partner Co-Admin Access Checkbox */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--color-text)', marginTop: '0.25rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--color-text)', marginTop: '0.35rem' }}>
                   <input
                     type="checkbox"
                     checked={grantPartner2Admin}
@@ -619,7 +716,7 @@ export default function VowSetupWizard({
                       if (e.target.checked && partner2Email) setAdmin1Email(partner2Email);
                     }}
                   />
-                  <span>Grant Partner 2 Co-Admin Google Drive & App editing access</span>
+                  <span>Grant {partner2FirstName || 'Partner 2'} Co-Admin Google Drive &amp; workspace editing access</span>
                 </label>
               </div>
 
@@ -704,12 +801,8 @@ export default function VowSetupWizard({
                     <input
                       type="number"
                       min="0"
-                      placeholder="0"
+                      placeholder="e.g. 35,000"
                       value={budget}
-                      onFocus={(e) => {
-                        if (budget === 0 || budget === '0' || budget === '') setBudget('');
-                        else e.target.select();
-                      }}
                       onChange={(e) => setBudget(e.target.value)}
                       style={{ ...styles.inputField, flex: 1 }}
                     />
@@ -840,7 +933,7 @@ export default function VowSetupWizard({
                 <label style={styles.fieldLabel}>OPTIONAL TOP NAVIGATION BAR</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.6rem' }}>
                   {[
-                    { key: false, title: 'Standard Layout (Recommended)', desc: 'Left Sidebar on Desktop, Bottom Nav + Hamburger on Mobile' },
+                    { key: false, title: 'Standard Layout (Recommended)', desc: 'Left Sidebar on Desktop, 5-Item Bottom Dock on Mobile' },
                     { key: true, title: 'Dual Top Navigation Bar', desc: 'Adds an extra top horizontal navigation tab bar' },
                   ].map(option => (
                     <div
@@ -965,12 +1058,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   inputField: {
     width: '100%',
-    padding: '0.65rem 0.85rem',
+    padding: '0.75rem 0.85rem',
+    minHeight: '46px',
     backgroundColor: 'var(--color-surface, #ffffff)',
     color: 'var(--color-text)',
-    border: '1px solid var(--color-border)',
+    border: '1.5px solid var(--color-border)',
     borderRadius: 'var(--border-radius-sm)',
-    fontSize: '0.85rem',
+    fontSize: '1rem',
     fontFamily: 'var(--font-sans)',
     outline: 'none',
     boxSizing: 'border-box',

@@ -11,10 +11,26 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.17.0',
+    title: 'Streamlined Setup Flow & Guided Onboarding Experience',
+    date: 'Oct 26, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Top-level visual progress tracker: clear 3-stage roadmap guiding you from license confirmation through Google Drive connection to wedding setup.',
+      'Smart celebration naming & contact setup: enter partner names once to automatically generate your wedding title, eliminating repetitive typing.',
+      'Dynamic wedding date calculation: smart date picker automatically defaults to a realistic future weekend date 6 months ahead.',
+      'Live provisioning milestone checklist: real-time animated checklist displaying setup progress as your private Google Drive spreadsheet is initialized.',
+      'Mobile touch ergonomics: polished form inputs with touch-friendly heights and anti-zoom scaling optimized for smartphone web browsers.',
+    ],
+    details: 'Comprehensive redesign of the initial activation and onboarding experience featuring an intuitive top-level stepper, intelligent name derivations, dynamic calendar recommendations, touch-friendly mobile styling, and transparent live spreadsheet initialization.',
+  },
+  {
     version: 'v1.16.0',
     title: 'Streamlined Setup & Data Sovereignty Architecture',
     date: 'Oct 24, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [

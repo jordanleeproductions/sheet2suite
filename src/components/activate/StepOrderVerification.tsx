@@ -27,9 +27,16 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <form onSubmit={onVerify} className="activation-form-section" style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-bg-subtle, #f8fafc)', border: '1px solid var(--color-border, #e2e8f0)', padding: '0.75rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text, #0f172a)' }}>
-          <Key size={18} style={{ color: 'var(--color-highlight, #f59e0b)' }} />
-          <span>Enter Etsy Order Details</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', backgroundColor: 'var(--color-bg-subtle, #f8fafc)', border: '1px solid var(--color-border, #e2e8f0)', padding: '0.75rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text, #0f172a)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Key size={18} style={{ color: 'var(--color-highlight, #f59e0b)' }} />
+            <span>Enter Etsy Order Details</span>
+          </div>
+          {email && orderId && (
+            <span style={{ fontSize: '0.7rem', color: '#15803d', backgroundColor: '#dcfce7', padding: '0.2rem 0.5rem', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+              ⚡ AUTO-FILLED
+            </span>
+          )}
         </div>
 
         {verifyError && (
@@ -71,9 +78,12 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
             onChange={(e) => setOrderId(e.target.value)}
             style={{ width: '100%', padding: '0.75rem 0.85rem', minHeight: '48px', borderRadius: '8px', border: '1.5px solid var(--color-border, #cbd5e1)', fontSize: '1rem', color: 'var(--color-text)', backgroundColor: 'var(--color-bg)' }}
           />
-          <span style={{ fontSize: '0.725rem', color: 'var(--color-muted, #64748b)', display: 'block', marginTop: '0.4rem' }}>
-            Find your Order ID in your Etsy purchase confirmation email or receipt.
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.4rem', fontSize: '0.725rem', color: 'var(--color-muted, #64748b)' }}>
+            <span>Find your Order ID (10-digit number) on your Etsy receipt or confirmation email.</span>
+            <a href="https://www.etsy.com/your/purchases" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}>
+              View Purchases ↗
+            </a>
+          </div>
         </div>
 
         <button
