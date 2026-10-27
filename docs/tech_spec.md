@@ -530,6 +530,10 @@ src/
 - **Etsy Receipt Helper & Auto-Fill Pill (`StepOrderVerification.tsx`):** Provides an explicit `⚡ AUTO-FILLED` indicator badge when URL query parameters pre-populate credentials, and provides guidance for finding the 10-digit Etsy order receipt number.
 - **Google Account Discrepancy Reassurance:** Clarifies that the user's Google account does not need to match their Etsy purchase email, preventing user hesitation.
 - **iOS Mobile Anti-Zoom Sizing:** Enforces `minHeight: 46px` and `fontSize: 1rem` (16px) across form input styles to eliminate unwanted automatic mobile viewport zooming on iOS Safari.
+- **Co-Planner Admin Auto-Check & Simplified Contacts (`VowSetupWizard.tsx`):** Co-admin access checkbox defaults to unchecked and dynamically auto-checks when a valid partner email address is entered. Removed non-essential phone number fields across Partner 1 & 2.
+- **Real-Time Thousand Comma Formatting (`formatWithCommas`):** Formats estimated budget values with thousand separators in real time (e.g. `35,000`) and parses clean numeric integers upon submission.
+- **International Currency Expansion & Dropdown Width:** Expanded currency selector width to 135px with right padding to eliminate text truncation. Added New Zealand Dollar (`NZL ($)` / `NZD`) and Australian Dollar (`AUD ($)`) across `src/lib/currency.ts` and setup forms.
+- **Curated Pre-Built Task Presets:** Excluded duplicate blank templates from the Pre-Built Wedding Checklist list, offering a clear distinction between structured templates and Clean Slate (Empty).
 
 ### 3.9 Admin Database Inspector & Monarch Operations Portal (`[ADMIN-MONARCH-UX-REDESIGN]`)
 - **Monarch Operations Architecture (`src/app/admin/page.tsx`):** Provides a comprehensive database inspector and entitlements management portal for Sheet2Suite administrators at `/admin`, completely modernized to conform with the Monarch design language:

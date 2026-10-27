@@ -118,7 +118,19 @@ export default function VowSetupWizard({
   const [partner2LastName, setPartner2LastName] = useState('');
   const [partner2Email, setPartner2Email] = useState('');
   const [partner2Phone, setPartner2Phone] = useState('');
-  const [grantPartner2Admin, setGrantPartner2Admin] = useState(true);
+  const [grantPartner2Admin, setGrantPartner2Admin] = useState(false);
+
+  // Auto-check co-planner admin checkbox when a valid email is entered
+  const handlePartner2EmailChange = (val: string) => {
+    setPartner2Email(val);
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+    if (isValidEmail) {
+      setGrantPartner2Admin(true);
+      setAdmin1Email(val.trim());
+    } else if (!val.trim()) {
+      setGrantPartner2Admin(false);
+    }
+  };
 
   // Helper sync for partner names -> wedding celebration title
   const updatePartner1FirstName = (val: string) => {
@@ -151,9 +163,29 @@ export default function VowSetupWizard({
     }
   };
 
-  // Setup Form State: Feature Details
+  // Setup Form State: Feature Details & Number Formatting Helpers
   const [budget, setBudget] = useState<number | string>('');
   const [currency, setCurrency] = useState('USD');
+
+  // Formats budget input with thousand separator commas (e.g. 35,000)
+  const formatWithCommas = (val: string | number): string => {
+    if (val === '' || val === null || val === undefined) return '';
+    const clean = String(val).replace(/[^0-9.]/g, '');
+    if (!clean) return '';
+    const parts = clean.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.length > 1 ? `${parts[0]}.${parts.slice(1).join('')}` : parts[0];
+  };
+
+  const parseRawNumber = (val: string | number): number => {
+    if (typeof val === 'number') return val;
+    const clean = String(val).replace(/[^0-9.]/g, '');
+    return parseFloat(clean) || 0;
+  };
+
+  const handleBudgetChange = (val: string) => {
+    setBudget(formatWithCommas(val));
+  };
   const [taskMode, setTaskMode] = useState<'preset' | 'clean_slate'>('preset');
   const [selectedPresetKey, setSelectedPresetKey] = useState<string>('TRADITIONAL');
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>(() => {
@@ -236,7 +268,7 @@ export default function VowSetupWizard({
       admin2Email: (grantPartner2Admin && partner2Email) ? partner2Email : (showAdmin2 ? admin2Email : undefined),
       partner1: partner1Obj,
       partner2: partner2Obj,
-      budget: typeof budget === 'number' ? budget : parseFloat(budget as string) || 0,
+      budget: typeof budget === 'number' ? budget : parseRawNumber(budget),
       currency,
       driveFolder,
       modules,
@@ -383,23 +415,31 @@ export default function VowSetupWizard({
               <label style={styles.fieldLabel}>TOTAL BUDGET & CURRENCY *</label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <input
-                  type="number"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="e.g. 35,000"
                   value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
+                  onChange={(e) => handleBudgetChange(e.target.value)}
                   style={{ ...styles.inputField, flex: 1 }}
                 />
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  style={{ ...styles.inputField, width: '100px', cursor: 'pointer' }}
+                  style={{
+                    ...styles.inputField,
+                    width: '135px',
+                    minWidth: '135px',
+                    flexShrink: 0,
+                    cursor: 'pointer',
+                    paddingRight: '1rem',
+                  }}
                 >
                   <option value="USD">USD ($)</option>
                   <option value="CAD">CAD ($)</option>
                   <option value="GBP">GBP (£)</option>
                   <option value="EUR">EUR (€)</option>
                   <option value="AUD">AUD ($)</option>
+                  <option value="NZD">NZL ($)</option>
                 </select>
               </div>
             </div>
@@ -659,52 +699,31 @@ export default function VowSetupWizard({
               </div>
 
               {/* Partner 1 Contact */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  {partner1FirstName ? partner1FirstName.toUpperCase() : 'PARTNER 1'} (PRIMARY PLANNER CONTACT)
+                  {partner1FirstName ? partner1FirstName.toUpperCase() : 'PARTNER 1'} (PRIMARY PLANNER EMAIL)
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.6rem' }}>
-                  <input
-                    type="email"
-                    placeholder="Primary Email"
-                    value={partner1Email}
-                    onChange={(e) => setPartner1Email(e.target.value)}
-                    style={styles.inputField}
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number (Optional)"
-                    value={partner1Phone}
-                    onChange={(e) => setPartner1Phone(e.target.value)}
-                    style={styles.inputField}
-                  />
-                </div>
+                <input
+                  type="email"
+                  placeholder="Primary Email (e.g. your-email@gmail.com)"
+                  value={partner1Email}
+                  onChange={(e) => setPartner1Email(e.target.value)}
+                  style={styles.inputField}
+                />
               </div>
 
               {/* Partner 2 Contact */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  {partner2FirstName ? partner2FirstName.toUpperCase() : 'PARTNER 2'} (CO-PLANNER CONTACT)
+                  {partner2FirstName ? partner2FirstName.toUpperCase() : 'PARTNER 2'} (CO-PLANNER EMAIL)
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.6rem' }}>
-                  <input
-                    type="email"
-                    placeholder="Partner 2 Email (Optional)"
-                    value={partner2Email}
-                    onChange={(e) => {
-                      setPartner2Email(e.target.value);
-                      if (grantPartner2Admin) setAdmin1Email(e.target.value);
-                    }}
-                    style={styles.inputField}
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number (Optional)"
-                    value={partner2Phone}
-                    onChange={(e) => setPartner2Phone(e.target.value)}
-                    style={styles.inputField}
-                  />
-                </div>
+                <input
+                  type="email"
+                  placeholder="Partner 2 Google Email (Optional, e.g. partner@gmail.com)"
+                  value={partner2Email}
+                  onChange={(e) => handlePartner2EmailChange(e.target.value)}
+                  style={styles.inputField}
+                />
 
                 {/* Partner Co-Admin Access Checkbox */}
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--color-text)', marginTop: '0.35rem' }}>
@@ -744,7 +763,7 @@ export default function VowSetupWizard({
                     { key: 'schedule' as const, label: 'Day-Of Timeline & Itinerary', desc: 'Schedule milestones & UP NEXT ticker' },
                     { key: 'tasks' as const, label: 'Kanban Tasks & Checklist', desc: 'To Do, In Progress, Done checklists' },
                     { key: 'vendors' as const, label: 'Vendor Directory & Contracts', desc: 'Contacts, contracts, deposits & meals' },
-                    { key: 'music' as const, label: 'Wedding Playlist & Song Requests', desc: 'Must-play tracks & guest QR requests' },
+                    { key: 'music' as const, label: 'Wedding Playlists & Music', desc: 'Ceremony, reception, special dances & DJ playlists' },
                   ].map((mod) => (
                     <div
                       key={mod.key}
@@ -799,23 +818,31 @@ export default function VowSetupWizard({
                   <label style={styles.fieldLabel}>ESTIMATED TOTAL BUDGET & CURRENCY</label>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="e.g. 35,000"
                       value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
+                      onChange={(e) => handleBudgetChange(e.target.value)}
                       style={{ ...styles.inputField, flex: 1 }}
                     />
                     <select
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value)}
-                      style={{ ...styles.inputField, width: '100px', cursor: 'pointer' }}
+                      style={{
+                        ...styles.inputField,
+                        width: '135px',
+                        minWidth: '135px',
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                        paddingRight: '1rem',
+                      }}
                     >
                       <option value="USD">USD ($)</option>
                       <option value="CAD">CAD ($)</option>
                       <option value="GBP">GBP (£)</option>
                       <option value="EUR">EUR (€)</option>
                       <option value="AUD">AUD ($)</option>
+                      <option value="NZD">NZL ($)</option>
                     </select>
                   </div>
                 </div>
@@ -851,25 +878,27 @@ export default function VowSetupWizard({
                     <div>
                       <label style={{ ...styles.fieldLabel, fontSize: '0.75rem' }}>CHOOSE PRESET STYLE</label>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                        {Object.entries(TASK_PRESETS).map(([key, preset]) => {
-                          const isSelected = selectedPresetKey === key;
-                          return (
-                            <div
-                              key={key}
-                              onClick={() => handlePresetSelect(key)}
-                              style={{
-                                padding: '0.5rem',
-                                borderRadius: 'var(--border-radius-sm)',
-                                border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                                backgroundColor: isSelected ? 'var(--color-surface)' : 'var(--color-bg)',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <div style={{ fontSize: '0.75rem', fontWeight: isSelected ? 800 : 600 }}>{preset.name}</div>
-                              <div style={{ fontSize: '0.65rem', color: 'var(--color-muted)' }}>{preset.tasks.length} tasks</div>
-                            </div>
-                          );
-                        })}
+                        {Object.entries(TASK_PRESETS)
+                          .filter(([key]) => key !== 'BLANK')
+                          .map(([key, preset]) => {
+                            const isSelected = selectedPresetKey === key;
+                            return (
+                              <div
+                                key={key}
+                                onClick={() => handlePresetSelect(key)}
+                                style={{
+                                  padding: '0.5rem',
+                                  borderRadius: 'var(--border-radius-sm)',
+                                  border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                                  backgroundColor: isSelected ? 'var(--color-surface)' : 'var(--color-bg)',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <div style={{ fontSize: '0.75rem', fontWeight: isSelected ? 800 : 600 }}>{preset.name}</div>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--color-muted)' }}>{preset.tasks.length} tasks</div>
+                              </div>
+                            );
+                          })}
                       </div>
 
                       {/* Granular Task Checklist */}

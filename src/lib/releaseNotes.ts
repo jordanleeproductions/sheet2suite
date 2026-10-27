@@ -11,10 +11,27 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.17.1',
+    title: 'Setup Wizard Ergonomics & Currency Refinements',
+    date: 'Oct 27, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Smart co-planner permission handling: co-admin access checkbox now intelligently auto-checks when a partner email is entered.',
+      'Automatic thousand comma formatting: budget numbers now format automatically with readable thousand separators (e.g. 35,000) as you type.',
+      'Expanded international currency support: widened currency selector to display full labels clearly and added New Zealand Dollar (NZL $) support.',
+      'Streamlined contact inputs: simplified partner contact details to focus exclusively on essential email addresses.',
+      'Curated checklist presets: removed duplicate blank template options so couples choose between pre-built checklists or a clean slate with zero confusion.',
+      'Music module label alignment: updated music selection in setup to focus purely on ceremony, reception, and DJ playlists.',
+    ],
+    details: 'Setup wizard polish addressing partner co-planner permissions, currency selector visibility, New Zealand Dollar support, real-time thousand comma formatting for budget inputs, and refined checklist templates.',
+  },
+  {
     version: 'v1.17.0',
     title: 'Streamlined Setup Flow & Guided Onboarding Experience',
     date: 'Oct 26, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [
