@@ -33,6 +33,7 @@ import {
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import InfoDisclosure from '@/components/InfoDisclosure';
 import { ProductSetupPluginProps } from '@/lib/core/activation/types';
+import { getCurrencySymbol } from '@/lib/currency';
 
 export interface PartnerProfile {
   firstName: string;
@@ -412,7 +413,12 @@ export default function VowSetupWizard({
           {/* Total Budget Input (if budget enabled) */}
           {modules.budget && (
             <div>
-              <label style={styles.fieldLabel}>TOTAL BUDGET & CURRENCY *</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <label style={{ ...styles.fieldLabel, margin: 0 }}>TOTAL BUDGET & CURRENCY (OPTIONAL)</label>
+                <InfoDisclosure title="Optional Total Budget">
+                  You do not need to set a budget right now. If left blank or set to 0, no budget cap will be enforced. You can set or change this anytime in Financials settings.
+                </InfoDisclosure>
+              </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <input
                   type="text"
@@ -441,6 +447,9 @@ export default function VowSetupWizard({
                   <option value="AUD">AUD ($)</option>
                   <option value="NZD">NZL ($)</option>
                 </select>
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--color-muted)', marginTop: '0.3rem', lineHeight: 1.4 }}>
+                💡 <strong>Optional:</strong> If you don&apos;t know your budget yet, leave this blank or enter 0. You can set or update your budget anytime in Financials settings.
               </div>
             </div>
           )}
@@ -815,7 +824,12 @@ export default function VowSetupWizard({
               {/* Budget Settings */}
               {modules.budget && (
                 <div>
-                  <label style={styles.fieldLabel}>ESTIMATED TOTAL BUDGET & CURRENCY</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                    <label style={{ ...styles.fieldLabel, margin: 0 }}>ESTIMATED TOTAL BUDGET & CURRENCY (OPTIONAL)</label>
+                    <InfoDisclosure title="Optional Total Budget">
+                      You do not need to set a budget right now. If left blank or set to 0, no budget cap will be enforced. You can set or change this anytime in Financials settings.
+                    </InfoDisclosure>
+                  </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <input
                       type="text"
@@ -844,6 +858,9 @@ export default function VowSetupWizard({
                       <option value="AUD">AUD ($)</option>
                       <option value="NZD">NZL ($)</option>
                     </select>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-muted)', marginTop: '0.3rem', lineHeight: 1.4 }}>
+                    💡 <strong>Optional:</strong> If you don&apos;t have a budget yet, leave this blank or enter 0. No budget limit will be set, and you can change it anytime later in Financials.
                   </div>
                 </div>
               )}
@@ -1045,6 +1062,51 @@ export default function VowSetupWizard({
                       <div style={{ fontSize: '0.65rem', color: 'var(--color-muted)' }}>{theme.tag}</div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Total Budget Education & Flexibility Note */}
+              <div style={{
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '1.5px solid var(--color-border)',
+                borderRadius: 'var(--border-radius-sm)',
+                padding: '0.85rem 1rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+              }}>
+                <div style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                  color: 'var(--color-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: '2px',
+                }}>
+                  <DollarSign size={16} />
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--color-text)', lineHeight: 1.45, flex: 1 }}>
+                  <div style={{ fontWeight: 800, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                    <span>TOTAL WEDDING BUDGET:</span>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.72rem',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '4px',
+                      backgroundColor: parseRawNumber(budget) > 0 ? 'rgba(22, 163, 74, 0.1)' : 'rgba(79, 70, 229, 0.1)',
+                      color: parseRawNumber(budget) > 0 ? '#15803d' : 'var(--color-primary)',
+                      fontWeight: 700,
+                    }}>
+                      {parseRawNumber(budget) > 0 ? `${getCurrencySymbol(currency)}${formatWithCommas(budget)}` : 'NO TARGET SET (FLEXIBLE)'}
+                    </span>
+                  </div>
+                  <div style={{ color: 'var(--color-muted)', fontSize: '0.74rem' }}>
+                    Your total wedding budget does not need to be set right now. If left blank or set to 0, no spending limit will be applied. You can easily set, adjust, or remove your budget target at any time in Financials settings.
+                  </div>
                 </div>
               </div>
 

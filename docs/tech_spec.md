@@ -534,6 +534,7 @@ src/
 - **Real-Time Thousand Comma Formatting (`formatWithCommas`):** Formats estimated budget values with thousand separators in real time (e.g. `35,000`) and parses clean numeric integers upon submission.
 - **International Currency Expansion & Dropdown Width:** Expanded currency selector width to 135px with right padding to eliminate text truncation. Added New Zealand Dollar (`NZL ($)` / `NZD`) and Australian Dollar (`AUD ($)`) across `src/lib/currency.ts` and setup forms.
 - **Curated Pre-Built Task Presets:** Excluded duplicate blank templates from the Pre-Built Wedding Checklist list, offering a clear distinction between structured templates and Clean Slate (Empty).
+- **Total Budget Flexibility Education & Pre-Launch Callout (`[SETUP-WIZARD-BUDGET-EDUCATION]`):** Step 5 features an educational callout clarifying that setting a budget is optional, leaving it blank or set to 0 enables flexible tracking, and it can be updated anytime later in Financials settings. Features a dynamic status pill (`NO TARGET SET (FLEXIBLE)` vs formatted target amount with currency symbol). Aligned Step 4 and Quick Setup with `(OPTIONAL)` label tags and helper text.
 
 ### 3.9 Admin Database Inspector & Monarch Operations Portal (`[ADMIN-MONARCH-UX-REDESIGN]`)
 - **Monarch Operations Architecture (`src/app/admin/page.tsx`):** Provides a comprehensive database inspector and entitlements management portal for Sheet2Suite administrators at `/admin`, completely modernized to conform with the Monarch design language:

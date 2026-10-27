@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.17.2',
+    title: 'Setup Wizard Budget Flexibility & Education Callout',
+    date: 'Oct 27, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Clear budget flexibility education: step 5 now explicitly reassures couples that setting a total budget is optional and can be adjusted anytime.',
+      'Dynamic target budget status pill: real-time summary pill confirming whether a target budget is configured or operating in flexible mode.',
+      'Clearer budget input labels: added optional indicator and helpful guidance directly below budget inputs during setup.',
+    ],
+    details: 'Enhances the setup wizard with an educational callout explaining that total budgets are optional and can be updated anytime later in Financials settings, eliminating onboarding hesitation.',
+  },
+  {
     version: 'v1.17.1',
     title: 'Setup Wizard Ergonomics & Currency Refinements',
     date: 'Oct 27, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'fix',
     highlights: [
