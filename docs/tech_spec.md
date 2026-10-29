@@ -161,8 +161,12 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
   - **Scannable Card Anatomy:** Compact layout with category tag, smart relative due date (`Overdue by Xd`, `Today`, `Tomorrow`), 2-line clamped title, notes snippet preview, and circular assignee avatar initials. Mobile bottom sheets also provided for Category and Sort selection.
 
 ### 2.9 Wedding Playlist & Music (`MusicManager.tsx`)
-- Categorized music tracks (*Ceremony*, *Reception*, *First Dance*, *Must Play*, *Banned / Do Not Play*).
-- Live 30-second iTunes audio preview player, Spotify/YouTube search buttons, and **`EMAIL LIST`** DJ email generator (`mailto:`).
+- **Dual View Mode (`[CARDS] | [PLAYLIST TABLE]`):** Toggle between rich, visual track cards (`repeat(auto-fill, minmax(320px, 1fr))`) and a high-density tabular playlist view (Track #, Sample Play/Pause, Title & Artist, Occasion badge, Priority pill, Requester, DJ Notes snippet, Streaming links, Actions) matching standard music curation software and sister modules.
+- **Orthogonal Occasion & Priority Segmentation:** Separates wedding moments (*Ceremony*, *Special Moments / Dances*, *Reception & Party*, *Do Not Play*) from priority (*Must Play*, *Play If Time*, *Banned*), supported by `PageHeaderCard.segmentSwitcher`, priority dropdown selector, and dynamic active filter badges with 1-click removal.
+- **Docked Audio Mini-Player Bar:** Persistent floating bottom player dock when streaming 30-second iTunes audio previews, featuring vinyl disc icon, track metadata, interactive seekable progress scrubber with elapsed/total duration, play/pause and stop controls, and direct streaming links.
+- **Monarch Slide-Over Track Inspector:** Overhauled add/edit drawer with live debounced iTunes catalog auto-search with artwork thumbnails, title/artist validation, occasion selector, `PriorityPills` for play urgency, DJ cue notes, and adjacent track navigation (`onPrev`, `onNext`).
+- **1-Click DJ Clipboard Export & Vendor Email:** `COPY SETLIST` action copies formatted wedding rundown to clipboard for instant pasting into DJ forms (Vibo, HoneyBook, Google Docs), alongside direct vendor lookup `EMAIL DJ` (`mailto:`).
+- **Responsive Mobile Touch Ergonomics:** Automatically reflows cards into full-width touch-friendly rows on viewports ≤ 768px with ≥ 44px touch targets and integrated `MobileFAB`.
 
 ### 2.11 Admin Song Request Approval Queue & DJ Gating (`[MUSIC-4]` - Sidelined / Disabled for Initial Launch)
 > ⚠️ **Launch Status:** Sidelined / Disabled for Initial Launch — Guest song request portal links, alert banners, and approval queues are hidden for initial release.

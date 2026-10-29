@@ -480,21 +480,35 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
   };
 
   // Theme and Settings
-  const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
+  const {
+    fontSizeScale,
+    setFontSizeScale,
+    setStyleTheme: setContextStyleTheme,
+    setTheme: setContextTheme,
+    setPrimaryColor: setContextPrimaryColor,
+  } = useSheet2Theme();
   const [styleTheme, setStyleTheme] = useState<'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [primaryColor, setPrimaryColor] = useState<string>('');
 
   const handleStyleThemeChange = (newStyle: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => {
     setStyleTheme(newStyle);
+    setContextStyleTheme(newStyle);
     const presets = getColorPresets(newStyle, theme);
-    if (presets.length > 0) setPrimaryColor(presets[0].hex);
+    if (presets.length > 0) {
+      setPrimaryColor(presets[0].hex);
+      setContextPrimaryColor(presets[0].hex);
+    }
   };
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
+    setContextTheme(newTheme);
     const presets = getColorPresets(styleTheme, newTheme);
-    if (presets.length > 0) setPrimaryColor(presets[0].hex);
+    if (presets.length > 0) {
+      setPrimaryColor(presets[0].hex);
+      setContextPrimaryColor(presets[0].hex);
+    }
   };
 
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
@@ -1104,12 +1118,15 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
 
     if (primaryColor) {
       if (styleTheme === 'neo-brutalism') {
-        // Customize Green accent colors in Neo-Brutalism without changing structural black/slate
+        // Customize accent colors in Neo-Brutalism without changing structural black/slate
         document.documentElement.style.setProperty('--color-highlight', primaryColor);
         document.documentElement.style.setProperty('--color-gold-dark', primaryColor);
-        document.documentElement.style.setProperty('--color-on-primary', primaryColor);
         if (theme === 'dark') {
           document.documentElement.style.setProperty('--color-primary', primaryColor);
+          document.documentElement.style.setProperty('--color-on-primary', '#000000');
+        } else {
+          document.documentElement.style.removeProperty('--color-primary');
+          document.documentElement.style.setProperty('--color-on-primary', '#ffffff');
         }
       } else {
         document.documentElement.style.setProperty('--color-primary', primaryColor);

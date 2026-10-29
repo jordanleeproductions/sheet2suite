@@ -57,14 +57,32 @@ export function Sheet2ThemeProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     if (primaryColor) {
-      document.documentElement.style.setProperty('--color-primary', primaryColor);
+      if (styleTheme === 'neo-brutalism') {
+        document.documentElement.style.setProperty('--color-highlight', primaryColor);
+        document.documentElement.style.setProperty('--color-gold-dark', primaryColor);
+        if (theme === 'dark') {
+          document.documentElement.style.setProperty('--color-primary', primaryColor);
+          document.documentElement.style.setProperty('--color-on-primary', '#000000');
+        } else {
+          document.documentElement.style.removeProperty('--color-primary');
+          document.documentElement.style.setProperty('--color-on-primary', '#ffffff');
+        }
+      } else {
+        document.documentElement.style.removeProperty('--color-highlight');
+        document.documentElement.style.removeProperty('--color-gold-dark');
+        document.documentElement.style.removeProperty('--color-on-primary');
+        document.documentElement.style.setProperty('--color-primary', primaryColor);
+      }
       localStorage.setItem('s2v_primary_color', primaryColor);
     } else {
       document.documentElement.style.removeProperty('--color-primary');
+      document.documentElement.style.removeProperty('--color-highlight');
+      document.documentElement.style.removeProperty('--color-gold-dark');
+      document.documentElement.style.removeProperty('--color-on-primary');
       localStorage.removeItem('s2v_primary_color');
     }
     localStorage.setItem('s2v_theme', theme);
-  }, [theme, primaryColor]);
+  }, [theme, primaryColor, styleTheme]);
 
   // Effect 3: Font size scale — isolated so it NEVER touches theme attributes
   useEffect(() => {
