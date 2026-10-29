@@ -306,6 +306,13 @@ export default function SlideOverDrawer({
           display: none;
         }
 
+        .slide-over-footer button:disabled {
+          opacity: 0.45 !important;
+          cursor: not-allowed !important;
+          box-shadow: none !important;
+          filter: grayscale(0.5);
+        }
+
         @media (min-width: 641px) {
           .slide-over-panel {
             animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;

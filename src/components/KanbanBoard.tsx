@@ -1335,60 +1335,76 @@ export default function KanbanBoard({
         onNext={() => handleNavigateAdjacentTask(1)}
         width="520px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            {!isAdding && editingTask ? (
-              <button
-                type="button"
-                style={styles.deleteBtn}
-                onClick={() => setTaskToDelete(editingTask)}
-                title="Delete task"
-              >
-                DELETE
-              </button>
-            ) : (
-              <button
-                type="button"
-                style={styles.cancelBtn}
-                onClick={() => { setIsAdding(false); setEditingTask(null); }}
-              >
-                CANCEL
-              </button>
-            )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {!isAdding && (
-                <button
-                  type="button"
-                  style={styles.cancelBtn}
-                  onClick={() => { setIsAdding(false); setEditingTask(null); }}
-                >
-                  CANCEL
-                </button>
-              )}
-              {isAdding && (
-                <button
-                  type="button"
-                  style={{
-                    ...styles.saveBtn,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-primary, #0F172A)',
-                    border: '1px solid var(--color-border, #CBD5E1)',
-                  }}
-                  disabled={isSyncing}
-                  onClick={(e) => saveTask(e, true)}
-                >
-                  SAVE & ADD NEW
-                </button>
-              )}
-              <button
-                type="button"
-                style={styles.saveBtn}
-                disabled={isSyncing}
-                onClick={(e) => saveTask(e)}
-              >
-                {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE TASK' : 'SAVE CHANGES')}
-              </button>
-            </div>
-          </div>
+          (() => {
+            const isTaskFormValid = Boolean((formState.taskName || '').trim());
+            const isDisabled = !isTaskFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                {!isAdding && editingTask ? (
+                  <button
+                    type="button"
+                    style={styles.deleteBtn}
+                    onClick={() => setTaskToDelete(editingTask)}
+                    title="Delete task"
+                  >
+                    DELETE
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    style={styles.cancelBtn}
+                    onClick={() => { setIsAdding(false); setEditingTask(null); }}
+                  >
+                    CANCEL
+                  </button>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {!isAdding && (
+                    <button
+                      type="button"
+                      style={styles.cancelBtn}
+                      onClick={() => { setIsAdding(false); setEditingTask(null); }}
+                    >
+                      CANCEL
+                    </button>
+                  )}
+                  {isAdding && (
+                    <button
+                      type="button"
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: 'transparent',
+                        color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                        border: `1px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary, #0F172A)'}`,
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={isDisabled}
+                      title={!isTaskFormValid ? 'Enter Task Name to enable saving' : undefined}
+                      onClick={(e) => saveTask(e, true)}
+                    >
+                      SAVE & ADD NEW
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      opacity: isDisabled ? 0.45 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isDisabled}
+                    title={!isTaskFormValid ? 'Enter Task Name to enable saving' : undefined}
+                    onClick={(e) => saveTask(e)}
+                  >
+                    {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE TASK' : 'SAVE CHANGES')}
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form onSubmit={saveTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>

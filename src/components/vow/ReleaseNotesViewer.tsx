@@ -98,7 +98,8 @@ export default function ReleaseNotesViewer({
     details: latestRelease?.details,
   };
 
-  const pastReleases = RELEASE_NOTES.filter((r) => r.version !== activeRelease.version);
+  // Cap historical releases to 1 so the UI exposes only the last 2 releases total (current active + 1 previous)
+  const pastReleases = RELEASE_NOTES.filter((r) => r.version !== activeRelease.version).slice(0, 1);
 
   const toggleVersion = (ver: string) => {
     setExpandedVersions((prev) => ({
@@ -366,7 +367,7 @@ export default function ReleaseNotesViewer({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <History size={15} style={{ color: 'var(--color-muted, #64748B)' }} />
-                    <span>Previous Releases ({pastReleases.length})</span>
+                    <span>{pastReleases.length === 1 ? 'Previous Release' : `Previous Releases (${pastReleases.length})`}</span>
                   </div>
                   {showHistory ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
@@ -731,7 +732,7 @@ export default function ReleaseNotesViewer({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <History size={13} />
-                <span>Past Updates ({pastReleases.length})</span>
+                <span>{pastReleases.length === 1 ? 'Previous Update' : `Past Updates (${pastReleases.length})`}</span>
               </div>
               {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>

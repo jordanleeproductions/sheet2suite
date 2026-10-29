@@ -489,6 +489,10 @@ export default function ThankYouManager({
     }
   };
 
+  const isGiftFormValid = Boolean(
+    (formData.description || '').trim() && (formData.giverName || '').trim()
+  );
+
   // Save Gift Handler
   const handleSaveGift = async (e: React.FormEvent, continueAdding = false) => {
     e.preventDefault();
@@ -1002,17 +1006,21 @@ export default function ThankYouManager({
               {isAddingGift && (
                 <button
                   type="button"
+                  disabled={!isGiftFormValid || Boolean(isSyncing)}
+                  title={!isGiftFormValid ? 'Enter Gift Description and Gift Giver to enable saving' : undefined}
                   onClick={(e) => handleSaveGift(e, true)}
                   style={{
                     padding: '9px 16px',
                     borderRadius: '8px',
-                    border: '1.5px solid var(--color-primary)',
+                    border: `1.5px solid ${!isGiftFormValid || isSyncing ? 'var(--color-border, #cbd5e1)' : 'var(--color-primary)'}`,
                     backgroundColor: 'var(--color-surface, #ffffff)',
-                    color: 'var(--color-primary)',
+                    color: !isGiftFormValid || isSyncing ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary)',
                     fontSize: '0.875rem',
                     fontWeight: 600,
-                    cursor: 'pointer',
+                    cursor: !isGiftFormValid || isSyncing ? 'not-allowed' : 'pointer',
+                    opacity: !isGiftFormValid || isSyncing ? 0.45 : 1,
                     minHeight: '44px',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   Save & Add Another
@@ -1022,17 +1030,21 @@ export default function ThankYouManager({
               <button
                 type="submit"
                 form="gift-form"
+                disabled={!isGiftFormValid || Boolean(isSyncing)}
+                title={!isGiftFormValid ? 'Enter Gift Description and Gift Giver to enable saving' : undefined}
                 style={{
                   padding: '9px 20px',
                   borderRadius: '8px',
                   border: 'none',
-                  backgroundColor: 'var(--color-primary, #6366f1)',
-                  color: 'var(--color-on-primary, #ffffff)',
+                  backgroundColor: !isGiftFormValid || isSyncing ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary, #6366f1)',
+                  color: !isGiftFormValid || isSyncing ? '#ffffff' : 'var(--color-on-primary, #ffffff)',
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                  cursor: !isGiftFormValid || isSyncing ? 'not-allowed' : 'pointer',
+                  opacity: !isGiftFormValid || isSyncing ? 0.45 : 1,
+                  boxShadow: !isGiftFormValid || isSyncing ? 'none' : '0 2px 6px rgba(0,0,0,0.12)',
                   minHeight: '44px',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {isAddingGift ? 'Save Gift' : 'Save Changes'}

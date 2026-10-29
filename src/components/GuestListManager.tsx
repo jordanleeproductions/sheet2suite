@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { Guest, AgeCategory, RSVPStatus, MenuItem, TableConfig } from '@/lib/sheets/types';
 import { calculateRelationalCateringSummary } from '@/lib/sheets/relationalSync';
-import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Coffee, Tag, Plus, Edit2, Check, X, Utensils, Users, Grid, AlertTriangle, Download, Printer, Heart, ChevronDown, ChevronUp, List, Armchair, CheckCircle2 } from 'lucide-react';
 import MobileFAB from '@/components/MobileFAB';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { DrawerSection, DrawerField, DrawerRow } from '@/components/vow/MonarchForm';
 import PageSearchInput from '@/components/PageSearchInput';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
@@ -920,6 +921,13 @@ export default function GuestListManager({
             flex-direction: column !important;
             justify-content: center !important;
           }
+          .guest-form-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+          }
+          .guest-form-content input,
+          .guest-form-content select,
+          .guest-form-content textarea,
           .guest-form-grid input,
           .guest-form-grid select,
           .guest-form-grid textarea {
@@ -1714,243 +1722,328 @@ export default function GuestListManager({
         hasNext={currentGuestIndex >= 0 && currentGuestIndex < filteredGuests.length - 1}
         onPrevious={() => handleNavigateAdjacentGuest(-1)}
         onNext={() => handleNavigateAdjacentGuest(1)}
-        width="480px"
+        width="520px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            <button 
-              type="button" 
-              style={styles.cancelBtn} 
-              onClick={() => { setEditingGuest(null); setIsAdding(false); }}
-            >
-              CANCEL
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {isAdding && (
-                <button
-                  type="button"
-                  style={{
-                    ...styles.saveBtn,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-primary, #0F172A)',
-                    border: '1px solid var(--color-border, #CBD5E1)',
-                  }}
-                  disabled={isSyncing}
-                  onClick={(e) => saveGuest(e as any, true)}
+          (() => {
+            const isGuestFormValid = Boolean(
+              (formState.firstName || '').trim() && (formState.lastName || '').trim()
+            );
+            const isDisabled = !isGuestFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                <button 
+                  type="button" 
+                  style={styles.cancelBtn} 
+                  onClick={() => { setEditingGuest(null); setIsAdding(false); }}
                 >
-                  SAVE & ADD NEW
+                  CANCEL
                 </button>
-              )}
-              <button
-                type="button"
-                style={styles.saveBtn}
-                disabled={isSyncing}
-                onClick={(e) => saveGuest(e as any)}
-              >
-                {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE GUEST' : 'SAVE CHANGES')}
-              </button>
-            </div>
-          </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {isAdding && (
+                    <button
+                      type="button"
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: 'transparent',
+                        color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                        border: `1px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary, #0F172A)'}`,
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={isDisabled}
+                      title={!isGuestFormValid ? 'Enter First Name and Last Name to enable saving' : undefined}
+                      onClick={(e) => saveGuest(e as any, true)}
+                    >
+                      SAVE & ADD NEW
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      opacity: isDisabled ? 0.45 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isDisabled}
+                    title={!isGuestFormValid ? 'Enter First Name and Last Name to enable saving' : undefined}
+                    onClick={(e) => saveGuest(e as any)}
+                  >
+                    {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE GUEST' : 'SAVE CHANGES')}
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form onSubmit={saveGuest} style={styles.form}>
-          <div className="guest-form-grid" style={styles.formGrid}>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>FIRST NAME *</label>
-              <input
-                type="text"
-                required
-                value={formState.firstName || ''}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                style={styles.input}
-              />
-            </div>
+          <div
+            className="guest-form-content"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.9rem',
+              padding: '1.1rem 1.25rem 2.5rem 1.25rem',
+              overflowY: 'auto',
+              flex: 1,
+            }}
+          >
+            {/* Section 1: Guest Identity & Party Group */}
+            <DrawerSection
+              title="Guest Identity & Group"
+              icon={<User size={13} style={{ color: 'var(--color-primary)' }} />}
+            >
+              <DrawerRow columns={2}>
+                <DrawerField label="First Name" required>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Jane"
+                    value={formState.firstName || ''}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    style={styles.input}
+                  />
+                </DrawerField>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>LAST NAME *</label>
-              <input
-                type="text"
-                required
-                value={formState.lastName || ''}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                style={styles.input}
-              />
-            </div>
+                <DrawerField label="Last Name" required>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Doe"
+                    value={formState.lastName || ''}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    style={styles.input}
+                  />
+                </DrawerField>
+              </DrawerRow>
 
-            {/* Dynamic Party Group Combo Dropdown [GUEST-8] */}
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>PARTY GROUP</label>
-              <input
-                type="text"
-                list="party-group-options"
-                value={formState.partyGroup || ''}
-                placeholder="Select existing or type custom group..."
-                onChange={(e) => handleInputChange('partyGroup', e.target.value)}
-                style={styles.input}
-              />
-              <datalist id="party-group-options">
-                {groups.map(grp => (
-                  <option key={grp} value={grp} />
-                ))}
-                <option value={`${p1} Family`} />
-                <option value={`${p2} Family`} />
-                <option value="Wedding Party" />
-                <option value="Mutual Friends" />
-                <option value="Co-Workers" />
-              </datalist>
-            </div>
+              <DrawerRow columns={2}>
+                <DrawerField label="Party Group" hint="Family or Circle">
+                  <input
+                    type="text"
+                    list="party-group-options"
+                    value={formState.partyGroup || ''}
+                    placeholder="Select or type group..."
+                    onChange={(e) => handleInputChange('partyGroup', e.target.value)}
+                    style={styles.input}
+                  />
+                  <datalist id="party-group-options">
+                    {groups.map(grp => (
+                      <option key={grp} value={grp} />
+                    ))}
+                    <option value={`${p1} Family`} />
+                    <option value={`${p2} Family`} />
+                    <option value="Wedding Party" />
+                    <option value="Mutual Friends" />
+                    <option value="Co-Workers" />
+                  </datalist>
+                </DrawerField>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>AGE CATEGORY</label>
-              <select
-                value={formState.ageCategory || 'Adult'}
-                onChange={(e) => handleInputChange('ageCategory', e.target.value)}
-                style={styles.select}
-              >
-                <option value="Adult">Adult</option>
-                <option value="Youth">Youth</option>
-                <option value="Child">Child</option>
-                <option value="Infant">Infant</option>
-                <option value="Vendor">Vendor</option>
-              </select>
-            </div>
+                <DrawerField label="Age Category">
+                  <select
+                    value={formState.ageCategory || 'Adult'}
+                    onChange={(e) => handleInputChange('ageCategory', e.target.value)}
+                    style={styles.select}
+                  >
+                    <option value="Adult">Adult</option>
+                    <option value="Youth">Youth</option>
+                    <option value="Child">Child</option>
+                    <option value="Infant">Infant</option>
+                    <option value="Vendor">Vendor</option>
+                  </select>
+                </DrawerField>
+              </DrawerRow>
+            </DrawerSection>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>RSVP STATUS</label>
-              <select
-                value={formState.rsvpStatus || 'No Response'}
-                onChange={(e) => handleInputChange('rsvpStatus', e.target.value)}
-                style={styles.select}
-              >
-                <option value="No Response">No Response</option>
-                <option value="Attending">Attending</option>
-                <option value="Declined">Declined</option>
-              </select>
-            </div>
+            {/* Section 2: Attendance & RSVP */}
+            <DrawerSection
+              title="Attendance & RSVP"
+              icon={<CheckCircle2 size={13} style={{ color: formState.rsvpStatus === 'Attending' ? '#10B981' : (formState.rsvpStatus === 'Declined' ? '#EF4444' : '#F59E0B') }} />}
+            >
+              <DrawerField label="RSVP Response Status">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', width: '100%' }}>
+                  {[
+                    { value: 'No Response', label: 'Pending', icon: '⏳', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.08)', border: '#F59E0B' },
+                    { value: 'Attending', label: 'Attending', icon: '✅', color: '#10B981', bg: 'rgba(16, 185, 129, 0.08)', border: '#10B981' },
+                    { value: 'Declined', label: 'Declined', icon: '❌', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.08)', border: '#EF4444' },
+                  ].map((opt) => {
+                    const isSelected = (formState.rsvpStatus || 'No Response') === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleInputChange('rsvpStatus', opt.value)}
+                        style={{
+                          minHeight: '46px',
+                          padding: '0.5rem 0.35rem',
+                          borderRadius: 'var(--border-radius-sm, 6px)',
+                          border: isSelected ? `2px solid ${opt.border}` : '1px solid var(--color-border, #CBD5E1)',
+                          backgroundColor: isSelected ? opt.bg : 'var(--color-surface, #FFFFFF)',
+                          color: isSelected ? opt.color : 'var(--color-muted, #64748B)',
+                          fontWeight: isSelected ? 700 : 500,
+                          fontSize: '0.8rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.35rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <span>{opt.icon}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </DrawerField>
+            </DrawerSection>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>
-                RECEPTION TABLE ASSIGNMENT
-                {formState.rsvpStatus === 'Declined' && (
-                  <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
-                    (N/A — Guest Declined)
-                  </span>
-                )}
-              </label>
-              {existingTables.length > 0 ? (
-                <select
-                  value={formState.rsvpStatus === 'Declined' ? '' : (formState.tableAssignment || '')}
-                  onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
-                  disabled={formState.rsvpStatus === 'Declined'}
+            {/* Section 3: Table & Seating Placement */}
+            <DrawerSection
+              title="Table & Seating Placement"
+              icon={<Armchair size={13} style={{ color: '#0284C7' }} />}
+            >
+              {formState.rsvpStatus === 'Declined' ? (
+                <div
                   style={{
-                    ...styles.select,
-                    opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
-                    cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
-                    backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
+                    padding: '0.75rem 0.85rem',
+                    backgroundColor: 'var(--color-bg, #F8FAFC)',
+                    border: '1px dashed var(--color-border, #CBD5E1)',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    color: 'var(--color-muted, #64748B)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
                   }}
                 >
-                  <option value="">Unassigned</option>
-                  {existingTables.map(t => (
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', padding: '0.5rem 0.625rem', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-muted)', borderRadius: 'var(--border-radius-sm)' }}>
-                  No tables set up yet. Go to <strong>Seating Chart</strong> to add tables first.
+                  <span>Guest declined attendance — table and ceremony seating are not required.</span>
                 </div>
+              ) : (
+                <DrawerRow columns={2}>
+                  <DrawerField label="Reception Table" hint={existingTables.length ? `${existingTables.length} tables` : undefined}>
+                    {existingTables.length > 0 ? (
+                      <select
+                        value={formState.tableAssignment || ''}
+                        onChange={(e) => handleInputChange('tableAssignment', e.target.value)}
+                        style={styles.select}
+                      >
+                        <option value="">Unassigned</option>
+                        {existingTables.map(t => (
+                          <option key={t.id} value={t.id}>{t.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', padding: '0.625rem', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-muted)', borderRadius: 'var(--border-radius-sm, 6px)' }}>
+                        No tables set up yet. Go to <strong>Seating Chart</strong> to add tables.
+                      </div>
+                    )}
+                  </DrawerField>
+
+                  <DrawerField label="Ceremony Seating" hint="Row / Side / Aisle">
+                    <input
+                      type="text"
+                      value={formState.ceremonySeating || ''}
+                      onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
+                      placeholder="e.g. Row 1 - Left Aisle"
+                      style={styles.input}
+                    />
+                  </DrawerField>
+                </DrawerRow>
               )}
-            </div>
+            </DrawerSection>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>
-                CEREMONY SEATING (ROW / SIDE)
-                {formState.rsvpStatus === 'Declined' && (
-                  <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
-                    (N/A — Guest Declined)
-                  </span>
-                )}
-              </label>
-              <input
-                type="text"
-                value={formState.rsvpStatus === 'Declined' ? '' : (formState.ceremonySeating || '')}
-                onChange={(e) => handleInputChange('ceremonySeating', e.target.value)}
-                disabled={formState.rsvpStatus === 'Declined'}
-                placeholder={formState.rsvpStatus === 'Declined' ? 'Not Applicable (Declined)' : 'e.g. Row 1 - Left Aisle, Front Aisle'}
-                style={{
-                  ...styles.input,
-                  opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
-                  cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'text',
-                  backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
-                }}
-              />
-            </div>
+            {/* Section 4: Catering & Dietary */}
+            <DrawerSection
+              title="Catering & Dietary"
+              icon={<Utensils size={13} style={{ color: '#10B981' }} />}
+            >
+              {formState.rsvpStatus === 'Declined' ? (
+                <div
+                  style={{
+                    padding: '0.75rem 0.85rem',
+                    backgroundColor: 'var(--color-bg, #F8FAFC)',
+                    border: '1px dashed var(--color-border, #CBD5E1)',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    color: 'var(--color-muted, #64748B)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <span>Guest declined attendance — catering and meal selections are omitted.</span>
+                </div>
+              ) : (
+                <DrawerRow columns={2}>
+                  <DrawerField label="Meal Selection">
+                    <select
+                      value={formState.mealChoice || 'Unassigned / Pending'}
+                      onChange={(e) => handleInputChange('mealChoice', e.target.value)}
+                      style={styles.select}
+                    >
+                      <option value="Unassigned / Pending">Unassigned / Pending</option>
+                      {menuOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </DrawerField>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>
-                MEAL SELECTION
-                {formState.rsvpStatus === 'Declined' && (
-                  <span style={{ fontSize: '0.65rem', color: 'var(--color-red)', fontWeight: 600, marginLeft: '0.5rem' }}>
-                    (N/A — Guest Declined)
-                  </span>
-                )}
-              </label>
-              <select
-                value={formState.rsvpStatus === 'Declined' ? '' : (formState.mealChoice || 'Unassigned / Pending')}
-                onChange={(e) => handleInputChange('mealChoice', e.target.value)}
-                disabled={formState.rsvpStatus === 'Declined'}
-                style={{
-                  ...styles.select,
-                  opacity: formState.rsvpStatus === 'Declined' ? 0.6 : 1,
-                  cursor: formState.rsvpStatus === 'Declined' ? 'not-allowed' : 'pointer',
-                  backgroundColor: formState.rsvpStatus === 'Declined' ? 'var(--color-bg-subtle, #f9fafb)' : undefined,
-                }}
-              >
-                <option value="Unassigned / Pending">Unassigned / Pending</option>
-                {menuOptions.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </div>
+                  <DrawerField label="Dietary Restrictions" hint="Allergies / Special Diets">
+                    <input
+                      type="text"
+                      value={formState.dietaryRestrictions || ''}
+                      placeholder="e.g. Vegetarian, Nut Allergy"
+                      onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
+                      style={styles.input}
+                    />
+                  </DrawerField>
+                </DrawerRow>
+              )}
+            </DrawerSection>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>EMAIL ADDRESS</label>
-              <input
-                type="email"
-                value={formState.emailAddress || ''}
-                onChange={(e) => handleInputChange('emailAddress', e.target.value)}
-                style={styles.input}
-              />
-            </div>
+            {/* Section 5: Contact Information */}
+            <DrawerSection
+              title="Contact Information"
+              icon={<Mail size={13} style={{ color: '#6366F1' }} />}
+            >
+              <DrawerRow columns={2}>
+                <DrawerField label="Email Address">
+                  <input
+                    type="email"
+                    inputMode="email"
+                    placeholder="guest@example.com"
+                    value={formState.emailAddress || ''}
+                    onChange={(e) => handleInputChange('emailAddress', e.target.value)}
+                    style={styles.input}
+                  />
+                </DrawerField>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>PHONE NUMBER</label>
-              <input
-                type="text"
-                value={formState.phoneNumber || ''}
-                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                style={styles.input}
-              />
-            </div>
+                <DrawerField label="Phone Number">
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="(555) 000-0000"
+                    value={formState.phoneNumber || ''}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    style={styles.input}
+                  />
+                </DrawerField>
+              </DrawerRow>
 
-            <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-              <label style={styles.label}>DIETARY RESTRICTIONS</label>
-              <input
-                type="text"
-                value={formState.dietaryRestrictions || ''}
-                placeholder="e.g. Vegetarian, Gluten Free, Nut Allergy"
-                onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
-                style={styles.input}
-              />
-            </div>
-
-            <div className="form-field-span-2" style={{ ...styles.fieldGroup, gridColumn: 'span 2' }}>
-              <label style={styles.label}>MAILING ADDRESS</label>
-              <textarea
-                value={formState.mailingAddress || ''}
-                rows={2}
-                onChange={(e) => handleInputChange('mailingAddress', e.target.value)}
-                style={styles.textarea}
-              />
-            </div>
+              <DrawerField label="Mailing Address" hint="For Invitations & Thank You Cards">
+                <textarea
+                  value={formState.mailingAddress || ''}
+                  rows={2}
+                  placeholder="Street Address, City, State, ZIP..."
+                  onChange={(e) => handleInputChange('mailingAddress', e.target.value)}
+                  style={styles.textarea}
+                />
+              </DrawerField>
+            </DrawerSection>
           </div>
         </form>
       </SlideOverDrawer>
@@ -2369,33 +2462,38 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-muted)',
   },
   input: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    fontSize: '0.85rem',
+    minHeight: '44px',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid var(--color-border, #CBD5E1)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
+    fontSize: '0.9rem',
     width: '100%',
     boxSizing: 'border-box',
     backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   select: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    fontSize: '0.85rem',
+    minHeight: '44px',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid var(--color-border, #CBD5E1)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
+    fontSize: '0.9rem',
     width: '100%',
     boxSizing: 'border-box',
     backgroundColor: 'var(--color-input-bg, #ffffff)',
     color: 'var(--color-text)',
   },
   textarea: {
-    padding: '0.5rem',
-    border: '1px solid var(--color-muted)',
-    borderRadius: 'var(--border-radius-sm)',
-    fontSize: '0.85rem',
+    minHeight: '70px',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid var(--color-border, #CBD5E1)',
+    borderRadius: 'var(--border-radius-sm, 6px)',
+    fontSize: '0.9rem',
     fontFamily: 'var(--font-sans)',
     width: '100%',
     boxSizing: 'border-box',
+    backgroundColor: 'var(--color-input-bg, #ffffff)',
+    color: 'var(--color-text)',
   },
   formActions: {
     display: 'flex',

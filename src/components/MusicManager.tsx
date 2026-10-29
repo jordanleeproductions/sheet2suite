@@ -964,95 +964,106 @@ export default function MusicManager({ music, vendors = [], onUpdate, isSyncing,
             : undefined
         }
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {editingItem ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setSongToDelete(editingItem);
-                  closeModal();
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-red, #dc2626)',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: '6px',
-                }}
-              >
-                <Trash2 size={15} />
-                Delete Track
-              </button>
-            ) : <div />}
+          (() => {
+            const isTrackFormValid = Boolean(
+              (formState.title || '').trim() && (formState.artist || '').trim()
+            );
+            const isDisabled = !isTrackFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {editingItem ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSongToDelete(editingItem);
+                      closeModal();
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-red, #dc2626)',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '6px 8px',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <Trash2 size={15} />
+                    Delete Track
+                  </button>
+                ) : <div />}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
-              <button
-                type="button"
-                onClick={closeModal}
-                style={{
-                  padding: '9px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border, #e2e8f0)',
-                  backgroundColor: 'var(--color-surface, #ffffff)',
-                  color: 'var(--color-text, #1a202c)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Cancel
-              </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    style={{
+                      padding: '9px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border, #e2e8f0)',
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-text, #1a202c)',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Cancel
+                  </button>
 
-              {isAdding && (
-                <button
-                  type="button"
-                  disabled={isSyncing}
-                  onClick={(e) => saveItem(e, true)}
-                  style={{
-                    padding: '9px 16px',
-                    borderRadius: '8px',
-                    border: '1.5px solid var(--color-primary)',
-                    backgroundColor: 'var(--color-surface, #ffffff)',
-                    color: 'var(--color-primary)',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    minHeight: '44px',
-                  }}
-                >
-                  {isSyncing ? 'Saving...' : 'Save & Add Another'}
-                </button>
-              )}
+                  {isAdding && (
+                    <button
+                      type="button"
+                      disabled={isDisabled}
+                      title={!isTrackFormValid ? 'Enter Song Title and Artist to enable saving' : undefined}
+                      onClick={(e) => saveItem(e, true)}
+                      style={{
+                        padding: '9px 16px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${isDisabled ? 'var(--color-border, #cbd5e1)' : 'var(--color-primary)'}`,
+                        backgroundColor: 'var(--color-surface, #ffffff)',
+                        color: isDisabled ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        opacity: isDisabled ? 0.45 : 1,
+                        minHeight: '44px',
+                      }}
+                    >
+                      {isSyncing ? 'Saving...' : 'Save & Add Another'}
+                    </button>
+                  )}
 
-              <button
-                type="submit"
-                form="music-track-form"
-                disabled={isSyncing}
-                style={{
-                  padding: '9px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: 'var(--color-primary, #6366f1)',
-                  color: 'var(--color-on-primary, #ffffff)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
-                  minHeight: '44px',
-                  opacity: isSyncing ? 0.7 : 1,
-                }}
-              >
-                {isSyncing ? 'Saving...' : (isAdding ? 'Save Track' : 'Save Changes')}
-              </button>
-            </div>
-          </div>
+                  <button
+                    type="submit"
+                    form="music-track-form"
+                    disabled={isDisabled}
+                    title={!isTrackFormValid ? 'Enter Song Title and Artist to enable saving' : undefined}
+                    style={{
+                      padding: '9px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary, #6366f1)',
+                      color: isDisabled ? '#ffffff' : 'var(--color-on-primary, #ffffff)',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      boxShadow: isDisabled ? 'none' : '0 2px 6px rgba(0,0,0,0.12)',
+                      minHeight: '44px',
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                  >
+                    {isSyncing ? 'Saving...' : (isAdding ? 'Save Track' : 'Save Changes')}
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form id="music-track-form" onSubmit={saveItem} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

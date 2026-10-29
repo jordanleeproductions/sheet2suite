@@ -11,10 +11,40 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.17.5',
+    title: 'Smart Form Validation & Disabled Save Button Visual Guardrails',
+    date: 'Oct 28, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Real-time required field validation: Save and Save & Add New buttons across all planning modules now remain disabled until all mandatory fields are populated.',
+      'Clear visual feedback: disabled save buttons appear distinctly dimmed with a muted palette and helpful hover tooltips indicating which required fields are missing.',
+      'Instant activation on input: as soon as all required fields are entered when adding or editing records, save actions immediately illuminate in full color.',
+    ],
+    details: 'Prevents incomplete records across Guests, Gifts, Vendors, Financials, Tasks, Timeline, Music, Photo Shots, Menu, and Seating by disabling and visually dimming save actions until all mandatory fields are filled.',
+  },
+  {
+    version: 'v1.17.4',
+    title: 'Mobile Guest Edit Screen Redesign & Compact Release History',
+    date: 'Oct 28, 2026',
+    badge: 'Update',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Redesigned mobile guest editing: guest details are now organized into dedicated, card-based sections (Identity, Attendance, Seating, Catering, Contact) that smoothly collapse to full-width on mobile screens.',
+      'Quick-touch RSVP selector: update attendance instantly with large, tactile buttons that clearly reflect pending, attending, or declined status.',
+      'Context-aware form simplification: when a guest declines attendance, seating and catering fields are cleanly replaced with a helpful notice, keeping mobile screens uncluttered.',
+      'Streamlined release notes: the release notes viewer now focuses exclusively on the active update and the preceding release for clean, clutter-free reading.',
+      'Responsive vendor edit forms: vendor inspector forms now reflow seamlessly into a comfortable single-column layout on mobile devices.',
+    ],
+    details: 'Brings modern card-based organization and single-tap RSVP controls to the mobile guest editing experience while keeping update history focused and easy to digest.',
+  },
+  {
     version: 'v1.17.3',
     title: 'Mobile Thank You Tracker Layout & Input Refinements',
     date: 'Oct 28, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'fix',
     highlights: [

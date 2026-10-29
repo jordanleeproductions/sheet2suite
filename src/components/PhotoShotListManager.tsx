@@ -1786,93 +1786,105 @@ export default function PhotoShotListManager({
             : undefined
         }
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {editingShot ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setShotToDelete(editingShot);
-                  setIsAddingShot(false);
-                  setEditingShot(null);
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-red, #dc2626)',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: '6px',
-                }}
-              >
-                <Trash2 size={15} />
-                Delete Shot
-              </button>
-            ) : <div />}
+          (() => {
+            const isShotFormValid = Boolean((formData.description || '').trim());
+            const isDisabled = !isShotFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {editingShot ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShotToDelete(editingShot);
+                      setIsAddingShot(false);
+                      setEditingShot(null);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-red, #dc2626)',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '6px 8px',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <Trash2 size={15} />
+                    Delete Shot
+                  </button>
+                ) : <div />}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
-              <button
-                type="button"
-                onClick={() => { setIsAddingShot(false); setEditingShot(null); }}
-                style={{
-                  padding: '9px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border, #e2e8f0)',
-                  backgroundColor: 'var(--color-surface, #ffffff)',
-                  color: 'var(--color-text, #1a202c)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Cancel
-              </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setIsAddingShot(false); setEditingShot(null); }}
+                    style={{
+                      padding: '9px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border, #e2e8f0)',
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-text, #1a202c)',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Cancel
+                  </button>
 
-              {isAddingShot && (
-                <button
-                  type="button"
-                  onClick={(e) => handleSaveShot(e, true)}
-                  style={{
-                    padding: '9px 16px',
-                    borderRadius: '8px',
-                    border: '1.5px solid var(--color-primary)',
-                    backgroundColor: 'var(--color-surface, #ffffff)',
-                    color: 'var(--color-primary)',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    minHeight: '44px',
-                  }}
-                >
-                  Save & Add Another
-                </button>
-              )}
+                  {isAddingShot && (
+                    <button
+                      type="button"
+                      disabled={isDisabled}
+                      title={!isShotFormValid ? 'Enter Shot Description to enable saving' : undefined}
+                      onClick={(e) => handleSaveShot(e, true)}
+                      style={{
+                        padding: '9px 16px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${isDisabled ? 'var(--color-border, #cbd5e1)' : 'var(--color-primary)'}`,
+                        backgroundColor: 'var(--color-surface, #ffffff)',
+                        color: isDisabled ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        opacity: isDisabled ? 0.45 : 1,
+                        minHeight: '44px',
+                      }}
+                    >
+                      Save & Add Another
+                    </button>
+                  )}
 
-              <button
-                type="submit"
-                form="photo-shot-form"
-                style={{
-                  padding: '9px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: 'var(--color-primary, #6366f1)',
-                  color: 'var(--color-on-primary, #ffffff)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
-                  minHeight: '44px',
-                }}
-              >
-                {isAddingShot ? 'Save Shot' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
+                  <button
+                    type="submit"
+                    form="photo-shot-form"
+                    disabled={isDisabled}
+                    title={!isShotFormValid ? 'Enter Shot Description to enable saving' : undefined}
+                    style={{
+                      padding: '9px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary, #6366f1)',
+                      color: isDisabled ? '#ffffff' : 'var(--color-on-primary, #ffffff)',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.45 : 1,
+                      boxShadow: isDisabled ? 'none' : '0 2px 6px rgba(0,0,0,0.12)',
+                      minHeight: '44px',
+                    }}
+                  >
+                    {isAddingShot ? 'Save Shot' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form id="photo-shot-form" onSubmit={handleSaveShot} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

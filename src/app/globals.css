@@ -492,12 +492,20 @@ td,
 }
 
 /* Save / Submit Button background rule */
-/* Save / Submit Button background rule */
 [class*="saveBtn"],
 [class*="submitBtn"],
 button[type="submit"] {
   background-color: var(--color-primary);
   color: var(--color-on-primary, #ffffff);
+}
+
+[class*="saveBtn"]:disabled,
+[class*="submitBtn"]:disabled,
+button[type="submit"]:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.5);
+  box-shadow: none !important;
 }
 
 /* In Dark Mode: buttons with var(--color-primary) background use on-primary token */

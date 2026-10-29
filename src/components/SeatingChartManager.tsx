@@ -2607,32 +2607,56 @@ export default function SeatingChartManager({
                 </>
               )}
 
-              <div style={styles.formActions}>
-                <button
-                  type="button"
-                  style={styles.cancelBtn}
-                  onClick={() => { setIsAddingTable(false); setEditingTable(null); }}
-                >
-                  CANCEL
-                </button>
-                {isAddingTable && (
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.saveBtn,
-                      backgroundColor: 'var(--color-surface, #ffffff)',
-                      color: 'var(--color-primary)',
-                      border: '2px solid var(--color-primary)',
-                    }}
-                    onClick={(e) => saveTableConfig(e, true)}
-                  >
-                    SAVE & ADD NEW
-                  </button>
-                )}
-                <button type="submit" style={styles.saveBtn} className="saveBtn">
-                  {isAddingTable ? 'SAVE TABLE' : 'SAVE CHANGES'}
-                </button>
-              </div>
+              {(() => {
+                const isTableFormValid = Boolean(
+                  (tableFormState.tableName || '').trim() && Number(tableFormState.capacity) >= 2
+                );
+                const isDisabled = !isTableFormValid || Boolean(isSyncing);
+                return (
+                  <div style={styles.formActions}>
+                    <button
+                      type="button"
+                      style={styles.cancelBtn}
+                      onClick={() => { setIsAddingTable(false); setEditingTable(null); }}
+                    >
+                      CANCEL
+                    </button>
+                    {isAddingTable && (
+                      <button
+                        type="button"
+                        disabled={isDisabled}
+                        title={!isTableFormValid ? 'Enter Table Name and Seat Capacity to enable saving' : undefined}
+                        style={{
+                          ...styles.saveBtn,
+                          backgroundColor: 'var(--color-surface, #ffffff)',
+                          color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                          border: `2px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary)'}`,
+                          opacity: isDisabled ? 0.45 : 1,
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        }}
+                        onClick={(e) => saveTableConfig(e, true)}
+                      >
+                        SAVE & ADD NEW
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={isDisabled}
+                      title={!isTableFormValid ? 'Enter Table Name and Seat Capacity to enable saving' : undefined}
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                        color: '#ffffff',
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      className="saveBtn"
+                    >
+                      {isAddingTable ? 'SAVE TABLE' : 'SAVE CHANGES'}
+                    </button>
+                  </div>
+                );
+              })()}
             </form>
           </div>
         </div>

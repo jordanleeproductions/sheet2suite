@@ -744,6 +744,10 @@ export default function VendorManager({
             align-items: center !important;
             font-size: 0.76rem !important;
           }
+          .vendor-form-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+          }
           .vendor-form-grid input,
           .vendor-form-grid select,
           .vendor-form-grid textarea {
@@ -1127,29 +1131,50 @@ export default function VendorManager({
         onNext={() => handleNavigateAdjacentVendor(1)}
         width="480px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {isAdding && (
-                <button
-                  type="button"
-                  style={{
-                    ...styles.saveBtn,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-primary, #0F172A)',
-                    border: '1px solid var(--color-border, #CBD5E1)',
-                  }}
-                  disabled={isSyncing}
-                  onClick={(e) => saveItem(e, true)}
-                >
-                  SAVE & ADD NEW
-                </button>
-              )}
-              <button type="submit" form="vendor-inspector-form" style={styles.saveBtn} disabled={isSyncing}>
-                {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE VENDOR' : 'SAVE CHANGES')}
-              </button>
-            </div>
-          </div>
+          (() => {
+            const isVendorFormValid = Boolean((formState.vendorName || '').trim());
+            const isDisabled = !isVendorFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                <button type="button" style={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {isAdding && (
+                    <button
+                      type="button"
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: 'transparent',
+                        color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                        border: `1px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary, #0F172A)'}`,
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={isDisabled}
+                      title={!isVendorFormValid ? 'Enter Vendor Name to enable saving' : undefined}
+                      onClick={(e) => saveItem(e, true)}
+                    >
+                      SAVE & ADD NEW
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    form="vendor-inspector-form"
+                    style={{
+                      ...styles.saveBtn,
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      opacity: isDisabled ? 0.45 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isDisabled}
+                    title={!isVendorFormValid ? 'Enter Vendor Name to enable saving' : undefined}
+                  >
+                    {isSyncing ? 'SAVING...' : (isAdding ? 'SAVE VENDOR' : 'SAVE CHANGES')}
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form id="vendor-inspector-form" onSubmit={saveItem} style={styles.form}>

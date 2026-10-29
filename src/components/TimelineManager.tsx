@@ -691,57 +691,73 @@ export default function TimelineManager({
         onNext={() => handleNavigateAdjacentEvent(1)}
         width="540px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            {editingIndex !== null ? (
-              <button 
-                type="button" 
-                style={styles.deleteBtn}
-                onClick={() => setEventToDeleteIndex(editingIndex)}
-              >
-                <Trash2 size={13} style={{ marginRight: '4px' }} />
-                DELETE
-              </button>
-            ) : <div />}
+          (() => {
+            const isMomentFormValid = Boolean(
+              (formState.startTime || '').trim() && (formState.eventMoment || '').trim()
+            );
+            const isDisabled = !isMomentFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                {editingIndex !== null ? (
+                  <button 
+                    type="button" 
+                    style={styles.deleteBtn}
+                    onClick={() => setEventToDeleteIndex(editingIndex)}
+                  >
+                    <Trash2 size={13} style={{ marginRight: '4px' }} />
+                    DELETE
+                  </button>
+                ) : <div />}
 
-            <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
-              <button 
-                type="button" 
-                style={styles.cancelBtn} 
-                onClick={() => { setIsAdding(false); setEditingIndex(null); }}
-              >
-                CANCEL
-              </button>
-              {isAdding && (
-                <button
-                  type="button"
-                  style={{
-                    ...styles.saveBtn,
-                    backgroundColor: 'var(--color-surface, #ffffff)',
-                    color: 'var(--color-primary)',
-                    border: '1.5px solid var(--color-primary)',
-                  }}
-                  disabled={isSyncing}
-                  onClick={(e) => saveEvent(e, true)}
-                >
-                  SAVE & ADD NEXT
-                </button>
-              )}
-              <button
-                type="button"
-                style={{
-                  ...styles.saveBtn,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                }}
-                disabled={isSyncing}
-                onClick={(e) => saveEvent(e)}
-              >
-                <Check size={14} />
-                <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}</span>
-              </button>
-            </div>
-          </div>
+                <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+                  <button 
+                    type="button" 
+                    style={styles.cancelBtn} 
+                    onClick={() => { setIsAdding(false); setEditingIndex(null); }}
+                  >
+                    CANCEL
+                  </button>
+                  {isAdding && (
+                    <button
+                      type="button"
+                      style={{
+                        ...styles.saveBtn,
+                        backgroundColor: 'var(--color-surface, #ffffff)',
+                        color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                        border: `1.5px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary)'}`,
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={isDisabled}
+                      title={!isMomentFormValid ? 'Enter Start Time and Event Moment Name to enable saving' : undefined}
+                      onClick={(e) => saveEvent(e, true)}
+                    >
+                      SAVE & ADD NEXT
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.saveBtn,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      opacity: isDisabled ? 0.45 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isDisabled}
+                    title={!isMomentFormValid ? 'Enter Start Time and Event Moment Name to enable saving' : undefined}
+                    onClick={(e) => saveEvent(e)}
+                  >
+                    <Check size={14} />
+                    <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MOMENT' : 'SAVE CHANGES')}</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form onSubmit={saveEvent} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

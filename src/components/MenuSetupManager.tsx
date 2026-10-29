@@ -613,56 +613,77 @@ export default function MenuSetupManager({ guests, catering, onUpdateCatering, o
         onNext={() => handleNavigateAdjacentDish(1)}
         width="520px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            {!isAdding && editingItem ? (
-              <button
-                type="button"
-                style={styles.deleteBtn}
-                onClick={() => handleDeleteClick(editingItem)}
-                title="Delete menu item"
-              >
-                DELETE
-              </button>
-            ) : (
-              <button
-                type="button"
-                style={styles.cancelBtn}
-                onClick={() => { setIsAdding(false); setEditingItem(null); }}
-              >
-                CANCEL
-              </button>
-            )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {!isAdding && (
-                <button
-                  type="button"
-                  style={styles.cancelBtn}
-                  onClick={() => { setIsAdding(false); setEditingItem(null); }}
-                >
-                  CANCEL
-                </button>
-              )}
-              {isAdding && (
-                <button
-                  type="button"
-                  onClick={(e) => handleSave(e, true)}
-                  style={{
-                    ...styles.submitBtn,
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-primary, #0F172A)',
-                    border: '1px solid var(--color-border, #CBD5E1)',
-                  }}
-                  disabled={isSyncing}
-                >
-                  SAVE & ADD NEW
-                </button>
-              )}
-              <button type="submit" form="menu-inspector-form" style={styles.submitBtn} disabled={isSyncing}>
-                <Check size={14} style={{ marginRight: '4px' }} />
-                <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MENU ITEM' : 'SAVE CHANGES')}</span>
-              </button>
-            </div>
-          </div>
+          (() => {
+            const isMenuFormValid = Boolean((formState.name || '').trim());
+            const isDisabled = !isMenuFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                {!isAdding && editingItem ? (
+                  <button
+                    type="button"
+                    style={styles.deleteBtn}
+                    onClick={() => handleDeleteClick(editingItem)}
+                    title="Delete menu item"
+                  >
+                    DELETE
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    style={styles.cancelBtn}
+                    onClick={() => { setIsAdding(false); setEditingItem(null); }}
+                  >
+                    CANCEL
+                  </button>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {!isAdding && (
+                    <button
+                      type="button"
+                      style={styles.cancelBtn}
+                      onClick={() => { setIsAdding(false); setEditingItem(null); }}
+                    >
+                      CANCEL
+                    </button>
+                  )}
+                  {isAdding && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleSave(e, true)}
+                      style={{
+                        ...styles.submitBtn,
+                        backgroundColor: 'transparent',
+                        color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                        border: `1px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary, #0F172A)'}`,
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={isDisabled}
+                      title={!isMenuFormValid ? 'Enter Dish Name to enable saving' : undefined}
+                    >
+                      SAVE & ADD NEW
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    form="menu-inspector-form"
+                    style={{
+                      ...styles.submitBtn,
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      opacity: isDisabled ? 0.45 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isDisabled}
+                    title={!isMenuFormValid ? 'Enter Dish Name to enable saving' : undefined}
+                  >
+                    <Check size={14} style={{ marginRight: '4px' }} />
+                    <span>{isSyncing ? 'SAVING...' : (isAdding ? 'SAVE MENU ITEM' : 'SAVE CHANGES')}</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form id="menu-inspector-form" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>

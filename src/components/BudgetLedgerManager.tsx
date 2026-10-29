@@ -1812,19 +1812,64 @@ export default function BudgetLedgerManager({
         badgeColor="#0284C7"
         width="460px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            <button type="button" onClick={closeModal} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
-              CANCEL
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button type="button" onClick={(e) => saveBudget(e, true)} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
-                SAVE & ADD ANOTHER
-              </button>
-              <button type="submit" form="budget-category-form" style={{ padding: '0.35rem 0.85rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--color-primary, #0F172A)', color: '#FFFFFF', border: 'none', borderRadius: '2px', cursor: 'pointer' }}>
-                SAVE CATEGORY
-              </button>
-            </div>
-          </div>
+          (() => {
+            const isBudgetFormValid = Boolean(
+              (formState.category || '').trim() &&
+              formState.estimatedCost !== undefined &&
+              formState.estimatedCost !== null &&
+              String(formState.estimatedCost).trim() !== '' &&
+              Number(formState.estimatedCost) > 0
+            );
+            const isDisabled = !isBudgetFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                <button type="button" onClick={closeModal} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
+                  CANCEL
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    disabled={isDisabled}
+                    title={!isBudgetFormValid ? 'Enter Category Name and Planned Budget to enable saving' : undefined}
+                    onClick={(e) => saveBudget(e, true)}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.7rem',
+                      border: `1px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary, #0F172A)'}`,
+                      color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                      borderRadius: '2px',
+                      background: 'transparent',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                  >
+                    SAVE & ADD ANOTHER
+                  </button>
+                  <button
+                    type="submit"
+                    form="budget-category-form"
+                    disabled={isDisabled}
+                    title={!isBudgetFormValid ? 'Enter Category Name and Planned Budget to enable saving' : undefined}
+                    style={{
+                      padding: '0.35rem 0.85rem',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                  >
+                    SAVE CATEGORY
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form id="budget-category-form" onSubmit={(e) => saveBudget(e, false)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1885,19 +1930,66 @@ export default function BudgetLedgerManager({
         badgeColor="#059669"
         width="460px"
         footer={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
-            <button type="button" onClick={closeExpenseModal} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
-              CANCEL
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button type="button" onClick={(e) => saveExpense(e, true)} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
-                SAVE & ADD ANOTHER
-              </button>
-              <button type="submit" form="expense-item-form" style={{ padding: '0.35rem 0.85rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--color-primary, #0F172A)', color: '#FFFFFF', border: 'none', borderRadius: '2px', cursor: 'pointer' }}>
-                RECORD PURCHASE
-              </button>
-            </div>
-          </div>
+          (() => {
+            const isExpenseFormValid = Boolean(
+              (expenseFormState.description || '').trim() &&
+              (expenseFormState.category || selectedCategoryId || allCategories[0] || '').trim() &&
+              expenseFormState.amount !== undefined &&
+              expenseFormState.amount !== null &&
+              String(expenseFormState.amount).trim() !== '' &&
+              Number(expenseFormState.amount) > 0 &&
+              (expenseFormState.paidBy || 'Couple').trim()
+            );
+            const isDisabled = !isExpenseFormValid || Boolean(isSyncing);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.75rem' }}>
+                <button type="button" onClick={closeExpenseModal} style={{ padding: '0.35rem 0.75rem', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.7rem', border: '1px solid var(--color-border, #E2E8F0)', borderRadius: '2px', background: 'transparent', cursor: 'pointer' }}>
+                  CANCEL
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    disabled={isDisabled}
+                    title={!isExpenseFormValid ? 'Enter Description, Category, and Amount to enable saving' : undefined}
+                    onClick={(e) => saveExpense(e, true)}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.7rem',
+                      border: `1px solid ${isDisabled ? 'var(--color-border, #CBD5E1)' : 'var(--color-primary, #0F172A)'}`,
+                      color: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                      borderRadius: '2px',
+                      background: 'transparent',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                  >
+                    SAVE & ADD ANOTHER
+                  </button>
+                  <button
+                    type="submit"
+                    form="expense-item-form"
+                    disabled={isDisabled}
+                    title={!isExpenseFormValid ? 'Enter Description, Category, and Amount to enable saving' : undefined}
+                    style={{
+                      padding: '0.35rem 0.85rem',
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      backgroundColor: isDisabled ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary, #0F172A)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                  >
+                    RECORD PURCHASE
+                  </button>
+                </div>
+              </div>
+            );
+          })()
         }
       >
         <form id="expense-item-form" onSubmit={(e) => saveExpense(e, false)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
