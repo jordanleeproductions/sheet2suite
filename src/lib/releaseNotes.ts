@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.17.3',
+    title: 'Mobile Thank You Tracker Layout & Input Refinements',
+    date: 'Oct 28, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Compact mobile search & filter spacing: removed extra vertical whitespace around the Thank You tracker search bar and category/status dropdowns on mobile screens.',
+      'Clean currency & giver icon alignment: fixed overlapping currency symbols and guest icons inside the Received Gift form drawer on mobile devices.',
+      'Polished mobile drawer input ergonomics: preserved custom leading icon spacing across all mobile slide-over forms while maintaining touch-friendly heights.',
+    ],
+    details: 'Refines the mobile Thank You & Gift Tracker experience by eliminating excess vertical gaps around search and filter controls and ensuring leading icons in the gift logging drawer never overlap text.',
+  },
+  {
     version: 'v1.17.2',
     title: 'Setup Wizard Budget Flexibility & Education Callout',
     date: 'Oct 27, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'enhancement',
     highlights: [

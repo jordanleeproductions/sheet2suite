@@ -362,12 +362,13 @@ export default function SlideOverDrawer({
             font-size: 0.8rem !important;
             font-weight: 700 !important;
           }
-          .slide-over-body input,
+          .slide-over-body input:not([type="checkbox"]):not([type="radio"]),
           .slide-over-body select,
           .slide-over-body textarea {
             min-height: 44px !important;
             font-size: 16px !important; /* Prevents auto-zoom on iOS */
-            padding: 0.6rem 0.75rem !important;
+            padding-top: 0.6rem !important;
+            padding-bottom: 0.6rem !important;
           }
         }
       `}</style>

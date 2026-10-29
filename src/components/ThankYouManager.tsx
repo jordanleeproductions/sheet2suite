@@ -553,7 +553,7 @@ export default function ThankYouManager({
   };
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="thankyou-container">
       {/* Standardized Header Card with Integrated View Switcher */}
       <PageHeaderCard
         title="Thank You & Gift Tracker"
@@ -585,6 +585,9 @@ export default function ThankYouManager({
 
       <style>{`
         @media (max-width: 768px) {
+          .thankyou-container {
+            gap: 1rem !important;
+          }
           .thankyou-add-btn {
             display: none !important;
           }
@@ -596,7 +599,7 @@ export default function ThankYouManager({
           }
           .thankyou-search-wrapper {
             width: 100% !important;
-            flex: 1 1 100% !important;
+            flex: 0 0 auto !important;
           }
           .thankyou-filter-group {
             width: 100% !important;
@@ -622,7 +625,6 @@ export default function ThankYouManager({
 
       {/* Monarch-Style Hero Metric Strip */}
       <PageMetricStrip
-        style={{ marginBottom: '1.25rem' }}
         metrics={subTab === 'gifts' ? [
           {
             id: 'gifts',
@@ -706,6 +708,7 @@ export default function ThankYouManager({
       {/* Search & Filter Section */}
       <div style={styles.filterBar} className="thankyou-filter-bar">
         <PageSearchInput
+          className="thankyou-search-wrapper"
           placeholder={subTab === 'gifts' ? "Search gift description, giver, category, or amount..." : "Search attending guest or party name..."}
           value={searchTerm}
           onChange={setSearchTerm}
@@ -1063,8 +1066,19 @@ export default function ThankYouManager({
             </DrawerField>
 
             <DrawerField label="Gift Giver (From)" required hint="Guest name or family group">
-              <div style={{ position: 'relative' }}>
-                <Users size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #718096)' }} />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Users
+                  size={16}
+                  style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--color-text-muted, #718096)',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                  }}
+                />
                 <input
                   type="text"
                   required
@@ -1073,7 +1087,10 @@ export default function ThankYouManager({
                   onChange={(e) => setFormData({ ...formData, giverName: e.target.value })}
                   style={{
                     width: '100%',
-                    padding: '10px 12px 10px 34px',
+                    paddingTop: '10px',
+                    paddingRight: '12px',
+                    paddingBottom: '10px',
+                    paddingLeft: '38px',
                     borderRadius: '8px',
                     border: '1px solid var(--color-border, #e2e8f0)',
                     backgroundColor: 'var(--color-surface, #ffffff)',
@@ -1113,14 +1130,15 @@ export default function ThankYouManager({
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <span style={{
                     position: 'absolute',
-                    left: '10px',
+                    left: '12px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     color: 'var(--color-text-muted, #718096)',
-                    fontSize: '0.9rem',
+                    fontSize: '0.95rem',
                     fontWeight: 700,
                     pointerEvents: 'none',
                     userSelect: 'none',
+                    zIndex: 1,
                   }}>
                     {currencySymbol}
                   </span>
@@ -1147,7 +1165,10 @@ export default function ThankYouManager({
                     }}
                     style={{
                       width: '100%',
-                      padding: '10px 12px 10px 28px',
+                      paddingTop: '10px',
+                      paddingRight: '12px',
+                      paddingBottom: '10px',
+                      paddingLeft: currencySymbol.length > 1 ? '42px' : '34px',
                       borderRadius: '8px',
                       border: '1px solid var(--color-border, #e2e8f0)',
                       backgroundColor: 'var(--color-surface, #ffffff)',
