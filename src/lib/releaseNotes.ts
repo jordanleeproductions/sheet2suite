@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.18.3',
+    title: 'Account Authentication & Connection Protection',
+    date: 'Oct 29, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Upgraded account connection and sign-in verification safeguards.',
+      'Protected Google account linking against session tampering and cross-browser interference.',
+      'Refined connection reliability and smooth background authorization for connected spreadsheets.',
+    ],
+    details: 'Enhanced sign-in and Google account verification protocols to ensure secure, tamper-proof connection handling when linking your wedding spreadsheets.',
+  },
+  {
     version: 'v1.18.2',
     title: 'Workspace Data Protection & Access Safeguards',
     date: 'Oct 29, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'fix',
     highlights: [

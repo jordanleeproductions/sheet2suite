@@ -26,7 +26,7 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
 | **`[SEC-4]`** | 🟠 **HIGH** | Unauthenticated Refresh Token Harvesting via Cookie Injection | `src/app/api/auth/register-token/route.ts` | ✅ Resolved |
 | **`[SEC-5]`** | 🟠 **HIGH** | Hardcoded Fallback JWT Secret for Vendor Share & Upload Links | `src/lib/share/token.ts` | ✅ Resolved |
 | **`[SEC-6]`** | 🟡 **MEDIUM** | Unauthenticated Workspace & User Email Enumeration | `src/app/api/workspaces/route.ts` | ✅ Resolved |
-| **`[SEC-7]`** | 🟡 **MEDIUM** | Missing CSRF State Nonce in Google OAuth Authorization | `src/app/api/auth/google/route.ts` | 📝 Open |
+| **`[SEC-7]`** | 🟡 **MEDIUM** | Missing CSRF State Nonce in Google OAuth Authorization | `src/app/api/auth/google/route.ts` | ✅ Resolved |
 | **`[SEC-8]`** | 🟢 **LOW** | Local JSON Database Files Not Excluded in `.gitignore` | `.gitignore`, `data/workspaces.json` | ✅ Resolved |
 | **`[SEC-9]`** | 🟢 **LOW** | Client-Side / Stubbed License Verification Auto-Approves Any 5+ Character Order ID | `src/lib/core/activation/licenseValidator.ts` | 📝 Open |
 | **`[SEC-10]`** | 🟢 **LOW** | Outdated Sub-dependencies with Known CVEs (`next`, `postcss`, `sharp`) | `package.json` | 📝 Open |
@@ -73,6 +73,7 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
   - **Summary**: The OAuth `state` parameter generated in `/api/auth/google` only encodes `{ spreadsheetId }` without a cryptographically random CSRF nonce.
   - **Risk**: Susceptible to OAuth Login CSRF where an attacker tricks a victim into linking the attacker's Google account or spreadsheet.
   - **Suggested Fix**: Generate an unguessable random nonce stored in an HTTP-only cookie and verify it in `/api/auth/google/callback`.
+  - **Resolution (v1.18.3)**: Built dedicated OAuth CSRF engine in `src/lib/auth/oauthCsrf.ts` (`generateOAuthStatePayload`, `verifyOAuthStateNonce`). In `/api/auth/google`, generates an unguessable 32-byte cryptographic random nonce, binds it into the OAuth `state` with timestamp expiration, and sets an `HttpOnly`, `SameSite=Lax`, `Secure` session cookie (`s2s_oauth_nonce`). In `/api/auth/google/callback`, validates the incoming state nonce against the session cookie using constant-time comparison (`crypto.timingSafeEqual`) and a 15-minute expiration window, rejecting untrusted requests with HTTP 403 Forbidden and immediately clearing the nonce cookie upon completion.
 
 - **`[SEC-8]` [LOW] Local JSON Database Files Not Excluded in `.gitignore`**:
   - **Summary**: `.gitignore` only ignores `data/firestore/auth_tokens/`. Files like `data/workspaces.json` and `data/licenses.json` contain real user emails and spreadsheet IDs.

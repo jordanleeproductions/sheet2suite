@@ -3,6 +3,8 @@ import { google } from 'googleapis';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth, getGoogleAuthAsync } from '@/lib/sheets/client';
 import { LocalLicensingDb } from '@/lib/db/licensingDb';
 import { LocalFirestore } from '@/lib/db/firestoreDb';
+import { verifyOAuthStateNonce, OAUTH_NONCE_COOKIE } from '@/lib/auth/oauthCsrf';
+import { isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
 
 function getOAuth2Client(redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
@@ -44,35 +46,64 @@ export async function GET(req: NextRequest) {
     const code = url.searchParams.get('code');
     const error = url.searchParams.get('error');
 
-    // Extract state to securely identify caller targetOrigin [SEC-2]
+    // Extract state to securely identify caller targetOrigin [SEC-2] and verify CSRF nonce [SEC-7]
     const stateParam = url.searchParams.get('state');
+    const cookieNonce = req.cookies.get(OAUTH_NONCE_COOKIE)?.value;
+    const csrfCheck = verifyOAuthStateNonce(stateParam, cookieNonce);
+
     let stateSpreadsheetId: string | undefined;
     let stateOrigin: string | undefined;
-    if (stateParam) {
-      try {
-        const parsed = JSON.parse(stateParam);
-        stateSpreadsheetId = parsed.spreadsheetId;
-        if (isValidAppOrigin(parsed.origin)) {
-          stateOrigin = parsed.origin;
-        }
-      } catch (_) {}
+
+    if (csrfCheck.valid && csrfCheck.payload) {
+      stateSpreadsheetId = csrfCheck.payload.spreadsheetId;
+      if (isValidAppOrigin(csrfCheck.payload.origin)) {
+        stateOrigin = csrfCheck.payload.origin;
+      }
+    } else {
+      // Parse fallback state parameters for origin extraction in error cases
+      if (stateParam) {
+        try {
+          const parsed = JSON.parse(stateParam);
+          stateSpreadsheetId = parsed.spreadsheetId;
+          if (isValidAppOrigin(parsed.origin)) {
+            stateOrigin = parsed.origin;
+          }
+        } catch (_) {}
+      }
+
+      // Allow mock or demo mode to bypass real OAuth CSRF when running without Google client secrets
+      const isMock = isMockSpreadsheet(stateSpreadsheetId) || !process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID === 'MOCK_CLIENT_ID';
+      if (!isMock) {
+        console.warn('[OAuth Callback] CSRF state nonce verification failed:', csrfCheck.error);
+        const targetOriginExpr = stateOrigin ? JSON.stringify(stateOrigin) : 'window.location.origin';
+        const errResp = new NextResponse(
+          `<html><body><script>try { window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: '${csrfCheck.error || 'OAuth CSRF verification failed'}' }, ${targetOriginExpr}); } catch(e){} window.close();</script><h3>Authentication failed: ${csrfCheck.error || 'Invalid session'}</h3></body></html>`,
+          { status: 403, headers: { 'Content-Type': 'text/html' } }
+        );
+        errResp.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+        return errResp;
+      }
     }
 
     const targetOriginExpr = stateOrigin ? JSON.stringify(stateOrigin) : 'window.location.origin';
 
     if (error) {
       const safeError = String(error).replace(/[^a-zA-Z0-9_\-\s]/g, '');
-      return new NextResponse(
+      const errResp = new NextResponse(
         `<html><body><script>try { window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: '${safeError}' }, ${targetOriginExpr}); } catch(e){} window.close();</script></body></html>`,
         { headers: { 'Content-Type': 'text/html' } }
       );
+      errResp.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+      return errResp;
     }
 
     if (!code) {
-      return new NextResponse(
+      const errResp = new NextResponse(
         `<html><body><script>try { window.opener?.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: 'No authorization code returned' }, ${targetOriginExpr}); } catch(e){} window.close();</script></body></html>`,
         { headers: { 'Content-Type': 'text/html' } }
       );
+      errResp.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+      return errResp;
     }
 
     const forwardedHost = req.headers.get('x-forwarded-host');
@@ -434,12 +465,17 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Clear single-use OAuth CSRF nonce cookie [SEC-7]
+    response.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+
     return response;
   } catch (err: any) {
     console.error('OAuth Callback Error:', err);
-    return new NextResponse(
+    const errResp = new NextResponse(
       `<html><body><h3>Authentication failed: ${err.message}</h3><script>setTimeout(() => window.close(), 3000);</script></body></html>`,
       { headers: { 'Content-Type': 'text/html' } }
     );
+    errResp.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+    return errResp;
   }
 }

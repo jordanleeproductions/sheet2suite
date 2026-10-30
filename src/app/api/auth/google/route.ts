@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { generateOAuthStatePayload, OAUTH_NONCE_COOKIE, OAUTH_NONCE_MAX_AGE_SECONDS } from '@/lib/auth/oauthCsrf';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
@@ -47,9 +48,10 @@ export async function GET(req: NextRequest) {
       callerOrigin = `${protocol}://${host}`;
     }
 
-    const statePayload: Record<string, string> = {};
-    if (spreadsheetIdParam) statePayload.spreadsheetId = spreadsheetIdParam;
-    if (callerOrigin) statePayload.origin = callerOrigin;
+    const { state, nonce } = generateOAuthStatePayload({
+      spreadsheetId: spreadsheetIdParam,
+      origin: callerOrigin,
+    });
 
     const oauth2Client = getOAuth2Client(redirectUri);
 
@@ -57,14 +59,24 @@ export async function GET(req: NextRequest) {
       access_type: 'offline',
       scope: SCOPES,
       prompt: effectivePrompt,
-      state: Object.keys(statePayload).length > 0 ? JSON.stringify(statePayload) : undefined,
+      state,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       authUrl,
       scopes: SCOPES,
     });
+
+    response.cookies.set(OAUTH_NONCE_COOKIE, nonce, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: OAUTH_NONCE_MAX_AGE_SECONDS,
+      path: '/',
+    });
+
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate OAuth URL' },
