@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type StyleTheme = 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+export type StyleTheme = 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
 export type ColorTheme = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -30,7 +30,7 @@ export function Sheet2ThemeProvider({ children }: { children: React.ReactNode })
     const savedColor = localStorage.getItem('s2v_primary_color');
     const savedFontScale = localStorage.getItem('s2v_font_scale');
 
-    if (savedStyle === 'editorial' || savedStyle === 'neo-brutalism' || savedStyle === 'botanical-romance' || savedStyle === 'midnight-tuxedo') setStyleTheme(savedStyle);
+    if (savedStyle === 'botanical-romance' || savedStyle === 'midnight-tuxedo') setStyleTheme(savedStyle); else setStyleTheme('editorial');
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     if (savedColor) setPrimaryColor(savedColor);
     if (savedFontScale) {
@@ -56,33 +56,19 @@ export function Sheet2ThemeProvider({ children }: { children: React.ReactNode })
   // Effect 2: Color mode + primary accent — only fires when light/dark or color changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.removeProperty('--color-highlight');
+    document.documentElement.style.removeProperty('--color-gold-dark');
+    document.documentElement.style.removeProperty('--color-on-primary');
+
     if (primaryColor) {
-      if (styleTheme === 'neo-brutalism') {
-        document.documentElement.style.setProperty('--color-highlight', primaryColor);
-        document.documentElement.style.setProperty('--color-gold-dark', primaryColor);
-        if (theme === 'dark') {
-          document.documentElement.style.setProperty('--color-primary', primaryColor);
-          document.documentElement.style.setProperty('--color-on-primary', '#000000');
-        } else {
-          document.documentElement.style.removeProperty('--color-primary');
-          document.documentElement.style.setProperty('--color-on-primary', '#ffffff');
-        }
-      } else {
-        document.documentElement.style.removeProperty('--color-highlight');
-        document.documentElement.style.removeProperty('--color-gold-dark');
-        document.documentElement.style.removeProperty('--color-on-primary');
-        document.documentElement.style.setProperty('--color-primary', primaryColor);
-      }
+      document.documentElement.style.setProperty('--color-primary', primaryColor);
       localStorage.setItem('s2v_primary_color', primaryColor);
     } else {
       document.documentElement.style.removeProperty('--color-primary');
-      document.documentElement.style.removeProperty('--color-highlight');
-      document.documentElement.style.removeProperty('--color-gold-dark');
-      document.documentElement.style.removeProperty('--color-on-primary');
       localStorage.removeItem('s2v_primary_color');
     }
     localStorage.setItem('s2v_theme', theme);
-  }, [theme, primaryColor, styleTheme]);
+  }, [theme, primaryColor]);
 
   // Effect 3: Font size scale — isolated so it NEVER touches theme attributes
   useEffect(() => {

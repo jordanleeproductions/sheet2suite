@@ -128,7 +128,6 @@ export default function VowMobileNav({
     return () => window.removeEventListener('s2v:tools-order-updated', handleOrderChange);
   }, []);
 
-  const isBrutalist = styleTheme === 'neo-brutalism';
   const isBotanical = styleTheme === 'botanical-romance';
 
   // Currency formatter for live budget previews
@@ -631,25 +630,15 @@ export default function VowMobileNav({
                   style={{
                     width: '36px',
                     height: '36px',
-                    borderRadius: isBrutalist ? '4px' : '10px',
-                    backgroundColor: isBrutalist
-                      ? 'var(--color-primary, #0F172A)'
-                      : isBotanical
-                      ? '#2D6A4F'
-                      : 'var(--color-primary, #0F172A)',
+                    borderRadius: '10px',
+                    backgroundColor: isBotanical ? '#2D6A4F' : 'var(--color-primary, #0F172A)',
                     color: '#FFFFFF',
-                    border: isBrutalist
-                      ? '2px solid var(--color-primary, #0F172A)'
-                      : isBotanical
-                      ? '1px solid rgba(255, 255, 255, 0.2)'
-                      : 'none',
+                    border: isBotanical ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    boxShadow: isBrutalist
-                      ? '2px 2px 0px var(--color-primary, #0F172A)'
-                      : '0 2px 6px rgba(0, 0, 0, 0.12)',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12)',
                   }}
                 >
                   <FileSpreadsheet size={19} strokeWidth={2.2} />
@@ -762,10 +751,10 @@ export default function VowMobileNav({
                     <div
                       style={{
                         backgroundColor: 'var(--color-surface, #FFFFFF)',
-                        borderRadius: isBrutalist ? '6px' : '14px',
-                        border: isBrutalist ? '2px solid var(--color-primary, #0F172A)' : '1px solid var(--color-border, #E2E8F0)',
+                        borderRadius: '14px',
+                        border: '1px solid var(--color-border, #E2E8F0)',
                         overflow: 'hidden',
-                        boxShadow: isBrutalist ? '3px 3px 0px var(--color-primary, #0F172A)' : '0 1px 3px rgba(0, 0, 0, 0.02)',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
                       }}
                     >
                       {visibleItems.map((tab, idx) => {

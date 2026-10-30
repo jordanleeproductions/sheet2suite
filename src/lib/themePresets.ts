@@ -4,7 +4,7 @@ export interface ColorPreset {
   desc: string;
 }
 
-export type StyleTheme = 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+export type StyleTheme = 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
 export type ColorMode = 'light' | 'dark';
 
 export const COLOR_PRESETS: Record<StyleTheme, Record<ColorMode, ColorPreset[]>> = {
@@ -20,20 +20,6 @@ export const COLOR_PRESETS: Record<StyleTheme, Record<ColorMode, ColorPreset[]>>
       { name: 'Sage Leaf', hex: '#10B981', desc: 'Reconciled Luminous Sage' },
       { name: 'Ceremonial Gold', hex: '#EAB308', desc: 'Warm Milestone Gold' },
       { name: 'Rose Petal', hex: '#FB7185', desc: 'Soft Vintage Blush' },
-    ],
-  },
-  'neo-brutalism': {
-    light: [
-      { name: 'Electric Green', hex: '#00ED64', desc: 'High-Octane Acid Green' },
-      { name: 'Vivid Violet', hex: '#7c3aed', desc: 'Punchy Neo Violet' },
-      { name: 'Hot Coral', hex: '#f43f5e', desc: 'High-Contrast Crimson' },
-      { name: 'Electric Cyan', hex: '#06b6d4', desc: 'Cyber Teal Pop' },
-    ],
-    dark: [
-      { name: 'Neon Lime', hex: '#00ED64', desc: 'Vibrant Cyber Lime' },
-      { name: 'Cyber Yellow', hex: '#facc15', desc: 'High-Visibility Yellow' },
-      { name: 'Neon Pink', hex: '#f43f5e', desc: 'Hot Neon Magenta' },
-      { name: 'Electric Purple', hex: '#a855f7', desc: 'Luminous Violet Neon' },
     ],
   },
   'botanical-romance': {

@@ -47,7 +47,7 @@ interface AdvancedSettingsModalProps {
   driveFolder: string;
   enabledModules: ModuleConfig;
   isMockMode: boolean;
-  styleTheme: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+  styleTheme: 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
   theme: 'light' | 'dark';
   primaryColor?: string;
   timeFormat: '12h' | '24h';
@@ -55,7 +55,7 @@ interface AdvancedSettingsModalProps {
   showTopNav?: boolean;
   onUpdateWeddingDetails: (name: string, date: string, location?: string, budget?: number) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
-  onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => void;
+  onUpdateStyleTheme: (style: 'editorial' | 'botanical-romance' | 'midnight-tuxedo') => void;
   onUpdateTheme: (theme: 'light' | 'dark') => void;
   onUpdatePrimaryColor?: (color: string) => void;
   onUpdateTimeFormat: (format: '12h' | '24h') => void;
@@ -374,25 +374,6 @@ export default function AdvancedSettingsModal({
                     >
                       <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>EDITORIAL MINIMALIST</div>
                       <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Refined serif headers & warm neutral tones</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => onUpdateStyleTheme('neo-brutalism')}
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.75rem',
-                        padding: '0.75rem',
-                        border: styleTheme === 'neo-brutalism' ? '2px solid var(--color-primary)' : '1px solid var(--color-muted)',
-                        backgroundColor: styleTheme === 'neo-brutalism' ? 'var(--color-bg)' : 'transparent',
-                        color: 'var(--color-text)',
-                        borderRadius: 'var(--border-radius-sm)',
-                        cursor: 'pointer',
-                        textAlign: 'left'
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, marginBottom: '0.2rem' }}>MUTED NEO-BRUTALISM</div>
-                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', fontWeight: 400 }}>Bold borders, vivid badges & sharp contrast</span>
                     </button>
 
                     <button

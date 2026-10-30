@@ -37,7 +37,7 @@ export interface VowSidebarProps {
   onOpenCommandPalette?: () => void;
   onExportCSV: () => void;
   theme?: 'light' | 'dark';
-  styleTheme?: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+  styleTheme?: 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
   planningToolsOrder?: string[];
 }
 
@@ -92,26 +92,25 @@ export default function VowSidebar({
   }, []);
 
   const isBotanical = styleTheme === 'botanical-romance';
-  const isBrutalist = styleTheme === 'neo-brutalism';
   const isDarkTheme = styleTheme === 'editorial' || theme === 'dark';
   const isDarkSidebar = isBotanical || isDarkTheme;
 
   // Botanical & Dark Theme Palette
   const sidebarBg = isBotanical ? '#1B4332' : (isDarkTheme ? '#090D16' : 'var(--color-surface, #FFFFFF)');
-  const sidebarBorder = isBotanical ? '#25583E' : (isDarkTheme ? '#1E293B' : (isBrutalist ? '#121824' : 'var(--color-border, #E2E8F0)'));
-  const buttonBorder = isBotanical ? 'rgba(255, 255, 255, 0.16)' : (isDarkTheme ? '#334155' : (isBrutalist ? '#121824' : 'var(--color-border, #E2E8F0)'));
-  const activeItemBg = isBotanical ? '#2D6A4F' : (isDarkTheme ? '#1E293B' : (isBrutalist ? '#121824' : 'var(--color-primary, #0F172A)'));
+  const sidebarBorder = isBotanical ? '#25583E' : (isDarkTheme ? '#1E293B' : 'var(--color-border, #E2E8F0)');
+  const buttonBorder = isBotanical ? 'rgba(255, 255, 255, 0.16)' : (isDarkTheme ? '#334155' : 'var(--color-border, #E2E8F0)');
+  const activeItemBg = isBotanical ? '#2D6A4F' : (isDarkTheme ? '#1E293B' : 'var(--color-primary, #0F172A)');
   const activeItemBorder = isBotanical
     ? '1px solid rgba(255, 255, 255, 0.22)'
-    : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.12)' : (isBrutalist ? '2px solid #121824' : '1px solid transparent'));
+    : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid transparent');
   const textPrimary = isDarkSidebar ? '#FFFFFF' : 'var(--color-primary, #0F172A)';
-  const textMuted = isBotanical ? '#A3C9A8' : (isDarkTheme ? '#94A3B8' : (isBrutalist ? '#52525B' : 'var(--color-muted, #64748B)'));
-  const textSecondary = isBotanical ? '#D8E8DC' : (isDarkTheme ? '#CBD5E1' : (isBrutalist ? '#121824' : 'var(--color-text, #0F172A)'));
-  const logoBg = isBotanical ? '#2D6A4F' : (isDarkTheme ? '#1E293B' : (isBrutalist ? '#121824' : 'var(--color-primary, #0F172A)'));
-  const logoColor = isDarkSidebar ? '#FFFFFF' : (isBrutalist ? 'var(--color-highlight, #00ED64)' : 'var(--color-on-primary, #FFFFFF)');
-  const logoBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.2)' : (isDarkTheme ? '1px solid #334155' : (isBrutalist ? '2px solid #121824' : 'none'));
+  const textMuted = isBotanical ? '#A3C9A8' : (isDarkTheme ? '#94A3B8' : 'var(--color-muted, #64748B)');
+  const textSecondary = isBotanical ? '#D8E8DC' : (isDarkTheme ? '#CBD5E1' : 'var(--color-text, #0F172A)');
+  const logoBg = isBotanical ? '#2D6A4F' : (isDarkTheme ? '#1E293B' : 'var(--color-primary, #0F172A)');
+  const logoColor = isDarkSidebar ? '#FFFFFF' : 'var(--color-on-primary, #FFFFFF)';
+  const logoBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.2)' : (isDarkTheme ? '1px solid #334155' : 'none');
   const searchBg = isBotanical ? 'rgba(255, 255, 255, 0.08)' : (isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : 'var(--color-background-subtle, #F1F5F9)');
-  const searchBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.14)' : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.08)' : (isBrutalist ? '2px solid #121824' : '1px solid var(--color-border, #E2E8F0)'));
+  const searchBorder = isBotanical ? '1px solid rgba(255, 255, 255, 0.14)' : (isDarkTheme ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid var(--color-border, #E2E8F0)');
 
   const orderedNavItems = useMemo(() => {
     const homeItem = NAV_ITEMS.find((item) => item.id === 'home');
@@ -145,7 +144,7 @@ export default function VowSidebar({
         bottom: 0,
         width: isSidebarCollapsed ? '60px' : '210px',
         backgroundColor: sidebarBg,
-        borderRight: isBrutalist ? '2px solid var(--color-border, #121824)' : `1px solid ${sidebarBorder}`,
+        borderRight: `1px solid ${sidebarBorder}`,
         padding: isSidebarCollapsed ? '0.85rem 0.4rem' : '0.85rem 0.6rem',
         display: 'flex',
         flexDirection: 'column',
@@ -295,8 +294,7 @@ export default function VowSidebar({
                   color: isActive
                     ? '#FFFFFF'
                     : textSecondary,
-                  border: isActive ? (isBrutalist ? '2px solid #121824' : (isDarkSidebar ? activeItemBorder : '1px solid transparent')) : '1px solid transparent',
-                  boxShadow: (isActive && isBrutalist) ? '2px 2px 0px 0px #121824' : 'none',
+                  border: isActive && isDarkSidebar ? activeItemBorder : '1px solid transparent',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-technical-mono, var(--font-mono))',
                   fontSize: '0.72rem',

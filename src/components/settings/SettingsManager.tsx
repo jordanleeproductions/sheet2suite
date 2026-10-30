@@ -48,7 +48,7 @@ export interface SettingsManagerProps {
   driveFolder: string;
   enabledModules: ModuleConfig;
   isMockMode: boolean;
-  styleTheme: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+  styleTheme: 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
   theme: 'light' | 'dark';
   primaryColor?: string;
   timeFormat: '12h' | '24h';
@@ -58,7 +58,7 @@ export interface SettingsManagerProps {
   isMobile?: boolean;
   onUpdateWeddingDetails: (name: string, date: string, location?: string, budget?: number) => Promise<void>;
   onToggleModule: (moduleKey: keyof ModuleConfig) => void;
-  onUpdateStyleTheme: (style: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => void;
+  onUpdateStyleTheme: (style: 'editorial' | 'botanical-romance' | 'midnight-tuxedo') => void;
   onUpdateTheme: (theme: 'light' | 'dark') => void;
   onUpdatePrimaryColor?: (color: string) => void;
   onUpdateTimeFormat: (format: '12h' | '24h') => void;
@@ -150,8 +150,7 @@ export default function SettingsManager({
   onUpdateDashboardLayout,
 }: SettingsManagerProps) {
   const { fontSizeScale, setFontSizeScale } = useSheet2Theme();
-  const isBrutalist = styleTheme === 'neo-brutalism';
-
+  
   // Responsive mobile viewport detection
   const [isViewportMobile, setIsViewportMobile] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -642,7 +641,6 @@ export default function SettingsManager({
   const activeLinkCount = (coPlannersList.length || 0) + (spreadsheetId ? 3 : 1);
   const styleLabels: Record<string, string> = {
     editorial: 'Editorial',
-    'neo-brutalism': 'Modern',
     'botanical-romance': 'Botanical',
     'midnight-tuxedo': 'Formal',
   };
@@ -890,15 +888,7 @@ export default function SettingsManager({
                       sampleFont: 'serif',
                       sampleText: 'Aa',
                     },
-                    {
-                      id: 'neo-brutalism',
-                      name: 'Modern',
-                      desc: 'Geist mono typography with sharp dark borders.',
-                      swatchBg: '#FFFFFF',
-                      swatchAccent: '#00ED64',
-                      sampleFont: 'monospace',
-                      sampleText: '01',
-                    },
+                    
                     {
                       id: 'botanical-romance',
                       name: 'Botanical',
@@ -941,7 +931,7 @@ export default function SettingsManager({
                               height: '38px',
                               borderRadius: '8px',
                               backgroundColor: item.swatchBg,
-                              border: `1.5px solid ${item.id === 'neo-brutalism' ? '#0F172A' : '#E2E8F0'}`,
+                              border: '1.5px solid #E2E8F0',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -1335,9 +1325,9 @@ export default function SettingsManager({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '0.65rem 0.85rem',
-                      borderRadius: isBrutalist ? '4px' : '10px',
+                      borderRadius: '10px',
                       backgroundColor: 'var(--color-surface, #FFFFFF)',
-                      border: isBrutalist ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border, #E2E8F0)',
+                      border: '1px solid var(--color-border, #E2E8F0)',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
                     }}
                   >
@@ -1346,7 +1336,7 @@ export default function SettingsManager({
                         style={{
                           width: '32px',
                           height: '32px',
-                          borderRadius: isBrutalist ? '2px' : '50%',
+                          borderRadius: '50%',
                           backgroundColor: 'rgba(15, 23, 42, 0.08)',
                           color: 'var(--color-primary, #0F172A)',
                           display: 'flex',
@@ -1385,9 +1375,9 @@ export default function SettingsManager({
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '0.65rem 0.85rem',
-                          borderRadius: isBrutalist ? '4px' : '10px',
+                          borderRadius: '10px',
                           backgroundColor: 'var(--color-surface, #FFFFFF)',
-                          border: isBrutalist ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border, #E2E8F0)',
+                          border: '1px solid var(--color-border, #E2E8F0)',
                           boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
                         }}
                       >
@@ -1396,7 +1386,7 @@ export default function SettingsManager({
                             style={{
                               width: '32px',
                               height: '32px',
-                              borderRadius: isBrutalist ? '2px' : '50%',
+                              borderRadius: '50%',
                               backgroundColor: 'rgba(16, 185, 129, 0.12)',
                               color: '#059669',
                               display: 'flex',
@@ -1443,8 +1433,8 @@ export default function SettingsManager({
                     <div
                       style={{
                         padding: '0.85rem',
-                        borderRadius: isBrutalist ? '4px' : '10px',
-                        border: isBrutalist ? '1.5px dashed var(--color-primary)' : '1.5px dashed var(--color-border, #CBD5E1)',
+                        borderRadius: '10px',
+                        border: '1.5px dashed var(--color-border, #CBD5E1)',
                         backgroundColor: 'var(--color-bg-subtle, #F8FAFC)',
                       }}
                     >
@@ -1502,7 +1492,7 @@ export default function SettingsManager({
                   <div
                     style={{
                       padding: '0.85rem 1rem',
-                      borderRadius: isBrutalist ? '4px' : '10px',
+                      borderRadius: '10px',
                       backgroundColor: 'rgba(245, 158, 11, 0.06)',
                       border: '1px solid rgba(245, 158, 11, 0.3)',
                       display: 'flex',
@@ -1531,7 +1521,7 @@ export default function SettingsManager({
                       onClick={() => setIsProModalOpen(true)}
                       style={{
                         padding: '0.35rem 0.75rem',
-                        borderRadius: isBrutalist ? '2px' : '6px',
+                        borderRadius: '6px',
                         backgroundColor: '#D97706',
                         color: '#FFFFFF',
                         border: 'none',

@@ -36,7 +36,6 @@ export default function AppUpdateToast({ styleTheme, isMobile: isMobileProp }: A
   }, []);
 
   const isMobile = isMobileProp ?? viewportMobile;
-  const isBrutalist = styleTheme === 'neo-brutalism';
 
   if (!isUpdateAvailable) {
     return null;
@@ -63,13 +62,9 @@ export default function AppUpdateToast({ styleTheme, isMobile: isMobileProp }: A
         backgroundColor: 'var(--color-surface, #FFFFFF)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: isBrutalist
-          ? '2px solid var(--color-primary, #0F172A)'
-          : '1px solid var(--color-border, #E2E8F0)',
-        borderRadius: isBrutalist ? '6px' : '18px',
-        boxShadow: isBrutalist
-          ? '4px 4px 0px var(--color-primary, #0F172A)'
-          : '0 20px 40px -8px rgba(15, 23, 42, 0.22), 0 6px 16px -2px rgba(15, 23, 42, 0.08)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '18px',
+        boxShadow: '0 20px 40px -8px rgba(15, 23, 42, 0.22), 0 6px 16px -2px rgba(15, 23, 42, 0.08)',
         padding: '1rem',
         boxSizing: 'border-box',
         animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -82,7 +77,7 @@ export default function AppUpdateToast({ styleTheme, isMobile: isMobileProp }: A
             style={{
               width: '38px',
               height: '38px',
-              borderRadius: isBrutalist ? '4px' : '12px',
+              borderRadius: '12px',
               backgroundColor: 'rgba(79, 70, 229, 0.10)',
               color: '#4F46E5',
               display: 'flex',
@@ -190,9 +185,9 @@ export default function AppUpdateToast({ styleTheme, isMobile: isMobileProp }: A
             padding: '0.55rem 0.85rem',
             backgroundColor: 'var(--color-primary, #0F172A)',
             color: 'var(--color-on-primary, #FFFFFF)',
-            border: isBrutalist ? '2px solid var(--color-primary, #0F172A)' : 'none',
-            borderRadius: isBrutalist ? '4px' : '10px',
-            boxShadow: isBrutalist ? '2px 2px 0px var(--color-primary, #0F172A)' : '0 2px 6px rgba(0,0,0,0.10)',
+            border: 'none',
+            borderRadius: '10px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.10)',
             fontFamily: 'var(--font-interface-sans, system-ui)',
             fontSize: '0.8rem',
             fontWeight: 700,
@@ -217,7 +212,7 @@ export default function AppUpdateToast({ styleTheme, isMobile: isMobileProp }: A
             backgroundColor: 'transparent',
             color: 'var(--color-text, #0F172A)',
             border: '1px solid var(--color-border, #E2E8F0)',
-            borderRadius: isBrutalist ? '4px' : '10px',
+            borderRadius: '10px',
             fontFamily: 'var(--font-interface-sans, system-ui)',
             fontSize: '0.8rem',
             fontWeight: 600,

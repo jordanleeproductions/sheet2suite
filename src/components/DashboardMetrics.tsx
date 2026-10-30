@@ -211,7 +211,7 @@ export default function DashboardMetrics({
       };
     }
 
-    // Default styles for other themes (neo-brutalism, midnight-tuxedo, etc.)
+    // Default styles for other themes (midnight-tuxedo, etc.)
     return {
       bg: 'var(--color-bg-pane, #F8FAFC)',
       border: '1px solid var(--color-border, #E2E8F0)',

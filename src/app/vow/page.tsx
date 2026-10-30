@@ -487,11 +487,11 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     setTheme: setContextTheme,
     setPrimaryColor: setContextPrimaryColor,
   } = useSheet2Theme();
-  const [styleTheme, setStyleTheme] = useState<'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
+  const [styleTheme, setStyleTheme] = useState<'editorial' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [primaryColor, setPrimaryColor] = useState<string>('');
 
-  const handleStyleThemeChange = (newStyle: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo') => {
+  const handleStyleThemeChange = (newStyle: 'editorial' | 'botanical-romance' | 'midnight-tuxedo') => {
     setStyleTheme(newStyle);
     setContextStyleTheme(newStyle);
     const presets = getColorPresets(newStyle, theme);
@@ -1042,7 +1042,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     if (savedDate) setWeddingDate(savedDate);
     if (savedLocation) setLocationDetails(savedLocation);
     if (savedBudget && !isNaN(Number(savedBudget))) setBudgetThreshold(Number(savedBudget));
-    const activeStyle = (savedStyleTheme === 'editorial' || savedStyleTheme === 'neo-brutalism' || savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') ? savedStyleTheme : 'editorial';
+    const activeStyle = (savedStyleTheme === 'botanical-romance' || savedStyleTheme === 'midnight-tuxedo') ? savedStyleTheme : 'editorial';
     const activeTheme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light';
     if (savedStyleTheme) setStyleTheme(activeStyle);
     if (savedTheme) setTheme(activeTheme);
@@ -1117,20 +1117,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     document.documentElement.style.removeProperty('--color-on-primary');
 
     if (primaryColor) {
-      if (styleTheme === 'neo-brutalism') {
-        // Customize accent colors in Neo-Brutalism without changing structural black/slate
-        document.documentElement.style.setProperty('--color-highlight', primaryColor);
-        document.documentElement.style.setProperty('--color-gold-dark', primaryColor);
-        if (theme === 'dark') {
-          document.documentElement.style.setProperty('--color-primary', primaryColor);
-          document.documentElement.style.setProperty('--color-on-primary', '#000000');
-        } else {
-          document.documentElement.style.removeProperty('--color-primary');
-          document.documentElement.style.setProperty('--color-on-primary', '#ffffff');
-        }
-      } else {
-        document.documentElement.style.setProperty('--color-primary', primaryColor);
-      }
+      document.documentElement.style.setProperty('--color-primary', primaryColor);
       localStorage.setItem('s2v_primary_color', primaryColor);
     } else {
       localStorage.removeItem('s2v_primary_color');

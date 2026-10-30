@@ -104,7 +104,6 @@ function ToastItem({
     return () => clearTimeout(timer);
   }, [id, duration, isHovered, handleDismiss]);
 
-  const isBrutalist = styleTheme === 'neo-brutalism';
 
   // Configuration for category badges aligned with Monarch styling
   let icon = <CheckCircle2 size={17} strokeWidth={2.2} />;
@@ -143,13 +142,9 @@ function ToastItem({
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         color: 'var(--color-text, #0F172A)',
-        border: isBrutalist
-          ? '2px solid var(--color-primary, #0F172A)'
-          : '1px solid var(--color-border, #E2E8F0)',
-        borderRadius: isBrutalist ? '6px' : '14px',
-        boxShadow: isBrutalist
-          ? '4px 4px 0px var(--color-primary, #0F172A)'
-          : '0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.06)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+        borderRadius: '14px',
+        boxShadow: '0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.06)',
         boxSizing: 'border-box',
         overflow: 'hidden',
         animation: isExiting
@@ -194,7 +189,7 @@ function ToastItem({
           style={{
             width: '32px',
             height: '32px',
-            borderRadius: isBrutalist ? '4px' : '9px',
+            borderRadius: '9px',
             backgroundColor: iconBg,
             color: iconColor,
             display: 'flex',

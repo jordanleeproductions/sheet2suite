@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
       message: `Successfully granted co-planning access to ${cleanEmail} and sent Google notification email.`,
       permissionId,
       primaryUser: {
-        email: ws?.userEmail || userEmail || '',
+        email: ws?.userEmail || targetUserEmail || '',
         role: 'owner',
       },
       secondaryUsers: existingCoPlanners.map((email) => ({

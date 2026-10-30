@@ -64,7 +64,7 @@ export interface VowSetupConfig {
     vendors: boolean;
     music: boolean;
   };
-  styleTheme: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+  styleTheme: 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
   colorMode: 'light' | 'dark';
   showTopNav?: boolean;
   navLayout?: 'sidebar' | 'top';
@@ -194,7 +194,7 @@ export default function VowSetupWizard({
   });
 
   // Setup Form State: Workspace Styling & Navigation Experience
-  const [styleTheme, setStyleTheme] = useState<'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
+  const [styleTheme, setStyleTheme] = useState<'editorial' | 'botanical-romance' | 'midnight-tuxedo'>('editorial');
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
   const [showTopNav, setShowTopNav] = useState<boolean>(false);
 
@@ -1043,7 +1043,6 @@ export default function VowSetupWizard({
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
                   {[
                     { id: 'editorial' as const, name: 'Editorial Elegance', tag: 'Classic Serif' },
-                    { id: 'neo-brutalism' as const, name: 'Neo-Brutalism', tag: 'Bold & Modern' },
                     { id: 'botanical-romance' as const, name: 'Botanical Romance', tag: 'Sage & Green' },
                     { id: 'midnight-tuxedo' as const, name: 'Midnight Tuxedo', tag: 'Obsidian & Gold' },
                   ].map(theme => (

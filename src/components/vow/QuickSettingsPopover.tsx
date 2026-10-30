@@ -21,7 +21,7 @@ export interface QuickSettingsPopoverProps {
   anchorRef: React.RefObject<HTMLDivElement | null>;
   theme: 'light' | 'dark';
   onUpdateTheme: (theme: 'light' | 'dark') => void;
-  styleTheme: 'editorial' | 'neo-brutalism' | 'botanical-romance' | 'midnight-tuxedo';
+  styleTheme: 'editorial' | 'botanical-romance' | 'midnight-tuxedo';
   onNavigateSettings: (section?: string) => void;
 }
 
@@ -111,7 +111,6 @@ export default function QuickSettingsPopover({
 
   const styleNames: Record<string, string> = {
     editorial: 'Editorial',
-    'neo-brutalism': 'Neo-Brutal',
     'botanical-romance': 'Botanical',
     'midnight-tuxedo': 'Midnight',
   };

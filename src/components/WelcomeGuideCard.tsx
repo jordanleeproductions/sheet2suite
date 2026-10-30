@@ -167,12 +167,12 @@ export default function WelcomeGuideCard({
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--color-muted, #64748B)', lineHeight: 1.35 }}>
-              Editorial serif, Muted Neo-Brutalism, Botanical, or Midnight Tuxedo.
+              Editorial serif, Botanical, or Midnight Tuxedo.
             </p>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-            {(['editorial', 'neo-brutalism'] as StyleTheme[]).map((st) => (
+            {([ 'editorial', 'botanical-romance', 'midnight-tuxedo' ] as StyleTheme[]).map((st) => (
               <button
                 key={st}
                 type="button"
@@ -190,7 +190,7 @@ export default function WelcomeGuideCard({
                   textTransform: 'uppercase',
                 }}
               >
-                {st === 'editorial' ? 'Editorial' : 'Brutalism'}
+                {st === 'editorial' ? 'Editorial' : st === 'botanical-romance' ? 'Botanical' : 'Formal'}
               </button>
             ))}
           </div>

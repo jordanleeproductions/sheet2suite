@@ -29,7 +29,6 @@ export default function ProUpgradeModal({
 
   if (!isOpen) return null;
 
-  const isBrutalist = styleTheme === 'neo-brutalism';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,11 +66,9 @@ export default function ProUpgradeModal({
           width: '100%',
           maxWidth: '520px',
           backgroundColor: 'var(--color-surface, #FFFFFF)',
-          borderRadius: isBrutalist ? '6px' : '20px',
-          border: isBrutalist ? '2px solid var(--color-primary, #0F172A)' : '1px solid var(--color-border, #E2E8F0)',
-          boxShadow: isBrutalist
-            ? '6px 6px 0px var(--color-primary, #0F172A)'
-            : '0 24px 48px -12px rgba(15, 23, 42, 0.25), 0 8px 16px -4px rgba(15, 23, 42, 0.08)',
+          borderRadius: '20px',
+          border: '1px solid var(--color-border, #E2E8F0)',
+          boxShadow: '0 24px 48px -12px rgba(15, 23, 42, 0.25), 0 8px 16px -4px rgba(15, 23, 42, 0.08)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -89,9 +86,7 @@ export default function ProUpgradeModal({
         {/* Header Ribbon / Banner */}
         <div
           style={{
-            background: isBrutalist
-              ? 'var(--color-primary, #0F172A)'
-              : 'linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0369A1 100%)',
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0369A1 100%)',
             color: '#FFFFFF',
             padding: '1.25rem 1.5rem',
             position: 'relative',
@@ -181,7 +176,7 @@ export default function ProUpgradeModal({
           <div
             style={{
               padding: '1rem',
-              borderRadius: isBrutalist ? '4px' : '12px',
+              borderRadius: '12px',
               backgroundColor: 'var(--color-bg-subtle, #F8FAFC)',
               border: '1px solid var(--color-border, #E2E8F0)',
               marginTop: '0.25rem',
@@ -212,7 +207,7 @@ export default function ProUpgradeModal({
                     style={{
                       flex: 1,
                       padding: '0.55rem 0.75rem',
-                      borderRadius: isBrutalist ? '4px' : '8px',
+                      borderRadius: '8px',
                       border: '1px solid var(--color-border, #CBD5E1)',
                       fontSize: '0.82rem',
                       fontFamily: 'var(--font-interface-sans, system-ui)',
@@ -230,7 +225,7 @@ export default function ProUpgradeModal({
                       backgroundColor: 'var(--color-primary, #0F172A)',
                       color: 'var(--color-on-primary, #FFFFFF)',
                       border: 'none',
-                      borderRadius: isBrutalist ? '4px' : '8px',
+                      borderRadius: '8px',
                       fontWeight: 600,
                       fontSize: '0.8rem',
                       cursor: 'pointer',
