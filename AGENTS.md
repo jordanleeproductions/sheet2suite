@@ -7,7 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Workspace Guidelines & Rules for Sheet2Vow
 
 ## Documentation Synchronization Rule (Mandatory)
-- **Feature Epic Planning via Spec Kit**: All new feature epics must be planned via `specs/<feature-name>/` (`spec.md`, `plan.md`, `tasks.md`) using standardized templates before implementation.
+- **Feature Epic Planning via Spec Kit**: All new feature epics must be scaffolded via `npm run spec:new <feature-name>`, comply with `specs/CONSTITUTION.md`, pass validation via `npm run spec:validate`, and complete the triad (`spec.md`, `plan.md`, `tasks.md`) before implementation.
 - **Permanent Architecture & Schema Synchronization**: Permanent architectural, API, or infrastructure changes MUST be immediately synchronized into the modular platform specifications (`docs/platform/architecture.md`, `docs/platform/activation_pipeline.md`, `docs/platform/licensing_and_security.md`, `docs/platform/design_system.md`) or domain specifications (`docs/vow/modules/<module>.md`). Spreadsheet column and tab schema modifications MUST be synchronized with `docs/vow/master_spreadsheet_schema.md`.
 - **Never Leave Stale Docs**: Whenever new modules, tabs, endpoints, or data models are introduced or refactored, update the corresponding markdown documentation as part of the core implementation workflow before completing the task.
 

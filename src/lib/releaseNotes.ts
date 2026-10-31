@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.20.1',
+    title: 'Spec Kit Feature Pipeline Automation & Architectural Governance',
+    date: 'Oct 30, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Architectural Constitution: Formalized non-negotiable core invariants for data sovereignty, spreadsheet formula preservation, and mobile touch discipline.',
+      'Automated feature scaffolding: Integrated rapid spec generation and registry automation for upcoming platform and suite capabilities.',
+      'Quality validation engine: Added automated specification auditing to guarantee complete acceptance criteria, non-goals, and technical blueprints before development.',
+    ],
+    details: 'Establishes full Spec Kit pipeline automation, lifecycle registry tracking, and architectural constitution governance across the engineering workflow.',
+  },
+  {
     version: 'v1.20.0',
     title: 'Modular Documentation & Hybrid Spec Architecture',
     date: 'Oct 30, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [
