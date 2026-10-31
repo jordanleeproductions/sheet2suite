@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.21.1',
+    title: 'Support & Help Center Design System Alignment',
+    date: 'Oct 30, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Platform visual harmony: Aligned the Help Center layout, typography, and card hierarchy with the parent Sheet2Suite design system.',
+      'Dynamic theme responsiveness: Connected all guide cards, search inputs, and category pills directly to the platform theme engine for seamless light and dark mode adaptivity.',
+      'Enhanced navigation: Introduced a subpage navigation bar matching Privacy and Terms with one-click return to the main platform hub.',
+    ],
+    details: 'Refines the Support & Help Center visual experience, unifying it with the Sheet2Suite design system, CSS custom property tokens, and multi-theme architecture.',
+  },
+  {
     version: 'v1.21.0',
     title: 'Monarch Editorial Help Center & Knowledge Base',
     date: 'Oct 30, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [
