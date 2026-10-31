@@ -37,7 +37,7 @@ Every specification and technical plan must comply with the mandatory rules codi
 
 | Feature ID | Feature Name | Product | Target Release | DRI / Lead | Status | Specification Links |
 |---|---|---|---|---|---|---|
-| *None active* | *Run `npm run spec:new <feature-name>` to scaffold an epic* | — | — | — | — | — |
+| **[FEAT-001]** | Support Help Center | Sheet2Suite Platform | v1.21.0 | Jordan Lee | Shipped | [spec](support-help-center/spec.md) · [plan](support-help-center/plan.md) · [tasks](support-help-center/tasks.md) |
 
 ---
 

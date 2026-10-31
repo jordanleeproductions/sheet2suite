@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Key, ArrowRight, ShieldCheck, X } from 'lucide-react';
 
 interface StepOrderVerificationProps {
@@ -80,9 +81,14 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
           />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.4rem', fontSize: '0.725rem', color: 'var(--color-muted, #64748b)' }}>
             <span>Find your Order ID (10-digit number) on your Etsy receipt or confirmation email.</span>
-            <a href="https://www.etsy.com/your/purchases" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}>
-              View Purchases ↗
-            </a>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <Link href="/support#how-to-find-etsy-order-number" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}>
+                Help Guide ↗
+              </Link>
+              <a href="https://www.etsy.com/your/purchases" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}>
+                View Purchases ↗
+              </a>
+            </div>
           </div>
         </div>
 

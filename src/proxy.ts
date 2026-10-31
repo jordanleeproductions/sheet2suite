@@ -23,6 +23,11 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Alias rewrite: /help -> /support
+  if (url.pathname === '/help') {
+    return NextResponse.rewrite(new URL('/support', req.url));
+  }
+
   // Extract primary subdomain from hostname
   const hostWithoutPort = hostname.split(':')[0].toLowerCase();
   

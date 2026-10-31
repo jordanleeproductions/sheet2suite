@@ -28,6 +28,7 @@ import {
   Gift,
   Wrench,
   Sliders,
+  HelpCircle,
   ChevronRight
 } from 'lucide-react';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
@@ -158,6 +159,10 @@ export default function Sheet2SuiteParentHub() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Link href="/support" style={{ ...styles.activateLinkBtn, backgroundColor: 'transparent' }}>
+            <HelpCircle size={16} />
+            <span>HELP & GUIDES</span>
+          </Link>
           <Link href="/activate" style={styles.activateLinkBtn}>
             <Key size={16} />
             <span>ACTIVATION PORTAL</span>
@@ -404,6 +409,8 @@ export default function Sheet2SuiteParentHub() {
       <footer style={styles.footer}>
         <p style={{ margin: 0 }}>© 2026 Sheet2Suite Platform • Built for Google Sheets Purists</p>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/support" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Help Center & Guides</Link>
+          <span>•</span>
           <Link href="/activate" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Activation Portal</Link>
           <span>•</span>
           <Link href="/vow" style={{ color: 'var(--color-muted)', textDecoration: 'none' }}>Sheet2Vow Application</Link>

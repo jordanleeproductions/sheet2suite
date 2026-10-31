@@ -11,10 +11,25 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.21.0',
+    title: 'Monarch Editorial Help Center & Knowledge Base',
+    date: 'Oct 30, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Official Support & Help Center: Launched a dedicated knowledge base at /support with instant search, interactive guide accordions, and categorized tutorials.',
+      'Comprehensive onboarding guides: Step-by-step instructions for finding order receipts, connecting Google Drive, understanding drive.file privacy, and sharing workspaces.',
+      'Co-planning & sharing clarity: Clear guides explaining the 2-user household collaboration model and coordinator Pro tier options.',
+      'In-page diagnostic support: Integrated direct support contact form with automatic non-sensitive diagnostic telemetry for rapid assistance.',
+    ],
+    details: 'Introduces a comprehensive, searchable Help Center and knowledge base educating users on workspace activation, co-planning, two-way sync, and data sovereignty.',
+  },
+  {
     version: 'v1.20.1',
     title: 'Spec Kit Feature Pipeline Automation & Architectural Governance',
     date: 'Oct 30, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'enhancement',
     highlights: [

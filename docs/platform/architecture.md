@@ -61,6 +61,7 @@ src/
 ├── app/                              # Next.js App Router Shells & Subdomain Entrypoints
 │   ├── (suite)/                      # Main Platform Showcase (sheet2suite.com)
 │   ├── activate/                     # Generic Suite Activation Engine (activate.sheet2suite.com)
+│   ├── support/                      # Monarch Editorial Help Center & Knowledge Base (/support, /help)
 │   ├── vow/                          # Sheet2Vow Digital Wedding Canvas (vow.sheet2suite.com)
 │   ├── [future-app]/                 # e.g., build/ (build.sheet2suite.com), finance/, home/
 │   ├── api/                          # Shared Serverless API Endpoints

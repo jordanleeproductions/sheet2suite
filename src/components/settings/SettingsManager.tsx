@@ -32,6 +32,7 @@ import {
   Plus,
   UserPlus,
   LifeBuoy,
+  BookOpen,
   Crown,
 } from 'lucide-react';
 import ProUpgradeModal from '@/components/vow/ProUpgradeModal';
@@ -1834,6 +1835,25 @@ export default function SettingsManager({
             )}
 
             <div style={styles.fieldStack}>
+              {/* Online Knowledge Base & Help Center */}
+              <div>
+                <label style={styles.fieldLabel}>Knowledge base & user guides</label>
+                <p style={{ fontSize: '0.72rem', color: 'var(--color-muted, #64748B)', margin: '0.15rem 0 0.5rem 0' }}>
+                  Browse step-by-step guides for order activation, partner sharing, two-way spreadsheet sync, and troubleshooting.
+                </p>
+                <a
+                  href="/support"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ ...styles.secondaryActionButton, textDecoration: 'none', display: 'inline-flex' }}
+                >
+                  <BookOpen size={14} style={{ color: '#059669' }} />
+                  <span>Open Help Center & Guides ↗</span>
+                </a>
+              </div>
+
+              <div style={styles.dividerLine} />
+
               {/* Restart Setup Guide */}
               {onRestartSetup && (
                 <div>
