@@ -1,80 +1,61 @@
-# Execution Tasks: Sheet2vault Mvp
+# Execution Tasks: Sheet2Vault MVP
 
 **Feature ID:** `[FEAT-002]`  
 **Target Specification:** [`specs/sheet2vault-mvp/spec.md`](spec.md)  
 **Technical Plan:** [`specs/sheet2vault-mvp/plan.md`](plan.md)  
-**Status:** `[Pending | In Progress | Completed]`  
+**Status:** `Approved`  
 
 ---
 
-## Phase 1: Domain Models & Schema Definitions
+## Phase 1: Foundation & Master Template Engineering
 
-- [ ] **Task 1.1: TypeScript Domain Types**
-  - Update or define interfaces in `src/types/wedding.ts` or `src/types/licensing.ts`.
-  - Add strict typing for all new payload models and form data structures.
-- [ ] **Task 1.2: Google Sheet Row Mapper**
-  - Update `src/lib/sheets/mapper.ts` (`fromRow` and `toRow` methods).
-  - Verify `CellGuard` preserves formula strings and sanitizes user input values.
-- [ ] **Task 1.3: Update Authoritative Schema Reference**
-  - Record any column diffs in `docs/vow/master_spreadsheet_schema.md`.
+- [ ] **Task 1.1:** Create `templates/sheet2vault_master_template.xlsx` with formatted tabs: `VAULT_ITEMS`, `VAULT_SETTINGS`, and `VAULT_CLAIMS`.
+- [ ] **Task 1.2:** Inject `CellGuard`-safe formulas in column O of `VAULT_ITEMS` for automated readiness calculation (`=IF(AND(LEN(G2)>0,LEN(L2)>0,LEN(N2)>0),1,IF(LEN(L2)>0,0.6,0.2))`).
+- [ ] **Task 1.3:** Configure sub-limit defaults in `VAULT_SETTINGS` (\$1,500 jewelry, \$5,000 electronics, \$2,500 power tools).
+- [ ] **Task 1.4:** Register `vault` subdomain and route rewrites in `src/proxy.ts` and `next.config.ts`.
 
 ---
 
-## Phase 2: Backend Handlers & API Routes
+## Phase 2: Domain Types & Pluggable Activation Wizard
 
-- [ ] **Task 2.1: Server API Route Handler**
-  - Implement or update route handlers under `src/app/api/.../route.ts`.
-  - Enforce caller identity and authorization check (`verifyWorkspaceAccess`).
-- [ ] **Task 2.2: Session & Auth Error Handling**
-  - Ensure 401 token expirations trigger silent refresh via `/api/auth/refresh`.
-  - Return standardized API response format (`apiResponse.success()`, `apiResponse.error()`).
+- [ ] **Task 2.1:** Implement TypeScript interfaces, enums, and CellGuard column mapping definitions in `src/products/vault/lib/vaultSchema.ts`.
+- [ ] **Task 2.2:** Build `<VaultSetupWizard />` in `src/products/vault/setup/VaultSetupWizard.tsx` (Step 2 plugin capturing residence nickname, room selector checklist, and policy caps).
+- [ ] **Task 2.3:** Register `<VaultSetupWizard />` in the generic activation engine (`src/components/activate/StepSetupForm.tsx`).
+- [ ] **Task 2.4:** Implement `src/products/vault/lib/sublimitCalculator.ts` for real-time policy limit gap analysis.
 
 ---
 
-## Phase 3: UI Components & Client Ergonomics
+## Phase 3: Mobile PWA "Room Sweep" Ingestion
 
-- [ ] **Task 3.1: Desktop Component Layout**
-  - Implement or update desktop manager components under `src/components/`.
-  - Standardize headers with `<PageHeaderCard />` and metric strips with `<PageMetricStrip />`.
-- [ ] **Task 3.2: Universal Slide-Over Drawer Inspector**
-  - Implement edit/creation forms using `<SlideOverDrawer />` and `<MonarchForm />`.
-  - Ensure 3-button bulk-loading workflow (`CANCEL`, `SAVE & ADD NEW`, `SAVE`).
-- [ ] **Task 3.3: Mobile Ergonomics & Touch Optimization**
-  - Enforce $\ge 44\text{px}$–$48\text{px}$ touch targets on buttons, toggles, and edit actions.
-  - Enforce $16\text{px}$ font size and $\ge 48\text{px}$ input height on mobile form fields.
-  - Dock drawers above mobile bottom nav with `safe-area-inset-bottom`.
-- [ ] **Task 3.4: Multi-Theme Adaptability**
-  - Verify visual presentation across Editorial Minimalist, Neo-Brutalism, and Botanical Romance.
+- [ ] **Task 3.1:** Create `<RoomSweepDrawer />` in `src/products/vault/components/RoomSweepDrawer.tsx` optimized for 30-second mobile progressive capture.
+- [ ] **Task 3.2:** Wire device camera & file input for progressive photo snapping (Item Photo $\rightarrow$ Serial Plate $\rightarrow$ Receipt).
+- [ ] **Task 3.3:** Implement `/api/vault/media/upload` route handler to save photos directly to user's `Sheet2Vault Media` Drive folder using `drive.file` scope.
+- [ ] **Task 3.4:** Ensure all mobile inputs enforce $16\text{px}$ font (iOS auto-zoom prevention) and $\ge 44\text{px}$–$48\text{px}$ touch targets per Article III of `CONSTITUTION.md`.
 
 ---
 
-## Phase 4: State Synchronization & Ambient Feedback
+## Phase 4: Desktop Station & Monarch Hero Analytics
 
-- [ ] **Task 4.1: Client State & Optimistic Rendering**
-  - Update React state (`useState`, `useCallback`) for immediate optimistic response.
-- [ ] **Task 4.2: Ambient Sync Decoupling**
-  - Route routine spreadsheet save states to `<AmbientSyncIndicator />`.
-  - Reserve floating popups (`ToastNotification.tsx`) strictly for milestone exports or errors.
-
----
-
-## Phase 5: Verification & Quality Assurance
-
-- [ ] **Task 5.1: Build & Type-Check Verification**
-  - Run `npm run build` to verify zero Next.js App Router or TypeScript compilation errors.
-- [ ] **Task 5.2: Responsive Viewport Testing**
-  - Verify layout integrity across Desktop ($\ge 1200\text{px}$), Tablet ($768\text{px}$–$1023\text{px}$), and Mobile ($\le 480\text{px}$).
-- [ ] **Task 5.3: End-to-End Data Persistence Test**
-  - Verify create, read, update, and delete actions against Google Sheets sync engine.
+- [ ] **Task 4.1:** Build `src/app/vault/page.tsx` responsive canvas with dual mobile/desktop view modes.
+- [ ] **Task 4.2:** Implement `<VaultHeroStrip />` featuring Monarch tabular typography (`tnum`, `zero`), showing Total Replacement Cost, Claim Readiness %, and Sub-Limit gap warnings.
+- [ ] **Task 4.3:** Build `<VaultItemLedger />` supporting search, room filtering, category grouping, and "Missing Evidence" filter chips.
+- [ ] **Task 4.4:** Integrate `<AmbientSyncIndicator />` in the masthead for quiet Google Sheets auto-saving per Article VII.
 
 ---
 
-## Phase 6: Documentation Synchronization & Deployment
+## Phase 5: Dossier Engine & Adjuster Portal
 
-- [ ] **Task 6.1: Documentation Synchronization**
-  - Update corresponding modular specification in `docs/platform/` or `docs/vow/modules/`.
-- [ ] **Task 6.2: Semantic Version Bump & Release Notes**
-  - Run `npm run bump:minor` (or `bump:patch` for fixes).
-  - Add user-facing, non-technical release notes entry in `src/lib/releaseNotes.ts`.
-- [ ] **Task 6.3: Production Deployment**
-  - Push changes to `develop`, merge to `main`, and push to `origin main`.
+- [ ] **Task 5.1:** Build `<ClaimDossierModal />` allowing incident configuration (burglary, fire, water) and item selection.
+- [ ] **Task 5.2:** Implement `/api/vault/export/pdf` route generating a downloadable, insurance-ready PDF with itemized replacement costs and embedded photo plates.
+- [ ] **Task 5.3:** Implement `/api/vault/export/police` route outputting high-contrast stolen goods ledger with serial numbers for law enforcement.
+- [ ] **Task 5.4:** Implement tokenized adjuster portal at `src/app/vault/claim/[token]/page.tsx` protected by HMAC-SHA256 signatures.
+
+---
+
+## Phase 6: Verification, Documentation & Production Release
+
+- [ ] **Task 6.1:** Run `npm run spec:validate` to confirm all Spec Kit criteria and triad integrity.
+- [ ] **Task 6.2:** Execute full TypeScript build verification (`npm run build`) and linting (`npm run lint`).
+- [ ] **Task 6.3:** Verify manual flows: Room Sweep on mobile viewport, sub-limit alert triggers, and PDF claim dossier rendering.
+- [ ] **Task 6.4:** Update `docs/platform/architecture.md` with Sheet2Vault entry and bump minor version (`npm run bump:minor`).
+- [ ] **Task 6.5:** Commit and merge to `main` following Production Deployment Rule in `AGENTS.md`.

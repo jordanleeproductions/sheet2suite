@@ -38,6 +38,7 @@ Every specification and technical plan must comply with the mandatory rules codi
 | Feature ID | Feature Name | Product | Target Release | DRI / Lead | Status | Specification Links |
 |---|---|---|---|---|---|---|
 | **[FEAT-001]** | Support Help Center | Sheet2Suite Platform | v1.21.0 | Jordan Lee | Shipped | [spec](support-help-center/spec.md) · [plan](support-help-center/plan.md) · [tasks](support-help-center/tasks.md) |
+| **[FEAT-002]** | Sheet2Vault MVP | Sheet2Vault | Next Minor | Jordan Lee | Approved | [spec](sheet2vault-mvp/spec.md) · [plan](sheet2vault-mvp/plan.md) · [tasks](sheet2vault-mvp/tasks.md) |
 
 ---
 
