@@ -11,10 +11,25 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.20.0',
+    title: 'Modular Documentation & Hybrid Spec Architecture',
+    date: 'Oct 30, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Modular platform architecture: Reorganized platform specifications into focused core guides for activation, licensing, routing, and design systems.',
+      'Domain module specifications: Established dedicated, domain-specific specifications for seating floorplans, guest registry, financials, timelines, vendors, and settings.',
+      'Spec kit feature pipeline: Introduced standardized feature planning blueprints to ensure consistent quality, design harmony, and rigor across all upcoming suite capabilities.',
+      'Preserved schema integrity: Centralized the authoritative 15-tab spreadsheet contracts and archived completed historical feature milestones.',
+    ],
+    details: 'Establishes a modular hybrid documentation architecture and standardized feature engineering framework across the Sheet2Suite platform and Sheet2Vow application.',
+  },
+  {
     version: 'v1.19.0',
     title: 'Curated Wedding Styles: Editorial, Botanical & Formal Streamlining',
     date: 'Oct 29, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'enhancement',
     highlights: [
