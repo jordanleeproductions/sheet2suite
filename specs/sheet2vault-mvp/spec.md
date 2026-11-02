@@ -90,6 +90,6 @@
 
 ## 6. Explicit Non-Goals (Scope Guardrails)
 
-- **Non-Goal 1: Home Maintenance Tracking:** No maintenance task logs, HVAC filter reminders, contractor directories, or paint swatch catalogs. Those belong in a future dedicated sibling product (`Sheet2Home`).
+- **Non-Goal 1: Home Maintenance Tracking:** No maintenance task logs, HVAC filter reminders, contractor directories, or paint swatch catalogs. Those belong in a future dedicated sibling product (future dedicated product).
 - **Non-Goal 2: Automated Scraping of Resale Markets:** No live dynamic pricing scrapers (eBay, StockX, Chrono24) in MVP; valuations rely on purchase price, user replacement estimates, or receipt values.
 - **Non-Goal 3: Proprietary Cloud Media Hosting:** No photos or documents stored in proprietary databases; 100% of media resides in the user's personal Google Drive.

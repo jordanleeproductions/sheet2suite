@@ -28,8 +28,7 @@ The Sheet2Suite Activation Engine (`activate.sheet2suite.com` / `src/app/activat
 │ Step 2: Pluggable Product Setup (<ProductSetupPluginRenderer />)       │
 │ - Dynamically mounts product onboarding wizard (<ProductSetupPlugin>) │
 │ - 💍 Sheet2Vow: <VowSetupWizard /> (Couple names, wedding date, etc.)  │
-│ - 🏗️ Sheet2Build: <BuildSetupWizard /> (Project title, milestones)     │
-│ - 💰 Sheet2Finance: <FinanceSetupWizard /> (Fiscal year, accounts)     │
+│ - 🛡️ Sheet2Vault: <VaultSetupWizard /> (Valuables, claim dossiers)       │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
@@ -49,7 +48,7 @@ The Sheet2Suite Activation Engine (`activate.sheet2suite.com` / `src/app/activat
 
 - **Input Parameters:** Order identifier (`orderId`), customer email (`email`), and target product key (`productCode`).
 - **Etsy & Marketplace Integration:**
-  - Automatically parses `orderId`, `order`, or `license` query parameters directly from Etsy or Lemon Squeezy download links.
+  - Automatically parses `orderId`, `order`, or `license` query parameters directly from Etsy download links.
   - Surfaces a visual `⚡ AUTO-FILLED` badge when credentials are pre-populated.
   - Provides inline helper text and diagrams assisting customers in finding 10-digit numeric Etsy order receipt numbers.
 - **Google Account Mismatch Reassurance:** Explicitly clarifies that the customer's Google account email does not need to match their purchase receipt email, eliminating activation hesitation.

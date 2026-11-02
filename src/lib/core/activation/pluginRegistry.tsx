@@ -2,6 +2,7 @@
 
 import React from 'react';
 import VowSetupWizard from '@/products/vow/setup/VowSetupWizard';
+import VaultSetupWizard from '@/products/vault/setup/VaultSetupWizard';
 import { ProductSetupPluginProps } from './types';
 
 /**
@@ -16,8 +17,12 @@ export function ProductSetupPluginRenderer(props: ProductSetupPluginProps) {
     case 'VOW':
       return <VowSetupWizard {...props} />;
 
+    case 'SHEET2VAULT':
+    case 'VAULT':
+      return <VaultSetupWizard {...props} />;
+
     default:
-      // Fallback for upcoming suite apps (Sheet2Build, Sheet2Finance, etc.)
+      // Fallback for upcoming suite apps (Sheet2Vault, etc.)
       return (
         <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg-subtle)', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
           <h3 style={{ margin: '0 0 0.5rem 0', fontFamily: 'var(--font-mono)' }}>{props.productName || code} Setup</h3>

@@ -12,7 +12,7 @@ Sheet2Suite utilizes Cloud Firestore (`src/lib/db/firestoreDb.ts` and `src/lib/d
 ```typescript
 export interface LicenseRecord {
   licenseKey: string;             // Unique license key / order receipt
-  orderId: string;                // Etsy or Lemon Squeezy order ID
+  orderId: string;                // Etsy order ID
   purchaserEmail: string;         // Primary customer purchase email
   sku: string;                    // Purchased package SKU (e.g., 'VOW_PRO', 'BUNDLE_V1')
   status: 'active' | 'revoked' | 'refunded';

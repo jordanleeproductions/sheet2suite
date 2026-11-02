@@ -84,12 +84,12 @@ graph TD
 
 ## 3. Sheet2Suite Unified Shared Activation Strategy
 
-To support future Sheet2 products (Sheet2Stay, Sheet2Finances, Sheet2Events) without duplicating registration logic, the activation architecture will be centralized under **Sheet2Suite Shared Activation**:
+To support future Sheet2 products (Sheet2Vault) without duplicating registration logic, the activation architecture will be centralized under **Sheet2Suite Shared Activation**:
 
 - **Universal Activation Portal:** `https://activate.sheet2suite.com` (or `/activate` in shared engine).
-- **Multi-SKU Order Lookup (`/api/verify-order`):** Validates Etsy / Lemon Squeezy order IDs and returns entitled products:
+- **Multi-SKU Order Lookup (`/api/verify-order`):** Validates Etsy order IDs and returns entitled products:
   - Etsy Order for Sheet2Vow → Entitles *Sheet2Vow Wedding Planner*.
-  - Etsy Order for Sheet2Suite Bundle → Entitles *Sheet2Vow*, *Sheet2Finances*, *Sheet2Events*.
+  - Etsy Order for Sheet2Suite Bundle → Entitles *Sheet2Vow*, *Sheet2Vault*.
 - **Product Selector Hub:** Displays entitled apps with 1-click launch buttons.
 
 ---

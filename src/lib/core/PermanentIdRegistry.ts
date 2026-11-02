@@ -10,7 +10,7 @@ export interface RegisteredWorkspace {
   title: string;
   driveFolderPath?: string;
   webViewLink?: string;
-  productName: 'Sheet2Vow' | 'Sheet2Home' | 'Sheet2Finance';
+  productName: 'Sheet2Vow' | 'Sheet2Vault';
   orderId?: string;
   orderVerified?: boolean;
   registeredAt: string;

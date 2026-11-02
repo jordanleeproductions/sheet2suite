@@ -1,9 +1,9 @@
 /**
  * LicenseValidator - Core license entitlement validator for Sheet2 Suite applications.
- * Validates Etsy Order IDs & Lemon Squeezy licenses against product entitlement rules.
+ * Validates Etsy Order IDs & license codes against product entitlement rules.
  */
 
-export type ProductCode = 'SHEET2VOW' | 'SHEET2FINANCE' | 'SHEET2HOME' | 'SHEET2CLOSET' | 'SHEET2INVENTORY';
+export type ProductCode = 'SHEET2VOW' | 'SHEET2FINANCE' | 'SHEET2HOME' | 'SHEET2CLOSET' | 'SHEET2INVENTORY' | 'SHEET2VAULT';
 
 export interface LicenseValidationRequest {
   email: string;
@@ -83,7 +83,51 @@ export class LicenseValidator {
       };
     }
 
-    // Step 2: If new Order ID, auto-register license document into Cloud Firestore
+    // Step 2: Handle Sheet2Vault Developer Preview Segregation
+    if (req.productCode === 'SHEET2VAULT') {
+      const isDevVaultKey = cleanOrderId.startsWith('VAULT-DEV-') || cleanOrderId.startsWith('VAULT-TEST-') || cleanOrderId === 'JORDAN-ADMIN-VAULT';
+      const isAuthorizedDevEmail = cleanEmail === 'jordanleeproductions@gmail.com' || cleanEmail.endsWith('@sheet2suite.com');
+
+      if (isDevVaultKey || isAuthorizedDevEmail) {
+        const entitledProducts: ProductCode[] = ['SHEET2VAULT'];
+        const devLicense: LicenseDocument = {
+          id: cleanOrderId,
+          licenseKey: cleanOrderId,
+          orderId: cleanOrderId,
+          purchaserEmail: cleanEmail,
+          sku: 'DEV-SHEET2VAULT-PRO',
+          status: 'active',
+          licenseTier: 'pro',
+          entitledProducts,
+          maxWorkspaces: 10,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        await LocalLicensingDb.saveLicenseAsync(devLicense);
+
+        return {
+          valid: true,
+          productCode: 'SHEET2VAULT',
+          customerEmail: cleanEmail,
+          licenseTier: 'pro',
+          entitledProducts,
+          activatedAt: devLicense.createdAt
+        };
+      }
+
+      return {
+        valid: false,
+        productCode: 'SHEET2VAULT',
+        customerEmail: cleanEmail,
+        licenseTier: 'standard',
+        entitledProducts: [],
+        activatedAt: '',
+        errorMessage: 'Sheet2Vault is currently in private developer preview. Early access is limited to authorized developer test keys.'
+      };
+    }
+
+    // Step 3: If new Order ID, auto-register license document into Cloud Firestore
     const isPro = cleanOrderId.includes('PRO');
     const entitledProducts: ProductCode[] = ['SHEET2VOW'];
 

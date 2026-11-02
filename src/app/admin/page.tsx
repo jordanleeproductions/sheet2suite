@@ -565,7 +565,7 @@ export default function AdminDatabasePage() {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: '#090D16',
+        backgroundColor: 'var(--color-bg)',
         backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(30, 41, 59, 0.5) 0%, rgba(9, 13, 22, 1) 75%)',
         color: '#F8FAFC',
         display: 'flex',
@@ -574,8 +574,8 @@ export default function AdminDatabasePage() {
         fontFamily: 'var(--font-interface-sans, system-ui, -apple-system, sans-serif)',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <RefreshCw size={28} style={{ color: '#818CF8', animation: 'spin 1s linear infinite' }} />
-          <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'var(--font-technical-mono, monospace)' }}>
+          <RefreshCw size={28} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} />
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
             Verifying administrative access...
           </span>
         </div>
@@ -587,24 +587,23 @@ export default function AdminDatabasePage() {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: '#090D16',
-        backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(9, 13, 22, 1) 75%)',
-        color: '#F8FAFC',
+        backgroundColor: 'var(--color-bg)',
+        color: 'var(--color-text)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1.5rem',
         boxSizing: 'border-box',
-        fontFamily: 'var(--font-interface-sans, system-ui, -apple-system, sans-serif)',
+        fontFamily: 'var(--font-sans)',
       }}>
         <div style={{
           maxWidth: '460px',
           width: '100%',
-          backgroundColor: '#111827',
-          border: '1px solid rgba(99, 102, 241, 0.3)',
-          borderRadius: '16px',
-          padding: '2.25rem 2rem',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15)',
+          backgroundColor: 'var(--color-surface, #ffffff)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--border-radius-lg, 12px)',
+          padding: '2.5rem 2rem',
+          boxShadow: 'var(--box-shadow-subtle, 0 10px 25px -5px rgba(0, 0, 0, 0.06))',
           boxSizing: 'border-box',
           textAlign: 'center',
         }}>
@@ -612,37 +611,36 @@ export default function AdminDatabasePage() {
           <div style={{
             width: '56px',
             height: '56px',
-            borderRadius: '16px',
-            backgroundColor: 'rgba(99, 102, 241, 0.15)',
-            border: '1px solid rgba(99, 102, 241, 0.4)',
-            color: '#818CF8',
+            borderRadius: '14px',
+            backgroundColor: 'var(--color-bg-subtle)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.25rem auto',
-            boxShadow: '0 0 20px rgba(99, 102, 241, 0.25)',
           }}>
             <Lock size={26} />
           </div>
 
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#A5B4FC', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '4px 10px', borderRadius: '20px', backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', color: 'var(--color-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', fontWeight: 800, letterSpacing: '0.06em', marginBottom: '0.85rem' }}>
             RESTRICTED ADMIN ZONE
           </div>
 
           <h1 style={{
-            fontSize: '1.35rem',
-            fontWeight: 700,
+            fontSize: '1.5rem',
+            fontWeight: 900,
             margin: '0 0 0.5rem 0',
-            color: '#FFFFFF',
-            fontFamily: 'var(--font-editorial-serif, Georgia, serif)',
-            letterSpacing: '-0.02em',
+            color: 'var(--color-primary)',
+            fontFamily: 'var(--font-sans)',
+            letterSpacing: '-0.03em',
           }}>
             Sheet2Suite Admin Inspector
           </h1>
 
           <p style={{
-            fontSize: '0.8125rem',
-            color: '#94A3B8',
+            fontSize: '0.85rem',
+            color: 'var(--color-muted)',
             lineHeight: 1.5,
             margin: '0 0 1.5rem 0',
           }}>
@@ -652,11 +650,11 @@ export default function AdminDatabasePage() {
           {authError && (
             <div style={{
               padding: '0.75rem 1rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              color: '#FCA5A5',
-              borderRadius: '8px',
-              fontSize: '0.8rem',
+              backgroundColor: 'var(--color-red-muted, #FEF2F2)',
+              border: '1px solid rgba(220, 38, 38, 0.35)',
+              color: 'var(--color-red, #DC2626)',
+              borderRadius: 'var(--border-radius-sm, 6px)',
+              fontSize: '0.8125rem',
               marginBottom: '1.25rem',
               display: 'flex',
               alignItems: 'center',
@@ -675,7 +673,7 @@ export default function AdminDatabasePage() {
                 left: '12px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#64748B',
+                color: 'var(--color-muted)',
                 pointerEvents: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -691,15 +689,15 @@ export default function AdminDatabasePage() {
                 autoFocus
                 style={{
                   width: '100%',
-                  padding: '11px 40px 11px 38px',
-                  borderRadius: '10px',
-                  border: '1px solid #1E293B',
-                  backgroundColor: '#090D16',
-                  color: '#FFFFFF',
+                  padding: '12px 40px 12px 38px',
+                  borderRadius: 'var(--border-radius-sm, 6px)',
+                  border: '1.5px solid var(--color-border)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text)',
                   fontSize: '0.875rem',
                   outline: 'none',
                   boxSizing: 'border-box',
-                  fontFamily: 'var(--font-technical-mono, monospace)',
+                  fontFamily: 'var(--font-mono)',
                   transition: 'border-color 0.15s ease',
                 }}
               />
@@ -714,7 +712,7 @@ export default function AdminDatabasePage() {
                   transform: 'translateY(-50%)',
                   background: 'none',
                   border: 'none',
-                  color: '#64748B',
+                  color: 'var(--color-muted)',
                   cursor: 'pointer',
                   padding: '4px',
                   display: 'flex',
@@ -731,19 +729,21 @@ export default function AdminDatabasePage() {
               disabled={isAuthenticating}
               style={{
                 width: '100%',
-                padding: '0.75rem 1rem',
-                backgroundColor: '#6366F1',
-                color: '#FFFFFF',
+                padding: '0.85rem 1rem',
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-on-primary, #ffffff)',
                 border: 'none',
-                borderRadius: '10px',
-                fontSize: '0.875rem',
-                fontWeight: 600,
+                borderRadius: 'var(--border-radius-sm, 6px)',
+                fontSize: '0.85rem',
+                fontWeight: 800,
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.04em',
                 cursor: isAuthenticating ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                boxShadow: 'var(--box-shadow-subtle)',
                 transition: 'opacity 0.15s ease',
                 opacity: isAuthenticating ? 0.7 : 1,
               }}
@@ -751,34 +751,35 @@ export default function AdminDatabasePage() {
               {isAuthenticating ? (
                 <>
                   <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                  <span>Verifying Key...</span>
+                  <span>VERIFYING KEY...</span>
                 </>
               ) : (
                 <>
                   <Lock size={15} />
-                  <span>Unlock Admin Console</span>
+                  <span>UNLOCK ADMIN CONSOLE</span>
                 </>
               )}
             </button>
           </form>
 
-          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
             <Link
-              href="/vow"
+              href="/"
               style={{
-                color: '#94A3B8',
+                color: 'var(--color-muted)',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.35rem',
+                fontWeight: 600,
                 transition: 'color 0.15s ease',
               }}
             >
               <ArrowLeft size={14} />
-              <span>Back to App</span>
+              <span>Back to Hub</span>
             </Link>
 
-            <span style={{ color: '#475569', fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.6875rem' }}>
+            <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.6875rem' }}>
               SEC-1 ZERO-TRUST
             </span>
           </div>
@@ -790,11 +791,10 @@ export default function AdminDatabasePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#090D16',
-      backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(30, 41, 59, 0.5) 0%, rgba(9, 13, 22, 1) 75%)',
-      color: '#F8FAFC',
-      fontFamily: 'var(--font-interface-sans, system-ui, -apple-system, sans-serif)',
-      padding: '1.25rem 1rem 4rem 1rem',
+      backgroundColor: 'var(--color-bg)',
+      color: 'var(--color-text)',
+      fontFamily: 'var(--font-sans)',
+      padding: '1.5rem 1.5rem 4rem 1.5rem',
       boxSizing: 'border-box',
     }}>
       <style>{`
@@ -854,8 +854,52 @@ export default function AdminDatabasePage() {
         }
       `}</style>
 
-      <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
+        {/* Subpage Top Navigation Bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1.75rem',
+          paddingBottom: '1rem',
+          borderBottom: '1px solid var(--color-border)',
+        }}>
+          <Link
+            href="/"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: 'var(--color-muted)',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              transition: 'color 0.15s ease',
+            }}
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Sheet2Suite Hub</span>
+          </Link>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            padding: '0.3rem 0.75rem',
+            borderRadius: '20px',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-primary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            letterSpacing: '0.04em',
+          }}>
+            <ShieldCheck size={14} style={{ color: 'var(--color-primary)' }} />
+            <span>MONARCH ADMIN CONSOLE</span>
+          </div>
+        </div>
+
         {/* Monarch Top Masthead / Header Bar */}
         <div className="admin-header-row" style={{
           display: 'flex',
@@ -863,7 +907,7 @@ export default function AdminDatabasePage() {
           justifyContent: 'space-between',
           marginBottom: '1.75rem',
           paddingBottom: '1.25rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: '1px solid var(--color-border)',
           gap: '1rem',
           flexWrap: 'wrap',
         }}>
@@ -912,11 +956,11 @@ export default function AdminDatabasePage() {
                 </span>
               </div>
               <h1 style={{
-                fontSize: '1.45rem',
-                fontWeight: 700,
+                fontSize: '1.65rem',
                 margin: 0,
-                fontFamily: 'var(--font-editorial-serif, Georgia, serif)',
-                color: '#FFFFFF',
+                fontFamily: 'var(--font-sans)',
+                fontWeight: 900,
+                color: 'var(--color-primary)',
                 letterSpacing: '-0.02em',
                 lineHeight: 1.2,
               }}>
@@ -1006,8 +1050,8 @@ export default function AdminDatabasePage() {
               href="/vow"
               className="full-width-btn"
               style={{
-                backgroundColor: '#6366F1',
-                color: '#FFFFFF',
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-text)',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '0.55rem 1rem',
@@ -1086,19 +1130,19 @@ export default function AdminDatabasePage() {
         {/* Monarch Hero Metric Strip */}
         <div className="admin-kpi-grid">
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             padding: '1rem 1.15rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
           }}>
-            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Active Workspaces
             </span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.65rem', fontWeight: 800, fontFamily: 'var(--font-technical-mono, monospace)', color: '#FFFFFF' }}>
+              <span style={{ fontSize: '1.65rem', fontWeight: 800, fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-text)' }}>
                 {workspaces.length}
               </span>
               <span style={{ fontSize: '0.725rem', color: '#10B981', fontWeight: 600 }}>
@@ -1111,15 +1155,15 @@ export default function AdminDatabasePage() {
           </div>
 
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             padding: '1rem 1.15rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
           }}>
-            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Registered Licenses
             </span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
@@ -1131,20 +1175,20 @@ export default function AdminDatabasePage() {
               </span>
             </div>
             <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
-              Etsy & LemonSqueezy codes
+              Etsy & partner license codes
             </span>
           </div>
 
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             padding: '1rem 1.15rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
           }}>
-            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Master Template Schema
             </span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.2rem' }}>
@@ -1176,20 +1220,20 @@ export default function AdminDatabasePage() {
           </div>
 
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             padding: '1rem 1.15rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
           }}>
-            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Database Mode
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#FFFFFF', fontFamily: 'var(--font-technical-mono, monospace)' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-technical-mono, monospace)' }}>
                 Cloud Firestore
               </span>
             </div>
@@ -1212,8 +1256,8 @@ export default function AdminDatabasePage() {
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '10px',
             padding: '3px',
             gap: '3px',
@@ -1228,7 +1272,7 @@ export default function AdminDatabasePage() {
                 padding: '0.45rem 0.85rem',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: activeTab === 'workspaces' ? '#6366F1' : 'transparent',
+                backgroundColor: activeTab === 'workspaces' ? 'var(--color-primary)' : 'transparent',
                 color: activeTab === 'workspaces' ? '#FFFFFF' : '#94A3B8',
                 fontSize: '0.8125rem',
                 fontWeight: activeTab === 'workspaces' ? 600 : 500,
@@ -1241,7 +1285,7 @@ export default function AdminDatabasePage() {
               <span style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
                 fontSize: '0.6875rem',
-                backgroundColor: activeTab === 'workspaces' ? 'rgba(255, 255, 255, 0.25)' : '#1E293B',
+                backgroundColor: activeTab === 'workspaces' ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-bg-subtle)',
                 color: activeTab === 'workspaces' ? '#FFFFFF' : '#94A3B8',
                 padding: '1px 5px',
                 borderRadius: '4px',
@@ -1261,7 +1305,7 @@ export default function AdminDatabasePage() {
                 padding: '0.45rem 0.85rem',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: activeTab === 'licenses' ? '#6366F1' : 'transparent',
+                backgroundColor: activeTab === 'licenses' ? 'var(--color-primary)' : 'transparent',
                 color: activeTab === 'licenses' ? '#FFFFFF' : '#94A3B8',
                 fontSize: '0.8125rem',
                 fontWeight: activeTab === 'licenses' ? 600 : 500,
@@ -1274,7 +1318,7 @@ export default function AdminDatabasePage() {
               <span style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
                 fontSize: '0.6875rem',
-                backgroundColor: activeTab === 'licenses' ? 'rgba(255, 255, 255, 0.25)' : '#1E293B',
+                backgroundColor: activeTab === 'licenses' ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-bg-subtle)',
                 color: activeTab === 'licenses' ? '#FFFFFF' : '#94A3B8',
                 padding: '1px 5px',
                 borderRadius: '4px',
@@ -1294,7 +1338,7 @@ export default function AdminDatabasePage() {
                 padding: '0.45rem 0.85rem',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: activeTab === 'schema' ? '#6366F1' : 'transparent',
+                backgroundColor: activeTab === 'schema' ? 'var(--color-primary)' : 'transparent',
                 color: activeTab === 'schema' ? '#FFFFFF' : '#94A3B8',
                 fontSize: '0.8125rem',
                 fontWeight: activeTab === 'schema' ? 600 : 500,
@@ -1320,9 +1364,9 @@ export default function AdminDatabasePage() {
                   width: '100%',
                   padding: '9px 32px 9px 32px',
                   borderRadius: '8px',
-                  border: '1px solid #1E293B',
-                  backgroundColor: '#111827',
-                  color: '#FFFFFF',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  color: 'var(--color-text)',
                   fontSize: '0.85rem',
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -1356,8 +1400,8 @@ export default function AdminDatabasePage() {
             ------------------------------------------------------------- */}
         {activeTab === 'workspaces' && (
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             overflow: 'hidden',
           }}>
@@ -1366,13 +1410,10 @@ export default function AdminDatabasePage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8125rem' }}>
                 <thead>
                   <tr style={{
-                    backgroundColor: '#090D16',
+                    backgroundColor: 'var(--color-bg)',
                     color: '#94A3B8',
-                    fontFamily: 'var(--font-technical-mono, monospace)',
-                    fontSize: '0.67rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    borderBottom: '1px solid #1E293B',
+                    fontFamily: 'var(--font-mono)', fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.06em',
+                    borderBottom: '1px solid var(--color-border)',
                   }}>
                     <th style={{ padding: '0.85rem 1rem' }}>Spreadsheet Workspace</th>
                     <th style={{ padding: '0.85rem 1rem' }}>User & Partner</th>
@@ -1384,9 +1425,9 @@ export default function AdminDatabasePage() {
                 </thead>
                 <tbody>
                   {filteredWorkspaces.map((ws) => (
-                    <tr key={ws.workspaceId || ws.spreadsheetId} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <tr key={ws.workspaceId || ws.spreadsheetId} style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <td style={{ padding: '0.85rem 1rem' }}>
-                        <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>
                           {ws.spreadsheetName || 'Untitled Wedding'}
                         </div>
                         <div style={{ fontSize: '0.725rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
@@ -1395,7 +1436,7 @@ export default function AdminDatabasePage() {
                         </div>
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
-                        <div style={{ color: '#E2E8F0', fontWeight: 500 }}>{ws.userEmail}</div>
+                        <div style={{ color: 'var(--color-text)', fontWeight: 500 }}>{ws.userEmail}</div>
                         {ws.partnerEmail && (
                           <div style={{ fontSize: '0.725rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                             <Users size={11} />
@@ -1470,9 +1511,8 @@ export default function AdminDatabasePage() {
                             type="button"
                             onClick={() => setRawJsonRecord(ws)}
                             style={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                              color: '#94A3B8',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-muted)',
+                              border: '1px solid var(--color-border)',
                               borderRadius: '6px',
                               padding: '5px 8px',
                               cursor: 'pointer',
@@ -1487,8 +1527,7 @@ export default function AdminDatabasePage() {
                             type="button"
                             onClick={() => handleOpenEdit(ws, 'workspace')}
                             style={{
-                              backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                              color: '#A5B4FC',
+                              backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary, #ffffff)',
                               border: '1px solid rgba(99, 102, 241, 0.3)',
                               borderRadius: '6px',
                               padding: '5px 8px',
@@ -1538,8 +1577,8 @@ export default function AdminDatabasePage() {
                 <div
                   key={ws.workspaceId || ws.spreadsheetId}
                   style={{
-                    backgroundColor: '#1E293B',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: '10px',
                     padding: '0.9rem 1rem',
                     display: 'flex',
@@ -1549,7 +1588,7 @@ export default function AdminDatabasePage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
                     <div>
-                      <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.95rem' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: '0.95rem' }}>
                         {ws.spreadsheetName || 'Untitled Wedding'}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '2px' }}>
@@ -1578,7 +1617,7 @@ export default function AdminDatabasePage() {
                   )}
 
                   <div style={{
-                    backgroundColor: '#0F172A',
+                    backgroundColor: 'var(--color-bg-subtle)',
                     borderRadius: '6px',
                     padding: '0.5rem 0.65rem',
                     fontSize: '0.725rem',
@@ -1651,7 +1690,7 @@ export default function AdminDatabasePage() {
                       onClick={() => setRawJsonRecord(ws)}
                       style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        border: '1px solid var(--color-border)',
                         color: '#94A3B8',
                         borderRadius: '6px',
                         padding: '7px 4px',
@@ -1701,8 +1740,8 @@ export default function AdminDatabasePage() {
             ------------------------------------------------------------- */}
         {activeTab === 'licenses' && (
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             overflow: 'hidden',
           }}>
@@ -1711,13 +1750,10 @@ export default function AdminDatabasePage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8125rem' }}>
                 <thead>
                   <tr style={{
-                    backgroundColor: '#090D16',
+                    backgroundColor: 'var(--color-bg)',
                     color: '#94A3B8',
-                    fontFamily: 'var(--font-technical-mono, monospace)',
-                    fontSize: '0.67rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    borderBottom: '1px solid #1E293B',
+                    fontFamily: 'var(--font-mono)', fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.06em',
+                    borderBottom: '1px solid var(--color-border)',
                   }}>
                     <th style={{ padding: '0.85rem 1rem' }}>License Key</th>
                     <th style={{ padding: '0.85rem 1rem' }}>Order ID</th>
@@ -1729,7 +1765,7 @@ export default function AdminDatabasePage() {
                 </thead>
                 <tbody>
                   {filteredLicenses.map((lic) => (
-                    <tr key={lic.licenseKey} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <tr key={lic.licenseKey} style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontWeight: 700, color: '#F59E0B', fontSize: '0.8125rem' }}>
@@ -1745,10 +1781,10 @@ export default function AdminDatabasePage() {
                           </button>
                         </div>
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#E2E8F0', fontFamily: 'var(--font-technical-mono, monospace)' }}>
+                      <td style={{ padding: '0.85rem 1rem', color: 'var(--color-text)', fontFamily: 'var(--font-technical-mono, monospace)' }}>
                         {lic.orderId || 'N/A'}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#FFFFFF', fontWeight: 500 }}>
+                      <td style={{ padding: '0.85rem 1rem', color: 'var(--color-text)', fontWeight: 500 }}>
                         {lic.purchaserEmail}
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
@@ -1785,9 +1821,8 @@ export default function AdminDatabasePage() {
                             type="button"
                             onClick={() => setRawJsonRecord(lic)}
                             style={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                              color: '#94A3B8',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-muted)',
+                              border: '1px solid var(--color-border)',
                               borderRadius: '6px',
                               padding: '5px 8px',
                               cursor: 'pointer',
@@ -1801,8 +1836,7 @@ export default function AdminDatabasePage() {
                             type="button"
                             onClick={() => handleOpenEdit(lic, 'license')}
                             style={{
-                              backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                              color: '#A5B4FC',
+                              backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary, #ffffff)',
                               border: '1px solid rgba(99, 102, 241, 0.3)',
                               borderRadius: '6px',
                               padding: '5px 8px',
@@ -1850,8 +1884,8 @@ export default function AdminDatabasePage() {
                 <div
                   key={lic.licenseKey}
                   style={{
-                    backgroundColor: '#1E293B',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backgroundColor: 'var(--color-surface, #ffffff)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: '10px',
                     padding: '0.9rem 1rem',
                     display: 'flex',
@@ -1915,7 +1949,7 @@ export default function AdminDatabasePage() {
                       onClick={() => setRawJsonRecord(lic)}
                       style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        border: '1px solid var(--color-border)',
                         color: '#94A3B8',
                         borderRadius: '6px',
                         padding: '7px 4px',
@@ -1965,8 +1999,8 @@ export default function AdminDatabasePage() {
             ------------------------------------------------------------- */}
         {activeTab === 'schema' && (
           <div style={{
-            backgroundColor: '#111827',
-            border: '1px solid #1E293B',
+            backgroundColor: 'var(--color-surface, #ffffff)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             padding: '1.25rem',
             display: 'flex',
@@ -1975,7 +2009,7 @@ export default function AdminDatabasePage() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#FFFFFF', fontFamily: 'var(--font-editorial-serif, Georgia, serif)' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'var(--font-sans)', fontWeight: 800, color: 'var(--color-primary)' }}>
                   Master Spreadsheet Schema Validator & Auto-Repair Engine
                 </h3>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.75rem', color: '#94A3B8' }}>
@@ -1996,8 +2030,8 @@ export default function AdminDatabasePage() {
                       style={{
                         padding: '3px 8px',
                         borderRadius: '4px',
-                        border: auditSpreadsheetId === w.spreadsheetId ? '1px solid #6366F1' : '1px solid #1E293B',
-                        backgroundColor: auditSpreadsheetId === w.spreadsheetId ? 'rgba(99, 102, 241, 0.2)' : '#0F172A',
+                        border: auditSpreadsheetId === w.spreadsheetId ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: auditSpreadsheetId === w.spreadsheetId ? 'var(--color-bg-hover)' : 'var(--color-bg-subtle)',
                         color: auditSpreadsheetId === w.spreadsheetId ? '#A5B4FC' : '#94A3B8',
                         fontSize: '0.7rem',
                         fontFamily: 'var(--font-technical-mono, monospace)',
@@ -2016,10 +2050,10 @@ export default function AdminDatabasePage() {
               display: 'flex',
               alignItems: 'center',
               gap: '0.625rem',
-              backgroundColor: '#0F172A',
+              backgroundColor: 'var(--color-bg-subtle)',
               padding: '0.75rem',
               borderRadius: '8px',
-              border: '1px solid #1E293B',
+              border: '1px solid var(--color-border)',
               flexWrap: 'wrap',
             }}>
               <input
@@ -2030,11 +2064,11 @@ export default function AdminDatabasePage() {
                 style={{
                   flex: 1,
                   minWidth: '240px',
-                  backgroundColor: '#111827',
-                  border: '1px solid #1E293B',
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '6px',
                   padding: '9px 12px',
-                  color: '#FFFFFF',
+                  color: 'var(--color-text)',
                   fontFamily: 'var(--font-technical-mono, monospace)',
                   fontSize: '0.85rem',
                   outline: 'none',
@@ -2048,8 +2082,8 @@ export default function AdminDatabasePage() {
                   padding: '9px 18px',
                   borderRadius: '6px',
                   border: 'none',
-                  backgroundColor: '#6366F1',
-                  color: '#FFFFFF',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-text)',
                   fontWeight: 600,
                   fontSize: '0.8125rem',
                   cursor: isAuditingSchema ? 'not-allowed' : 'pointer',
@@ -2067,8 +2101,8 @@ export default function AdminDatabasePage() {
             {/* Schema Audit Results */}
             {schemaReport && (
               <div style={{
-                backgroundColor: '#0F172A',
-                border: '1px solid #1E293B',
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 padding: '1rem',
                 display: 'flex',
@@ -2101,7 +2135,7 @@ export default function AdminDatabasePage() {
                       disabled={isRepairingSchema}
                       style={{
                         backgroundColor: '#10B981',
-                        color: '#FFFFFF',
+                        color: 'var(--color-text)',
                         border: 'none',
                         borderRadius: '6px',
                         padding: '8px 14px',
@@ -2130,8 +2164,8 @@ export default function AdminDatabasePage() {
                       <div
                         key={tr.tabName}
                         style={{
-                          backgroundColor: '#111827',
-                          border: `1px solid ${isOk ? '#1E293B' : 'rgba(239, 68, 68, 0.3)'}`,
+                          backgroundColor: 'var(--color-surface, #ffffff)',
+                          border: `1px solid ${isOk ? 'var(--color-border)' : 'rgba(239, 68, 68, 0.3)'}`,
                           borderRadius: '6px',
                           padding: '0.75rem 0.85rem',
                           display: 'flex',
@@ -2140,7 +2174,7 @@ export default function AdminDatabasePage() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.8125rem', fontFamily: 'var(--font-technical-mono, monospace)' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: '0.8125rem', fontFamily: 'var(--font-technical-mono, monospace)' }}>
                             📄 {tr.tabName}
                           </span>
                           <span style={{
@@ -2216,8 +2250,8 @@ export default function AdminDatabasePage() {
                 padding: '9px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: isSavingRecord || Boolean(jsonParseError) ? '#94A3B8' : '#6366F1',
-                color: '#FFFFFF',
+                backgroundColor: isSavingRecord || Boolean(jsonParseError) ? '#94A3B8' : 'var(--color-primary)',
+                color: 'var(--color-text)',
                 fontSize: '0.875rem',
                 fontWeight: 600,
                 cursor: isSavingRecord || Boolean(jsonParseError) ? 'not-allowed' : 'pointer',
@@ -2381,8 +2415,7 @@ export default function AdminDatabasePage() {
                         }}
                       >
                         <option value="Sheet2Vow">Sheet2Vow</option>
-                        <option value="Sheet2Home">Sheet2Home</option>
-                        <option value="Sheet2Finance">Sheet2Finance</option>
+                        <option value="Sheet2Vault">Sheet2Vault (Coming Soon)</option>
                       </select>
                     </DrawerField>
 
@@ -2732,9 +2765,9 @@ export default function AdminDatabasePage() {
                   width: '100%',
                   padding: '12px',
                   borderRadius: '8px',
-                  border: jsonParseError ? '1.5px solid #EF4444' : '1px solid #1E293B',
-                  backgroundColor: '#0F172A',
-                  color: '#A7F3D0',
+                  border: jsonParseError ? '1.5px solid #EF4444' : '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  color: 'var(--color-text)',
                   fontFamily: 'var(--font-technical-mono, monospace)',
                   fontSize: '0.85rem',
                   lineHeight: '1.5',
@@ -2756,7 +2789,7 @@ export default function AdminDatabasePage() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -2771,11 +2804,11 @@ export default function AdminDatabasePage() {
               width: '100%',
               maxWidth: '680px',
               maxHeight: '85vh',
-              backgroundColor: '#111827',
-              border: '1px solid #1E293B',
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              border: '1px solid var(--color-border)',
               borderRadius: '16px',
               padding: '1.25rem',
-              color: '#FFFFFF',
+              color: 'var(--color-text)',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
               display: 'flex',
               flexDirection: 'column',
@@ -2784,10 +2817,10 @@ export default function AdminDatabasePage() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', paddingBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Code size={20} style={{ color: '#818CF8' }} />
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-editorial-serif, Georgia, serif)' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'var(--font-sans)', fontWeight: 800, color: 'var(--color-primary)' }}>
                   Raw Document Record (JSON)
                 </h3>
               </div>
@@ -2806,15 +2839,13 @@ export default function AdminDatabasePage() {
               </button>
             </div>
 
-            <pre style={{
-              backgroundColor: '#090D16',
-              border: '1px solid #1E293B',
+            <pre style={{ backgroundColor: 'var(--color-bg-subtle)',
+              border: '1px solid var(--color-border)',
               borderRadius: '8px',
               padding: '1rem',
               fontSize: '0.8125rem',
               fontFamily: 'var(--font-technical-mono, monospace)',
-              color: '#34D399',
-              overflow: 'auto',
+              color: 'var(--color-text)', overflow: 'auto',
               maxHeight: '52vh',
               margin: 0,
               whiteSpace: 'pre-wrap',
@@ -2832,8 +2863,8 @@ export default function AdminDatabasePage() {
                   setRawJsonRecord(null);
                 }}
                 style={{
-                  backgroundColor: '#6366F1',
-                  color: '#FFFFFF',
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-text)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '8px 16px',
@@ -2861,7 +2892,7 @@ export default function AdminDatabasePage() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -2875,11 +2906,11 @@ export default function AdminDatabasePage() {
             style={{
               width: '100%',
               maxWidth: '440px',
-              backgroundColor: '#111827',
-              border: '1px solid #1E293B',
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              border: '1px solid var(--color-border)',
               borderRadius: '16px',
               padding: '1.25rem',
-              color: '#FFFFFF',
+              color: 'var(--color-text)',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
               display: 'flex',
               flexDirection: 'column',
@@ -2911,7 +2942,7 @@ export default function AdminDatabasePage() {
               </div>
             </div>
 
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#CBD5E1', lineHeight: 1.4 }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-muted)', lineHeight: 1.4 }}>
               Are you sure you want to permanently delete <strong style={{ color: '#F87171' }}>"{recordToDelete.name || recordToDelete.id}"</strong>?
             </p>
 
@@ -2922,8 +2953,8 @@ export default function AdminDatabasePage() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: '8px',
-                  border: '1px solid #1E293B',
-                  backgroundColor: '#0F172A',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-subtle)',
                   color: '#94A3B8',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
@@ -2946,7 +2977,7 @@ export default function AdminDatabasePage() {
                   borderRadius: '8px',
                   border: 'none',
                   backgroundColor: '#EF4444',
-                  color: '#FFFFFF',
+                  color: 'var(--color-text)',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -2967,7 +2998,7 @@ export default function AdminDatabasePage() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -2981,11 +3012,11 @@ export default function AdminDatabasePage() {
             style={{
               width: '100%',
               maxWidth: '460px',
-              backgroundColor: '#111827',
-              border: '1px solid #1E293B',
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              border: '1px solid var(--color-border)',
               borderRadius: '16px',
               padding: '1.25rem',
-              color: '#FFFFFF',
+              color: 'var(--color-text)',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
               display: 'flex',
               flexDirection: 'column',
@@ -3017,7 +3048,7 @@ export default function AdminDatabasePage() {
               </div>
             </div>
 
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#CBD5E1', lineHeight: 1.4 }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-muted)', lineHeight: 1.4 }}>
               This will delete all test workspaces and licenses from the local database cache and clear all browser local storage sessions.
             </p>
 
@@ -3028,8 +3059,8 @@ export default function AdminDatabasePage() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: '8px',
-                  border: '1px solid #1E293B',
-                  backgroundColor: '#0F172A',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-subtle)',
                   color: '#94A3B8',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
@@ -3046,7 +3077,7 @@ export default function AdminDatabasePage() {
                   borderRadius: '8px',
                   border: 'none',
                   backgroundColor: '#EF4444',
-                  color: '#FFFFFF',
+                  color: 'var(--color-text)',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
                   cursor: 'pointer',

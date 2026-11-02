@@ -14,7 +14,7 @@ Foundational platform infrastructure, proxy routing, generic activation, licensi
 - [**`platform/licensing_and_security.md`**](platform/licensing_and_security.md) — Cloud Firestore workspace licensing schema, 2-user collaboration limit enforcement (`MAX_SECONDARY_USERS = 1`), Pro upgrade tier, minimized OAuth scopes (`drive.file`, `spreadsheets`), and BOLA / cross-user authorization security.
 - [**`platform/design_system.md`**](platform/design_system.md) — Monarch design language, CSS custom property tokens, multi-theme architecture (Editorial Minimalist, Neo-Brutalism, Botanical Romance), ambient sync indicator (`AmbientSyncIndicator.tsx`), and decoupled toast notification system.
 - [**`user_lifecycle_flows.md`**](user_lifecycle_flows.md) — User lifecycle states, returning user flows, and multi-workspace switching.
-- [**`sheet2suite_backlog.md`**](sheet2suite_backlog.md) — Platform roadmap, Lemon Squeezy / Etsy webhooks, Firebase App Hosting, and telemetry.
+- [**`sheet2suite_backlog.md`**](sheet2suite_backlog.md) — Platform roadmap, Etsy webhooks, Firebase App Hosting, and telemetry.
 
 ---
 

@@ -95,6 +95,32 @@ export async function POST(req: NextRequest) {
     const auth = (await getGoogleAuthAsync(token, undefined, userEmail, refreshToken)) || getGoogleAuth(token);
     const drive = google.drive({ version: 'v3', auth });
 
+    // Step 0: Modular Dispatcher for Sheet2Vault (Isolated from Sheet2Vow)
+    const productCode = (body.productCode || '').toUpperCase();
+    const isVault = productCode === 'SHEET2VAULT' || (productName || '').toLowerCase().includes('vault');
+
+    if (isVault) {
+      const { provisionVaultWorkspace } = await import('@/lib/sheets/provisioning/vaultProvisioner');
+      const vaultResult = await provisionVaultWorkspace({
+        drive,
+        auth,
+        token: token || undefined,
+        userEmail,
+        vaultConfig: body.vaultConfig || {},
+        driveFolder: body.driveFolder,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Sheet2Vault personal inventory workspace provisioned successfully.',
+        provisioned: {
+          spreadsheetId: vaultResult.spreadsheetId,
+          title: vaultResult.title,
+          webViewLink: vaultResult.webViewLink,
+        },
+      });
+    }
+
     // Step 1: Create or locate root folder "Sheet2Suite"
     const rootFolderId = await getOrCreateFolder(drive, 'Sheet2Suite');
 

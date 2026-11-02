@@ -158,7 +158,7 @@ export default function ActivationPage() {
       const res = await fetch('/api/verify-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, orderId }),
+        body: JSON.stringify({ email, orderId, productCode: targetProductCode }),
       });
 
       const data = await res.json();
@@ -206,7 +206,9 @@ export default function ActivationPage() {
         body: JSON.stringify({
           accessToken: currentGoogleToken || undefined,
           coupleName: workspaceTitle,
+          productCode: targetProductCode,
           productName: finalProductName,
+          vaultConfig: productConfig.vaultConfig || productConfig,
           driveFolder: driveFolder,
           budget: productConfig.budget,
           weddingDate: productConfig.weddingDate,
@@ -248,7 +250,9 @@ export default function ActivationPage() {
           spreadsheetName: provData.provisioned?.title || `${workspaceTitle} Database`,
           driveFolderPath: driveFolder,
           webViewLink: provData.provisioned?.webViewLink || `https://docs.google.com/spreadsheets/d/${createdSpreadsheetId}/edit`,
+          productCode: targetProductCode,
           productName: finalProductName,
+          vaultConfig: productConfig.vaultConfig || productConfig,
           orderId: orderId || 'VERIFIED-ORDER',
           orderVerified: true,
         }),

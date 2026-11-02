@@ -1,7 +1,7 @@
 # Feature Specification: [Epic / Feature Name]
 
 **Feature ID:** `[FEAT-XXX]`  
-**Target Product:** `[Sheet2Vow | Sheet2Suite Platform | Sheet2Build | Other]`  
+**Target Product:** `[Sheet2Vow | Sheet2Suite Platform | Sheet2Vault | Other]`  
 **Status:** `[Draft | In Review | Approved | In Progress | Completed]`  
 **Author / DRI:** `[Name / Team]`  
 **Created Date:** `YYYY-MM-DD`  

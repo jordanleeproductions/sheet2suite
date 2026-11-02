@@ -241,7 +241,7 @@ export const SUPPORT_ARTICLES: SupportArticle[] = [
     summary: 'How to activate your workspace using any Google Drive account you prefer.',
     keywords: ['etsy email', 'different email', 'google account mismatch', 'purchase email'],
     content: [
-      'Yes, absolutely. Your Etsy or Lemon Squeezy purchase receipt email does NOT need to match the Google account you use for Google Drive.',
+      'Yes, absolutely. Your Etsy purchase receipt email does NOT need to match the Google account you use for Google Drive.',
       'During Step 0 of activation, enter your purchase receipt number and the email address used at checkout so we can verify your order.',
       'In Step 1, you can connect ANY personal or shared Google account where you want the spreadsheet to live.',
       'This is especially helpful for couples who purchased using a personal shopping email but want the wedding planner stored in a shared couple Google account.'

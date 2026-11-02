@@ -7,7 +7,6 @@ import {
   Zap,
   Key,
   Heart,
-  Home,
   DollarSign,
   Calendar,
   Sparkles,
@@ -20,8 +19,6 @@ import {
   CreditCard,
   Unlock,
   Hammer,
-  Building2,
-  TrendingUp,
   Layers,
   Check,
   ExternalLink,
@@ -58,83 +55,27 @@ export default function Sheet2SuiteParentHub() {
       primaryHref: '/vow',
       secondaryCtaText: 'Activate License',
       secondaryHref: '/activate?product=vow',
+      disabled: false,
     },
     {
-      id: 'build',
-      name: 'Sheet2Build',
-      tagline: 'Construction, Renovation & Contractor Ledger',
+      id: 'vault',
+      name: 'Sheet2Vault',
+      tagline: 'Home Valuables, Inventory & Insurance Claim Dossier',
       status: 'roadmap',
       version: 'Coming Soon',
-      icon: Building2,
-      iconColor: '#f59e0b',
-      desc: 'Professional construction and home renovation management canvas: Contractor bids, change order logs, payment milestone tracking, material expense ledger, and site timeline.',
+      icon: ShieldCheck,
+      iconColor: '#3b82f6',
+      desc: 'High-value home inventory, serial numbers, appraisals, warranty expiration, and insurance claim dossiers backed securely by Google Sheets in your personal Drive.',
       features: [
-        'Trade Category & Subcontractor Directory',
-        'Change Order Log & Budget Variance Alerts',
-        'Payment Milestone Draw Schedule',
-        'Material & Supply Chain Expense Tracker',
-        'Gantt Project Timeline & Site Photos',
+        'Valuables & High-Value Asset Registry',
+        'Purchase Receipts, Appraisals & Serial Numbers',
+        'Warranty Tracking & Expiry Timeline',
+        'Instant Insurance Claim Dossier PDF Export',
       ],
       primaryCtaText: 'COMING SOON',
       primaryHref: '',
-      disabled: true,
-    },
-    {
-      id: 'finance',
-      name: 'Sheet2Finance',
-      tagline: 'Personal Finance & Cashflow Engine',
-      status: 'roadmap',
-      version: 'Coming Soon',
-      icon: TrendingUp,
-      iconColor: '#10b981',
-      desc: 'Zero-based monthly budget ledger, cashflow forecasting, debt payoff snowball calculator, asset allocation, and personal net worth tracker.',
-      features: [
-        'Zero-Based Monthly Income & Expense Ledger',
-        'Debt Snowball & Avalanche Payoff Calculator',
-        '12-Month Rolling Cashflow Forecast',
-        'Asset Allocation & Net Worth Meter',
-        'Emergency Fund Savings Goal Ticker',
-      ],
-      primaryCtaText: 'COMING SOON',
-      primaryHref: '',
-      disabled: true,
-    },
-    {
-      id: 'home',
-      name: 'Sheet2Home',
-      tagline: 'Property Inventory & Maintenance System',
-      status: 'roadmap',
-      version: 'Coming Q4 2026',
-      icon: Home,
-      iconColor: '#8b5cf6',
-      desc: 'Personal property, valuables, and electronics inventory system for home management, warranty tracking, insurance claims, and recurring home maintenance schedules.',
-      features: [
-        'Itemized Valuables & Serial Number Vault',
-        'Warranty Expiry & Receipt Photo Tracker',
-        'Seasonal Home Maintenance Schedule',
-        'Contractor & Trade Service Directory',
-      ],
-      primaryCtaText: 'COMING SOON',
-      primaryHref: '',
-      disabled: true,
-    },
-    {
-      id: 'harvest',
-      name: 'Sheet2Harvest',
-      tagline: "Gardener's Seasonal Log Book",
-      status: 'roadmap',
-      version: 'Coming Q1 2027',
-      icon: Sparkles,
-      iconColor: '#06b6d4',
-      desc: "A gardener's seasonal logbook for planting schedules, soil health tracking, crop rotation planning, pest management, and harvest yield analytics.",
-      features: [
-        'Planting Calendar & Seed Packet Database',
-        'Soil Health & Crop Rotation Planner',
-        'Pest & Fertilizer Application Journal',
-        'Harvest Weight & Yield Analytics',
-      ],
-      primaryCtaText: 'COMING SOON',
-      primaryHref: '',
+      secondaryCtaText: '',
+      secondaryHref: '',
       disabled: true,
     },
   ];
@@ -180,7 +121,7 @@ export default function Sheet2SuiteParentHub() {
           Turn Plain Spreadsheets Into <span style={{ color: 'var(--color-primary)' }}>High-Performance Digital Apps</span>.
         </h2>
         <p style={styles.heroDesc}>
-          Sheet2Suite converts Google Spreadsheets into ultra-fast, beautiful web applications for wedding planning, construction & renovation management, personal cashflow, and property logs. 100% private to your personal Google Drive with zero monthly subscription fees.
+          Sheet2Suite converts Google Spreadsheets into ultra-fast, beautiful web applications. 100% private to your personal Google Drive with zero monthly subscription fees.
         </p>
 
         <div style={styles.heroCtaGroup}>
@@ -190,14 +131,9 @@ export default function Sheet2SuiteParentHub() {
             <ArrowRight size={18} />
           </Link>
 
-          <Link href="/activate?product=build" style={styles.secondaryCta}>
-            <Building2 size={18} style={{ color: '#f59e0b' }} />
-            <span>TRY SHEET2BUILD (CONSTRUCTION)</span>
-          </Link>
-
-          <Link href="/activate?product=finance" style={styles.secondaryCta}>
-            <TrendingUp size={18} style={{ color: '#10b981' }} />
-            <span>TRY SHEET2FINANCE (BUDGET)</span>
+          <Link href="/activate" style={styles.secondaryCta}>
+            <Key size={18} style={{ color: 'var(--color-primary)' }} />
+            <span>ACTIVATION PORTAL</span>
           </Link>
         </div>
       </section>
@@ -211,7 +147,7 @@ export default function Sheet2SuiteParentHub() {
           </div>
           <h3 style={styles.masterPassTitle}>One Master License. Every Current & Future Application.</h3>
           <p style={styles.masterPassDesc}>
-            Purchasing a Sheet2Suite Master License gives you immediate access to all existing applications (*Sheet2Vow*, *Sheet2Build*, *Sheet2Finance*) plus all upcoming products (*Sheet2Home*, *Sheet2Harvest*) as they launch — backed by lifetime platform updates and zero recurring fees.
+            Purchasing a Sheet2Suite Master License gives you immediate access to all existing applications (*Sheet2Vow*) plus upcoming suite applications as they launch — backed by lifetime platform updates and zero recurring fees.
           </p>
         </div>
         <Link href="/activate" style={styles.masterPassBtn}>
@@ -389,7 +325,7 @@ export default function Sheet2SuiteParentHub() {
             </div>
             <h4 style={styles.sovereigntyCardTitle}>Zero Monthly Subscriptions</h4>
             <p style={styles.sovereigntyCardDesc}>
-              Say goodbye to monthly subscription fatigue ($15–$50/month). You pay <strong>one time</strong> on Etsy or Lemon Squeezy and own your application license for life with free lifetime platform updates.
+              Say goodbye to monthly subscription fatigue ($15–$50/month). You pay <strong>one time</strong> on Etsy and own your application license for life with free lifetime platform updates.
             </p>
           </div>
 

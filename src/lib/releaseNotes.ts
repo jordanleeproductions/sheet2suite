@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.22.0',
+    title: 'Admin Portal Redesign & Product Ecosystem Focus',
+    date: 'Nov 2, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'enhancement',
+    highlights: [
+      'Monarch Admin Portal UX: Fully aligned the database and entitlements inspector with the Sheet2Suite design system tokens, typography, and theme engine.',
+      'Refined suite showcase: Streamlined product family roadmap cards to highlight upcoming applications, featuring Sheet2Vault alongside Sheet2Vow.',
+      'Unified licensing & checkout: Standardized Etsy order activation and verified license provisioning across all platforms.',
+    ],
+    details: 'Modernizes administrative workspace inspection tools, cleans up product family roadmaps to focus on upcoming suite canvases, and refines license activation across the platform.',
+  },
+  {
     version: 'v1.21.1',
     title: 'Support & Help Center Design System Alignment',
     date: 'Oct 30, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'enhancement',
     highlights: [

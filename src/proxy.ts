@@ -5,8 +5,7 @@ import type { NextRequest } from 'next/server';
  * Sheet2Suite Dynamic Subdomain & Multi-Product Proxy Engine [LIFE-5]
  * Handles zero-cost DNS wildcard & subdomain routing for the entire Sheet2Suite ecosystem:
  * - vow.sheet2suite.com -> /vow (Sheet2Vow)
- * - build.sheet2suite.com -> /build (Sheet2Build)
- * - finance.sheet2suite.com -> /finance (Sheet2Finance)
+ * - vault.sheet2suite.com -> /vault (Sheet2Vault)
  * - activate.sheet2suite.com -> /activate (Universal Activation Engine)
  * - sheet2suite.com -> / (Parent Suite Showcase & Product Hub)
  */

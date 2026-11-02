@@ -9,8 +9,8 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
 ### 🛡️ Entitlements, Licensing & Webhooks
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
 |---|---|---|---|---|---|
-| **`[SYS-6]`** | Native Sheet2Suite Entitlements & License Database (Lemon Squeezy / Etsy Webhooks, Partner Email Validation, & Telemetry) | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
-| **`[SUITE-1]`** | Multi-Product Licensed Suite Applications Hub & Switcher (Support for Sheet2Finances, Sheet2Stay, Sheet2Closet, Sheet2Inventory multi-product bundle activation & cross-app workspace switching) | `src/app/activate/page.tsx`, `src/components/SuiteProductSwitcher.tsx`, `/api/workspaces` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[SYS-6]`** | Native Sheet2Suite Entitlements & License Database (Etsy Webhooks, Partner Email Validation, & Telemetry) | `/api/webhook` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
+| **`[SUITE-1]`** | Multi-Product Licensed Suite Applications Hub & Switcher (Support for Sheet2Vault multi-product bundle activation & cross-app workspace switching) | `src/app/activate/page.tsx`, `src/components/SuiteProductSwitcher.tsx`, `/api/workspaces` | 🔴 High | ⚡ High (~4-5 turns) | Pending |
 
 ### 📊 Telemetry & Analytics
 | Task ID | Feature Requirement | Target File | Effort Level | Quota Impact | Status |
@@ -84,7 +84,7 @@ Authoritative pending backlog tracking platform infrastructure, licensing, multi
 - **`[SEC-9]` [LOW] Client-Side / Stubbed License Verification Auto-Approves Any 5+ Character Order ID**:
   - **Summary**: In `licenseValidator.ts`, any order ID string of 5+ characters not in the database is automatically registered as active, and granting Pro if it contains `"PRO"`.
   - **Risk**: Unpaid commercial bypass.
-  - **Suggested Fix**: Connect to Etsy Open API v3 or Lemon Squeezy webhook signature verification before issuing active licenses.
+  - **Suggested Fix**: Connect to Etsy Open API v3 webhook signature verification before issuing active licenses.
 
 - **`[SEC-10]` [LOW] Outdated Sub-dependencies with Known CVEs**:
   - **Summary**: `npm audit` reports vulnerabilities in sub-dependencies of `next@16.2.10`, `postcss`, and `sharp`.

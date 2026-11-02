@@ -57,7 +57,7 @@ const MOCK_DRIVE_HIERARCHY: Record<string, DriveFolderItem[]> = {
   ],
   'f_sheet2suite': [
     { id: 'f_sheet2vow', name: 'Sheet2Vow', parentId: 'f_sheet2suite', path: 'My Drive / Sheet2Suite / Sheet2Vow', itemCount: 5, updatedAt: 'Today' },
-    { id: 'f_sheet2finance', name: 'Sheet2Finance', parentId: 'f_sheet2suite', path: 'My Drive / Sheet2Suite / Sheet2Finance', itemCount: 2, updatedAt: 'Aug 1, 2026' },
+    { id: 'f_sheet2vault', name: 'Sheet2Vault', parentId: 'f_sheet2suite', path: 'My Drive / Sheet2Suite / Sheet2Vault', itemCount: 2, updatedAt: 'Aug 1, 2026' },
   ],
   'f_wedding': [
     { id: 'f_vendors', name: 'Vendor Contracts & Invoices', parentId: 'f_wedding', path: 'My Drive / Wedding Planning 2026 / Vendor Contracts & Invoices', itemCount: 14, updatedAt: 'Jul 28, 2026' },

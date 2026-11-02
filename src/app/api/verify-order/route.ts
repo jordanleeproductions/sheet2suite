@@ -5,12 +5,13 @@ import { apiResponse } from '@/lib/core/apiResponse';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { email, orderId } = body;
+    const { email, orderId, productCode = 'SHEET2VOW' } = body;
+    const requestedProductCode = String(productCode).toUpperCase() as any;
 
     const validation = await LicenseValidator.validateLicense({
       email,
       orderId,
-      productCode: 'SHEET2VOW',
+      productCode: requestedProductCode,
     });
 
     if (!validation.valid) {
@@ -25,14 +26,14 @@ export async function POST(req: NextRequest) {
       email: email.trim().toLowerCase(),
       customerName: email.split('@')[0].replace('.', ' ').replace(/^./, (c: string) => c.toUpperCase()),
       purchaseDate: new Date().toISOString().split('T')[0],
-      packageTier: validation.licenseTier === 'pro'
+      packageTier: validation.productCode === 'SHEET2VAULT' ? (validation.licenseTier === 'pro' ? 'Sheet2Vault Pro (Developer Preview)' : 'Sheet2Vault Standard') : validation.licenseTier === 'pro'
         ? 'Sheet2Vow Pro (Unlimited Collaborators)'
         : 'Sheet2Vow Wedding Planner Suite (Standard)',
       licenseTier: validation.licenseTier,
       entitledProducts: validation.entitledProducts,
       licensedSheets: 1,
       isVerified: true,
-      message: 'Etsy purchase verified successfully!',
+      message: validation.productCode === 'SHEET2VAULT' ? 'Developer test license verified successfully!' : 'Etsy purchase verified successfully!',
     });
   } catch (error: any) {
     console.error('Error in /api/verify-order:', error);

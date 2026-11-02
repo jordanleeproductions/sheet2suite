@@ -17,10 +17,10 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 │        GENERIC ACTIVATION ENGINE         │                               │     SUB-PRODUCTS / DIGITAL CANVASES      │
 │         activate.sheet2suite.com         │                               │                                          │
 │                                          │                               │ 💍 Sheet2Vow (vow.sheet2suite.com)       │
-│ 1. License & Order Validation            │                               │ 🏗️ Sheet2Build (build.sheet2suite.com)   │
-│ 2. Google OAuth & Drive Selection        ├─────────── Provisions ───────►│ 💰 Sheet2Finance (finance.sheet2suite...) │
-│ 3. Feature Setup Plugin Injection        │      Directly into User Drive │ 🏡 Sheet2Home (home.sheet2suite.com)     │
-│ 4. Automated Spreadsheet Template Copy   │                               │ 🏋️ Sheet2Fit (fit.sheet2suite.com)       │
+│ 1. License & Order Validation            │                               │ 💒 Sheet2Vow (vow.sheet2suite.com)       │
+│ 2. Google OAuth & Drive Selection        ├─────────── Provisions ───────►│ 🛡️ Sheet2Vault (vault.sheet2suite.com)   │
+│ 3. Feature Setup Plugin Injection        │      Directly into User Drive │                                           │
+│ 4. Automated Spreadsheet Template Copy   │                               │                                           │
 └──────────────────────────────────────────┘                               └──────────────────────────────────────────┘
 ```
 
@@ -28,9 +28,9 @@ Sheet2Suite is the parent digital canvas application platform residing on **`she
 
 ## 2. Architectural Guarantees & Developer Experience
 
-- **Zero Rebuild for New Products:** Adding a new sub-product (e.g., *Sheet2Build*, *Sheet2Fit*, *Sheet2Finance*) does **not** require rebuilding authentication, Google Drive integration, licensing, provisioning, theme engines, or application layout shells.
+- **Zero Rebuild for New Products:** Adding a new sub-product (e.g., *Sheet2Vault*) does **not** require rebuilding authentication, Google Drive integration, licensing, provisioning, theme engines, or application layout shells.
 - **Generic Activation Framework:** A single, unified activation pipeline (`/activate` or `activate.sheet2suite.com`) handles order verification, Google OAuth authentication, target Drive directory resolution, and Drive spreadsheet provisioning for all products across the suite.
-- **Pluggable Feature Setup Modules:** Setup wizards are modular plugins injected into Step 2 of the Activation pipeline. Each product exposes a standard `<ProductSetupPlugin />` interface supplying product-specific onboarding steps (e.g., Wedding Date & Couple Names for Sheet2Vow vs Project Milestones & Trade Categories for Sheet2Build).
+- **Pluggable Feature Setup Modules:** Setup wizards are modular plugins injected into Step 2 of the Activation pipeline. Each product exposes a standard `<ProductSetupPlugin />` interface supplying product-specific onboarding steps (e.g., Wedding Date & Couple Names for Sheet2Vow vs Asset Categories & Appraisals for Sheet2Vault).
 - **Subdomain & Path Parity (`src/proxy.ts`):** Dynamic subdomain routing engine mapping `{product}.sheet2suite.com` and `sheet2suite.com/{product}` seamlessly to corresponding App Router pages.
 
 ---

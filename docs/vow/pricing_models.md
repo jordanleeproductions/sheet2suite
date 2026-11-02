@@ -98,11 +98,11 @@ The user's entitlement tier is stored in cell **`Settings!B2`** inside the JSON 
 When a Basic user attempts to access a Pro or VIP feature (e.g. generating a vendor share link or printing a PDF roster):
 1. The app presents a non-intrusive **Upgrade Drawer Modal**:
    - Displays feature highlights and price difference ($30 upgrade).
-2. Clicking **"UPGRADE TO PRO"** opens Lemon Squeezy checkout prefilled with the user's `spreadsheetId`.
-3. Lemon Squeezy webhook updates cell `Settings!B2` to `tier: "PRO"`, immediately unlocking features without data migration.
+2. Clicking **"UPGRADE TO PRO"** opens Etsy checkout prefilled with the user's `spreadsheetId`.
+3. Etsy webhook updates cell `Settings!B2` to `tier: "PRO"`, immediately unlocking features without data migration.
 
 ---
 
 ## 6. Related Documentation Sync
 - 📘 [tech_spec.md](file:///d:/Development/sheet2vow/docs/tech_spec.md) (Section 3.4 Access Control & License Entitlements)
-- 🗺️ [features.md](file:///d:/Development/sheet2vow/docs/features.md) (Phase 3 Monetization & Lemon Squeezy Integration)
+- 🗺️ [features.md](file:///d:/Development/sheet2vow/docs/features.md) (Phase 3 Monetization & Licensing Integration)
