@@ -64,6 +64,12 @@ export async function POST(req: NextRequest) {
     };
 
     if (parentId && parentId !== 'root' && !parentId.startsWith('custom_') && !parentId.startsWith('f_')) {
+      if (!/^[a-zA-Z0-9_-]{10,80}$/.test(parentId)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid parent folder ID format.' },
+          { status: 400 }
+        );
+      }
       folderMetadata.parents = [parentId];
     }
 

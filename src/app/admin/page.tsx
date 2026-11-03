@@ -43,6 +43,7 @@ import AdminDashboardTab from '@/components/admin/AdminDashboardTab';
 import AdminTrackerTab from '@/components/admin/AdminTrackerTab';
 import AdminTemplatesTab from '@/components/admin/AdminTemplatesTab';
 import AdminValidatorTab from '@/components/admin/AdminValidatorTab';
+import AdminReleaseNotesTab from '@/components/admin/AdminReleaseNotesTab';
 
 export default function AdminDatabasePage() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
@@ -193,7 +194,7 @@ export default function AdminDatabasePage() {
   };
 
   // Active Sub-Tab: 'workspaces' | 'licenses' | 'schema'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'tracker' | 'validator' | 'templates' | 'workspaces' | 'licenses' | 'schema'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'tracker' | 'validator' | 'templates' | 'releases' | 'workspaces' | 'licenses' | 'schema'>('dashboard');
   const [selectedValidatorSheetId, setSelectedValidatorSheetId] = useState<string>('1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI');
   const [selectedValidatorProduct, setSelectedValidatorProduct] = useState<string>('SHEET2VOW');
 
@@ -1018,11 +1019,11 @@ export default function AdminDatabasePage() {
             letterSpacing: '0.04em',
           }}>
             <ShieldCheck size={14} style={{ color: 'var(--color-primary)' }} />
-            <span>MONARCH ADMIN CONSOLE</span>
+            <span>ADMIN CONSOLE</span>
           </div>
         </div>
 
-        {/* Monarch Top Masthead / Header Bar */}
+        {/* Top Masthead / Header Bar */}
         <div className="admin-header-row" style={{
           display: 'flex',
           alignItems: 'center',
@@ -1062,7 +1063,7 @@ export default function AdminDatabasePage() {
                   color: '#4338CA',
                   border: '1px solid rgba(99, 102, 241, 0.25)',
                 }}>
-                  MONARCH ADMIN
+                  SHEET2SUITE ADMIN
                 </span>
                 <span style={{
                   display: 'inline-flex',
@@ -1249,7 +1250,7 @@ export default function AdminDatabasePage() {
           </div>
         )}
 
-        {/* Monarch Hero Metric Strip */}
+        {/* Platform Operations Metric Strip */}
         <div className="admin-kpi-grid">
           <div style={{
             backgroundColor: 'var(--color-surface, #ffffff)',
@@ -2234,7 +2235,7 @@ export default function AdminDatabasePage() {
       </div>
 
       {/* -------------------------------------------------------------
-          MONARCH SLIDE-OVER DRAWER (ADD / EDIT RECORD)
+          SLIDE-OVER DRAWER (ADD / EDIT RECORD)
           ------------------------------------------------------------- */}
       <SlideOverDrawer
         isOpen={Boolean(editingRecord && editType)}

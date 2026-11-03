@@ -14,9 +14,11 @@ export async function POST(req: Request) {
     const finalBudget = Number(budget) || 30000;
     const finalSelectedTasks = Array.isArray(selectedTasks) ? selectedTasks : [];
 
-    // Support Mock Mode for out-of-the-box local testing
+    // Support Mock Mode for out-of-the-box local testing (without mutating global singleton in production)
     if (!accessToken || accessToken === 'mock-token') {
-      updateMockDatabase(finalWeddingName, finalBudget, finalSelectedTasks);
+      if (process.env.NODE_ENV !== 'production') {
+        updateMockDatabase(finalWeddingName, finalBudget, finalSelectedTasks);
+      }
       return NextResponse.json({
         success: true,
         spreadsheetId: 'mock-sheet-id-vow-12345',

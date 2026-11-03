@@ -5,6 +5,9 @@ import { LocalLicensingDb } from '@/lib/db/licensingDb';
 import { LocalFirestore } from '@/lib/db/firestoreDb';
 import { verifyOAuthStateNonce, OAUTH_NONCE_COOKIE } from '@/lib/auth/oauthCsrf';
 import { isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
+import { setSignedUserEmailCookies } from '@/lib/auth/userSession';
+import { verifyShareToken } from '@/lib/share/token';
+import { isShareTokenRevokedAsync } from '@/lib/share/revocation';
 
 function getOAuth2Client(redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
@@ -187,7 +190,7 @@ export async function GET(req: NextRequest) {
   <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0F172A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
     <div style="text-align: center;">
       <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">Administrator Authenticated</h3>
-      <p style="color: #94A3B8; font-size: 0.875rem;">Unlocking Monarch Admin Console...</p>
+      <p style="color: #94A3B8; font-size: 0.875rem;">Unlocking Sheet2Suite Admin Console...</p>
     </div>
     <script>
       try {
@@ -348,32 +351,86 @@ export async function GET(req: NextRequest) {
       console.error('Provisioning step error:', pErr);
     }
 
-    // If partner/co-planner arrived via invite link carrying spreadsheetId, link them to the workspace
+    // SECURITY [VULN-2]: Verify invitation & license tier quota before linking co-planner or granting Drive writer access
     if (stateSpreadsheetId && userEmail) {
       try {
-        await LocalLicensingDb.addCoPlannerAsync(stateSpreadsheetId, userEmail);
-      } catch (cpErr) {
-        console.warn('[OAuth] Could not automatically link co-planner in workspace:', cpErr);
-      }
-
-      // Automatically grant Google Drive edit permissions using workspace owner credentials
-      try {
         const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(stateSpreadsheetId);
-        const ownerEmail = ws?.userEmail;
-        const driveAuth = await getGoogleAuthAsync(undefined, undefined, ownerEmail, undefined, { allowStoredFallback: true });
-        const driveClient = google.drive({ version: 'v3', auth: driveAuth });
-        await driveClient.permissions.create({
-          fileId: stateSpreadsheetId,
-          sendNotificationEmail: false,
-          requestBody: {
-            role: 'writer',
-            type: 'user',
-            emailAddress: userEmail.trim().toLowerCase(),
-          },
-        });
-        console.log(`[OAuth] Automatically granted Drive writer permission to co-planner ${userEmail} on ${stateSpreadsheetId}`);
+        const cleanCaller = userEmail.trim().toLowerCase();
+
+        if (ws) {
+          const isOwner = ws.userEmail?.toLowerCase().trim() === cleanCaller;
+          const existingCoPlanners = Array.from(
+            new Set(
+              [
+                ...(Array.isArray(ws.coPlanners) ? ws.coPlanners : []),
+                ...(ws.partnerEmail ? [ws.partnerEmail] : []),
+              ]
+                .map((e) => e.trim().toLowerCase())
+                .filter(Boolean)
+            )
+          );
+          const isPreInvited = existingCoPlanners.includes(cleanCaller);
+
+          let canJoinAsCoPlanner = isOwner || isPreInvited;
+
+          if (!canJoinAsCoPlanner) {
+            // Check if a valid signed partner_invite token was included in the OAuth state
+            const rawInviteToken = csrfCheck.payload?.inviteToken;
+            if (rawInviteToken && typeof rawInviteToken === 'string') {
+              const invitePayload = verifyShareToken(rawInviteToken);
+              const isRevoked = invitePayload ? await isShareTokenRevokedAsync(invitePayload, rawInviteToken) : true;
+              if (
+                invitePayload &&
+                !isRevoked &&
+                invitePayload.spreadsheetId === stateSpreadsheetId &&
+                invitePayload.scope === 'partner_invite'
+              ) {
+                const licenseKey = ws.orderId || (ws as any)?.licenseKey || '';
+                const license = licenseKey ? await LocalLicensingDb.getLicenseByKeyAsync(licenseKey) : null;
+                const isPro = license?.licenseTier === 'pro' || license?.licenseTier === 'unlimited';
+                const maxSecondary = isPro ? 999 : 1;
+
+                if (existingCoPlanners.length < maxSecondary) {
+                  canJoinAsCoPlanner = true;
+                } else {
+                  console.warn(
+                    `[OAuth Security] Co-planner quota reached (${existingCoPlanners.length}/${maxSecondary}) for ${stateSpreadsheetId}. Rejected ${cleanCaller}.`
+                  );
+                }
+              }
+            }
+          }
+
+          if (canJoinAsCoPlanner) {
+            if (!isOwner) {
+              await LocalLicensingDb.addCoPlannerAsync(stateSpreadsheetId, cleanCaller);
+              const ownerEmail = ws.userEmail;
+              const driveAuth = await getGoogleAuthAsync(undefined, undefined, ownerEmail, undefined, {
+                allowStoredFallback: true,
+              });
+              const driveClient = google.drive({ version: 'v3', auth: driveAuth });
+              await driveClient.permissions.create({
+                fileId: stateSpreadsheetId,
+                sendNotificationEmail: false,
+                requestBody: {
+                  role: 'writer',
+                  type: 'user',
+                  emailAddress: cleanCaller,
+                },
+              });
+              console.log(
+                `[OAuth] Granted Drive writer permission to authorized co-planner ${cleanCaller} on ${stateSpreadsheetId}`
+              );
+            }
+          } else {
+            console.warn(
+              `[OAuth Security] Blocked uninvited co-planner join attempt by ${cleanCaller} on spreadsheet ${stateSpreadsheetId}`
+            );
+            stateSpreadsheetId = undefined;
+          }
+        }
       } catch (permErr: any) {
-        console.warn('[OAuth] Note on auto-granting drive permission to co-planner:', permErr?.message);
+        console.warn('[OAuth] Note on verifying/granting drive permission to co-planner:', permErr?.message);
       }
     }
 
@@ -550,13 +607,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (userEmail) {
-      response.cookies.set('s2s_user_email', userEmail, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-        path: '/',
-      });
+      setSignedUserEmailCookies(response, userEmail);
     }
 
     if (effectiveRefreshToken) {

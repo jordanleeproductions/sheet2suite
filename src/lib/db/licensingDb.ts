@@ -13,6 +13,8 @@ export interface WorkspaceRecord {
   productName: 'Sheet2Vow' | 'Sheet2Vault';
   orderId?: string;
   orderVerified?: boolean;
+  shareVersion?: number;
+  revokedShareTokens?: string[];
   activatedAt: string;
   lastActiveAt: string;
 }
@@ -185,6 +187,8 @@ export const LocalLicensingDb = {
       productName: (record.productName || existingWorkspace?.productName || 'Sheet2Vow') as any,
       orderId: record.orderId !== undefined ? record.orderId : existingWorkspace?.orderId,
       orderVerified: record.orderVerified !== undefined ? record.orderVerified : (existingWorkspace?.orderVerified ?? true),
+      shareVersion: record.shareVersion !== undefined ? record.shareVersion : (existingWorkspace?.shareVersion ?? 1),
+      revokedShareTokens: record.revokedShareTokens !== undefined ? record.revokedShareTokens : (existingWorkspace?.revokedShareTokens || []),
       activatedAt: existingWorkspace?.activatedAt || record.activatedAt || now,
       lastActiveAt: now,
     };

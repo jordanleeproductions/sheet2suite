@@ -1,9 +1,22 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { LicenseValidator } from '@/lib/core/activation/licenseValidator';
 import { apiResponse } from '@/lib/core/apiResponse';
+import { checkRateLimit } from '@/lib/core/rateLimiter';
 
 export async function POST(req: NextRequest) {
   try {
+    const rate = checkRateLimit(req, 'verify-order', 15, 15 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many order verification attempts. Please wait ${rate.retryAfterSeconds}s and try again.`,
+          code: 'RATE_LIMITED',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 429 }
+      );
+    }
     const body = await req.json().catch(() => ({}));
     const { email, orderId, productCode = 'SHEET2VOW' } = body;
     const requestedProductCode = String(productCode).toUpperCase() as any;

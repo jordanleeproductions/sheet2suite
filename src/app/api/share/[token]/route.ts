@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { google } from 'googleapis';
 import { verifyShareToken } from '@/lib/share/token';
+import { isShareTokenRevokedAsync } from '@/lib/share/revocation';
 import { mockDatabase, mockWeddingName } from '@/lib/sheets/mockDb';
-import { getSheetsClient } from '@/lib/sheets/client';
+import { getGoogleAuthAsync } from '@/lib/sheets/client';
+import { isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
+import { LocalLicensingDb } from '@/lib/db/licensingDb';
 import { musicMapper, photoMapper, scheduleMapper, guestMapper } from '@/lib/sheets/mapper';
 
 export async function GET(
@@ -15,17 +19,23 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Token parameter is required' }, { status: 400 });
     }
 
-    // Verify token
+    // Verify token signature & expiration
     const payload = verifyShareToken(token);
     if (!payload) {
       return NextResponse.json({ success: false, error: 'Invalid, revoked, or expired share link' }, { status: 401 });
+    }
+
+    // Verify server-side revocation status
+    const isRevoked = await isShareTokenRevokedAsync(payload, token);
+    if (isRevoked) {
+      return NextResponse.json({ success: false, error: 'This vendor share link has been revoked by the couple.' }, { status: 401 });
     }
 
     const { spreadsheetId, scope, weddingName } = payload;
     let data: any = {};
 
     // Mock Mode
-    if (spreadsheetId === 'mock-sheet-id-vow-12345' || !process.env.GOOGLE_CLIENT_EMAIL) {
+    if (isMockSpreadsheet(spreadsheetId)) {
       if (scope === 'music' || scope === 'vendor_hub') {
         data.music = mockDatabase.music;
       }
@@ -89,9 +99,14 @@ export async function GET(
       });
     }
 
-    // Google Sheets Mode
+    // Google Sheets Mode: Authenticate using the couple's stored OAuth credentials for this spreadsheet
     try {
-      const sheetsClient = getSheetsClient(undefined);
+      const ws = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
+      const ownerEmail = ws?.userEmail || payload.userEmail;
+      const auth = await getGoogleAuthAsync(undefined, spreadsheetId, ownerEmail, undefined, {
+        allowStoredFallback: true,
+      });
+      const sheetsClient = google.sheets({ version: 'v4', auth });
 
       // Fetch spreadsheet metadata to get exact available sheet titles
       const metaRes = await sheetsClient.spreadsheets.get({ spreadsheetId });
@@ -210,25 +225,14 @@ export async function GET(
       });
 
     } catch (sheetError: any) {
-      console.warn('Fallback to mock mode for share endpoint due to sheet error:', sheetError.message);
-      
-      // Graceful fallback to mock data
-      return NextResponse.json({
-        success: true,
-        weddingName: weddingName || mockWeddingName,
-        scope,
-        data: {
-          music: mockDatabase.music,
-          photos: mockDatabase.photos,
-          schedule: mockDatabase.schedule,
-          catering: {
-            attendingCount: 18,
-            dietarySummary: [{ restriction: 'Gluten Free', count: 3 }, { restriction: 'Nut Allergy', count: 1 }],
-            tableSummary: [{ tableName: 'Table 1', count: 8 }, { tableName: 'Table 2', count: 8 }]
-          }
+      console.error('Error loading live spreadsheet for vendor share endpoint:', sheetError?.message);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unable to load live wedding spreadsheet. The couple may need to reconnect Google Drive in Sheet2Vow Settings.',
         },
-        isMock: true,
-      });
+        { status: 502 }
+      );
     }
 
   } catch (error: any) {

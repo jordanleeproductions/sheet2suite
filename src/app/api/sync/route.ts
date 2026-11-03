@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSheetsClient } from '@/lib/sheets/client';
+import { getVerifiedCookieEmail } from '@/lib/auth/userSession';
+import { isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
 import { 
   guestMapper, 
   budgetMapper, 
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('Authorization');
     const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     const cookieToken = req.cookies.get('s2s_access_token')?.value;
-    const cookieEmail = req.cookies.get('s2s_user_email')?.value;
+    const cookieEmail = getVerifiedCookieEmail(req);
     const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
     const effectiveToken = (accessToken && accessToken !== 'mock-token') ? accessToken : cookieToken;
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Mock Mode
-    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345' || spreadsheetId.startsWith('mock-') || spreadsheetId.includes('mock')) {
+    if (accessToken === 'mock-token' || isMockSpreadsheet(spreadsheetId)) {
       // Dynamically calculate metrics for consistency in mock mode
       const estimatedCost = mockDatabase.budget.reduce((sum, item) => sum + item.estimatedCost, 0);
       const actualCost = mockDatabase.budget.reduce((sum, item) => sum + item.actualCost, 0);
@@ -422,7 +424,7 @@ export async function GET(req: NextRequest) {
     let replacementSpreadsheetId: string | undefined;
 
     const catchSpreadsheetId = req.nextUrl?.searchParams?.get('spreadsheetId') || undefined;
-    const catchCookieEmail = req.cookies.get('s2s_user_email')?.value;
+    const catchCookieEmail = getVerifiedCookieEmail(req);
     const catchCookieToken = req.cookies.get('s2s_access_token')?.value;
     const catchRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
@@ -464,7 +466,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('Authorization');
     const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     const cookieToken = req.cookies.get('s2s_access_token')?.value;
-    const cookieEmail = req.cookies.get('s2s_user_email')?.value;
+    const cookieEmail = getVerifiedCookieEmail(req);
     const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
     const body = await req.json();
@@ -481,7 +483,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Mock Mode Update
-    if ((!hasAuth && !spreadsheetId) || accessToken === 'mock-token' || spreadsheetId === 'mock-sheet-id-vow-12345' || spreadsheetId.startsWith('mock-') || spreadsheetId.includes('mock')) {
+    if (accessToken === 'mock-token' || isMockSpreadsheet(spreadsheetId)) {
+      // SECURITY [VULN-8]: In production, keep server-side mockDatabase immutable so one visitor cannot deface the public demo for others
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({
+          success: true,
+          message: `Successfully synchronized ${sheetType} in Demo Mode (client-local).`,
+          data: mockDatabase,
+          isMock: true,
+        });
+      }
       if (sheetType === 'dashboard') {
         const newBudgetVal = data.totalBudget !== undefined ? Number(data.totalBudget) : (data.budget !== undefined ? Number(data.budget) : mockDatabase.dashboard.totalBudget);
         mockDatabase.dashboard.totalBudget = isNaN(newBudgetVal) ? mockDatabase.dashboard.totalBudget : newBudgetVal;

@@ -37,6 +37,8 @@ export interface WorkspaceDocument {
   productName: string;
   orderId?: string;
   orderVerified: boolean;
+  shareVersion?: number;
+  revokedShareTokens?: string[];
   createdAt: string;
   lastActiveAt: string;
 }
@@ -170,8 +172,9 @@ export function getCloudFirestore(): Firestore | null {
   return null;
 }
 
-// Seed default entitlement licenses into Firestore licenses collection if empty
+// Seed default entitlement licenses into local Firestore licenses collection only in non-production
 function seedDefaultLicenses() {
+  if (process.env.NODE_ENV === 'production') return;
   const collectionDir = ensureCollectionDir('licenses');
   const seededKeys = ['ETSY-98765432', 'ETSY-12345678', 'ETSY-DEMO-9876', 'S2S-MASTER-PASS-2026'];
 

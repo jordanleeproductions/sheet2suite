@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { generateOAuthStatePayload, OAUTH_NONCE_COOKIE, OAUTH_NONCE_MAX_AGE_SECONDS } from '@/lib/auth/oauthCsrf';
+import { setSignedUserEmailCookies } from '@/lib/auth/userSession';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
       : 'consent';
     const spreadsheetIdParam = url.searchParams.get('spreadsheetId') || undefined;
     const purposeParam = url.searchParams.get('purpose') || undefined;
+    const inviteTokenParam = url.searchParams.get('inviteToken') || undefined;
 
     const clientOrigin = req.headers.get('origin') || req.headers.get('referer');
     let callerOrigin: string | undefined;
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
       spreadsheetId: spreadsheetIdParam,
       origin: callerOrigin,
       purpose: purposeParam,
+      inviteToken: inviteTokenParam,
     });
 
     const oauth2Client = getOAuth2Client(redirectUri);
@@ -149,7 +152,18 @@ export async function POST(req: NextRequest) {
 
         await LocalFirestore.setDocAsync('auth_tokens', userEmail, recordData);
         if (spreadsheetId) {
-          await LocalFirestore.setDocAsync('auth_tokens', spreadsheetId, recordData);
+          const { LocalLicensingDb } = await import('@/lib/db/licensingDb');
+          const existingWs = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(spreadsheetId);
+          const cleanUser = userEmail.trim().toLowerCase();
+          const isAuthorizedOnWs =
+            !existingWs ||
+            existingWs.userEmail?.toLowerCase().trim() === cleanUser ||
+            existingWs.partnerEmail?.toLowerCase().trim() === cleanUser ||
+            (Array.isArray(existingWs.coPlanners) &&
+              existingWs.coPlanners.some((cp) => cp.trim().toLowerCase() === cleanUser));
+          if (isAuthorizedOnWs) {
+            await LocalFirestore.setDocAsync('auth_tokens', spreadsheetId, recordData);
+          }
         }
       } catch (err) {
         console.warn('[OAuth] Could not save token document:', err);
@@ -189,13 +203,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (userInfo.data.email) {
-      response.cookies.set('s2s_user_email', userInfo.data.email, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        path: '/',
-      });
+      setSignedUserEmailCookies(response, userInfo.data.email);
     }
 
     return response;

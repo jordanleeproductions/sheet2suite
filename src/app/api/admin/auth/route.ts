@@ -5,6 +5,7 @@ import {
   ADMIN_SESSION_COOKIE,
   getConfiguredAdminEmails,
 } from '@/lib/auth/adminAuth';
+import { checkRateLimit } from '@/lib/core/rateLimiter';
 
 /**
  * GET /api/admin/auth
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     authenticated: auth.authorized,
     user: auth.adminUser || (auth.adminEmail ? { email: auth.adminEmail } : null),
     authMethod: auth.authMethod,
-    authorizedEmails: getConfiguredAdminEmails(),
+    authorizedEmails: auth.authorized ? getConfiguredAdminEmails() : [],
   });
 }
 
@@ -28,6 +29,16 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    const rate = checkRateLimit(req, 'admin-auth', 10, 15 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many authentication attempts. Please try again in ${rate.retryAfterSeconds} seconds.`,
+        },
+        { status: 429 }
+      );
+    }
     let candidateKey: string | undefined;
 
     try {

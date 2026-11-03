@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { google } from 'googleapis';
 import { LocalLicensingDb, WorkspaceRecord } from '@/lib/db/licensingDb';
 import { LocalFirestore } from '@/lib/db/firestoreDb';
+import { getVerifiedCookieEmail } from '@/lib/auth/userSession';
 
 export interface WorkspaceAuthParams {
   spreadsheetId: string;
@@ -32,13 +33,13 @@ export function isMockSpreadsheet(spreadsheetId?: string | null): boolean {
   return (
     cleanId === 'mock-sheet-id-vow-12345' ||
     cleanId.startsWith('mock-') ||
-    cleanId.includes('mock') ||
     cleanId === 'demo'
   );
 }
 
 /**
  * Extracts authentication credentials and session context from a NextRequest.
+ * SECURITY [VULN-1]: Only accepts cookieEmail if verified by the HMAC-signed s2s_user_session cookie.
  */
 export function extractCallerCredentials(req: NextRequest) {
   const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
@@ -49,7 +50,7 @@ export function extractCallerCredentials(req: NextRequest) {
     req.cookies.get('s2s_access_token')?.value ||
     req.cookies.get('google_access_token')?.value;
 
-  const cookieEmail = req.cookies.get('s2s_user_email')?.value;
+  const cookieEmail = getVerifiedCookieEmail(req);
   const cookieRefreshToken = req.cookies.get('s2s_refresh_token')?.value;
 
   const effectiveToken = bearerToken || headerToken || cookieToken;

@@ -43,13 +43,35 @@ export default function VendorShareLinkManager({
   const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
   const [showRevokedSection, setShowRevokedSection] = useState(false);
 
-  const handleGenerateGuestUploadLink = () => {
-    const token = generateShareToken({
-      spreadsheetId,
-      scope: 'guest_upload',
-      weddingName: weddingName || 'Our Wedding',
-      expiresInDays: 90,
-    });
+  const handleGenerateGuestUploadLink = async () => {
+    let token = '';
+    let shareVersion = 1;
+    try {
+      const res = await fetch('/api/share/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId,
+          scope: 'guest_upload',
+          weddingName: weddingName || 'Our Wedding',
+          expiresInDays: 90,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success && data.token) {
+        token = data.token;
+        shareVersion = data.shareVersion || 1;
+      }
+    } catch (_) {}
+
+    if (!token) {
+      token = generateShareToken({
+        spreadsheetId,
+        scope: 'guest_upload',
+        weddingName: weddingName || 'Our Wedding',
+        expiresInDays: 90,
+      });
+    }
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const shareUrl = `${origin}/upload/${token}`;
@@ -62,7 +84,7 @@ export default function VendorShareLinkManager({
       shareUrl,
       createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       exp: Date.now() + 90 * 24 * 60 * 60 * 1000,
-      shareVersion: 1,
+      shareVersion,
     };
 
     const updated = [newRecord, ...links];
@@ -70,13 +92,35 @@ export default function VendorShareLinkManager({
     localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
   };
 
-  const handleGenerateSongRequestLink = () => {
-    const token = generateShareToken({
-      spreadsheetId,
-      scope: 'guest_song_request',
-      weddingName: weddingName || 'Our Wedding',
-      expiresInDays: 90,
-    });
+  const handleGenerateSongRequestLink = async () => {
+    let token = '';
+    let shareVersion = 1;
+    try {
+      const res = await fetch('/api/share/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId,
+          scope: 'guest_song_request',
+          weddingName: weddingName || 'Our Wedding',
+          expiresInDays: 90,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success && data.token) {
+        token = data.token;
+        shareVersion = data.shareVersion || 1;
+      }
+    } catch (_) {}
+
+    if (!token) {
+      token = generateShareToken({
+        spreadsheetId,
+        scope: 'guest_song_request',
+        weddingName: weddingName || 'Our Wedding',
+        expiresInDays: 90,
+      });
+    }
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const shareUrl = `${origin}/request-song/${token}`;
@@ -89,7 +133,7 @@ export default function VendorShareLinkManager({
       shareUrl,
       createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       exp: Date.now() + 90 * 24 * 60 * 60 * 1000,
-      shareVersion: 1,
+      shareVersion,
     };
 
     const updated = [newRecord, ...links];
@@ -125,11 +169,19 @@ export default function VendorShareLinkManager({
   };
 
   const handleRevokeSingle = async (linkId: string) => {
+    const targetLink = links.find((l) => l.id === linkId);
     const updated = links.map(l => 
       l.id === linkId ? { ...l, isRevoked: true } : l
     );
     setLinks(updated);
     localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
+    if (spreadsheetId && targetLink?.token) {
+      fetch('/api/share/token', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spreadsheetId, token: targetLink.token }),
+      }).catch(() => {});
+    }
     if (onRevokeAll) await onRevokeAll();
   };
 
@@ -138,6 +190,13 @@ export default function VendorShareLinkManager({
     setLinks(updated);
     localStorage.setItem('s2v_generated_share_links', JSON.stringify(updated));
     setShowRevokeAllModal(false);
+    if (spreadsheetId) {
+      fetch('/api/share/token', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spreadsheetId, revokeAll: true }),
+      }).catch(() => {});
+    }
     if (onRevokeAll) await onRevokeAll();
   };
 

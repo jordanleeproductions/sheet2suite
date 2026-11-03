@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { generateShareToken, ShareScope, ShareLinkRecord } from '@/lib/share/token';
 import { 
   Share2, 
@@ -47,16 +47,78 @@ export default function ShareModal({
     vendor_hub: 'Full Vendor Hub',
     guest_upload: 'Guest Photo & Video Upload Portal',
     guest_song_request: 'Guest Song Request Portal',
+    partner_invite: 'Co-Planner Workspace Invitation',
   };
 
-  // Generate Token & Link
+  const [serverToken, setServerToken] = useState<string>('');
+  const [serverShareVersion, setServerShareVersion] = useState<number>(1);
+  const [partnerInviteToken, setPartnerInviteToken] = useState<string>('');
+
   const expTimestamp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
-  const token = generateShareToken({
+  const fallbackToken = generateShareToken({
     spreadsheetId,
     scope,
     weddingName: weddingName || 'Our Wedding',
     expiresInDays,
   });
+  const token = serverToken || fallbackToken;
+
+  useEffect(() => {
+    let active = true;
+    const activeSheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+    if (!activeSheetId) return;
+
+    fetch('/api/share/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        spreadsheetId: activeSheetId,
+        scope,
+        weddingName: weddingName || 'Our Wedding',
+        expiresInDays,
+      }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (active && res?.success && res.token) {
+          setServerToken(res.token);
+          if (res.shareVersion) setServerShareVersion(res.shareVersion);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [spreadsheetId, scope, weddingName, expiresInDays]);
+
+  useEffect(() => {
+    let active = true;
+    const activeSheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+    if (!activeSheetId) return;
+
+    fetch('/api/share/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        spreadsheetId: activeSheetId,
+        scope: 'partner_invite',
+        weddingName: weddingName || 'Our Wedding',
+        expiresInDays: 30,
+      }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (active && res?.success && res.token) {
+          setPartnerInviteToken(res.token);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [spreadsheetId, weddingName]);
 
   const basePath = scope === 'guest_upload'
     ? '/upload/'
@@ -77,7 +139,7 @@ export default function ShareModal({
       shareUrl,
       createdAt: new Date().toISOString(),
       exp: expTimestamp,
-      shareVersion: 1,
+      shareVersion: serverShareVersion,
     };
 
     try {
@@ -118,9 +180,10 @@ export default function ShareModal({
           {/* Partner & Co-Planner Workspace Sharing Banner */}
           {(() => {
             const activeSheetId = spreadsheetId || (typeof window !== 'undefined' ? localStorage.getItem('s2v_spreadsheet_id') || '' : '');
+            const inviteQuery = partnerInviteToken ? `&inviteToken=${encodeURIComponent(partnerInviteToken)}` : '';
             const partnerUrl = typeof window !== 'undefined'
-              ? `${window.location.origin}/vow?spreadsheetId=${encodeURIComponent(activeSheetId)}`
-              : `/vow?spreadsheetId=${activeSheetId}`;
+              ? `${window.location.origin}/vow?spreadsheetId=${encodeURIComponent(activeSheetId)}${inviteQuery}`
+              : `/vow?spreadsheetId=${activeSheetId}${inviteQuery}`;
             const weddingTitle = weddingName || 'Our Wedding';
             const shareTitle = `${weddingTitle} - Co-Planner Workspace Invitation`;
             const shareText = `Hi! Join me as an authorized co-planner on Sheet2Vow for ${weddingTitle}.\nAccess our live wedding database workspace: ${partnerUrl}`;

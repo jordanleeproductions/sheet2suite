@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LocalLicensingDb } from '@/lib/db/licensingDb';
 import { verifyAdminAuth } from '@/lib/auth/adminAuth';
+import { getVerifiedCookieEmail, resolveGoogleTokenEmail } from '@/lib/auth/userSession';
 
 /**
  * Helper to extract and verify the caller's authenticated identity.
@@ -24,22 +25,13 @@ async function resolveCallerIdentity(req: NextRequest): Promise<{
   const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
   const token = bearerToken || cookieToken;
   const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
-  const cookieEmail = req.cookies.get('s2s_user_email')?.value?.trim().toLowerCase();
+  const cookieEmail = getVerifiedCookieEmail(req);
 
   let authenticatedEmail = cookieEmail;
 
-  // If cookie email not present but access token provided, verify with Google to obtain caller email
+  // If signed session cookie not present but access token provided, verify with Google to obtain caller email
   if (!authenticatedEmail && token) {
-    try {
-      const { google } = await import('googleapis');
-      const oauth2 = google.oauth2({ version: 'v2' });
-      const tokenInfo = await oauth2.tokeninfo({ access_token: token });
-      if (tokenInfo.data?.email) {
-        authenticatedEmail = tokenInfo.data.email.trim().toLowerCase();
-      }
-    } catch (tokenErr) {
-      console.warn('[Workspaces Auth] Could not resolve token with Google:', tokenErr);
-    }
+    authenticatedEmail = (await resolveGoogleTokenEmail(token)) || undefined;
   }
 
   return {
@@ -81,7 +73,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 2. Caller must have an active authenticated session
-    if (!caller.authenticatedEmail || (!caller.token && !caller.refreshToken && !req.cookies.get('s2s_user_email')?.value)) {
+    if (!caller.authenticatedEmail) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Active user authentication session required.' },
         { status: 401 }

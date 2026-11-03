@@ -59,13 +59,22 @@ export function isAuthorizedAdminEmail(email: string | null | undefined): boolea
 /**
  * Retrieves the secret used for signing admin session tokens.
  */
+const globalAdminSecretStore = globalThis as unknown as {
+  __s2s_runtime_admin_secret?: string;
+};
+
 function getSessionSecret(): string {
-  return (
+  const configured =
     process.env.ADMIN_SESSION_SECRET ||
     process.env.ADMIN_SECRET_KEY ||
-    process.env.GOOGLE_CLIENT_SECRET ||
-    'sheet2suite-admin-session-secret-salt-2026'
-  );
+    process.env.GOOGLE_CLIENT_SECRET;
+  if (configured && configured.trim().length >= 12 && configured !== 'MOCK_CLIENT_SECRET') {
+    return configured.trim();
+  }
+  if (!globalAdminSecretStore.__s2s_runtime_admin_secret) {
+    globalAdminSecretStore.__s2s_runtime_admin_secret = crypto.randomBytes(32).toString('hex');
+  }
+  return globalAdminSecretStore.__s2s_runtime_admin_secret;
 }
 
 /**

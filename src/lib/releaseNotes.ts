@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
-    version: 'v1.23.0',
-    title: 'Monarch Admin Suite & Platform Diagnostics',
+    version: 'v1.23.1',
+    title: 'Admin Portal Brand Alignment & Refinements',
     date: 'Nov 3, 2026',
     badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'fix',
+    highlights: [
+      'Streamlined admin navigation and header branding across the administrative suite.',
+      'Refined portal status pills and identity badges for seamless platform consistency.',
+      'Polished authentication modal transitions and diagnostic inspector controls.',
+    ],
+    details: 'Brand alignment and administrative interface refinements across the Sheet2Suite console.',
+  },
+  {
+    version: 'v1.23.0',
+    title: 'Sheet2Suite Admin Suite & Platform Diagnostics',
+    date: 'Nov 3, 2026',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [

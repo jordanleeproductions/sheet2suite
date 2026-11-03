@@ -1,6 +1,14 @@
 import crypto from 'crypto';
 
-export type ShareScope = 'music' | 'photos' | 'timeline' | 'catering' | 'vendor_hub' | 'guest_upload' | 'guest_song_request';
+export type ShareScope =
+  | 'music'
+  | 'photos'
+  | 'timeline'
+  | 'catering'
+  | 'vendor_hub'
+  | 'guest_upload'
+  | 'guest_song_request'
+  | 'partner_invite';
 
 export interface ShareTokenPayload {
   spreadsheetId: string;
@@ -30,22 +38,36 @@ export interface ShareLinkRecord {
   folderPath?: string;
 }
 
-// Security [SEC-5]: Ensure strong dynamic secret fallback rather than a static predictable string if SHARE_JWT_SECRET is unset
+const globalShareSecretStore = globalThis as unknown as {
+  __s2s_runtime_share_secret?: string;
+};
+
+/**
+ * Security [VULN-3]: Server-only HMAC signing secret resolution.
+ * Never falls back to a public static string that an attacker can read from source or client bundles.
+ */
 function resolveJwtSecret(): string {
   if (process.env.SHARE_JWT_SECRET && process.env.SHARE_JWT_SECRET.trim().length >= 16) {
     return process.env.SHARE_JWT_SECRET.trim();
   }
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('[Security Warning]: SHARE_JWT_SECRET is unset or under 16 characters. Please configure SHARE_JWT_SECRET in Cloud Secret Manager.');
+  const envFallback =
+    process.env.ADMIN_SECRET_KEY ||
+    process.env.NEXTAUTH_SECRET ||
+    process.env.GOOGLE_CLIENT_SECRET;
+  if (envFallback && envFallback.trim().length >= 12 && envFallback !== 'MOCK_CLIENT_SECRET') {
+    return envFallback.trim();
   }
-  return process.env.ADMIN_SECRET_KEY || process.env.NEXTAUTH_SECRET || 's2v_share_hmac_secret_runtime_fallback';
+  if (process.env.NODE_ENV === 'production') {
+    console.warn(
+      '[Security Warning]: SHARE_JWT_SECRET is unset. Using cryptographically random process secret.'
+    );
+  }
+  if (!globalShareSecretStore.__s2s_runtime_share_secret) {
+    globalShareSecretStore.__s2s_runtime_share_secret = crypto.randomBytes(32).toString('hex');
+  }
+  return globalShareSecretStore.__s2s_runtime_share_secret;
 }
 
-const JWT_SECRET = resolveJwtSecret();
-
-/**
- * Base64URL encode string
- */
 function base64UrlEncode(str: string): string {
   return Buffer.from(str)
     .toString('base64')
@@ -54,9 +76,6 @@ function base64UrlEncode(str: string): string {
     .replace(/\//g, '_');
 }
 
-/**
- * Base64URL decode string
- */
 function base64UrlDecode(str: string): string {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   while (base64.length % 4) {
@@ -66,9 +85,12 @@ function base64UrlDecode(str: string): string {
 }
 
 /**
- * Generate a signed HMAC-SHA256 token for vendor share links
+ * Generate a signed HMAC-SHA256 token for vendor/guest/partner share links.
  */
-export function generateShareToken(payload: Omit<ShareTokenPayload, 'exp'> & { expiresInDays?: number }): string {
+export function generateShareToken(
+  payload: Omit<ShareTokenPayload, 'exp'> & { expiresInDays?: number }
+): string {
+  const secret = resolveJwtSecret();
   const expiresInDays = payload.expiresInDays !== undefined ? payload.expiresInDays : 60;
   const exp = expiresInDays > 0 ? Date.now() + expiresInDays * 24 * 60 * 60 * 1000 : 0;
 
@@ -89,7 +111,7 @@ export function generateShareToken(payload: Omit<ShareTokenPayload, 'exp'> & { e
   const encodedPayload = base64UrlEncode(JSON.stringify(tokenPayload));
 
   const signature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', secret)
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest('base64')
     .replace(/=/g, '')
@@ -100,32 +122,33 @@ export function generateShareToken(payload: Omit<ShareTokenPayload, 'exp'> & { e
 }
 
 /**
- * Verify & decode a vendor share token
+ * Verify & decode a vendor/guest/partner share token.
  */
 export function verifyShareToken(token: string): ShareTokenPayload | null {
   try {
+    const secret = resolveJwtSecret();
     const parts = token.split('.');
     if (parts.length !== 3) return null;
 
     const [encodedHeader, encodedPayload, signature] = parts;
 
-    // Verify signature
     const expectedSignature = crypto
-      .createHmac('sha256', JWT_SECRET)
+      .createHmac('sha256', secret)
       .update(`${encodedHeader}.${encodedPayload}`)
       .digest('base64')
       .replace(/=/g, '')
       .replace(/\+/g, '-')
       .replace(/\//g, '_');
 
-    if (signature !== expectedSignature) {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       console.warn('Share token signature mismatch');
       return null;
     }
 
     const payload: ShareTokenPayload = JSON.parse(base64UrlDecode(encodedPayload));
 
-    // Check expiration (exp > 0 means token has an expiration timestamp; 0 means permanent)
     if (payload.exp && payload.exp > 0 && Date.now() > payload.exp) {
       console.warn('Share token expired');
       return null;

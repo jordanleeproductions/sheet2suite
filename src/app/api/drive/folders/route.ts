@@ -58,6 +58,13 @@ export async function GET(req: NextRequest) {
       ? 'root' 
       : folderId;
 
+    if (effectiveParent !== 'root' && !/^[a-zA-Z0-9_-]{10,80}$/.test(effectiveParent)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Google Drive folderId format.', files: [] },
+        { status: 400 }
+      );
+    }
+
     const q = `'${effectiveParent}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
 
     const res = await drive.files.list({

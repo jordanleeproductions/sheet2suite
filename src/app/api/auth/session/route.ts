@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getGoogleAuthAsync } from '@/lib/sheets/client';
 import { verifyWorkspaceAuthorization, isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
+import { getVerifiedCookieEmail } from '@/lib/auth/userSession';
 
 /**
  * GET /api/auth/session
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     const url = req.nextUrl;
     const spreadsheetId = url.searchParams.get('spreadsheetId') || req.headers.get('x-spreadsheet-id') || undefined;
     const token = req.headers.get('x-google-token') || req.cookies.get('google_access_token')?.value || req.cookies.get('s2s_access_token')?.value || undefined;
-    const userEmail = req.cookies.get('s2s_user_email')?.value || undefined;
+    const userEmail = getVerifiedCookieEmail(req);
     const refreshTokenCookie = req.cookies.get('s2s_refresh_token')?.value || undefined;
 
     // In mock or demo mode, sessions never expire

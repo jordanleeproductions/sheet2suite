@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyShareToken } from '@/lib/share/token';
+import { isShareTokenRevokedAsync } from '@/lib/share/revocation';
+import { checkRateLimit } from '@/lib/core/rateLimiter';
 import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { getGoogleAuthAsync } from '@/lib/sheets/client';
@@ -12,7 +14,8 @@ async function getOrCreateFolder(drive: any, folderName: string, parentId?: stri
     'trashed = false',
   ];
 
-  if (parentId && parentId !== 'root') {
+  const isSafeFolderId = Boolean(parentId && /^[a-zA-Z0-9_-]{10,80}$/.test(parentId));
+  if (parentId && parentId !== 'root' && isSafeFolderId) {
     queryParts.push(`'${parentId}' in parents`);
   } else {
     queryParts.push("'root' in parents");
@@ -68,14 +71,17 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid or expired share token' }, { status: 401 });
     }
 
+    const revoked = await isShareTokenRevokedAsync(payload, token);
+    if (revoked) {
+      return NextResponse.json({ error: 'This upload link has been revoked' }, { status: 401 });
+    }
+
+    // SECURITY [VULN-3]: Do not leak internal spreadsheetId or userEmail to public visitors
     return NextResponse.json({
       success: true,
       weddingName: payload.weddingName || 'Our Wedding',
-      spreadsheetId: payload.spreadsheetId,
-      folderId: payload.folderId,
       folderName: payload.folderName,
       folderPath: payload.folderPath || 'My Drive/Wedding Planning/Guest Uploads',
-      userEmail: payload.userEmail,
       exp: payload.exp,
     });
   } catch (error) {
@@ -94,9 +100,22 @@ export async function POST(
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
+    const rate = checkRateLimit(request, 'guest-upload', 30, 15 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: `Too many upload requests. Please wait ${rate.retryAfterSeconds}s and try again.` },
+        { status: 429 }
+      );
+    }
+
     const payload = verifyShareToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Invalid or expired upload token' }, { status: 401 });
+    }
+
+    const revoked = await isShareTokenRevokedAsync(payload, token);
+    if (revoked) {
+      return NextResponse.json({ error: 'This upload link has been revoked' }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -106,6 +125,26 @@ export async function POST(
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
+    }
+
+    // SECURITY [VULN-6]: Enforce strict file count & per-file size caps before reading into memory
+    const MAX_FILES_PER_UPLOAD = 10;
+    const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB per file
+
+    if (files.length > MAX_FILES_PER_UPLOAD) {
+      return NextResponse.json(
+        { error: `Maximum ${MAX_FILES_PER_UPLOAD} files allowed per upload submission.` },
+        { status: 400 }
+      );
+    }
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: `File "${file.name}" exceeds the 25MB maximum file size limit.` },
+          { status: 400 }
+        );
+      }
     }
 
     // Strict Image & Video Validation
@@ -416,8 +455,8 @@ export async function POST(
             }
           }
 
-          // Security [SEC-VOW-2]: Sanitize user-submitted name & caption against formula injection (=, +, -, @)
-          const sanitizedRowValues = CellGuard.sanitizePayload(rowValues);
+          // Security [SEC-VOW-2 / VULN-7]: Strictly sanitize untrusted guest input against all formulas
+          const sanitizedRowValues = CellGuard.sanitizeUntrustedInput(rowValues);
 
           // Append new entry row to GUESTBOOK tab
           await sheets.spreadsheets.values.append({

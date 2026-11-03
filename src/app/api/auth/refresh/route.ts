@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { LocalFirestore } from '@/lib/db/firestoreDb';
+import {
+  getVerifiedCookieEmail,
+  resolveGoogleTokenEmail,
+  setSignedUserEmailCookies,
+} from '@/lib/auth/userSession';
+import { verifyWorkspaceAuthorization } from '@/lib/auth/workspaceAuth';
 
 function getOAuth2Client() {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
@@ -10,8 +16,8 @@ function getOAuth2Client() {
 
 /**
  * POST /api/auth/refresh
- * Silently refreshes Google OAuth credentials using the HTTP-only refresh token cookie
- * or token document stored in Firestore. Returns fresh accessToken and updates cookies.
+ * Silently refreshes Google OAuth credentials using the HTTP-only refresh token cookie.
+ * SECURITY [VULN-1]: Verifies token owner identity before persisting tokens or setting session cookies.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -20,16 +26,28 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     } catch (_) {}
 
-    const spreadsheetId = body.spreadsheetId || req.nextUrl.searchParams.get('spreadsheetId') || req.headers.get('x-spreadsheet-id') || undefined;
-    const userEmail = body.userEmail || req.nextUrl.searchParams.get('userEmail') || req.cookies.get('s2s_user_email')?.value || undefined;
-    let refreshToken = req.cookies.get('s2s_refresh_token')?.value || body.refreshToken;
+    const spreadsheetId =
+      body.spreadsheetId ||
+      req.nextUrl.searchParams.get('spreadsheetId') ||
+      req.headers.get('x-spreadsheet-id') ||
+      undefined;
+    const requestedEmail = (
+      body.userEmail ||
+      req.nextUrl.searchParams.get('userEmail') ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
 
-    // SECURITY FIX (SEC-3): Only refresh using the caller's verified refresh token.
-    // Never harvest or substitute another user's stored refresh token by spreadsheetId.
+    const refreshToken = req.cookies.get('s2s_refresh_token')?.value || body.refreshToken;
 
     if (!refreshToken) {
       return NextResponse.json(
-        { success: false, error: 'No refresh token available. User must re-authenticate.', requiresLogin: true },
+        {
+          success: false,
+          error: 'No refresh token available. User must re-authenticate.',
+          requiresLogin: true,
+        },
         { status: 401 }
       );
     }
@@ -42,38 +60,63 @@ export async function POST(req: NextRequest) {
 
     if (!freshAccessToken) {
       return NextResponse.json(
-        { success: false, error: 'Google rejected token refresh. User must re-authenticate.', requiresLogin: true },
+        {
+          success: false,
+          error: 'Google rejected token refresh. User must re-authenticate.',
+          requiresLogin: true,
+        },
         { status: 401 }
+      );
+    }
+
+    // Resolve actual Google account email from signed session cookie or Google tokeninfo
+    let verifiedEmail =
+      getVerifiedCookieEmail(req) || (await resolveGoogleTokenEmail(freshAccessToken)) || undefined;
+
+    if (requestedEmail && verifiedEmail && requestedEmail !== verifiedEmail) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Forbidden: Requested userEmail does not match authenticated token owner.',
+        },
+        { status: 403 }
       );
     }
 
     const expiryDate = Date.now() + 3500 * 1000;
 
-    // Persist refreshed credentials to Firestore asynchronously
     const updatedRecord: any = {
       accessToken: freshAccessToken,
       refreshToken,
       expiryDate,
-      userEmail: userEmail || undefined,
+      userEmail: verifiedEmail || undefined,
       spreadsheetId: spreadsheetId || undefined,
       updatedAt: new Date().toISOString(),
     };
 
-    if (userEmail) {
-      LocalFirestore.setDocAsync('auth_tokens', userEmail, updatedRecord).catch(() => {});
+    if (verifiedEmail) {
+      LocalFirestore.setDocAsync('auth_tokens', verifiedEmail, updatedRecord).catch(() => {});
     }
-    if (spreadsheetId) {
-      LocalFirestore.setDocAsync('auth_tokens', spreadsheetId, updatedRecord).catch(() => {});
+
+    if (spreadsheetId && verifiedEmail) {
+      const wsAuth = await verifyWorkspaceAuthorization({
+        spreadsheetId,
+        userEmail: verifiedEmail,
+        accessToken: freshAccessToken,
+        refreshToken,
+      });
+      if (wsAuth.authorized) {
+        LocalFirestore.setDocAsync('auth_tokens', spreadsheetId, updatedRecord).catch(() => {});
+      }
     }
 
     const response = NextResponse.json({
       success: true,
       accessToken: freshAccessToken,
       expiryDate,
-      userEmail,
+      userEmail: verifiedEmail,
     });
 
-    // Update session cookies
     response.cookies.set('s2s_access_token', freshAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -86,28 +129,25 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 90, // 90 days
+      maxAge: 60 * 60 * 24 * 90,
       path: '/',
     });
 
-    if (userEmail) {
-      response.cookies.set('s2s_user_email', userEmail, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-        path: '/',
-      });
+    if (verifiedEmail) {
+      setSignedUserEmailCookies(response, verifiedEmail);
     }
 
     return response;
   } catch (err: any) {
     console.error('[Auth Refresh] Error:', err);
-    const isRevoked = err?.message?.includes('invalid_grant') || err?.code === 400 || err?.status === 400;
+    const isRevoked =
+      err?.message?.includes('invalid_grant') || err?.code === 400 || err?.status === 400;
     return NextResponse.json(
       {
         success: false,
-        error: isRevoked ? 'Google refresh token has been revoked or expired.' : err?.message || 'Token refresh failed',
+        error: isRevoked
+          ? 'Google refresh token has been revoked or expired.'
+          : err?.message || 'Token refresh failed',
         requiresLogin: Boolean(isRevoked),
       },
       { status: 401 }
