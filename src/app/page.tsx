@@ -88,23 +88,23 @@ export default function Sheet2SuiteParentHub() {
   });
 
   return (
-    <div style={styles.container}>
+    <div className="hub-container">
       {/* Top Suite Bar */}
-      <header style={styles.header}>
-        <div style={styles.brandGroup}>
-          <FileSpreadsheet size={34} style={{ color: 'var(--color-primary)' }} />
-          <div>
+      <header className="hub-header">
+        <div className="hub-brand-group">
+          <FileSpreadsheet size={34} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
             <h1 style={styles.brandTitle}>Sheet2Suite</h1>
-            <p style={styles.brandSubtitle}>The Digital Canvas Suite for Google Sheets Purists</p>
+            <p className="hub-brand-subtitle">The Digital Canvas Suite for Google Sheets Purists</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Link href="/support" style={{ ...styles.activateLinkBtn, backgroundColor: 'transparent' }}>
+        <div className="hub-header-actions">
+          <Link href="/support" className="hub-action-btn" style={{ backgroundColor: 'transparent', color: 'var(--color-text)' }}>
             <HelpCircle size={16} />
             <span>HELP & GUIDES</span>
           </Link>
-          <Link href="/activate" style={styles.activateLinkBtn}>
+          <Link href="/activate" className="hub-action-btn" style={{ backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text)' }}>
             <Key size={16} />
             <span>ACTIVATION PORTAL</span>
           </Link>
@@ -112,26 +112,26 @@ export default function Sheet2SuiteParentHub() {
       </header>
 
       {/* Hero Section */}
-      <section style={styles.heroSection}>
+      <section className="hub-hero-section">
         <div style={styles.heroBadge}>
           <Sparkles size={14} style={{ color: 'var(--color-gold, #f59e0b)' }} />
           <span>MULTI-PRODUCT DIGITAL CANVAS ECOSYSTEM</span>
         </div>
-        <h2 style={styles.heroTitle}>
+        <h2 className="hub-hero-title">
           Turn Plain Spreadsheets Into <span style={{ color: 'var(--color-primary)' }}>High-Performance Digital Apps</span>.
         </h2>
         <p style={styles.heroDesc}>
           Sheet2Suite converts Google Spreadsheets into ultra-fast, beautiful web applications. 100% private to your personal Google Drive with zero monthly subscription fees.
         </p>
 
-        <div style={styles.heroCtaGroup}>
-          <Link href="/vow" style={styles.primaryCta}>
+        <div className="hub-hero-cta-group">
+          <Link href="/vow" className="hub-primary-cta">
             <Heart size={18} />
             <span>LAUNCH SHEET2VOW (WEDDING)</span>
             <ArrowRight size={18} />
           </Link>
 
-          <Link href="/activate" style={styles.secondaryCta}>
+          <Link href="/activate" className="hub-secondary-cta">
             <Key size={18} style={{ color: 'var(--color-primary)' }} />
             <span>ACTIVATION PORTAL</span>
           </Link>
@@ -139,8 +139,8 @@ export default function Sheet2SuiteParentHub() {
       </section>
 
       {/* Master Pass Bundle Banner */}
-      <section style={styles.masterPassBanner}>
-        <div style={styles.masterPassContent}>
+      <section className="hub-master-pass-banner">
+        <div className="hub-master-pass-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <Layers size={22} style={{ color: 'var(--color-primary)' }} />
             <span style={styles.masterPassBadge}>SHEET2SUITE MASTER PASS</span>
@@ -150,7 +150,7 @@ export default function Sheet2SuiteParentHub() {
             Purchasing a Sheet2Suite Master License gives you immediate access to all existing applications (*Sheet2Vow*) plus upcoming suite applications as they launch — backed by lifetime platform updates and zero recurring fees.
           </p>
         </div>
-        <Link href="/activate" style={styles.masterPassBtn}>
+        <Link href="/activate" className="hub-master-pass-btn">
           <Key size={18} />
           <span>ENTER ACTIVATION CODE</span>
         </Link>
@@ -202,7 +202,7 @@ export default function Sheet2SuiteParentHub() {
         </div>
 
         {/* Product Grid */}
-        <div style={styles.productGrid}>
+        <div className="hub-product-grid">
           {filteredProducts.map((p) => {
             const IconComp = p.icon;
             const isLive = p.status === 'available';
@@ -296,7 +296,7 @@ export default function Sheet2SuiteParentHub() {
       </section>
 
       {/* Data Sovereignty, Privacy & Zero Subscriptions Section */}
-      <section style={styles.sovereigntySection}>
+      <section className="hub-sovereignty-section">
         <div style={styles.sovereigntyHeader}>
           <div style={styles.sovereigntyBadge}>
             <Lock size={14} style={{ color: 'var(--color-primary)' }} />
@@ -697,7 +697,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   pillarsSection: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
     gap: '1.5rem',
     padding: '2rem',
     backgroundColor: 'var(--color-bg-subtle)',
@@ -754,7 +754,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sovereigntyTitle: {
     fontFamily: 'var(--font-sans)',
-    fontSize: '1.8rem',
+    fontSize: 'clamp(1.35rem, 4.5vw, 1.8rem)',
     fontWeight: 800,
     color: 'var(--color-text)',
     margin: '0 0 0.5rem 0',
@@ -768,7 +768,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sovereigntyGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
     gap: '1.5rem',
   },
   sovereigntyCard: {

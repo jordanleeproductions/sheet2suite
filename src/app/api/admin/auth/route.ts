@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAdminKey, verifyAdminAuth } from '@/lib/auth/adminAuth';
+import {
+  validateAdminKey,
+  verifyAdminAuth,
+  ADMIN_SESSION_COOKIE,
+  getConfiguredAdminEmails,
+} from '@/lib/auth/adminAuth';
 
 /**
  * GET /api/admin/auth
  * Checks whether the current request is authenticated as an admin.
+ * Returns admin identity metadata if authorized.
  */
 export async function GET(req: NextRequest) {
   const auth = verifyAdminAuth(req);
   return NextResponse.json({
     authenticated: auth.authorized,
+    user: auth.adminUser || (auth.adminEmail ? { email: auth.adminEmail } : null),
+    authMethod: auth.authMethod,
+    authorizedEmails: getConfiguredAdminEmails(),
   });
 }
 
 /**
  * POST /api/admin/auth
- * Authenticates an admin using a secret key and establishes an HttpOnly session cookie.
+ * Authenticates an admin using a developer secret key (fallback for CLI or offline testing)
+ * and establishes session cookies.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -40,10 +50,14 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
-      message: 'Admin authentication successful.',
+      message: 'Admin key authentication successful.',
+      user: {
+        email: 'developer@sheet2suite.com',
+        name: 'Developer Key Admin',
+      },
     });
 
-    // Set secure HttpOnly cookie for browser persistence
+    // Set fallback cookie for browser persistence
     response.cookies.set({
       name: 's2s_admin_key',
       value: candidateKey!.trim(),
@@ -65,7 +79,7 @@ export async function POST(req: NextRequest) {
 
 /**
  * DELETE /api/admin/auth
- * Logs out of the admin session by clearing the HttpOnly cookie.
+ * Logs out of the admin session by clearing all admin session cookies.
  */
 export async function DELETE() {
   const response = NextResponse.json({
@@ -73,10 +87,33 @@ export async function DELETE() {
     message: 'Admin session terminated.',
   });
 
+  // Clear Google OAuth Admin Session Cookie
+  response.cookies.set({
+    name: ADMIN_SESSION_COOKIE,
+    value: '',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
+  // Clear legacy admin key cookie
   response.cookies.set({
     name: 's2s_admin_key',
     value: '',
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
+  // Clear admin user info cookie
+  response.cookies.set({
+    name: 's2s_admin_user',
+    value: '',
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',

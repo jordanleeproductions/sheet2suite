@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.22.1',
+    title: 'Mobile Experience Polish & Platform Refinements',
+    date: 'Nov 2, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Mobile Navigation Redesign: Streamlined the parent hub header into a balanced two-tier utility strip on smartphones, eliminating horizontal overflow and button clipping.',
+      'Fluid Typography & Responsive Grids: Added dynamic fluid headline scaling and full-width thumb-friendly action buttons for smaller mobile viewports.',
+      'Google OAuth Administrative Sign-In: Enabled secure one-click Google OAuth authentication for authorized platform administrators with popup handshake fallback.',
+    ],
+    details: 'Improves smartphone usability and navigation on the main platform hub, ensuring a smooth, zero-overflow browsing experience on all screen sizes, and introduces seamless Google OAuth for admin portal management.',
+  },
+  {
     version: 'v1.22.0',
     title: 'Admin Portal Redesign & Product Ecosystem Focus',
     date: 'Nov 2, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'enhancement',
     highlights: [

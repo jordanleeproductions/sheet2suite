@@ -124,6 +124,110 @@ export async function GET(req: NextRequest) {
     const userName = userInfo.data.name || 'Sheet2Suite User';
     const userPicture = userInfo.data.picture || undefined;
 
+    // Step 2.5: Admin Authentication Dispatcher
+    const isForAdmin = csrfCheck.payload?.purpose === 'admin';
+    if (isForAdmin) {
+      const { isAuthorizedAdminEmail, createAdminSessionToken, ADMIN_SESSION_COOKIE } = await import('@/lib/auth/adminAuth');
+
+      if (!isAuthorizedAdminEmail(userEmail)) {
+        console.warn(`[AdminAuth] Unauthorized admin login attempt by: ${userEmail}`);
+        const safeEmail = String(userEmail).replace(/[^a-zA-Z0-9@._-]/g, '');
+        const targetOriginExpr = stateOrigin ? JSON.stringify(stateOrigin) : 'window.location.origin';
+        const errHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Access Denied • Sheet2Suite Admin</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0F172A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; text-align: center; }
+      .card { max-width: 440px; background: #1E293B; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 2.25rem 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+      .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; background: rgba(239, 68, 68, 0.2); color: #FCA5A5; font-size: 0.725rem; font-weight: 700; margin-bottom: 1rem; font-family: monospace; letter-spacing: 0.05em; }
+      h2 { margin: 0 0 0.5rem 0; font-size: 1.35rem; }
+      p { color: #94A3B8; font-size: 0.875rem; line-height: 1.5; margin: 0 0 1.5rem 0; }
+      .btn { display: inline-block; padding: 0.7rem 1.25rem; border-radius: 6px; background: #334155; color: #FFFFFF; text-decoration: none; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge">403 FORBIDDEN • UNAUTHORIZED</div>
+      <h2>Admin Access Denied</h2>
+      <p>Google account <strong>${safeEmail}</strong> is not an authorized administrator. Only designated platform administrator accounts are permitted.</p>
+      <button class="btn" onclick="try { window.close(); } catch(e){} window.location.href='/admin';">Return to Admin Portal</button>
+    </div>
+    <script>
+      try {
+        window.opener?.postMessage({
+          type: 'ADMIN_AUTH_ERROR',
+          error: 'Access Denied: ' + ${JSON.stringify(safeEmail)} + ' is not an authorized administrator.'
+        }, ${targetOriginExpr});
+      } catch(e) {}
+    </script>
+  </body>
+</html>`;
+        const res = new NextResponse(errHtml, {
+          status: 403,
+          headers: { 'Content-Type': 'text/html' },
+        });
+        res.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+        return res;
+      }
+
+      // Authorized Administrator!
+      const adminToken = createAdminSessionToken({
+        email: userEmail,
+        name: userName,
+        picture: userPicture,
+      });
+
+      const targetOriginExpr = stateOrigin ? JSON.stringify(stateOrigin) : 'window.location.origin';
+      const successHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Authenticated • Sheet2Suite Admin</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0F172A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <div style="text-align: center;">
+      <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">Administrator Authenticated</h3>
+      <p style="color: #94A3B8; font-size: 0.875rem;">Unlocking Monarch Admin Console...</p>
+    </div>
+    <script>
+      try {
+        window.opener?.postMessage({
+          type: 'ADMIN_AUTH_SUCCESS',
+          user: {
+            email: ${JSON.stringify(userEmail)},
+            name: ${JSON.stringify(userName)},
+            picture: ${JSON.stringify(userPicture || null)}
+          }
+        }, ${targetOriginExpr});
+        setTimeout(function() {
+          try { window.close(); } catch(e) {}
+          window.location.href = '/admin';
+        }, 200);
+      } catch(e) {
+        window.location.href = '/admin';
+      }
+    </script>
+  </body>
+</html>`;
+
+      const response = new NextResponse(successHtml, {
+        headers: { 'Content-Type': 'text/html' },
+      });
+
+      // Set secure HttpOnly admin session cookie
+      response.cookies.set(ADMIN_SESSION_COOKIE, adminToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: '/',
+      });
+
+      // Clear OAuth nonce cookie
+      response.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });
+      return response;
+    }
+
     // Step 3: Automatically Provision Google Drive Folder & Master Sheet
     let provisionData: any = null;
     try {

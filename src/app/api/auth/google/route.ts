@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
       ? (promptParam.includes('consent') ? promptParam : `${promptParam} consent`)
       : 'consent';
     const spreadsheetIdParam = url.searchParams.get('spreadsheetId') || undefined;
+    const purposeParam = url.searchParams.get('purpose') || undefined;
 
     const clientOrigin = req.headers.get('origin') || req.headers.get('referer');
     let callerOrigin: string | undefined;
@@ -51,13 +52,22 @@ export async function GET(req: NextRequest) {
     const { state, nonce } = generateOAuthStatePayload({
       spreadsheetId: spreadsheetIdParam,
       origin: callerOrigin,
+      purpose: purposeParam,
     });
 
     const oauth2Client = getOAuth2Client(redirectUri);
 
+    const effectiveScopes = purposeParam === 'admin'
+      ? [
+          'https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'openid',
+        ]
+      : SCOPES;
+
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: SCOPES,
+      scope: effectiveScopes,
       prompt: effectivePrompt,
       state,
     });

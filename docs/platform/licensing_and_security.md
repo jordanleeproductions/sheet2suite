@@ -101,5 +101,7 @@ To prevent out-of-sync state when permissions are modified directly in Google Dr
 - **Cryptographic State Nonce (`[SEC-7]`):** Binds a 32-byte unpredictable random nonce in a secure HTTP-only cookie (`s2s_oauth_nonce`). The callback endpoint validates this nonce using `crypto.timingSafeEqual`, preventing OAuth login CSRF attacks.
 
 ### 4.3 Monarch Admin Operations & Zero-Trust Access (`[SEC-1]`)
-- **Admin Authentication Gateway (`src/lib/auth/adminAuth.ts`):** Admin endpoints (`/api/admin/db`, `/api/admin/validate-schema`) require timing-safe validation of `ADMIN_SECRET_KEY`.
-- **Admin Lock Screen (`src/app/admin/page.tsx`):** Unauthenticated visitors cannot inspect database records, customer emails, or execute mutations. Sessions are governed by 7-day secure HttpOnly cookies (`s2s_admin_key`).
+- **Google OAuth Admin Identity Gateway (`src/lib/auth/adminAuth.ts`):** Admin endpoints (`/api/admin/db`, `/api/admin/validate-schema`, `/api/admin/auth`) require cryptographically verified Google OAuth identity matched against the `ADMIN_EMAILS` allowlist.
+- **HMAC-SHA256 Signed Session Token (`s2s_admin_session`):** Authenticated administrators receive a 7-day secure HttpOnly session cookie signed via HMAC-SHA256 containing their verified Google email, name, and admin role.
+- **Strict Email Allowlist Enforcement:** Access to the Admin Portal is restricted strictly to authorized administrator emails (`process.env.ADMIN_EMAILS`, defaulting to `jordanleeproductions@gmail.com`). Any non-whitelisted Google account attempting login receives an immediate 403 Forbidden rejection.
+- **Admin Lock Screen (`src/app/admin/page.tsx`):** Unauthenticated visitors cannot inspect database records, customer emails, or execute mutations. The portal features a 1-click Official Google Sign-In button with a collapsible developer secret key bypass for offline CLI testing.

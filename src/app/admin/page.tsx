@@ -35,6 +35,7 @@ import {
 import { WorkspaceRecord } from '@/lib/db/licensingDb';
 import { Sheet2SuiteLicense } from '@/lib/sheets/types';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
+import { OfficialGoogleButton } from '@/components/OfficialGoogleButton';
 import { DrawerSection, DrawerField, DrawerRow } from '@/components/vow/MonarchForm';
 
 export default function AdminDatabasePage() {
@@ -47,6 +48,8 @@ export default function AdminDatabasePage() {
 
   // Authentication & Security State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminUser, setAdminUser] = useState<{ email: string; name?: string; picture?: string } | null>(null);
+  const [showManualKeyInput, setShowManualKeyInput] = useState<boolean>(false);
   const [adminKeyInput, setAdminKeyInput] = useState<string>('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
@@ -66,6 +69,70 @@ export default function AdminDatabasePage() {
       headers['x-admin-key'] = key;
     }
     return headers;
+  };
+
+  const handleGoogleAdminLogin = async () => {
+    setIsAuthenticating(true);
+    setAuthError(null);
+
+    try {
+      const res = await fetch('/api/auth/google?purpose=admin&prompt=select_account');
+      const data = await res.json();
+
+      if (!data.authUrl) {
+        throw new Error(data.error || 'Failed to initialize Google authentication URL.');
+      }
+
+      if (typeof window !== 'undefined') {
+        const width = 520;
+        const height = 650;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
+        const handleAuthMessage = (event: MessageEvent) => {
+          const origin = event.origin || '';
+          const isAllowedOrigin =
+            origin === window.location.origin ||
+            origin.endsWith('sheet2suite.com') ||
+            origin.endsWith('.web.app') ||
+            origin.endsWith('.firebaseapp.com') ||
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1');
+
+          if (!isAllowedOrigin) return;
+
+          if (event.data?.type === 'ADMIN_AUTH_SUCCESS') {
+            window.removeEventListener('message', handleAuthMessage);
+            setIsAuthenticating(false);
+            setIsAuthenticated(true);
+            if (event.data.user) {
+              setAdminUser(event.data.user);
+            }
+            fetchRecords();
+          } else if (event.data?.type === 'ADMIN_AUTH_ERROR') {
+            window.removeEventListener('message', handleAuthMessage);
+            setIsAuthenticating(false);
+            setAuthError(event.data.error || 'Access denied: Google account is not an authorized administrator.');
+          }
+        };
+
+        window.addEventListener('message', handleAuthMessage);
+
+        const popup = window.open(
+          data.authUrl,
+          'Sheet2SuiteAdminLogin',
+          `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+          // If popup is blocked by the browser, fallback to standard window redirect
+          window.location.href = data.authUrl;
+        }
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Google authentication failed.');
+      setIsAuthenticating(false);
+    }
   };
 
   const handleAdminLogin = async (e?: React.FormEvent) => {
@@ -666,101 +733,135 @@ export default function AdminDatabasePage() {
             </div>
           )}
 
-          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ position: 'relative', textAlign: 'left' }}>
-              <div style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--color-muted)',
-                pointerEvents: 'none',
-                display: 'flex',
-                alignItems: 'center',
-              }}>
-                <Key size={16} />
-              </div>
-
-              <input
-                type={showKeyText ? 'text' : 'password'}
-                value={adminKeyInput}
-                onChange={(e) => setAdminKeyInput(e.target.value)}
-                placeholder="Enter Admin Secret Key..."
-                autoFocus
-                style={{
-                  width: '100%',
-                  padding: '12px 40px 12px 38px',
-                  borderRadius: 'var(--border-radius-sm, 6px)',
-                  border: '1.5px solid var(--color-border)',
-                  backgroundColor: 'var(--color-surface, #ffffff)',
-                  color: 'var(--color-text)',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  fontFamily: 'var(--font-mono)',
-                  transition: 'border-color 0.15s ease',
-                }}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+            {/* Primary Google OAuth Sign In Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <OfficialGoogleButton
+                onClick={handleGoogleAdminLogin}
+                disabled={isAuthenticating}
+                text={isAuthenticating ? 'Verifying with Google...' : 'Sign in with Google'}
               />
-
-              <button
-                type="button"
-                onClick={() => setShowKeyText(!showKeyText)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-muted)',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title={showKeyText ? 'Hide key' : 'Show key'}
-              >
-                {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isAuthenticating}
-              style={{
-                width: '100%',
-                padding: '0.85rem 1rem',
-                backgroundColor: 'var(--color-primary)',
-                color: 'var(--color-on-primary, #ffffff)',
-                border: 'none',
+              <div style={{
+                padding: '0.65rem 0.85rem',
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '1px solid var(--color-border)',
                 borderRadius: 'var(--border-radius-sm, 6px)',
-                fontSize: '0.85rem',
-                fontWeight: 800,
-                fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.04em',
-                cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+                fontSize: '0.75rem',
+                color: 'var(--color-muted)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '0.5rem',
-                boxShadow: 'var(--box-shadow-subtle)',
-                transition: 'opacity 0.15s ease',
-                opacity: isAuthenticating ? 0.7 : 1,
-              }}
-            >
-              {isAuthenticating ? (
-                <>
-                  <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                  <span>VERIFYING KEY...</span>
-                </>
-              ) : (
-                <>
-                  <Lock size={15} />
-                  <span>UNLOCK ADMIN CONSOLE</span>
-                </>
-              )}
-            </button>
-          </form>
+                gap: '0.4rem',
+                fontFamily: 'var(--font-mono)',
+              }}>
+                <ShieldCheck size={14} style={{ color: 'var(--color-green, #059669)', flexShrink: 0 }} />
+                <span>Authorized Administrator: <strong>jordanleeproductions@gmail.com</strong></span>
+              </div>
+            </div>
+
+            {/* Developer Secret Key Bypass Toggle */}
+            <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowManualKeyInput(!showManualKeyInput)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-muted)',
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  textDecoration: 'underline',
+                }}
+              >
+                {showManualKeyInput ? 'Hide developer secret key input' : 'Or enter developer secret key (offline fallback)'}
+              </button>
+            </div>
+
+            {showManualKeyInput && (
+              <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.25rem' }}>
+                <div style={{ position: 'relative', textAlign: 'left' }}>
+                  <div style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--color-muted)',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    <Key size={16} />
+                  </div>
+
+                  <input
+                    type={showKeyText ? 'text' : 'password'}
+                    value={adminKeyInput}
+                    onChange={(e) => setAdminKeyInput(e.target.value)}
+                    placeholder="Enter Admin Secret Key..."
+                    style={{
+                      width: '100%',
+                      padding: '10px 40px 10px 38px',
+                      borderRadius: 'var(--border-radius-sm, 6px)',
+                      border: '1.5px solid var(--color-border)',
+                      backgroundColor: 'var(--color-surface, #ffffff)',
+                      color: 'var(--color-text)',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyText(!showKeyText)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-muted)',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    title={showKeyText ? 'Hide key' : 'Show key'}
+                  >
+                    {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isAuthenticating}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-on-primary, #ffffff)',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm, 6px)',
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    fontFamily: 'var(--font-mono)',
+                    cursor: isAuthenticating ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <Key size={14} />
+                  <span>AUTHENTICATE WITH KEY</span>
+                </button>
+              </form>
+            )}
+          </div>
 
           <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
             <Link
