@@ -22,6 +22,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
       'License Key & Google Sheet relational tracker with quick audit and sheet navigation.',
       'Advanced Sheet Validator with tab compliance auditing and 1-click header auto-repair.',
       'Golden Master Template Inspector supporting both Sheet2Vow and upcoming Sheet2Vault.',
+      'Full WCAG AA visual contrast overhaul resolving font readability across light surfaces and buttons.',
     ],
     details: 'Comprehensive administrative tooling and diagnostic engines to monitor customer workspaces and maintain canonical spreadsheet integrity.',
   },
