@@ -11,10 +11,25 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.23.0',
+    title: 'Monarch Admin Suite & Platform Diagnostics',
+    date: 'Nov 3, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Executive Operations Pulse dashboard tracking active workspaces and platform telemetry.',
+      'License Key & Google Sheet relational tracker with quick audit and sheet navigation.',
+      'Advanced Sheet Validator with tab compliance auditing and 1-click header auto-repair.',
+      'Golden Master Template Inspector supporting both Sheet2Vow and upcoming Sheet2Vault.',
+    ],
+    details: 'Comprehensive administrative tooling and diagnostic engines to monitor customer workspaces and maintain canonical spreadsheet integrity.',
+  },
+  {
     version: 'v1.22.2',
     title: 'Google OAuth Admin Identity Authentication',
     date: 'Nov 2, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'enhancement',
     highlights: [

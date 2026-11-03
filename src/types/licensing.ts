@@ -15,9 +15,11 @@ export interface Sheet2SuiteLicense {
     sheet2home: boolean;
     sheet2finance: boolean;
   };
+  entitledProducts?: string[];
   status: 'active' | 'refunded' | 'revoked' | 'expired';
   createdAt: string;
   updatedAt?: string;
+  lastActiveAt?: string;
   coPlanner?: {
     partnerEmail?: string;
     partnerName?: string;

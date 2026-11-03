@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
-  Database, 
+  Database,
+  Activity,
+  FileSpreadsheet, 
   Trash2, 
   RefreshCw, 
   HardDrive, 
@@ -37,6 +39,10 @@ import { Sheet2SuiteLicense } from '@/lib/sheets/types';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import { OfficialGoogleButton } from '@/components/OfficialGoogleButton';
 import { DrawerSection, DrawerField, DrawerRow } from '@/components/vow/MonarchForm';
+import AdminDashboardTab from '@/components/admin/AdminDashboardTab';
+import AdminTrackerTab from '@/components/admin/AdminTrackerTab';
+import AdminTemplatesTab from '@/components/admin/AdminTemplatesTab';
+import AdminValidatorTab from '@/components/admin/AdminValidatorTab';
 
 export default function AdminDatabasePage() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
@@ -187,7 +193,22 @@ export default function AdminDatabasePage() {
   };
 
   // Active Sub-Tab: 'workspaces' | 'licenses' | 'schema'
-  const [activeTab, setActiveTab] = useState<'workspaces' | 'licenses' | 'schema'>('workspaces');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'tracker' | 'validator' | 'templates' | 'workspaces' | 'licenses' | 'schema'>('dashboard');
+  const [selectedValidatorSheetId, setSelectedValidatorSheetId] = useState<string>('1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI');
+  const [selectedValidatorProduct, setSelectedValidatorProduct] = useState<string>('SHEET2VOW');
+
+  const handleNavigateToValidator = (sheetId: string, productCode: string = 'SHEET2VOW') => {
+    setSelectedValidatorSheetId(sheetId);
+    setSelectedValidatorProduct(productCode);
+    setActiveTab('validator');
+  };
+
+  const handleNavigateToTab = (tab: string, sheetId?: string) => {
+    if (sheetId) {
+      setSelectedValidatorSheetId(sheetId);
+    }
+    setActiveTab(tab as any);
+  };
 
   // Search Filter
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -1017,12 +1038,12 @@ export default function AdminDatabasePage() {
               width: '44px',
               height: '44px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(99, 102, 241, 0.15)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#818CF8',
+              color: '#4F46E5',
               flexShrink: 0,
             }}>
               <Database size={24} />
@@ -1037,9 +1058,9 @@ export default function AdminDatabasePage() {
                   letterSpacing: '0.08em',
                   padding: '2px 6px',
                   borderRadius: '4px',
-                  backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                  color: '#A5B4FC',
-                  border: '1px solid rgba(99, 102, 241, 0.4)',
+                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                  color: '#4338CA',
+                  border: '1px solid rgba(99, 102, 241, 0.25)',
                 }}>
                   MONARCH ADMIN
                 </span>
@@ -1075,9 +1096,9 @@ export default function AdminDatabasePage() {
             <button
               onClick={handleAdminLogout}
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                color: '#E2E8F0',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backgroundColor: 'var(--color-bg-subtle)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 padding: '0.55rem 0.85rem',
                 fontSize: '0.75rem',
@@ -1100,9 +1121,9 @@ export default function AdminDatabasePage() {
             <button
               onClick={() => setShowPurgeConfirm(true)}
               style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                color: '#F87171',
-                border: '1px solid rgba(239, 68, 68, 0.35)',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                color: '#DC2626',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
                 borderRadius: '8px',
                 padding: '0.55rem 0.85rem',
                 fontSize: '0.75rem',
@@ -1126,9 +1147,9 @@ export default function AdminDatabasePage() {
               onClick={() => fetchRecords()}
               disabled={isLoading}
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                color: '#E2E8F0',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backgroundColor: 'var(--color-bg-subtle)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
                 padding: '0.55rem 0.85rem',
                 fontSize: '0.75rem',
@@ -1152,7 +1173,7 @@ export default function AdminDatabasePage() {
               className="full-width-btn"
               style={{
                 backgroundColor: 'var(--color-primary)',
-                color: 'var(--color-text)',
+                color: 'var(--color-on-primary, #ffffff)',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '0.55rem 1rem',
@@ -1179,7 +1200,7 @@ export default function AdminDatabasePage() {
             padding: '0.85rem 1.15rem',
             backgroundColor: 'rgba(16, 185, 129, 0.12)',
             border: '1px solid rgba(16, 185, 129, 0.35)',
-            color: '#34D399',
+            color: '#065F46',
             borderRadius: '10px',
             marginBottom: '1.25rem',
             fontSize: '0.85rem',
@@ -1194,7 +1215,7 @@ export default function AdminDatabasePage() {
             </div>
             <button
               onClick={() => setSuccessMsg(null)}
-              style={{ background: 'none', border: 'none', color: '#34D399', cursor: 'pointer', padding: '2px' }}
+              style={{ background: 'none', border: 'none', color: '#065F46', cursor: 'pointer', padding: '2px' }}
             >
               <X size={16} />
             </button>
@@ -1206,7 +1227,7 @@ export default function AdminDatabasePage() {
             padding: '0.85rem 1.15rem',
             backgroundColor: 'rgba(239, 68, 68, 0.12)',
             border: '1px solid rgba(239, 68, 68, 0.35)',
-            color: '#FCA5A5',
+            color: '#991B1B',
             borderRadius: '10px',
             marginBottom: '1.25rem',
             fontSize: '0.85rem',
@@ -1221,7 +1242,7 @@ export default function AdminDatabasePage() {
             </div>
             <button
               onClick={() => setErrorMsg(null)}
-              style={{ background: 'none', border: 'none', color: '#FCA5A5', cursor: 'pointer', padding: '2px' }}
+              style={{ background: 'none', border: 'none', color: '#991B1B', cursor: 'pointer', padding: '2px' }}
             >
               <X size={16} />
             </button>
@@ -1297,17 +1318,17 @@ export default function AdminDatabasePage() {
                 fontFamily: 'var(--font-technical-mono, monospace)',
                 fontSize: '0.85rem',
                 fontWeight: 700,
-                color: schemaReport ? (schemaReport.isFullyCompliant ? '#10B981' : '#F59E0B') : '#94A3B8',
+                color: schemaReport ? (schemaReport.isFullyCompliant ? '#047857' : '#B45309') : 'var(--color-muted, #475569)',
               }}>
                 {schemaReport ? (schemaReport.isFullyCompliant ? '100% COMPLIANT' : 'DISCREPANCIES') : 'NOT AUDITED'}
               </span>
             </div>
             <button
-              onClick={() => setActiveTab('schema')}
+              onClick={() => setActiveTab('validator')}
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#818CF8',
+                color: '#4338CA',
                 fontSize: '0.725rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -1362,7 +1383,96 @@ export default function AdminDatabasePage() {
             borderRadius: '10px',
             padding: '3px',
             gap: '3px',
+            flexWrap: 'wrap',
           }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('dashboard')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeTab === 'dashboard' ? 'var(--color-primary)' : 'transparent',
+                color: activeTab === 'dashboard' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
+                fontSize: '0.8125rem',
+                fontWeight: activeTab === 'dashboard' ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Activity size={15} />
+              <span>Operations Pulse</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('tracker')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeTab === 'tracker' ? 'var(--color-primary)' : 'transparent',
+                color: activeTab === 'tracker' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
+                fontSize: '0.8125rem',
+                fontWeight: activeTab === 'tracker' ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Key size={15} />
+              <span>Sheet Tracker</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('validator')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: (activeTab === 'validator' || activeTab === 'schema') ? 'var(--color-primary)' : 'transparent',
+                color: (activeTab === 'validator' || activeTab === 'schema') ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
+                fontSize: '0.8125rem',
+                fontWeight: (activeTab === 'validator' || activeTab === 'schema') ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <ShieldCheck size={15} />
+              <span>Sheet Validator</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('templates')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeTab === 'templates' ? 'var(--color-primary)' : 'transparent',
+                color: activeTab === 'templates' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
+                fontSize: '0.8125rem',
+                fontWeight: activeTab === 'templates' ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <FileSpreadsheet size={15} />
+              <span>Templates</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setActiveTab('workspaces')}
@@ -1374,20 +1484,20 @@ export default function AdminDatabasePage() {
                 borderRadius: '8px',
                 border: 'none',
                 backgroundColor: activeTab === 'workspaces' ? 'var(--color-primary)' : 'transparent',
-                color: activeTab === 'workspaces' ? '#FFFFFF' : '#94A3B8',
+                color: activeTab === 'workspaces' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
                 fontSize: '0.8125rem',
-                fontWeight: activeTab === 'workspaces' ? 600 : 500,
+                fontWeight: activeTab === 'workspaces' ? 700 : 500,
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
             >
               <HardDrive size={15} />
-              <span>Workspaces</span>
+              <span>Workspaces DB</span>
               <span style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
                 fontSize: '0.6875rem',
                 backgroundColor: activeTab === 'workspaces' ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-bg-subtle)',
-                color: activeTab === 'workspaces' ? '#FFFFFF' : '#94A3B8',
+                color: activeTab === 'workspaces' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
                 padding: '1px 5px',
                 borderRadius: '4px',
                 fontWeight: 700,
@@ -1407,20 +1517,20 @@ export default function AdminDatabasePage() {
                 borderRadius: '8px',
                 border: 'none',
                 backgroundColor: activeTab === 'licenses' ? 'var(--color-primary)' : 'transparent',
-                color: activeTab === 'licenses' ? '#FFFFFF' : '#94A3B8',
+                color: activeTab === 'licenses' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
                 fontSize: '0.8125rem',
-                fontWeight: activeTab === 'licenses' ? 600 : 500,
+                fontWeight: activeTab === 'licenses' ? 700 : 500,
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
             >
-              <Key size={15} />
-              <span>Licenses</span>
+              <Database size={15} />
+              <span>Licenses DB</span>
               <span style={{
                 fontFamily: 'var(--font-technical-mono, monospace)',
                 fontSize: '0.6875rem',
                 backgroundColor: activeTab === 'licenses' ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-bg-subtle)',
-                color: activeTab === 'licenses' ? '#FFFFFF' : '#94A3B8',
+                color: activeTab === 'licenses' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
                 padding: '1px 5px',
                 borderRadius: '4px',
                 fontWeight: 700,
@@ -1428,32 +1538,10 @@ export default function AdminDatabasePage() {
                 {licenses.length}
               </span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('schema')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.85rem',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: activeTab === 'schema' ? 'var(--color-primary)' : 'transparent',
-                color: activeTab === 'schema' ? '#FFFFFF' : '#94A3B8',
-                fontSize: '0.8125rem',
-                fontWeight: activeTab === 'schema' ? 600 : 500,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <ShieldCheck size={15} />
-              <span>Schema Engine</span>
-            </button>
           </div>
 
           {/* Quick Search Bar */}
-          {activeTab !== 'schema' && (
+          {(activeTab === 'workspaces' || activeTab === 'licenses') && (
             <div style={{ position: 'relative', minWidth: '260px', flex: '1', maxWidth: '380px' }}>
               <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
               <input
@@ -1512,7 +1600,7 @@ export default function AdminDatabasePage() {
                 <thead>
                   <tr style={{
                     backgroundColor: 'var(--color-bg)',
-                    color: '#94A3B8',
+                    color: 'var(--color-muted, #475569)',
                     fontFamily: 'var(--font-mono)', fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.06em',
                     borderBottom: '1px solid var(--color-border)',
                   }}>
@@ -1546,14 +1634,14 @@ export default function AdminDatabasePage() {
                         )}
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
-                        <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontWeight: 700, color: '#F59E0B', fontSize: '0.775rem' }}>
+                        <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontWeight: 700, color: '#B45309', fontSize: '0.775rem' }}>
                           {ws.orderId || 'ETSY-DEMO'}
                         </div>
                         <span style={{
                           display: 'inline-block',
                           marginTop: '2px',
                           backgroundColor: ws.orderVerified !== false ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: ws.orderVerified !== false ? '#34D399' : '#FCA5A5',
+                          color: ws.orderVerified !== false ? '#047857' : '#B91C1C',
                           border: `1px solid ${ws.orderVerified !== false ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                           padding: '1px 5px',
                           borderRadius: '4px',
@@ -1566,7 +1654,7 @@ export default function AdminDatabasePage() {
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', color: '#94A3B8', fontSize: '0.75rem' }}>
+                          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', color: 'var(--color-muted, #475569)', fontSize: '0.75rem' }}>
                             {(ws.spreadsheetId || '').slice(0, 14)}...
                           </span>
                           <button
@@ -1590,7 +1678,7 @@ export default function AdminDatabasePage() {
                               target="_blank"
                               rel="noreferrer"
                               style={{
-                                color: '#34D399',
+                                color: '#047857',
                                 textDecoration: 'none',
                                 padding: '5px 8px',
                                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -1648,8 +1736,8 @@ export default function AdminDatabasePage() {
                             type="button"
                             onClick={() => setRecordToDelete({ id: ws.workspaceId || ws.spreadsheetId, type: 'workspace', name: ws.spreadsheetName || ws.userEmail })}
                             style={{
-                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                              color: '#F87171',
+                              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                              color: '#DC2626',
                               border: '1px solid rgba(239, 68, 68, 0.25)',
                               borderRadius: '6px',
                               padding: '5px 8px',
@@ -1692,13 +1780,13 @@ export default function AdminDatabasePage() {
                       <div style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: '0.95rem' }}>
                         {ws.spreadsheetName || 'Untitled Wedding'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-muted, #475569)', marginTop: '2px' }}>
                         {ws.userEmail}
                       </div>
                     </div>
                     <span style={{
                       backgroundColor: ws.orderVerified !== false ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                      color: ws.orderVerified !== false ? '#34D399' : '#FCA5A5',
+                      color: ws.orderVerified !== false ? '#047857' : '#B91C1C',
                       border: `1px solid ${ws.orderVerified !== false ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                       padding: '2px 6px',
                       borderRadius: '4px',
@@ -1726,7 +1814,7 @@ export default function AdminDatabasePage() {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     fontFamily: 'var(--font-technical-mono, monospace)',
-                    color: '#94A3B8',
+                    color: 'var(--color-muted, #475569)',
                   }}>
                     <span>ID: {(ws.spreadsheetId || '').slice(0, 16)}...</span>
                     <button
@@ -1748,7 +1836,7 @@ export default function AdminDatabasePage() {
                         style={{
                           backgroundColor: 'rgba(16, 185, 129, 0.1)',
                           border: '1px solid rgba(16, 185, 129, 0.25)',
-                          color: '#34D399',
+                          color: '#047857',
                           borderRadius: '6px',
                           padding: '7px 4px',
                           fontSize: '0.75rem',
@@ -1769,9 +1857,9 @@ export default function AdminDatabasePage() {
                       type="button"
                       onClick={() => handleOpenEdit(ws, 'workspace')}
                       style={{
-                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                        border: '1px solid rgba(99, 102, 241, 0.3)',
-                        color: '#A5B4FC',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        border: '1px solid rgba(99, 102, 241, 0.25)',
+                        color: '#4338CA',
                         borderRadius: '6px',
                         padding: '7px 4px',
                         fontSize: '0.75rem',
@@ -1790,9 +1878,9 @@ export default function AdminDatabasePage() {
                       type="button"
                       onClick={() => setRawJsonRecord(ws)}
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        backgroundColor: 'var(--color-bg-subtle)',
                         border: '1px solid var(--color-border)',
-                        color: '#94A3B8',
+                        color: 'var(--color-text)',
                         borderRadius: '6px',
                         padding: '7px 4px',
                         fontSize: '0.75rem',
@@ -1806,9 +1894,9 @@ export default function AdminDatabasePage() {
                       type="button"
                       onClick={() => setRecordToDelete({ id: ws.workspaceId || ws.spreadsheetId, type: 'workspace', name: ws.spreadsheetName || ws.userEmail })}
                       style={{
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
                         border: '1px solid rgba(239, 68, 68, 0.25)',
-                        color: '#F87171',
+                        color: '#DC2626',
                         borderRadius: '6px',
                         padding: '7px 4px',
                         fontSize: '0.75rem',
@@ -1852,7 +1940,7 @@ export default function AdminDatabasePage() {
                 <thead>
                   <tr style={{
                     backgroundColor: 'var(--color-bg)',
-                    color: '#94A3B8',
+                    color: 'var(--color-muted, #475569)',
                     fontFamily: 'var(--font-mono)', fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.06em',
                     borderBottom: '1px solid var(--color-border)',
                   }}>
@@ -1869,7 +1957,7 @@ export default function AdminDatabasePage() {
                     <tr key={lic.licenseKey} style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontWeight: 700, color: '#F59E0B', fontSize: '0.8125rem' }}>
+                          <span style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontWeight: 700, color: '#B45309', fontSize: '0.8125rem' }}>
                             {lic.licenseKey}
                           </span>
                           <button
@@ -1892,9 +1980,9 @@ export default function AdminDatabasePage() {
                         <span style={{
                           fontFamily: 'var(--font-technical-mono, monospace)',
                           fontSize: '0.6875rem',
-                          color: '#818CF8',
+                          color: '#4338CA',
                           fontWeight: 700,
-                          backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                          backgroundColor: 'rgba(99, 102, 241, 0.1)',
                           padding: '2px 6px',
                           borderRadius: '4px',
                           border: '1px solid rgba(99, 102, 241, 0.25)',
@@ -1905,7 +1993,7 @@ export default function AdminDatabasePage() {
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <span style={{
                           backgroundColor: lic.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: lic.status === 'active' ? '#34D399' : '#FCA5A5',
+                          color: lic.status === 'active' ? '#047857' : '#B91C1C',
                           border: `1px solid ${lic.status === 'active' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                           padding: '2px 6px',
                           borderRadius: '4px',
@@ -1957,7 +2045,7 @@ export default function AdminDatabasePage() {
                             onClick={() => setRecordToDelete({ id: lic.licenseKey, type: 'license', name: lic.licenseKey })}
                             style={{
                               backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                              color: '#F87171',
+                              color: '#DC2626',
                               border: '1px solid rgba(239, 68, 68, 0.25)',
                               borderRadius: '6px',
                               padding: '5px 8px',
@@ -1999,13 +2087,13 @@ export default function AdminDatabasePage() {
                       <div style={{ fontFamily: 'var(--font-technical-mono, monospace)', fontWeight: 700, color: '#F59E0B', fontSize: '0.875rem' }}>
                         {lic.licenseKey}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-muted, #475569)', marginTop: '2px' }}>
                         {lic.purchaserEmail}
                       </div>
                     </div>
                     <span style={{
                       backgroundColor: lic.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                      color: lic.status === 'active' ? '#34D399' : '#FCA5A5',
+                      color: lic.status === 'active' ? '#047857' : '#B91C1C',
                       border: `1px solid ${lic.status === 'active' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                       padding: '2px 6px',
                       borderRadius: '4px',
@@ -2017,9 +2105,9 @@ export default function AdminDatabasePage() {
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.725rem', color: '#94A3B8' }}>
-                    <span>Order: <strong style={{ color: '#E2E8F0' }}>{lic.orderId || 'N/A'}</strong></span>
-                    <span>SKU: <strong style={{ color: '#818CF8' }}>{lic.sku || 'sheet2vow'}</strong></span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.725rem', color: 'var(--color-muted, #475569)' }}>
+                    <span>Order: <strong style={{ color: 'var(--color-text)' }}>{lic.orderId || 'N/A'}</strong></span>
+                    <span>SKU: <strong style={{ color: '#4338CA' }}>{lic.sku || 'sheet2vow'}</strong></span>
                   </div>
 
                   {/* Mobile Actions Row */}
@@ -2028,9 +2116,9 @@ export default function AdminDatabasePage() {
                       type="button"
                       onClick={() => handleOpenEdit(lic, 'license')}
                       style={{
-                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                        border: '1px solid rgba(99, 102, 241, 0.3)',
-                        color: '#A5B4FC',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        border: '1px solid rgba(99, 102, 241, 0.25)',
+                        color: '#4338CA',
                         borderRadius: '6px',
                         padding: '7px 4px',
                         fontSize: '0.75rem',
@@ -2049,9 +2137,9 @@ export default function AdminDatabasePage() {
                       type="button"
                       onClick={() => setRawJsonRecord(lic)}
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        backgroundColor: 'var(--color-bg-subtle)',
                         border: '1px solid var(--color-border)',
-                        color: '#94A3B8',
+                        color: 'var(--color-text)',
                         borderRadius: '6px',
                         padding: '7px 4px',
                         fontSize: '0.75rem',
@@ -2065,9 +2153,9 @@ export default function AdminDatabasePage() {
                       type="button"
                       onClick={() => setRecordToDelete({ id: lic.licenseKey, type: 'license', name: lic.licenseKey })}
                       style={{
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
                         border: '1px solid rgba(239, 68, 68, 0.25)',
-                        color: '#F87171',
+                        color: '#DC2626',
                         borderRadius: '6px',
                         padding: '7px 4px',
                         fontSize: '0.75rem',
@@ -2096,215 +2184,51 @@ export default function AdminDatabasePage() {
         )}
 
         {/* -------------------------------------------------------------
-            TAB 3: SCHEMA AUDITOR & AUTO-REPAIR ENGINE
+            TAB: OPERATIONS DASHBOARD PULSE
             ------------------------------------------------------------- */}
-        {activeTab === 'schema' && (
-          <div style={{
-            backgroundColor: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            padding: '1.25rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'var(--font-sans)', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  Master Spreadsheet Schema Validator & Auto-Repair Engine
-                </h3>
-                <p style={{ margin: '3px 0 0 0', fontSize: '0.75rem', color: '#94A3B8' }}>
-                  Audits Google Sheets columns against strict TypeScript codebase contracts and auto-heals missing headers.
-                </p>
-              </div>
+        {activeTab === 'dashboard' && (
+          <AdminDashboardTab
+            workspaces={workspaces}
+            licenses={licenses}
+            onNavigateToTab={handleNavigateToTab}
+            getAdminHeaders={getAdminHeaders}
+          />
+        )}
 
-              {workspaces.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.7rem', color: '#64748B', fontFamily: 'var(--font-technical-mono, monospace)' }}>
-                    QUICK SELECT:
-                  </span>
-                  {workspaces.slice(0, 3).map(w => (
-                    <button
-                      key={w.spreadsheetId}
-                      type="button"
-                      onClick={() => setAuditSpreadsheetId(w.spreadsheetId)}
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        border: auditSpreadsheetId === w.spreadsheetId ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: auditSpreadsheetId === w.spreadsheetId ? 'var(--color-bg-hover)' : 'var(--color-bg-subtle)',
-                        color: auditSpreadsheetId === w.spreadsheetId ? '#A5B4FC' : '#94A3B8',
-                        fontSize: '0.7rem',
-                        fontFamily: 'var(--font-technical-mono, monospace)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {w.spreadsheetName || (w.spreadsheetId || '').slice(0, 8)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        {/* -------------------------------------------------------------
+            TAB: LICENSE & SHEET TRACKER
+            ------------------------------------------------------------- */}
+        {activeTab === 'tracker' && (
+          <AdminTrackerTab
+            workspaces={workspaces}
+            licenses={licenses}
+            onNavigateToValidator={handleNavigateToValidator}
+            onOpenEditRecord={handleOpenEdit}
+            onOpenJsonRecord={(record) => setRawJsonRecord(record)}
+          />
+        )}
 
-            {/* Audit Input Row */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.625rem',
-              backgroundColor: 'var(--color-bg-subtle)',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              border: '1px solid var(--color-border)',
-              flexWrap: 'wrap',
-            }}>
-              <input
-                type="text"
-                value={auditSpreadsheetId}
-                onChange={(e) => setAuditSpreadsheetId(e.target.value)}
-                placeholder="Google Spreadsheet ID to Audit"
-                style={{
-                  flex: 1,
-                  minWidth: '240px',
-                  backgroundColor: 'var(--color-surface, #ffffff)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
-                  padding: '9px 12px',
-                  color: 'var(--color-text)',
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.85rem',
-                  outline: 'none',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleRunSchemaAudit}
-                disabled={isAuditingSchema}
-                style={{
-                  padding: '9px 18px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: 'var(--color-primary)',
-                  color: 'var(--color-text)',
-                  fontWeight: 600,
-                  fontSize: '0.8125rem',
-                  cursor: isAuditingSchema ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  minHeight: '40px',
-                }}
-              >
-                <RefreshCw size={14} className={isAuditingSchema ? 'spin' : ''} />
-                <span>{isAuditingSchema ? 'Auditing Sheet...' : 'Run Schema Audit'}</span>
-              </button>
-            </div>
+        {/* -------------------------------------------------------------
+            TAB: SHEET VALIDATOR & AUTO-REPAIR
+            ------------------------------------------------------------- */}
+        {(activeTab === 'validator' || activeTab === 'schema') && (
+          <AdminValidatorTab
+            workspaces={workspaces}
+            initialSpreadsheetId={selectedValidatorSheetId}
+            initialProductCode={selectedValidatorProduct}
+            getAdminHeaders={getAdminHeaders}
+            onAutoRepairSuccess={() => fetchRecords()}
+          />
+        )}
 
-            {/* Schema Audit Results */}
-            {schemaReport && (
-              <div style={{
-                backgroundColor: 'var(--color-bg-subtle)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '8px',
-                padding: '1rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.85rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{
-                      backgroundColor: schemaReport.isFullyCompliant ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                      color: schemaReport.isFullyCompliant ? '#34D399' : '#FBBF24',
-                      border: `1px solid ${schemaReport.isFullyCompliant ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontFamily: 'var(--font-technical-mono, monospace)',
-                      fontWeight: 700,
-                    }}>
-                      {schemaReport.isFullyCompliant ? '✅ 100% SCHEMA COMPLIANT' : '⚠️ DISCREPANCIES DETECTED'}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                      Audited {schemaReport.tabReports?.length || 0} sheets
-                    </span>
-                  </div>
-
-                  {!schemaReport.isFullyCompliant && (
-                    <button
-                      type="button"
-                      onClick={handleAutoRepairSchema}
-                      disabled={isRepairingSchema}
-                      style={{
-                        backgroundColor: '#10B981',
-                        color: 'var(--color-text)',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '8px 14px',
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        cursor: isRepairingSchema ? 'not-allowed' : 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      <Sparkles size={14} />
-                      <span>{isRepairingSchema ? 'Repairing Tabs...' : '🛠️ Auto-Repair Google Sheet'}</span>
-                    </button>
-                  )}
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                  gap: '0.625rem',
-                }}>
-                  {schemaReport.tabReports?.map((tr: any) => {
-                    const isOk = tr.missingHeaders.length === 0;
-                    return (
-                      <div
-                        key={tr.tabName}
-                        style={{
-                          backgroundColor: 'var(--color-surface, #ffffff)',
-                          border: `1px solid ${isOk ? 'var(--color-border)' : 'rgba(239, 68, 68, 0.3)'}`,
-                          borderRadius: '6px',
-                          padding: '0.75rem 0.85rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.35rem',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: '0.8125rem', fontFamily: 'var(--font-technical-mono, monospace)' }}>
-                            📄 {tr.tabName}
-                          </span>
-                          <span style={{
-                            fontSize: '0.65rem',
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-technical-mono, monospace)',
-                            color: isOk ? '#34D399' : '#F87171',
-                          }}>
-                            {isOk ? 'MATCH' : `-${tr.missingHeaders.length} MISSING`}
-                          </span>
-                        </div>
-
-                        {tr.missingHeaders.length > 0 && (
-                          <div style={{ fontSize: '0.7rem', color: '#FCA5A5', fontFamily: 'var(--font-technical-mono, monospace)', lineHeight: 1.3 }}>
-                            Missing: {tr.missingHeaders.join(', ')}
-                          </div>
-                        )}
-                        {tr.extraHeaders.length > 0 && (
-                          <div style={{ fontSize: '0.7rem', color: '#FBBF24', fontFamily: 'var(--font-technical-mono, monospace)', lineHeight: 1.3 }}>
-                            Extra: {tr.extraHeaders.join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* -------------------------------------------------------------
+            TAB: MASTER TEMPLATES INSPECTOR
+            ------------------------------------------------------------- */}
+        {activeTab === 'templates' && (
+          <AdminTemplatesTab
+            getAdminHeaders={getAdminHeaders}
+            onNavigateToValidator={handleNavigateToValidator}
+          />
         )}
 
       </div>
@@ -2351,8 +2275,8 @@ export default function AdminDatabasePage() {
                 padding: '9px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: isSavingRecord || Boolean(jsonParseError) ? '#94A3B8' : 'var(--color-primary)',
-                color: 'var(--color-text)',
+                backgroundColor: isSavingRecord || Boolean(jsonParseError) ? 'var(--color-muted, #94A3B8)' : 'var(--color-primary)',
+                color: 'var(--color-on-primary, #ffffff)',
                 fontSize: '0.875rem',
                 fontWeight: 600,
                 cursor: isSavingRecord || Boolean(jsonParseError) ? 'not-allowed' : 'pointer',
@@ -2920,7 +2844,7 @@ export default function AdminDatabasePage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Code size={20} style={{ color: '#818CF8' }} />
+                <Code size={20} style={{ color: '#4F46E5' }} />
                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'var(--font-sans)', fontWeight: 800, color: 'var(--color-primary)' }}>
                   Raw Document Record (JSON)
                 </h3>
@@ -2931,7 +2855,7 @@ export default function AdminDatabasePage() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#94A3B8',
+                  color: 'var(--color-muted, #475569)',
                   cursor: 'pointer',
                   padding: '4px',
                 }}
@@ -2965,7 +2889,7 @@ export default function AdminDatabasePage() {
                 }}
                 style={{
                   backgroundColor: 'var(--color-primary)',
-                  color: 'var(--color-text)',
+                  color: 'var(--color-on-primary, #ffffff)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '8px 16px',
@@ -3037,14 +2961,14 @@ export default function AdminDatabasePage() {
                 <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
                   Delete {recordToDelete.type === 'workspace' ? 'Workspace' : 'License'}?
                 </h3>
-                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-muted, #475569)' }}>
                   This removes the record from Cloud Firestore.
                 </span>
               </div>
             </div>
 
             <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-muted)', lineHeight: 1.4 }}>
-              Are you sure you want to permanently delete <strong style={{ color: '#F87171' }}>"{recordToDelete.name || recordToDelete.id}"</strong>?
+              Are you sure you want to permanently delete <strong style={{ color: '#DC2626' }}>"{recordToDelete.name || recordToDelete.id}"</strong>?
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', marginTop: '0.5rem' }}>
@@ -3056,7 +2980,7 @@ export default function AdminDatabasePage() {
                   borderRadius: '8px',
                   border: '1px solid var(--color-border)',
                   backgroundColor: 'var(--color-bg-subtle)',
-                  color: '#94A3B8',
+                  color: 'var(--color-text)',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -3077,8 +3001,8 @@ export default function AdminDatabasePage() {
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  backgroundColor: '#EF4444',
-                  color: 'var(--color-text)',
+                  backgroundColor: '#DC2626',
+                  color: '#FFFFFF',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -3143,7 +3067,7 @@ export default function AdminDatabasePage() {
                 <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
                   Purge All Records & Reset Session?
                 </h3>
-                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-muted, #475569)' }}>
                   Destructive admin action
                 </span>
               </div>
@@ -3162,7 +3086,7 @@ export default function AdminDatabasePage() {
                   borderRadius: '8px',
                   border: '1px solid var(--color-border)',
                   backgroundColor: 'var(--color-bg-subtle)',
-                  color: '#94A3B8',
+                  color: 'var(--color-text)',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -3177,8 +3101,8 @@ export default function AdminDatabasePage() {
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  backgroundColor: '#EF4444',
-                  color: 'var(--color-text)',
+                  backgroundColor: '#DC2626',
+                  color: '#FFFFFF',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
                   cursor: 'pointer',

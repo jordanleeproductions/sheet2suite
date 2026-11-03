@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auditMasterSpreadsheet, repairGoogleSheetHeaders } from '../../../../../scripts/validateMasterSheet';
+import { auditMasterSpreadsheet, repairGoogleSheetHeaders, EXPECTED_SCHEMA, VAULT_SCHEMA } from '../../../../../scripts/validateMasterSheet';
 import { requireAdminAuth } from '@/lib/auth/adminAuth';
 
 export async function GET(req: NextRequest) {
@@ -9,12 +9,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const customSheetId = searchParams.get('spreadsheetId') || undefined;
+    const productCode = searchParams.get('productCode') || 'SHEET2VOW';
+    const schema = productCode === 'SHEET2VAULT' ? VAULT_SCHEMA : EXPECTED_SCHEMA;
 
     // Extract optional Bearer token from header
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
 
-    const report = await auditMasterSpreadsheet(customSheetId, token);
+    const report = await auditMasterSpreadsheet(customSheetId, token, schema);
     return NextResponse.json({ success: true, report });
   } catch (err: any) {
     return NextResponse.json(
@@ -31,10 +33,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const spreadsheetId = body.spreadsheetId;
+    const productCode = body.productCode || 'SHEET2VOW';
+    const schema = productCode === 'SHEET2VAULT' ? VAULT_SCHEMA : EXPECTED_SCHEMA;
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
 
-    const report = await auditMasterSpreadsheet(spreadsheetId, token);
+    const report = await auditMasterSpreadsheet(spreadsheetId, token, schema);
     const repairResult = await repairGoogleSheetHeaders(report, token);
 
     return NextResponse.json({

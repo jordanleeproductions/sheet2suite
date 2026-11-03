@@ -48,6 +48,24 @@ export const EXPECTED_SCHEMA: Record<string, string[]> = {
   ]
 };
 
+// Define expected schema contract for Sheet2Vault (In Development)
+export const VAULT_SCHEMA: Record<string, string[]> = {
+  VAULT_ITEMS: [
+    'Item ID', 'Item Name', 'Category', 'Room', 'Brand / Make',
+    'Model Number', 'Serial Number', 'Purchase Date', 'Purchase Price',
+    'Est Replacement Cost', 'Condition', 'Readiness Score', 'Receipt URL',
+    'Photo URL', 'Warranty Expiry', 'Notes', 'Status'
+  ],
+  VAULT_SETTINGS: [
+    'Setting Key', 'Setting Value', 'Description', 'Last Updated'
+  ],
+  VAULT_CLAIMS: [
+    'Claim ID', 'Incident Date', 'Incident Type', 'Carrier Name',
+    'Policy Number', 'Deductible', 'Claim Status', 'Total Claimed',
+    'Total Approved', 'Adjuster Name', 'Adjuster Email', 'Notes'
+  ],
+};
+
 export const DEFAULT_MASTER_SHEET_ID = '1h_RGirRXv_4zXjqvhJnRlSJ-OnqxPeK9f3M_Eep4RcI';
 
 export interface AuditTabReport {
@@ -134,7 +152,8 @@ function getGoogleAuthClient(accessToken?: string) {
  */
 export async function auditMasterSpreadsheet(
   customSheetId?: string,
-  accessToken?: string
+  accessToken?: string,
+  customSchema?: Record<string, string[]>
 ): Promise<AuditReport> {
   loadLocalEnv();
   const spreadsheetId = customSheetId || process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
@@ -160,7 +179,8 @@ export async function auditMasterSpreadsheet(
     });
   } else {
     // 2. Unauthenticated Public CSV Export Inspection
-    for (const tabName of Object.keys(EXPECTED_SCHEMA)) {
+    const targetSchema = customSchema || EXPECTED_SCHEMA;
+    for (const tabName of Object.keys(targetSchema)) {
       try {
         const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
         const res = await fetch(csvUrl, { headers: { 'User-Agent': 'Sheet2Suite-Validator/1.0' } });
@@ -185,7 +205,8 @@ export async function auditMasterSpreadsheet(
   let totalMissingCount = 0;
   let totalExtraCount = 0;
 
-  for (const [tabName, expectedHeaders] of Object.entries(EXPECTED_SCHEMA)) {
+  const targetSchema = customSchema || EXPECTED_SCHEMA;
+  for (const [tabName, expectedHeaders] of Object.entries(targetSchema)) {
     const actualHeaders = actualSheetData[tabName] || [];
     const tabExists = Boolean(actualSheetData[tabName]);
 
