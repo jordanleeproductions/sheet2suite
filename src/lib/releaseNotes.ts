@@ -11,10 +11,24 @@ export interface ReleaseNoteItem {
 
 export const RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.22.2',
+    title: 'Google OAuth Admin Identity Authentication',
+    date: 'Nov 2, 2026',
+    badge: 'Latest',
+    badgeColor: '#10B981',
+    category: 'enhancement',
+    highlights: [
+      'Google Identity sign-in: Upgraded Admin Portal login from manual secret key entry to 1-click Google OAuth authentication.',
+      'Strict email allowlist: Enforced zero-trust access control allowing only verified administrator Google accounts to unlock the portal.',
+      'Secure HMAC session: Introduced signed, tamper-proof HttpOnly administrator sessions with automatic identity recognition.',
+    ],
+    details: 'Strengthens administrative security by replacing password-based entry with cryptographically verified Google account authentication restricted to authorized platform owners.',
+  },
+  {
     version: 'v1.22.1',
     title: 'Mobile Experience Polish & Platform Refinements',
     date: 'Nov 2, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'enhancement',
     highlights: [
