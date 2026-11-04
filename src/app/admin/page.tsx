@@ -1476,6 +1476,28 @@ export default function AdminDatabasePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('releases')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeTab === 'releases' ? 'var(--color-primary)' : 'transparent',
+                color: activeTab === 'releases' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #475569)',
+                fontSize: '0.8125rem',
+                fontWeight: activeTab === 'releases' ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Sparkles size={15} />
+              <span>Release Notes</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('workspaces')}
               style={{
                 display: 'inline-flex',
@@ -2206,6 +2228,7 @@ export default function AdminDatabasePage() {
             onNavigateToValidator={handleNavigateToValidator}
             onOpenEditRecord={handleOpenEdit}
             onOpenJsonRecord={(record) => setRawJsonRecord(record)}
+
           />
         )}
 
@@ -2229,6 +2252,15 @@ export default function AdminDatabasePage() {
           <AdminTemplatesTab
             getAdminHeaders={getAdminHeaders}
             onNavigateToValidator={handleNavigateToValidator}
+          />
+        )}
+
+        {/* -------------------------------------------------------------
+            TAB: SHEET2VOW RELEASE NOTES
+            ------------------------------------------------------------- */}
+        {activeTab === 'releases' && (
+          <AdminReleaseNotesTab
+            onNavigateToTab={handleNavigateToTab}
           />
         )}
 
