@@ -1,6 +1,6 @@
 {
   "name": "sheet2suite",
-  "version": "1.23.2",
+  "version": "1.23.4",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",

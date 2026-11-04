@@ -777,7 +777,7 @@ export default function AdminDatabasePage() {
                 fontFamily: 'var(--font-mono)',
               }}>
                 <ShieldCheck size={14} style={{ color: 'var(--color-green, #059669)', flexShrink: 0 }} />
-                <span>Authorized Administrator: <strong>jordanleeproductions@gmail.com</strong></span>
+                <span>Restricted to authorized administrator Google accounts</span>
               </div>
             </div>
 

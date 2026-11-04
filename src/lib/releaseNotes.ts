@@ -14,11 +14,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.23.4',
+    product: 'suite',
+    title: 'Admin Authentication Privacy & Security Hardening',
+    date: 'Nov 3, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Eliminated administrator email exposure from the Admin Portal authentication interface.',
+      'Enforced zero-trust allowlist messaging without revealing privileged account identities.',
+      'Sanitized default developer input states across private preview gates.',
+    ],
+    details: 'Hardens administrative privacy by preventing email disclosure on public authentication screens.',
+  },
+  {
     version: 'v1.23.3',
     product: 'suite',
     title: 'Multi-Product Version Isolation & Release Architecture',
     date: 'Nov 3, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'enhancement',
     highlights: [

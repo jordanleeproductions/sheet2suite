@@ -121,7 +121,7 @@ function VaultContent() {
 
   // Private Preview Gate States
   const [testKeyInput, setTestKeyInput] = useState('VAULT-DEV-ALPHA-2026');
-  const [testEmailInput, setTestEmailInput] = useState('jordanleeproductions@gmail.com');
+  const [testEmailInput, setTestEmailInput] = useState('');
 
   // Vault Canvas States
   const [items, setItems] = useState<VaultItem[]>(INITIAL_MOCK_ITEMS);
