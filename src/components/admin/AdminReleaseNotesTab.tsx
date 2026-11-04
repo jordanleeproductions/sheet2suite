@@ -3,509 +3,669 @@
 import React, { useState, useMemo } from 'react';
 import {
   Sparkles,
+  Tag,
+  Calendar,
   Search,
+  Layers,
+  Zap,
+  ShieldCheck,
   CheckCircle2,
   Copy,
   Check,
-  Tag,
-  Calendar,
-  Layers,
-  ArrowUpDown,
-  History,
-  ExternalLink,
-  Code2,
-  FileText,
+  FileCode2,
+  Box,
 } from 'lucide-react';
-import { RELEASE_NOTES, ReleaseNoteItem } from '@/lib/releaseNotes';
-import { APP_VERSION } from '@/lib/buildInfo';
+import {
+  getReleaseNotesByProduct,
+  ReleaseNoteItem,
+  SUITE_RELEASE_NOTES,
+  VOW_RELEASE_NOTES,
+  VAULT_RELEASE_NOTES,
+} from '@/lib/releaseNotes';
+import {
+  PRODUCT_VERSIONS,
+  SuiteProductId,
+  getProductBuildInfo,
+} from '@/lib/buildInfo';
 
 interface AdminReleaseNotesTabProps {
   onNavigateToTab?: (tab: string) => void;
 }
 
-export default function AdminReleaseNotesTab({
-  onNavigateToTab,
-}: AdminReleaseNotesTabProps) {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+export default function AdminReleaseNotesTab({}: AdminReleaseNotesTabProps) {
+  const [selectedProduct, setSelectedProduct] = useState<SuiteProductId | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'major' | 'feature' | 'enhancement' | 'fix'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [copiedVersion, setCopiedVersion] = useState<string | null>(null);
 
-  const handleCopy = (text: string, identifier: string) => {
-    if (typeof navigator !== 'undefined') {
-      navigator.clipboard.writeText(text);
-      setCopiedVersion(identifier);
+  const rawNotes = useMemo(() => {
+    return getReleaseNotesByProduct(selectedProduct);
+  }, [selectedProduct]);
+
+  const filteredNotes = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return rawNotes.filter((note: ReleaseNoteItem) => {
+      if (selectedCategory !== 'all' && note.category !== selectedCategory) {
+        return false;
+      }
+      if (!q) return true;
+      const inVersion = note.version.toLowerCase().includes(q);
+      const inTitle = note.title.toLowerCase().includes(q);
+      const inDetails = (note.details || '').toLowerCase().includes(q);
+      const inHighlights = note.highlights.some((h: string) => h.toLowerCase().includes(q));
+      return inVersion || inTitle || inDetails || inHighlights;
+    });
+  }, [rawNotes, selectedCategory, searchQuery]);
+
+  const counts = useMemo(() => {
+    return {
+      all: rawNotes.length,
+      major: rawNotes.filter((n: ReleaseNoteItem) => n.category === 'major').length,
+      feature: rawNotes.filter((n: ReleaseNoteItem) => n.category === 'feature').length,
+      enhancement: rawNotes.filter((n: ReleaseNoteItem) => n.category === 'enhancement').length,
+      fix: rawNotes.filter((n: ReleaseNoteItem) => n.category === 'fix').length,
+    };
+  }, [rawNotes]);
+
+  const handleCopyNoteMarkdown = (note: ReleaseNoteItem) => {
+    const pInfo = getProductBuildInfo(note.product || 'vow');
+    const lines = [
+      `## [${pInfo.name}] ${note.version} — ${note.title} (${note.date})`,
+      note.details ? `\n${note.details}\n` : '',
+      ...note.highlights.map((h: string) => `- ${h}`),
+    ].filter(Boolean);
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(lines.join('\n'));
+      setCopiedVersion(`${note.product || 'vow'}-${note.version}`);
       setTimeout(() => setCopiedVersion(null), 2000);
     }
   };
 
-  const handleCopyMarkdown = (note: ReleaseNoteItem) => {
-    let md = `## ${note.version} — ${note.title} (${note.date})\n\n`;
-    if (note.details) {
-      md += `${note.details}\n\n`;
+  const getCategoryMeta = (category?: ReleaseNoteItem['category']) => {
+    switch (category) {
+      case 'major':
+        return {
+          label: 'Major Release',
+          icon: <Sparkles size={13} />,
+          color: '#7C3AED',
+          bg: 'rgba(124, 58, 237, 0.1)',
+          border: 'rgba(124, 58, 237, 0.28)',
+        };
+      case 'feature':
+        return {
+          label: 'New Feature',
+          icon: <Layers size={13} />,
+          color: '#059669',
+          bg: 'rgba(5, 150, 105, 0.1)',
+          border: 'rgba(5, 150, 105, 0.28)',
+        };
+      case 'enhancement':
+        return {
+          label: 'Enhancement',
+          icon: <Zap size={13} />,
+          color: '#2563EB',
+          bg: 'rgba(37, 99, 235, 0.1)',
+          border: 'rgba(37, 99, 235, 0.28)',
+        };
+      case 'fix':
+        return {
+          label: 'Fix & Security',
+          icon: <ShieldCheck size={13} />,
+          color: '#D97706',
+          bg: 'rgba(217, 119, 6, 0.1)',
+          border: 'rgba(217, 119, 6, 0.28)',
+        };
+      default:
+        return {
+          label: 'Update',
+          icon: <CheckCircle2 size={13} />,
+          color: '#475569',
+          bg: 'rgba(71, 85, 105, 0.1)',
+          border: 'rgba(71, 85, 105, 0.25)',
+        };
     }
-    md += `### Highlights\n`;
-    note.highlights.forEach((h) => {
-      md += `- ${h}\n`;
-    });
-    handleCopy(md, `md-${note.version}`);
   };
 
-  // Filter and sort releases
-  const filteredNotes = useMemo(() => {
-    let notes = [...RELEASE_NOTES];
-
-    // Search query
-    if (searchTerm.trim()) {
-      const q = searchTerm.trim().toLowerCase();
-      notes = notes.filter((r) => {
-        const matchesVersion = r.version.toLowerCase().includes(q);
-        const matchesTitle = r.title.toLowerCase().includes(q);
-        const matchesDate = r.date.toLowerCase().includes(q);
-        const matchesHighlights = r.highlights.some((h) => h.toLowerCase().includes(q));
-        const matchesDetails = (r.details || '').toLowerCase().includes(q);
-        return matchesVersion || matchesTitle || matchesDate || matchesHighlights || matchesDetails;
-      });
-    }
-
-    // Category filter
-    if (selectedCategory !== 'ALL') {
-      notes = notes.filter((r) => (r.category || 'enhancement').toUpperCase() === selectedCategory);
-    }
-
-    // Sort order
-    if (sortOrder === 'asc') {
-      notes.reverse();
-    }
-
-    return notes;
-  }, [searchTerm, selectedCategory, sortOrder]);
-
-  // Category counts
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {
-      ALL: RELEASE_NOTES.length,
-      FEATURE: 0,
-      ENHANCEMENT: 0,
-      FIX: 0,
-      MAJOR: 0,
-    };
-    RELEASE_NOTES.forEach((r) => {
-      const cat = (r.category || 'enhancement').toUpperCase();
-      if (counts[cat] !== undefined) {
-        counts[cat]++;
-      }
-    });
-    return counts;
-  }, []);
+  const allProductsList = Object.values(PRODUCT_VERSIONS);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Top Header & Pulse Strip */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '0.85rem',
-      }}>
-        <div>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: 800,
-            margin: 0,
-            color: 'var(--color-primary)',
-            letterSpacing: '-0.02em',
-          }}>
-            Sheet2Vow Release Notes & Platform Changelog
-          </h2>
-          <p style={{
-            margin: '0.2rem 0 0 0',
-            fontSize: '0.8rem',
-            color: 'var(--color-muted)',
-          }}>
-            Official chronological log of production deployments, feature additions, security upgrades, and architectural enhancements.
-          </p>
-        </div>
-
-        {/* Current Active Release Pill */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.65rem',
-          padding: '0.4rem 0.85rem',
+      {/* Top Banner: Multi-Product Build Version Matrix */}
+      <div
+        style={{
           backgroundColor: 'var(--color-surface, #ffffff)',
           border: '1px solid var(--color-border)',
-          borderRadius: '20px',
-          fontSize: '0.75rem',
-          fontFamily: 'var(--font-mono)',
-          boxShadow: 'var(--box-shadow-subtle, 0 1px 3px rgba(0,0,0,0.05))',
-        }}>
-          <span style={{ color: 'var(--color-muted)' }}>CURRENT BUILD:</span>
-          <strong style={{ color: 'var(--color-text)' }}>v{APP_VERSION}</strong>
-          <span style={{ color: 'var(--color-border)' }}>|</span>
-          <span style={{ color: '#059669', fontWeight: 700 }}>
-            {RELEASE_NOTES.length} TOTAL RELEASES
-          </span>
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.1rem',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+            <div
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '11px',
+                backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                border: '1px solid rgba(79, 70, 229, 0.3)',
+                color: '#4F46E5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Sparkles size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: '1.15rem',
+                    fontWeight: 800,
+                    color: 'var(--color-text)',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Sheet2Suite Ecosystem Release Notes & Version Registry
+                </h2>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-technical-mono, monospace)',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    backgroundColor: 'rgba(79, 70, 229, 0.14)',
+                    color: '#4F46E5',
+                    border: '1px solid rgba(79, 70, 229, 0.35)',
+                  }}
+                >
+                  ISOLATED PRODUCT VERSIONS
+                </span>
+              </div>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.825rem', color: 'var(--color-muted)' }}>
+                Platform & Admin updates bump <strong>Sheet2Suite</strong> independently without altering <strong>Sheet2Vow</strong> or other suite product versions.
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              flexWrap: 'wrap',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-technical-mono, monospace)',
+              color: 'var(--color-muted)',
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.7rem',
+                borderRadius: '8px',
+                backgroundColor: 'var(--color-bg-subtle)',
+                border: '1px solid var(--color-border)',
+              }}
+            >
+              <FileCode2 size={14} style={{ color: '#4F46E5' }} />
+              <span>npm run bump:suite:patch | bump:vow:patch</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Product Version Cards Strip */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))',
+            gap: '0.65rem',
+          }}
+        >
+          {allProductsList.map((prod) => {
+            const isSelected = selectedProduct === prod.id;
+            return (
+              <button
+                key={prod.id}
+                type="button"
+                onClick={() => setSelectedProduct(isSelected ? 'all' : prod.id)}
+                style={{
+                  textAlign: 'left',
+                  padding: '0.75rem 0.85rem',
+                  borderRadius: '10px',
+                  backgroundColor: isSelected ? 'var(--color-bg-subtle)' : 'var(--color-surface, #ffffff)',
+                  border: isSelected
+                    ? `2px solid ${prod.accentColor}`
+                    : '1px solid var(--color-border)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.25rem',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 800,
+                      color: 'var(--color-text)',
+                    }}
+                  >
+                    {prod.name}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      padding: '1px 6px',
+                      borderRadius: '999px',
+                      backgroundColor: `${prod.accentColor}18`,
+                      color: prod.accentColor,
+                      border: `1px solid ${prod.accentColor}40`,
+                    }}
+                  >
+                    {prod.version}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: '0.68rem',
+                    color: 'var(--color-muted)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {prod.tagline}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '0.75rem',
-        flexWrap: 'wrap',
-        backgroundColor: 'var(--color-surface, #ffffff)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--border-radius-md, 8px)',
-        padding: '0.75rem 1rem',
-        boxShadow: 'var(--box-shadow-subtle, 0 1px 3px rgba(0,0,0,0.05))',
-      }}>
-        {/* Search input */}
-        <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: '400px' }}>
-          <Search size={15} style={{
-            position: 'absolute',
-            left: '10px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: 'var(--color-muted)',
-          }} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search version (v1.23.0), features, notes..."
-            style={{
-              width: '100%',
-              padding: '0.45rem 0.75rem 0.45rem 2.1rem',
-              borderRadius: 'var(--border-radius-sm, 6px)',
-              border: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-bg-subtle)',
-              color: 'var(--color-text)',
-              fontSize: '0.8rem',
-              fontFamily: 'var(--font-sans)',
-              boxSizing: 'border-box',
-              outline: 'none',
-            }}
-          />
-        </div>
-
-        {/* Category Filter Pills & Sort Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {/* Category Pills */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            backgroundColor: 'var(--color-bg-subtle)',
-            borderRadius: '20px',
-            padding: '2px',
-            border: '1px solid var(--color-border)',
-          }}>
-            {(['ALL', 'FEATURE', 'ENHANCEMENT', 'FIX'] as const).map((cat) => {
-              const isSelected = selectedCategory === cat;
+      {/* Product Filter & Category Bar */}
+      <div
+        style={{
+          backgroundColor: 'var(--color-surface, #ffffff)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '12px',
+          padding: '0.85rem 1.15rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+        }}
+      >
+        {/* Row 1: Product Scope Tabs */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {(
+              [
+                { id: 'all', label: 'All Products', count: SUITE_RELEASE_NOTES.length + VOW_RELEASE_NOTES.length + VAULT_RELEASE_NOTES.length, color: '#475569' },
+                { id: 'suite', label: `Sheet2Suite (${PRODUCT_VERSIONS.suite.version})`, count: SUITE_RELEASE_NOTES.length, color: '#4F46E5' },
+                { id: 'vow', label: `Sheet2Vow (${PRODUCT_VERSIONS.vow.version})`, count: VOW_RELEASE_NOTES.length, color: '#059669' },
+                { id: 'vault', label: `Sheet2Vault (${PRODUCT_VERSIONS.vault.version})`, count: VAULT_RELEASE_NOTES.length, color: '#D97706' },
+              ] as const
+            ).map((tab) => {
+              const active = selectedProduct === tab.id;
               return (
                 <button
-                  key={cat}
+                  key={tab.id}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => setSelectedProduct(tab.id)}
                   style={{
-                    padding: '3px 9px',
-                    borderRadius: '16px',
-                    border: 'none',
-                    backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
-                    color: isSelected ? '#ffffff' : 'var(--color-muted)',
-                    fontSize: '0.7rem',
-                    fontWeight: isSelected ? 700 : 500,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.42rem 0.85rem',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: active ? 700 : 600,
+                    border: active ? `1.5px solid ${tab.color}` : '1px solid var(--color-border)',
+                    backgroundColor: active ? tab.color : 'var(--color-bg-subtle)',
+                    color: active ? '#ffffff' : 'var(--color-text)',
                     cursor: 'pointer',
-                    fontFamily: 'var(--font-mono)',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {cat} ({categoryCounts[cat] || 0})
+                  <Box size={13} />
+                  <span>{tab.label}</span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-technical-mono, monospace)',
+                      fontSize: '0.68rem',
+                      padding: '0px 5px',
+                      borderRadius: '999px',
+                      backgroundColor: active ? 'rgba(255,255,255,0.22)' : 'var(--color-surface)',
+                      color: active ? '#ffffff' : 'var(--color-muted)',
+                    }}
+                  >
+                    {tab.count}
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Sort Order Toggle */}
-          <button
-            type="button"
-            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-            title={`Sorting: ${sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}`}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.4rem 0.75rem',
-              borderRadius: 'var(--border-radius-sm, 6px)',
-              border: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-surface, #ffffff)',
-              color: 'var(--color-text)',
-              fontSize: '0.725rem',
-              fontWeight: 600,
-              fontFamily: 'var(--font-mono)',
-              cursor: 'pointer',
-            }}
-          >
-            <ArrowUpDown size={13} style={{ color: 'var(--color-primary)' }} />
-            <span>{sortOrder === 'desc' ? 'NEWEST FIRST' : 'OLDEST FIRST'}</span>
-          </button>
+          <div style={{ position: 'relative', minWidth: '240px', flex: '1', maxWidth: '340px' }}>
+            <Search
+              size={14}
+              style={{
+                position: 'absolute',
+                left: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--color-muted)',
+              }}
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter release notes by keyword or version..."
+              style={{
+                width: '100%',
+                padding: '0.45rem 0.75rem 0.45rem 2rem',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-bg-subtle)',
+                color: 'var(--color-text)',
+                fontSize: '0.8125rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Row 2: Category Filter Pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', paddingTop: '0.25rem', borderTop: '1px solid var(--color-border)' }}>
+          {(
+            [
+              { id: 'all', label: 'All Categories', count: counts.all },
+              { id: 'feature', label: 'Features', count: counts.feature },
+              { id: 'enhancement', label: 'Enhancements', count: counts.enhancement },
+              { id: 'fix', label: 'Fixes & Security', count: counts.fix },
+              { id: 'major', label: 'Major', count: counts.major },
+            ] as const
+          ).map((tab) => {
+            const active = selectedCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedCategory(tab.id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.32rem 0.7rem',
+                  borderRadius: '999px',
+                  fontSize: '0.74rem',
+                  fontWeight: active ? 700 : 500,
+                  border: active ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: active ? 'var(--color-primary)' : 'transparent',
+                  color: active ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>{tab.label}</span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-technical-mono, monospace)',
+                    fontSize: '0.66rem',
+                    padding: '0px 5px',
+                    borderRadius: '999px',
+                    backgroundColor: active ? 'rgba(255,255,255,0.22)' : 'var(--color-bg-subtle)',
+                    color: active ? '#ffffff' : 'var(--color-muted)',
+                  }}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Release Notes Chronological List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Release Cards List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
         {filteredNotes.length === 0 ? (
-          <div style={{
-            padding: '3rem 2rem',
-            textAlign: 'center',
-            backgroundColor: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--border-radius-lg, 12px)',
-            color: 'var(--color-muted)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '0.75rem',
-          }}>
-            <History size={32} style={{ opacity: 0.35 }} />
-            <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>No matching release notes found.</div>
-            <p style={{ fontSize: '0.75rem', margin: 0, maxWidth: '380px' }}>
-              Try adjusting your search query or reset the category filter above to see all product versions.
-            </p>
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              padding: '2.5rem',
+              textAlign: 'center',
+              color: 'var(--color-muted)',
+              fontSize: '0.875rem',
+            }}
+          >
+            No release notes match your current product or filter criteria.
           </div>
         ) : (
-          filteredNotes.map((note, index) => {
-            const isLatest = note.version === RELEASE_NOTES[0].version;
-            const category = (note.category || 'enhancement').toUpperCase();
-
-            // Category color tokens
-            let catBg = 'rgba(79, 70, 229, 0.1)';
-            let catBorder = 'rgba(79, 70, 229, 0.25)';
-            let catColor = '#4F46E5';
-
-            if (category === 'FEATURE') {
-              catBg = 'rgba(16, 185, 129, 0.1)';
-              catBorder = 'rgba(16, 185, 129, 0.25)';
-              catColor = '#059669';
-            } else if (category === 'FIX') {
-              catBg = 'rgba(245, 158, 11, 0.1)';
-              catBorder = 'rgba(245, 158, 11, 0.25)';
-              catColor = '#D97706';
-            } else if (category === 'MAJOR') {
-              catBg = 'rgba(168, 85, 247, 0.1)';
-              catBorder = 'rgba(168, 85, 247, 0.25)';
-              catColor = '#7C3AED';
-            }
+          filteredNotes.map((note: ReleaseNoteItem) => {
+            const cat = getCategoryMeta(note.category);
+            const prodInfo = getProductBuildInfo(note.product || 'vow');
+            const isCurrentProductVersion = note.version === prodInfo.version;
+            const copyKey = `${note.product || 'vow'}-${note.version}`;
+            const isCopied = copiedVersion === copyKey;
 
             return (
               <div
-                key={note.version}
+                key={copyKey}
                 style={{
                   backgroundColor: 'var(--color-surface, #ffffff)',
-                  border: isLatest ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  borderRadius: 'var(--border-radius-lg, 12px)',
-                  padding: '1.25rem 1.5rem',
+                  border: isCurrentProductVersion
+                    ? `1.5px solid ${prodInfo.accentColor}`
+                    : '1px solid var(--color-border)',
+                  borderRadius: '12px',
+                  padding: '1.25rem 1.4rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.85rem',
-                  boxShadow: isLatest
-                    ? '0 4px 14px rgba(79, 70, 229, 0.08)'
-                    : 'var(--box-shadow-subtle, 0 1px 3px rgba(0,0,0,0.04))',
-                  position: 'relative',
+                  gap: '0.7rem',
+                  boxShadow: isCurrentProductVersion ? `0 4px 16px ${prodInfo.accentColor}14` : 'none',
                 }}
               >
-                {/* Header row */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '0.75rem',
-                }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {/* Version Pill */}
-                      <span style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.9rem',
-                        fontWeight: 900,
-                        color: 'var(--color-text)',
-                        backgroundColor: 'var(--color-bg-subtle)',
-                        border: '1px solid var(--color-border)',
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                      }}>
-                        {note.version}
-                      </span>
-
-                      {/* Latest Tag */}
-                      {isLatest && (
-                        <span style={{
-                          fontSize: '0.65rem',
-                          fontFamily: 'var(--font-mono)',
-                          padding: '2px 8px',
-                          borderRadius: '20px',
-                          backgroundColor: '#059669',
-                          color: '#ffffff',
-                          fontWeight: 800,
-                          letterSpacing: '0.04em',
-                        }}>
-                          LATEST PRODUCTION
-                        </span>
-                      )}
-
-                      {/* Category Pill */}
-                      <span style={{
-                        fontSize: '0.65rem',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '2px 8px',
-                        borderRadius: '20px',
-                        backgroundColor: catBg,
-                        border: `1px solid ${catBorder}`,
-                        color: catColor,
-                        fontWeight: 700,
+                {/* Header Meta Row */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {/* Product Badge */}
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
                         textTransform: 'uppercase',
                         letterSpacing: '0.04em',
-                      }}>
-                        {category}
-                      </span>
+                        padding: '0.22rem 0.6rem',
+                        borderRadius: '6px',
+                        backgroundColor: `${prodInfo.accentColor}15`,
+                        color: prodInfo.accentColor,
+                        border: `1px solid ${prodInfo.accentColor}40`,
+                      }}
+                    >
+                      <Box size={11} />
+                      {prodInfo.name}
+                    </span>
 
-                      {/* Date */}
-                      <div style={{
+                    {/* Version Tag */}
+                    <span
+                      style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '0.25rem',
-                        fontSize: '0.75rem',
-                        color: 'var(--color-muted)',
-                      }}>
-                        <Calendar size={12} />
-                        <span>{note.date}</span>
-                      </div>
-                    </div>
+                        gap: '0.35rem',
+                        fontFamily: 'var(--font-technical-mono, monospace)',
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        backgroundColor: 'var(--color-bg-subtle)',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <Tag size={12} style={{ color: prodInfo.accentColor }} />
+                      {note.version}
+                    </span>
 
-                    {/* Title */}
-                    <h3 style={{
-                      margin: 0,
-                      fontSize: '1.05rem',
-                      fontWeight: 800,
-                      color: 'var(--color-text)',
-                      letterSpacing: '-0.01em',
-                    }}>
-                      {note.title}
-                    </h3>
+                    {isCurrentProductVersion && (
+                      <span
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          padding: '0.18rem 0.55rem',
+                          borderRadius: '999px',
+                          backgroundColor: `${prodInfo.accentColor}18`,
+                          color: prodInfo.accentColor,
+                          border: `1px solid ${prodInfo.accentColor}45`,
+                        }}
+                      >
+                        Active {prodInfo.shortName} Build
+                      </span>
+                    )}
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '0.18rem 0.55rem',
+                        borderRadius: '999px',
+                        backgroundColor: cat.bg,
+                        color: cat.color,
+                        border: `1px solid ${cat.border}`,
+                      }}
+                    >
+                      {cat.icon}
+                      {cat.label}
+                    </span>
                   </div>
 
-                  {/* Quick Copy Actions */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(note.version, `ver-${note.version}`)}
-                      title="Copy version tag"
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.3rem',
-                        padding: '0.35rem 0.65rem',
-                        borderRadius: 'var(--border-radius-sm, 6px)',
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: 'var(--color-bg-subtle)',
-                        color: 'var(--color-text)',
-                        fontSize: '0.7rem',
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 600,
-                        cursor: 'pointer',
+                        fontSize: '0.74rem',
+                        color: 'var(--color-muted)',
+                        fontFamily: 'var(--font-technical-mono, monospace)',
                       }}
                     >
-                      {copiedVersion === `ver-${note.version}` ? <Check size={12} style={{ color: '#059669' }} /> : <Copy size={12} />}
-                      <span>{copiedVersion === `ver-${note.version}` ? 'COPIED' : 'TAG'}</span>
-                    </button>
+                      <Calendar size={12} />
+                      {note.date}
+                    </span>
 
                     <button
                       type="button"
-                      onClick={() => handleCopyMarkdown(note)}
-                      title="Copy release entry in markdown"
+                      onClick={() => handleCopyNoteMarkdown(note)}
+                      title="Copy release note as Markdown"
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.3rem',
-                        padding: '0.35rem 0.65rem',
-                        borderRadius: 'var(--border-radius-sm, 6px)',
+                        padding: '0.28rem 0.6rem',
+                        borderRadius: '6px',
                         border: '1px solid var(--color-border)',
                         backgroundColor: 'var(--color-bg-subtle)',
-                        color: 'var(--color-text)',
+                        color: isCopied ? '#059669' : 'var(--color-muted)',
                         fontSize: '0.7rem',
-                        fontFamily: 'var(--font-mono)',
                         fontWeight: 600,
                         cursor: 'pointer',
                       }}
                     >
-                      {copiedVersion === `md-${note.version}` ? <Check size={12} style={{ color: '#059669' }} /> : <FileText size={12} />}
-                      <span>{copiedVersion === `md-${note.version}` ? 'COPIED MD' : 'MARKDOWN'}</span>
+                      {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{isCopied ? 'Copied' : 'Copy MD'}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Details paragraph (if provided) */}
-                {note.details && (
-                  <p style={{
+                {/* Title */}
+                <h3
+                  style={{
                     margin: 0,
-                    fontSize: '0.8125rem',
-                    color: 'var(--color-muted)',
-                    lineHeight: 1.5,
-                  }}>
+                    fontSize: '1.025rem',
+                    fontWeight: 800,
+                    color: 'var(--color-text)',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {note.title}
+                </h3>
+
+                {/* Details */}
+                {note.details && (
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '0.84rem',
+                      color: 'var(--color-muted)',
+                      lineHeight: 1.5,
+                    }}
+                  >
                     {note.details}
                   </p>
                 )}
 
-                {/* Highlights List */}
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.45rem',
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '8px',
-                  padding: '0.85rem 1rem',
-                }}>
-                  <div style={{
-                    fontSize: '0.6875rem',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 800,
-                    color: 'var(--color-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '0.1rem',
-                  }}>
-                    RELEASE HIGHLIGHTS
-                  </div>
-
-                  {note.highlights.map((highlight, hIdx) => (
-                    <div
-                      key={hIdx}
+                {/* Highlights */}
+                <ul
+                  style={{
+                    margin: '0.15rem 0 0 0',
+                    paddingLeft: '1.2rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                  }}
+                >
+                  {note.highlights.map((bullet: string, bIdx: number) => (
+                    <li
+                      key={bIdx}
                       style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '0.5rem',
-                        fontSize: '0.8rem',
-                        lineHeight: 1.45,
+                        fontSize: '0.8125rem',
                         color: 'var(--color-text)',
+                        lineHeight: 1.48,
                       }}
                     >
-                      <CheckCircle2
-                        size={14}
-                        style={{
-                          color: '#059669',
-                          flexShrink: 0,
-                          marginTop: '3px',
-                        }}
-                      />
-                      <span>{highlight}</span>
-                    </div>
+                      {bullet}
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             );
           })

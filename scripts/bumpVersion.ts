@@ -1,130 +1,125 @@
 import fs from 'fs';
 import path from 'path';
 
-/**
- * Version Bumping Script for Sheet2Vow
- * 
- * Rules:
- * - patch: Bug fixes, styling tweaks, minor cleanups (e.g. 1.2.1 -> 1.2.2).
- * - minor: Features added, updated, or removed (e.g. 1.2.2 -> 1.3.0).
- * - major: Significant changes / "New release bundles" (e.g. 1.3.0 -> 2.0.0). Only when explicitly requested.
- *
- * Usage:
- *   npx tsx scripts/bumpVersion.ts [patch|minor|major]
- */
+type BumpType = 'patch' | 'minor' | 'major';
+type SuiteProductId = 'suite' | 'vow' | 'vault' | 'finance' | 'home' | 'closet' | 'inventory';
 
-const type = (process.argv[2] || 'patch').toLowerCase() as 'patch' | 'minor' | 'major';
+const VALID_PRODUCTS: SuiteProductId[] = ['suite', 'vow', 'vault', 'finance', 'home', 'closet', 'inventory'];
 
-if (!['patch', 'minor', 'major'].includes(type)) {
-  console.error(`Invalid version bump type: "${type}". Must be "patch", "minor", or "major".`);
+const rawArgs = process.argv.slice(2);
+const bumpArg = (rawArgs.find((a) => ['patch', 'minor', 'major'].includes(a)) as BumpType) || 'patch';
+const productArgRaw = rawArgs.find((a) => !['patch', 'minor', 'major'].includes(a) && !a.startsWith('--'))
+  || rawArgs.find((a) => a.startsWith('--product='))?.split('=')[1]
+  || 'suite';
+
+const targetProduct: SuiteProductId = VALID_PRODUCTS.includes(productArgRaw as SuiteProductId)
+  ? (productArgRaw as SuiteProductId)
+  : 'suite';
+
+const buildInfoPath = path.resolve(process.cwd(), 'src/lib/buildInfo.ts');
+let buildInfoContent = fs.readFileSync(buildInfoPath, 'utf-8');
+
+const productBlockRegex = new RegExp(
+  `(${targetProduct}:\\s*\\{[\\s\\S]*?version:\\s*['"]v?)(\\d+\\.\\d+\\.\\d+)(['"][\\s\\S]*?buildTimestamp:\\s*['"])([^'"]+)(['"][\\s\\S]*?buildEpoch:\\s*)(\\d+)(,[\\s\\S]*?buildIso:\\s*['"])([^'"]+)(['"])`,
+  'm'
+);
+
+const match = buildInfoContent.match(productBlockRegex);
+if (!match) {
+  console.error(`Could not locate product "${targetProduct}" in src/lib/buildInfo.ts`);
   process.exit(1);
 }
 
-const packageJsonPath = path.resolve(process.cwd(), 'package.json');
-const buildInfoPath = path.resolve(process.cwd(), 'src/lib/buildInfo.ts');
-const releaseNotesPath = path.resolve(process.cwd(), 'src/lib/releaseNotes.ts');
+const currentSemver = match[2];
+const [major, minor, patch] = currentSemver.split('.').map(Number);
 
-const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const currentVersion = pkg.version || '1.2.1';
-const [majorStr, minorStr, patchStr] = currentVersion.split('.');
+let nextMajor = major;
+let nextMinor = minor;
+let nextPatch = patch;
 
-let major = parseInt(majorStr, 10) || 1;
-let minor = parseInt(minorStr, 10) || 0;
-let patch = parseInt(patchStr, 10) || 0;
-
-if (type === 'major') {
-  major += 1;
-  minor = 0;
-  patch = 0;
-} else if (type === 'minor') {
-  minor += 1;
-  patch = 0;
+if (bumpArg === 'major') {
+  nextMajor += 1;
+  nextMinor = 0;
+  nextPatch = 0;
+} else if (bumpArg === 'minor') {
+  nextMinor += 1;
+  nextPatch = 0;
 } else {
-  patch += 1;
+  nextPatch += 1;
 }
 
-const newVersion = `${major}.${minor}.${patch}`;
-pkg.version = newVersion;
-fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-
-// Format date & time in user's locale/standard format: e.g. "Oct 17, 2026 • 11:07 AM"
+const nextVersion = `${nextMajor}.${nextMinor}.${nextPatch}`;
+const nextVersionTag = `v${nextVersion}`;
 const now = new Date();
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const month = months[now.getMonth()];
 const day = now.getDate();
 const year = now.getFullYear();
-
 let hours = now.getHours();
 const minutes = now.getMinutes().toString().padStart(2, '0');
 const ampm = hours >= 12 ? 'PM' : 'AM';
 hours = hours % 12;
-hours = hours ? hours : 12; // 0 becomes 12
-
+hours = hours ? hours : 12;
 const formattedTimestamp = `${month} ${day}, ${year} • ${hours}:${minutes} ${ampm}`;
-const isoTimestamp = now.toISOString();
+const epoch = now.getTime();
+const iso = now.toISOString();
 
-const buildInfoContent = `// Application Build & Version Information
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || 'v${newVersion}';
-export const BUILD_TIMESTAMP = process.env.NEXT_PUBLIC_BUILD_TIMESTAMP || '${formattedTimestamp}';
-export const BUILD_ISO = process.env.NEXT_PUBLIC_BUILD_ISO || '${isoTimestamp}';
-`;
+buildInfoContent = buildInfoContent.replace(
+  productBlockRegex,
+  `$1${nextVersion}$3${formattedTimestamp}$5${epoch}$7${iso}$9`
+);
 
-fs.writeFileSync(buildInfoPath, buildInfoContent, 'utf8');
+fs.writeFileSync(buildInfoPath, buildInfoContent, 'utf-8');
 
-// Synchronize src/lib/releaseNotes.ts automatically
+if (targetProduct === 'suite') {
+  const pkgPath = path.resolve(process.cwd(), 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+  pkg.version = nextVersion;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
+}
+
+const releaseNotesPath = path.resolve(process.cwd(), 'src/lib/releaseNotes.ts');
 if (fs.existsSync(releaseNotesPath)) {
-  let releaseNotesContent = fs.readFileSync(releaseNotesPath, 'utf8');
-  const versionTag = `v${newVersion}`;
+  const notesContent = fs.readFileSync(releaseNotesPath, 'utf-8');
+  const arrayMap: Record<SuiteProductId, string> = {
+    suite: 'SUITE_RELEASE_NOTES',
+    vow: 'VOW_RELEASE_NOTES',
+    vault: 'VAULT_RELEASE_NOTES',
+    finance: 'SUITE_RELEASE_NOTES',
+    home: 'SUITE_RELEASE_NOTES',
+    closet: 'SUITE_RELEASE_NOTES',
+    inventory: 'SUITE_RELEASE_NOTES',
+  };
+  const targetArrayName = arrayMap[targetProduct];
 
-  if (!releaseNotesContent.includes(`version: '${versionTag}'`)) {
-    // Demote any existing 'Latest' badges in past releases to an appropriate badge
-    releaseNotesContent = releaseNotesContent.replace(/badge: 'Latest',/g, "badge: 'Update',");
+  if (!notesContent.includes(`version: '${nextVersionTag}'`)) {
+    const formattedDate = `${month} ${day}, ${year}`;
+    const category = bumpArg === 'major' ? 'major' : bumpArg === 'minor' ? 'feature' : 'fix';
+    const badgeColor = targetProduct === 'suite' ? '#4F46E5' : targetProduct === 'vow' ? '#059669' : '#D97706';
 
-    const defaultTitle = type === 'major'
-      ? 'Major Platform Release'
-      : type === 'minor'
-      ? 'New Features & Enhancements'
-      : 'Performance Improvements & Refinements';
-
-    const defaultBadgeColor = type === 'major' ? '#7C3AED' : type === 'minor' ? '#059669' : '#10B981';
-    const defaultCategory = type === 'major' ? 'major' : type === 'minor' ? 'feature' : 'fix';
-
-    const defaultHighlights = type === 'minor'
-      ? [
-          'New planning features and workflow enhancements.',
-          'Responsive design refinements across mobile and desktop views.',
-          'Smooth and reliable background data synchronization.',
-        ]
-      : [
-          'Platform stability enhancements and performance optimizations.',
-          'User interface refinements and responsive layout polish.',
-          'General improvements to planning suite reliability.',
-        ];
-
-    const highlightsStr = defaultHighlights.map(h => `      '${h}',`).join('\n');
-
-    const newEntry = `  {
-    version: '${versionTag}',
-    title: '${defaultTitle}',
-    date: '${month} ${day}, ${year}',
+    const newNoteEntry = `  {
+    version: '${nextVersionTag}',
+    product: '${targetProduct}',
+    title: '${targetProduct === 'suite' ? 'Sheet2Suite Platform' : targetProduct === 'vow' ? 'Sheet2Vow' : 'Sheet2Vault'} Update (${nextVersionTag})',
+    date: '${formattedDate}',
     badge: 'Latest',
-    badgeColor: '${defaultBadgeColor}',
-    category: '${defaultCategory}',
+    badgeColor: '${badgeColor}',
+    category: '${category}',
     highlights: [
-${highlightsStr}
+      'Refined user experience, interface responsiveness, and reliability improvements.',
     ],
-    details: 'Continuous platform enhancements to make your wedding planning experience smoother and more reliable.',
-  },\n`;
+    details: 'Summary of user-facing improvements and fixes for this release.',
+  },`;
 
-    const markerMatch = releaseNotesContent.match(/export const RELEASE_NOTES: ReleaseNoteItem\[\] = \[\r?\n/);
-    if (markerMatch) {
-      const marker = markerMatch[0];
-      releaseNotesContent = releaseNotesContent.replace(marker, marker + newEntry);
-      fs.writeFileSync(releaseNotesPath, releaseNotesContent, 'utf8');
-      console.log(`✓ Synchronized src/lib/releaseNotes.ts with ${versionTag} entry.`);
+    const arrayExportMarker = `export const ${targetArrayName}: ReleaseNoteItem[] = [`;
+    if (notesContent.includes(arrayExportMarker)) {
+      const [beforeMarker, afterMarker] = notesContent.split(arrayExportMarker);
+      const updatedAfter = afterMarker.replace(`badge: 'Latest'`, `badge: 'Update'`);
+      const updatedNotes = `${beforeMarker}${arrayExportMarker}\n${newNoteEntry}${updatedAfter}`;
+      fs.writeFileSync(releaseNotesPath, updatedNotes, 'utf-8');
+      console.log(`📝 Added ${nextVersionTag} release note entry to ${targetArrayName} in src/lib/releaseNotes.ts`);
     }
   }
 }
 
-console.log(`Successfully bumped to ${newVersion} (${type}) • Deployed: ${formattedTimestamp}`);
-console.log(`ℹ️  Reminder: Keep release notes user-facing, high-level, and free of code or internal method names.`);
+console.log(`✅ Bumped [${targetProduct.toUpperCase()}] to ${nextVersionTag} (${formattedTimestamp})`);

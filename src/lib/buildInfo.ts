@@ -16,7 +16,8 @@ export interface ProductBuildInfo {
   shortName: string;
   tagline: string;
   version: string;
-  buildTimestamp: number;
+  buildTimestamp: string;
+  buildEpoch: number;
   buildIso: string;
   status: 'live' | 'preview' | 'planned';
   accentColor: string;
@@ -29,8 +30,9 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Suite',
     tagline: 'Parent Platform, Licensing & Admin Console',
     version: 'v1.23.3',
-    buildTimestamp: 1793750400000,
-    buildIso: '2026-11-03T23:35:00.000Z',
+    buildTimestamp: 'Nov 3, 2026 • 7:35 PM',
+    buildEpoch: 1793752500000,
+    buildIso: '2026-11-04T00:35:00.000Z',
     status: 'live',
     accentColor: '#4F46E5',
   },
@@ -40,7 +42,8 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Vow',
     tagline: 'Bespoke Wedding Planning Suite',
     version: 'v1.19.0',
-    buildTimestamp: 1793314800000,
+    buildTimestamp: 'Oct 29, 2026 • 5:30 PM',
+    buildEpoch: 1793314800000,
     buildIso: '2026-10-29T22:30:00.000Z',
     status: 'live',
     accentColor: '#059669',
@@ -51,7 +54,8 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Vault',
     tagline: 'Home Inventory & Insurance Claim Dossier Engine',
     version: 'v0.1.0',
-    buildTimestamp: 1793664000000,
+    buildTimestamp: 'Nov 2, 2026 • 6:30 PM',
+    buildEpoch: 1793664000000,
     buildIso: '2026-11-02T23:30:00.000Z',
     status: 'preview',
     accentColor: '#D97706',
@@ -62,7 +66,8 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Finance',
     tagline: 'Personal Net Worth & Cashflow Ledger',
     version: 'v0.1.0',
-    buildTimestamp: 1793664000000,
+    buildTimestamp: 'Nov 2, 2026 • 6:30 PM',
+    buildEpoch: 1793664000000,
     buildIso: '2026-11-02T23:30:00.000Z',
     status: 'planned',
     accentColor: '#0284C7',
@@ -73,7 +78,8 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Home',
     tagline: 'Property Maintenance & Renovation Tracker',
     version: 'v0.1.0',
-    buildTimestamp: 1793664000000,
+    buildTimestamp: 'Nov 2, 2026 • 6:30 PM',
+    buildEpoch: 1793664000000,
     buildIso: '2026-11-02T23:30:00.000Z',
     status: 'planned',
     accentColor: '#7C3AED',
@@ -84,7 +90,8 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Closet',
     tagline: 'Wardrobe Archiving & Capsule Curation',
     version: 'v0.1.0',
-    buildTimestamp: 1793664000000,
+    buildTimestamp: 'Nov 2, 2026 • 6:30 PM',
+    buildEpoch: 1793664000000,
     buildIso: '2026-11-02T23:30:00.000Z',
     status: 'planned',
     accentColor: '#DB2777',
@@ -95,7 +102,8 @@ export const PRODUCT_VERSIONS: Record<SuiteProductId, ProductBuildInfo> = {
     shortName: 'Inventory',
     tagline: 'Small Business & Maker Stock Ledger',
     version: 'v0.1.0',
-    buildTimestamp: 1793664000000,
+    buildTimestamp: 'Nov 2, 2026 • 6:30 PM',
+    buildEpoch: 1793664000000,
     buildIso: '2026-11-02T23:30:00.000Z',
     status: 'planned',
     accentColor: '#EA580C',

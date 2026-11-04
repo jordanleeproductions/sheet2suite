@@ -1,5 +1,8 @@
+import { SuiteProductId } from '@/lib/buildInfo';
+
 export interface ReleaseNoteItem {
   version: string;
+  product?: SuiteProductId;
   title: string;
   date: string;
   badge?: string;
@@ -9,12 +12,44 @@ export interface ReleaseNoteItem {
   category?: 'major' | 'feature' | 'enhancement' | 'fix';
 }
 
-export const RELEASE_NOTES: ReleaseNoteItem[] = [
+export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
-    version: 'v1.23.1',
-    title: 'Admin Portal Brand Alignment & Refinements',
+    version: 'v1.23.3',
+    product: 'suite',
+    title: 'Multi-Product Version Isolation & Release Architecture',
     date: 'Nov 3, 2026',
     badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'enhancement',
+    highlights: [
+      'Decoupled version tracking between Sheet2Suite (Platform & Admin), Sheet2Vow, Sheet2Vault, and future suite products.',
+      'Isolated customer-facing release notes so Admin Portal and core platform updates no longer alter the Sheet2Vow version or trigger false update banners for wedding planners.',
+      'Upgraded Admin Release Notes Inspector with per-product filtering, multi-product build version matrix, and product-scoped bump scripts.',
+    ],
+    details: 'Separates platform-level and administrative versioning from individual customer-facing suite applications.',
+  },
+  {
+    version: 'v1.23.2',
+    product: 'suite',
+    title: 'Pre-Launch Security Hardening & Order Verification Safeguards',
+    date: 'Nov 3, 2026',
+    badge: 'Update',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Cryptographic workspace session tokens (HMAC-SHA256 HttpOnly cookies) verifying caller ownership on all spreadsheet APIs.',
+      'Strict 9-to-11 digit Etsy receipt validation with purchaser email binding and explicit promo secret gating.',
+      'Distributed Firestore rate limiting across authentication, order activation, and support endpoints.',
+      'Hardened OAuth postMessage origin allowlisting and Content Security Policy frame protections.',
+    ],
+    details: 'Comprehensive zero-trust security hardening across platform licensing, OAuth handshakes, and API boundaries.',
+  },
+  {
+    version: 'v1.23.1',
+    product: 'suite',
+    title: 'Admin Portal Brand Alignment & Refinements',
+    date: 'Nov 3, 2026',
+    badge: 'Update',
     badgeColor: '#10B981',
     category: 'fix',
     highlights: [
@@ -26,6 +61,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.23.0',
+    product: 'suite',
     title: 'Sheet2Suite Admin Suite & Platform Diagnostics',
     date: 'Nov 3, 2026',
     badge: 'Update',
@@ -42,6 +78,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.22.2',
+    product: 'suite',
     title: 'Google OAuth Admin Identity Authentication',
     date: 'Nov 2, 2026',
     badge: 'Update',
@@ -56,6 +93,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.22.1',
+    product: 'suite',
     title: 'Mobile Experience Polish & Platform Refinements',
     date: 'Nov 2, 2026',
     badge: 'Update',
@@ -70,6 +108,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.22.0',
+    product: 'suite',
     title: 'Admin Portal Redesign & Product Ecosystem Focus',
     date: 'Nov 2, 2026',
     badge: 'Update',
@@ -84,6 +123,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.21.1',
+    product: 'suite',
     title: 'Support & Help Center Design System Alignment',
     date: 'Oct 30, 2026',
     badge: 'Update',
@@ -98,6 +138,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.21.0',
+    product: 'suite',
     title: 'Monarch Editorial Help Center & Knowledge Base',
     date: 'Oct 30, 2026',
     badge: 'Update',
@@ -113,6 +154,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.20.1',
+    product: 'suite',
     title: 'Spec Kit Feature Pipeline Automation & Architectural Governance',
     date: 'Oct 30, 2026',
     badge: 'Update',
@@ -127,6 +169,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.20.0',
+    product: 'suite',
     title: 'Modular Documentation & Hybrid Spec Architecture',
     date: 'Oct 30, 2026',
     badge: 'Update',
@@ -140,11 +183,15 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
     ],
     details: 'Establishes a modular hybrid documentation architecture and standardized feature engineering framework across the Sheet2Suite platform and Sheet2Vow application.',
   },
+];
+
+export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
     version: 'v1.19.0',
+    product: 'vow',
     title: 'Curated Wedding Styles: Editorial, Botanical & Formal Streamlining',
     date: 'Oct 29, 2026',
-    badge: 'Update',
+    badge: 'Latest',
     badgeColor: '#059669',
     category: 'enhancement',
     highlights: [
@@ -157,6 +204,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.18.3',
+    product: 'vow',
     title: 'Account Authentication & Connection Protection',
     date: 'Oct 29, 2026',
     badge: 'Update',
@@ -171,6 +219,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.18.2',
+    product: 'vow',
     title: 'Workspace Data Protection & Access Safeguards',
     date: 'Oct 29, 2026',
     badge: 'Update',
@@ -185,6 +234,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.18.1',
+    product: 'vow',
     title: 'Modern Style Aesthetic Polish & High-Contrast Light Mode Support',
     date: 'Oct 29, 2026',
     badge: 'Update',
@@ -200,6 +250,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.18.0',
+    product: 'vow',
     title: 'Music & Playlists Modernization, Dual View Modes & Docked Audio Player',
     date: 'Oct 29, 2026',
     badge: 'Update',
@@ -216,6 +267,7 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
   },
   {
     version: 'v1.17.5',
+    product: 'vow',
     title: 'Smart Form Validation & Disabled Save Button Visual Guardrails',
     date: 'Oct 28, 2026',
     badge: 'Update',
@@ -229,3 +281,47 @@ export const RELEASE_NOTES: ReleaseNoteItem[] = [
     details: 'Prevents incomplete records across Guests, Gifts, Vendors, Financials, Tasks, Timeline, Music, Photo Shots, Menu, and Seating by disabling and visually dimming save actions until all mandatory fields are filled.',
   },
 ];
+
+export const VAULT_RELEASE_NOTES: ReleaseNoteItem[] = [
+  {
+    version: 'v0.1.0',
+    product: 'vault',
+    title: 'Sheet2Vault Developer Preview & Insurance Claim Dossier Engine',
+    date: 'Nov 2, 2026',
+    badge: 'Preview',
+    badgeColor: '#D97706',
+    category: 'major',
+    highlights: [
+      'Room-by-room personal asset inventory ledger with serial number, model, and replacement value tracking.',
+      'Automated policy sub-limit alerts for high-value categories including Jewelry and Electronics.',
+      'Claim readiness scoring and 1-click Insurance Claim Dossier preview.',
+    ],
+    details: 'Initial private developer preview of Sheet2Vault for home asset protection and insurance documentation.',
+  },
+];
+
+export const PRODUCT_RELEASE_NOTES: Record<SuiteProductId, ReleaseNoteItem[]> = {
+  suite: SUITE_RELEASE_NOTES,
+  vow: VOW_RELEASE_NOTES,
+  vault: VAULT_RELEASE_NOTES,
+  finance: [],
+  home: [],
+  closet: [],
+  inventory: [],
+};
+
+export const ALL_RELEASE_NOTES: ReleaseNoteItem[] = [
+  ...SUITE_RELEASE_NOTES,
+  ...VOW_RELEASE_NOTES,
+  ...VAULT_RELEASE_NOTES,
+];
+
+export function getReleaseNotesByProduct(product: SuiteProductId | 'all' = 'vow'): ReleaseNoteItem[] {
+  if (product === 'all') {
+    return ALL_RELEASE_NOTES;
+  }
+  return PRODUCT_RELEASE_NOTES[product] || [];
+}
+
+// Default export for backward compatibility in /vow components
+export const RELEASE_NOTES: ReleaseNoteItem[] = VOW_RELEASE_NOTES;

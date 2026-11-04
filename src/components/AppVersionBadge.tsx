@@ -2,18 +2,25 @@
 
 import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { APP_VERSION, BUILD_TIMESTAMP } from '@/lib/buildInfo';
+import { SuiteProductId, getProductBuildInfo } from '@/lib/buildInfo';
 import ReleaseNotesViewer from '@/components/vow/ReleaseNotesViewer';
 
-interface AppVersionBadgeProps {
+export interface AppVersionBadgeProps {
   collapsed?: boolean;
-  variant?: 'sidebar' | 'mobile-drawer';
+  variant?: 'sidebar' | 'mobile-drawer' | 'footer' | 'compact';
   isDark?: boolean;
+  product?: SuiteProductId;
 }
 
-export default function AppVersionBadge({ collapsed = false, variant = 'sidebar', isDark = false }: AppVersionBadgeProps) {
+export default function AppVersionBadge({
+  collapsed = false,
+  variant = 'sidebar',
+  isDark = false,
+  product = 'vow',
+}: AppVersionBadgeProps) {
   const [isReleaseNotesOpen, setIsReleaseNotesOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const productInfo = getProductBuildInfo(product);
 
   // Mobile Drawer Variant
   if (variant === 'mobile-drawer') {
@@ -22,7 +29,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
         <button
           type="button"
           onClick={() => setIsReleaseNotesOpen(true)}
-          title={`Sheet2Vow ${APP_VERSION} - Tap to view release notes`}
+          title={`${productInfo.name} ${productInfo.version} - Tap to view release notes`}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -63,7 +70,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
                 flexShrink: 0,
               }}
             />
-            <span style={{ whiteSpace: 'nowrap' }}>{APP_VERSION}</span>
+            <span style={{ whiteSpace: 'nowrap' }}>{productInfo.version}</span>
             <span
               style={{
                 display: 'inline-flex',
@@ -85,14 +92,15 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
           </div>
 
           <div style={{ fontSize: '0.625rem', color: 'var(--color-muted)', opacity: 0.85, whiteSpace: 'nowrap' }}>
-            Deployed {BUILD_TIMESTAMP}
+            Deployed {productInfo.buildTimestamp}
           </div>
         </button>
 
         <ReleaseNotesViewer
           isOpen={isReleaseNotesOpen}
           onClose={() => setIsReleaseNotesOpen(false)}
-          currentVersion={APP_VERSION}
+          currentVersion={productInfo.version}
+          product={product}
         />
       </>
     );
@@ -112,7 +120,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
           onClick={() => setIsReleaseNotesOpen(true)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          title={`Sheet2Vow ${APP_VERSION} (Deployed: ${BUILD_TIMESTAMP}) - Click for release notes`}
+          title={`${productInfo.name} ${productInfo.version} (Deployed: ${productInfo.buildTimestamp}) - Click for release notes`}
           style={{
             width: '100%',
             padding: '0.6rem 0',
@@ -146,13 +154,14 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
               boxShadow: '0 0 6px rgba(16, 185, 129, 0.4)',
             }}
           />
-          <span>{APP_VERSION}</span>
+          <span>{productInfo.version}</span>
         </button>
 
         <ReleaseNotesViewer
           isOpen={isReleaseNotesOpen}
           onClose={() => setIsReleaseNotesOpen(false)}
-          currentVersion={APP_VERSION}
+          currentVersion={productInfo.version}
+          product={product}
         />
       </>
     );
@@ -165,7 +174,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
         onClick={() => setIsReleaseNotesOpen(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        title={`Sheet2Vow ${APP_VERSION} (Deployed: ${BUILD_TIMESTAMP}) - Click for release notes`}
+        title={`${productInfo.name} ${productInfo.version} (Deployed: ${productInfo.buildTimestamp}) - Click for release notes`}
         style={{
           width: '100%',
           padding: '0.55rem 0.45rem',
@@ -201,7 +210,7 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
                 flexShrink: 0,
               }}
             />
-            <span style={{ whiteSpace: 'nowrap' }}>Sheet2Vow {APP_VERSION}</span>
+            <span style={{ whiteSpace: 'nowrap' }}>{productInfo.name} {productInfo.version}</span>
           </div>
 
           <span
@@ -234,14 +243,15 @@ export default function AppVersionBadge({ collapsed = false, variant = 'sidebar'
             width: '100%',
           }}
         >
-          Deployed {BUILD_TIMESTAMP}
+          Deployed {productInfo.buildTimestamp}
         </div>
       </button>
 
       <ReleaseNotesViewer
         isOpen={isReleaseNotesOpen}
         onClose={() => setIsReleaseNotesOpen(false)}
-        currentVersion={APP_VERSION}
+        currentVersion={productInfo.version}
+        product={product}
       />
     </>
   );

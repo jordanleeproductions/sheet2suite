@@ -1,25 +1,32 @@
-import { NextResponse } from 'next/server';
-import { APP_VERSION, BUILD_TIMESTAMP, BUILD_ISO } from '@/lib/buildInfo';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  PRODUCT_VERSIONS,
+  getProductBuildInfo,
+  normalizeProductId,
+} from '@/lib/buildInfo';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-/**
- * GET /api/version
- * Lightweight, uncached endpoint exposing the current server-side deployment version and timestamp.
- * Polled by client sessions to notify users when a new production release is available.
- */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const requestedProduct = searchParams.get('product');
+  const productId = normalizeProductId(requestedProduct);
+  const info = getProductBuildInfo(productId);
+
   return NextResponse.json(
     {
-      version: APP_VERSION,
-      buildTimestamp: BUILD_TIMESTAMP,
-      buildIso: BUILD_ISO,
-      timestamp: Date.now(),
+      product: info.id,
+      name: info.name,
+      version: info.version,
+      buildTimestamp: info.buildTimestamp,
+      buildEpoch: info.buildEpoch,
+      buildIso: info.buildIso,
+      products: PRODUCT_VERSIONS,
     },
     {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         Pragma: 'no-cache',
         Expires: '0',
       },
