@@ -496,6 +496,28 @@ export default function AdminDashboardTab({
                 <span>📑 Inspect Golden Master Templates</span>
                 <ArrowRight size={14} />
               </button>
+              <button
+                type="button"
+                onClick={() => onNavigateToTab('releases')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.65rem 0.85rem',
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--border-radius-sm, 6px)',
+                  color: 'var(--color-text)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-mono)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <span>🚀 Browse Sheet2Vow Release Notes</span>
+                <ArrowRight size={14} />
+              </button>
             </div>
           </div>
         </div>
