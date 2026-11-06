@@ -14,11 +14,27 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.24.0',
+    product: 'suite',
+    title: 'Developer & Special User License Key Generator',
+    date: 'Nov 5, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'feature',
+    highlights: [
+      'Introduced Admin License Key Generator modal for granting instant access to dev team members, VIPs, and beta testers.',
+      'Added multi-product entitlement support allowing custom combinations of Sheet2Vow and preview products (like Sheet2Vault).',
+      'Engineered single-use locking that prevents key reuse once redeemed for workspace activation.',
+      'Provided 1-click activation handover dossier generation and real-time consumption tracking in the Admin Portal.',
+    ],
+    details: 'Enables administrators to provision custom multi-product, single-use license keys with automatic consumption tracking and handover links.',
+  },
+  {
     version: 'v1.23.4',
     product: 'suite',
     title: 'Admin Authentication Privacy & Security Hardening',
     date: 'Nov 3, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [

@@ -1,16 +1,28 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDriveClient, getSheetsClient, DEFAULT_MASTER_SHEET_ID } from '@/lib/sheets/client';
 import { updateMockDatabase } from '@/lib/sheets/mockDb';
+import { CellGuard } from '@/lib/core/CellGuard';
+import { checkRateLimit } from '@/lib/core/rateLimiter';
+import { getVerifiedCookieEmail, resolveGoogleTokenEmail } from '@/lib/auth/userSession';
+import { LocalLicensingDb } from '@/lib/db/licensingDb';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const rate = checkRateLimit(req, 'onboard', 8, 15 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Too many onboarding requests. Please wait ${rate.retryAfterSeconds}s.` },
+        { status: 429 }
+      );
+    }
+
     const authHeader = req.headers.get('Authorization');
     const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
-    
-    const body = await req.json().catch(() => ({}));
-    const { weddingName, budget, driveFolder, selectedTasks } = body;
 
-    const finalWeddingName = weddingName || 'Our Wedding';
+    const body = await req.json().catch(() => ({}));
+    const { weddingName, budget, driveFolder, selectedTasks, orderId } = body;
+
+    const finalWeddingName = CellGuard.sanitizeCellValue(weddingName || 'Our Wedding');
     const finalBudget = Number(budget) || 30000;
     const finalSelectedTasks = Array.isArray(selectedTasks) ? selectedTasks : [];
 
@@ -25,16 +37,41 @@ export async function POST(req: Request) {
         weddingName: finalWeddingName,
         budget: finalBudget,
         isMock: true,
-        message: `Onboarded successfully in Mock Mode. Folder: ${driveFolder || 'Root'}`
+        message: `Onboarded successfully in Mock Mode. Folder: ${driveFolder || 'Root'}`,
       });
+    }
+
+    // Verify license entitlement before cloning real Master Sheet ([VULN-11])
+    const callerEmail = (getVerifiedCookieEmail(req) || (await resolveGoogleTokenEmail(accessToken)) || '').trim().toLowerCase();
+    let hasEntitlement = false;
+    if (orderId) {
+      const lic = await LocalLicensingDb.getLicenseByKeyAsync(String(orderId).trim().toUpperCase());
+      if (lic && (lic.status === 'active' || lic.status === 'used')) {
+        hasEntitlement = true;
+      }
+    }
+    if (!hasEntitlement && callerEmail) {
+      const allLicenses = await LocalLicensingDb.getAllLicensesAsync();
+      hasEntitlement = allLicenses.some(
+        (l) => (l.status === 'active' || l.status === 'used') && (l.purchaserEmail || '').trim().toLowerCase() === callerEmail
+      );
+      if (!hasEntitlement) {
+        const ws = await LocalLicensingDb.getWorkspacesByEmailAsync(callerEmail);
+        hasEntitlement = ws.some((w) => w.orderVerified !== false);
+      }
+    }
+
+    if (!hasEntitlement) {
+      return NextResponse.json(
+        { success: false, error: 'License verification required before provisioning a Google Sheet.' },
+        { status: 403 }
+      );
     }
 
     const driveClient = getDriveClient(accessToken);
     const sheetsClient = getSheetsClient(accessToken);
-
     const masterSheetId = process.env.GOOGLE_MASTER_SHEET_ID || DEFAULT_MASTER_SHEET_ID;
 
-    // 1. Single atomic copy request
     const copyResponse = await driveClient.files.copy({
       fileId: masterSheetId,
       requestBody: {
@@ -47,12 +84,6 @@ export async function POST(req: Request) {
       throw new Error('Failed to retrieve copied spreadsheet ID.');
     }
 
-    // 2. Perform exactly ONE spreadsheets.values.update call to cell B2
-    const configPayload = {
-      budget: finalBudget,
-      weddingName: finalWeddingName,
-    };
-
     await sheetsClient.spreadsheets.values.batchUpdate({
       spreadsheetId: newSheetId,
       requestBody: {
@@ -63,11 +94,11 @@ export async function POST(req: Request) {
             values: [
               ['Name', 'Value'],
               ['Wedding Name', finalWeddingName],
-              ['Wedding Budget', finalBudget]
+              ['Wedding Budget', finalBudget],
             ],
-          }
-        ]
-      }
+          },
+        ],
+      },
     });
 
     return NextResponse.json({
@@ -75,9 +106,8 @@ export async function POST(req: Request) {
       spreadsheetId: newSheetId,
       weddingName: finalWeddingName,
       budget: finalBudget,
-      isMock: false
+      isMock: false,
     });
-
   } catch (error: any) {
     console.error('Error in /api/onboard:', error);
     return NextResponse.json(

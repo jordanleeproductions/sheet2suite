@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { getApps, initializeApp, cert, type AppOptions } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { encryptAuthTokenDocFields, decryptAuthTokenDocFields } from '@/lib/auth/tokenCrypto';
 
 export interface LicenseDocument {
   id: string; // Document ID (licenseKey / orderId)
@@ -16,10 +17,14 @@ export interface LicenseDocument {
   orderId: string;
   purchaserEmail: string;
   sku: string;
-  status: 'active' | 'revoked' | 'expired';
+  status: 'active' | 'revoked' | 'expired' | 'used';
   licenseTier: 'standard' | 'pro' | 'unlimited';
   entitledProducts: string[];
   maxWorkspaces: number;
+  singleUse?: boolean;
+  usedAt?: string;
+  usedBy?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -216,7 +221,8 @@ export const LocalFirestore = {
         const dirPath = ensureCollectionDir(collectionName);
         const filePath = path.join(dirPath, `${docId.toLowerCase().trim()}.json`);
         if (fs.existsSync(filePath)) {
-          return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
+          const parsed = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+          return (collectionName === 'auth_tokens' ? decryptAuthTokenDocFields(parsed) : parsed) as T;
         }
       } catch (e) {}
     }
@@ -227,7 +233,8 @@ export const LocalFirestore = {
       if (!fs.existsSync(filePath)) return null;
 
       const raw = fs.readFileSync(filePath, 'utf-8');
-      return JSON.parse(raw) as T;
+      const parsed = JSON.parse(raw);
+      return (collectionName === 'auth_tokens' ? decryptAuthTokenDocFields(parsed) : parsed) as T;
     } catch (e) {
       console.error(`LocalFirestore Error reading ${collectionName}/${docId}:`, e);
       return null;
@@ -243,7 +250,8 @@ export const LocalFirestore = {
       try {
         const docRef = await cloudDb.collection(collectionName).doc(docId.toLowerCase().trim()).get();
         if (docRef.exists) {
-          return docRef.data() as T;
+          const rawData = docRef.data() as any;
+          return (collectionName === 'auth_tokens' ? decryptAuthTokenDocFields(rawData) : rawData) as T;
         }
       } catch (err: any) {
         console.warn(`[Cloud Firestore] Error reading ${collectionName}/${docId}:`, err?.message);
@@ -256,7 +264,8 @@ export const LocalFirestore = {
    * Writes a document by Collection Name & Document ID (Firestore setDoc())
    */
   setDoc<T = any>(collectionName: string, docId: string, data: T): T {
-    const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...data };
+    const preparedData = collectionName === 'auth_tokens' ? encryptAuthTokenDocFields(data as any) : data;
+    const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...preparedData };
 
     // 1. Sync to local file storage with merge support to preserve existing refreshToken
     try {
@@ -297,7 +306,8 @@ export const LocalFirestore = {
    * Async document writer for Cloud Firestore
    */
   async setDocAsync<T = any>(collectionName: string, docId: string, data: T): Promise<T> {
-    const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...data };
+    const preparedData = collectionName === 'auth_tokens' ? encryptAuthTokenDocFields(data as any) : data;
+    const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...preparedData };
 
     const cloudDb = getCloudFirestore();
     if (cloudDb) {
@@ -354,7 +364,7 @@ export const LocalFirestore = {
           .limit(1)
           .get();
         if (!bySheet.empty) {
-          const doc = bySheet.docs[0].data() as AuthTokenDocument;
+          const doc = decryptAuthTokenDocFields(bySheet.docs[0].data() as AuthTokenDocument);
           if (doc?.refreshToken) return doc;
           if (doc?.userEmail) {
             const userDoc = await this.getDocAsync<AuthTokenDocument>('auth_tokens', doc.userEmail);
@@ -370,7 +380,7 @@ export const LocalFirestore = {
           .limit(1)
           .get();
         if (!byEmail.empty) {
-          const doc = byEmail.docs[0].data() as AuthTokenDocument;
+          const doc = decryptAuthTokenDocFields(byEmail.docs[0].data() as AuthTokenDocument);
           if (doc?.refreshToken) return doc;
           if (doc?.spreadsheetId) {
             const sheetDoc = await this.getDocAsync<AuthTokenDocument>('auth_tokens', doc.spreadsheetId);
@@ -391,7 +401,7 @@ export const LocalFirestore = {
         if (!file.endsWith('.json')) continue;
         try {
           const raw = fs.readFileSync(path.join(dirPath, file), 'utf-8');
-          const doc = JSON.parse(raw) as AuthTokenDocument;
+          const doc = decryptAuthTokenDocFields(JSON.parse(raw) as AuthTokenDocument);
           if (
             doc.spreadsheetId === cleanKey ||
             doc.userEmail?.toLowerCase() === cleanKey.toLowerCase() ||

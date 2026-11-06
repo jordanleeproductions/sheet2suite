@@ -15,10 +15,14 @@ export interface LicenseRecord {
   orderId: string;                // Etsy order ID
   purchaserEmail: string;         // Primary customer purchase email
   sku: string;                    // Purchased package SKU (e.g., 'VOW_PRO', 'BUNDLE_V1')
-  status: 'active' | 'revoked' | 'refunded';
-  licenseTier: 'standard' | 'pro'; // Standard (2 users) vs Pro (unlimited)
+  status: 'active' | 'revoked' | 'refunded' | 'used';
+  licenseTier: 'standard' | 'pro' | 'developer' | 'vip'; // Standard, Pro, or special Dev/VIP
   maxWorkspaces: number;          // Default: 1 (or N for multi-property bundles)
-  entitledProducts: string[];     // Array of allowed product keys, e.g. ['SHEET2VOW']
+  entitledProducts: string[];     // Array of allowed product keys, e.g. ['SHEET2VOW', 'SHEET2VAULT']
+  singleUse?: boolean;            // When true, key is invalidated upon first workspace activation
+  usedAt?: string;                // ISO 8601 redemption timestamp
+  usedBy?: string;                // Google user email of redeemer
+  notes?: string;                 // Admin notes regarding key recipient / purpose
   createdAt: string;              // ISO 8601 creation timestamp
   updatedAt: string;              // ISO 8601 last update timestamp
 }
@@ -105,3 +109,9 @@ To prevent out-of-sync state when permissions are modified directly in Google Dr
 - **HMAC-SHA256 Signed Session Token (`s2s_admin_session`):** Authenticated administrators receive a 7-day secure HttpOnly session cookie signed via HMAC-SHA256 containing their verified Google email, name, and admin role.
 - **Strict Email Allowlist Enforcement:** Access to the Admin Portal is restricted strictly to authorized administrator emails (`process.env.ADMIN_EMAILS`, defaulting to `jordanleeproductions@gmail.com`). Any non-whitelisted Google account attempting login receives an immediate 403 Forbidden rejection.
 - **Admin Lock Screen (`src/app/admin/page.tsx`):** Unauthenticated visitors cannot inspect database records, customer emails, or execute mutations. The portal features a 1-click Official Google Sign-In button with a collapsible developer secret key bypass for offline CLI testing.
+
+
+### 4.4 Admin License Key Generator & Single-Use Safeguards
+- **Admin-Generated License Keys (`/api/admin/generate-license`):** Protected by `requireAdminAuth(req)`, enabling admins to create custom keys (`S2S-[PREFIX]-[XXXX]-[XXXX]`) for internal dev/QA teams and special VIP users.
+- **Multi-Product Entitlements:** Generated keys can grant access to any combination of products (`SHEET2VOW`, `SHEET2VAULT`, `SHEET2FINANCE`, `SHEET2HOME`), which are verified during `/api/verify-order` and workspace provisioning.
+- **Strict Single-Use Invalidation:** Keys flagged with `singleUse: true` are locked immediately upon workspace provisioning in `/api/workspaces`. The license record status transitions to `'used'`, recording `usedAt` and `usedBy`. Subsequent redemption attempts are rejected at the verification pipeline.

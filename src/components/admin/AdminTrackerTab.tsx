@@ -33,6 +33,10 @@ export interface RelationalRecord {
   licenseTier: string;
   entitledProducts: string[];
   maxWorkspaces: number;
+  singleUse?: boolean;
+  usedAt?: string;
+  usedBy?: string;
+  notes?: string;
   workspace?: WorkspaceRecord;
   hasBoundSheet: boolean;
   spreadsheetId?: string;
@@ -49,6 +53,7 @@ export interface RelationalRecord {
 
 interface AdminTrackerTabProps {
   workspaces: WorkspaceRecord[];
+  onOpenGenerateModal?: () => void;
   licenses: Sheet2SuiteLicense[];
   onNavigateToValidator: (sheetId: string, productCode?: string) => void;
   onOpenEditRecord: (record: any, type: 'workspace' | 'license') => void;
@@ -61,10 +66,11 @@ export default function AdminTrackerTab({
   onNavigateToValidator,
   onOpenEditRecord,
   onOpenJsonRecord,
+  onOpenGenerateModal,
 }: AdminTrackerTabProps) {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [productFilter, setProductFilter] = useState<'ALL' | 'SHEET2VOW' | 'SHEET2VAULT'>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'REVOKED' | 'UNBOUND'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'USED' | 'REVOKED' | 'UNBOUND'>('ALL');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = (text: string, identifier: string) => {
@@ -104,6 +110,10 @@ export default function AdminTrackerTab({
         licenseTier: lic.licenseTier || 'standard',
         entitledProducts: lic.entitledProducts || ['SHEET2VOW'],
         maxWorkspaces: lic.maxWorkspaces ?? 2,
+        singleUse: (lic as any).singleUse,
+        usedAt: (lic as any).usedAt,
+        usedBy: (lic as any).usedBy,
+        notes: (lic as any).notes,
         workspace: matchingWs,
         hasBoundSheet: Boolean(matchingWs?.spreadsheetId),
         spreadsheetId: matchingWs?.spreadsheetId,
@@ -208,6 +218,32 @@ export default function AdminTrackerTab({
             Relational mapping connecting Etsy orders, purchaser identity, provisioned Google Sheets, and Drive folder structures.
           </p>
         </div>
+
+        {onOpenGenerateModal && (
+          <button
+            type="button"
+            onClick={onOpenGenerateModal}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.45rem 0.85rem',
+              backgroundColor: 'var(--color-primary)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              fontFamily: 'var(--font-mono)',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(99, 102, 241, 0.25)',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Sparkles size={13} />
+            <span>GENERATE KEY</span>
+          </button>
+        )}
 
         {/* Aggregate Stats Summary Pill */}
         <div style={{
@@ -377,6 +413,23 @@ export default function AdminTrackerTab({
               }}
             >
               Active
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('USED')}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '16px',
+                border: 'none',
+                backgroundColor: statusFilter === 'USED' ? 'var(--color-surface, #ffffff)' : 'transparent',
+                color: statusFilter === 'USED' ? '#D97706' : 'var(--color-muted)',
+                boxShadow: statusFilter === 'USED' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Used (1-Time)
             </button>
             <button
               type="button"

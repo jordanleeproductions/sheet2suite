@@ -120,7 +120,7 @@ function VaultContent() {
   const spreadsheetId = searchParams?.get('spreadsheetId') || (typeof window !== 'undefined' ? localStorage.getItem('s2vault_spreadsheet_id') : null);
 
   // Private Preview Gate States
-  const [testKeyInput, setTestKeyInput] = useState('VAULT-DEV-ALPHA-2026');
+  const [testKeyInput, setTestKeyInput] = useState('');
   const [testEmailInput, setTestEmailInput] = useState('');
 
   // Vault Canvas States
@@ -232,7 +232,7 @@ function VaultContent() {
           </div>
 
           <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>
-            Production isolation active · Zero customer-facing exposure
+            Production isolation active · Informational organizational tool only (Not insurance or legal advice)
           </div>
         </div>
       </main>

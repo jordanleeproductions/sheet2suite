@@ -87,7 +87,7 @@ export class LicenseValidator {
           licenseTier: licenseDoc.licenseTier || 'standard',
           entitledProducts: (licenseDoc.entitledProducts as ProductCode[]) || [req.productCode],
           activatedAt: licenseDoc.createdAt,
-          errorMessage: `License status is currently ${licenseDoc.status.toUpperCase()}. Please contact support.`,
+          errorMessage: licenseDoc.status === 'used' ? 'This single-use license key has already been redeemed and cannot be used again.' : `License status is currently ${licenseDoc.status.toUpperCase()}. Please contact support.`,
         };
       }
 
@@ -128,6 +128,21 @@ export class LicenseValidator {
       const matchingWorkspaces = allWorkspaces.filter(
         (w) => (w.orderId || '').trim().toUpperCase() === cleanOrderId
       );
+      // Strict single-use license enforcement
+      if (
+        licenseDoc.singleUse && (matchingWorkspaces.length >= 1 || Boolean(licenseDoc.usedAt))
+      ) {
+        return {
+          valid: false,
+          productCode: req.productCode,
+          customerEmail: cleanEmail,
+          licenseTier: licenseDoc.licenseTier || 'standard',
+          entitledProducts: [],
+          activatedAt: licenseDoc.createdAt,
+          errorMessage: 'This single-use license key has already been redeemed and cannot be used again.',
+        };
+      }
+
       const userAlreadyHasWorkspaceOnOrder = matchingWorkspaces.some(
         (w) => (w.userEmail || '').trim().toLowerCase() === cleanEmail
       );

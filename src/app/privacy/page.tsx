@@ -2,10 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, ArrowLeft, Lock, HardDrive, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = 'October 24, 2026';
+  const lastUpdated = 'November 5, 2026';
 
   return (
     <div style={styles.container}>
@@ -34,13 +34,12 @@ export default function PrivacyPolicyPage() {
       <section style={styles.promiseCard}>
         <div style={styles.promiseHeader}>
           <Lock size={20} style={{ color: '#16a34a' }} />
-          <h2 style={styles.promiseTitle}>Our Core Privacy Commitment: 100% Data Sovereignty</h2>
+          <h2 style={styles.promiseTitle}>Our Core Privacy Commitment: Google Drive Data Sovereignty</h2>
         </div>
         <p style={styles.promiseText}>
-          Sheet2Suite and its applications (including Sheet2Vow) are engineered with a strict <strong>Google Drive First</strong> philosophy.
-          Unlike traditional cloud SaaS applications that ingest, duplicate, and store your personal spreadsheets on third-party databases,
-          <strong> Sheet2Suite never copies, processes, or stores your wedding, financial, or personal records on external database servers.</strong>
-          Your Google Drive is your private database.
+          Sheet2Suite and its applications (including Sheet2Vow and Sheet2Vault) are engineered with a strict <strong>Google Drive First</strong> philosophy.
+          <strong> Your personal spreadsheet content—including guest lists, budgets, vendor contracts, seating charts, and home inventory rows—resides directly inside your personal Google Drive spreadsheet and is never copied to or stored in a central Sheet2Suite content database.</strong>
+          Our servers store only the minimal account licensing, workspace routing, and encrypted authentication metadata required to verify your purchase and connect your authorized devices.
         </p>
       </section>
 
@@ -54,13 +53,13 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul style={styles.list}>
             <li style={styles.listItem}>
-              <strong>Google Account Profile & Email:</strong> We read your primary email address and display name solely to identify your workspace session, authenticate your collaborator permissions, and verify your Etsy/license purchase.
+              <strong>Google Account Profile & Email (<code>openid</code>, <code>userinfo.email</code>, <code>userinfo.profile</code>):</strong> We read your primary email address and display name solely to authenticate your session, enforce collaborator permissions, and bind your verified purchase license.
             </li>
             <li style={styles.listItem}>
-              <strong>Application-Created Spreadsheets (drive.file scope):</strong> We request the non-sensitive <code>https://www.googleapis.com/auth/drive.file</code> and <code>https://www.googleapis.com/auth/spreadsheets</code> permissions. This strictly limits our application&apos;s access to files created directly by Sheet2Suite or opened explicitly by you. <strong>We cannot view, search, read, or modify any other files, folders, photos, or documents in your Google Drive.</strong>
+              <strong>Application-Created Files Only (<code>https://www.googleapis.com/auth/drive.file</code>):</strong> We request the non-sensitive <code>drive.file</code> permission. This strictly limits our application&apos;s access to spreadsheets and folders created directly by Sheet2Suite or explicitly selected by you. <strong>We cannot view, list, search, read, or modify any other personal files, folders, photos, or documents in your Google Drive.</strong>
             </li>
             <li style={styles.listItem}>
-              <strong>Order & Verification Metadata:</strong> If you activate via an Etsy or digital marketplace receipt, we store minimal cryptographic license tokens to validate your lifetime entitlement.
+              <strong>Licensing, Workspace Routing & Encrypted Session Metadata:</strong> To verify your lifetime entitlement and enable features such as co-planner access and tokenized vendor/guest share portals, we store minimal metadata in Google Cloud Firestore: your purchaser/owner email, invited co-planner emails, Etsy Order ID / license key, provisioned Google Spreadsheet ID, AES-256-GCM encrypted OAuth credentials, and anonymized security rate-limiting counters.
             </li>
           </ul>
         </section>
@@ -85,10 +84,10 @@ export default function PrivacyPolicyPage() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
               {[
-                'We do not transfer or disclose Google user data to third parties for advertising or marketing.',
+                'We do not transfer, sell, or disclose Google user data to third parties for advertising, marketing, or data brokering.',
                 'We do not use Google user data to serve targeted advertisements.',
-                'We do not use Google user data to train machine learning or artificial intelligence models.',
-                'Human access to your spreadsheet data is strictly prohibited unless you explicitly request customer support assistance.'
+                'We do not use Google user data or your spreadsheet contents to train machine learning or artificial intelligence models.',
+                'Human access to your spreadsheet data is strictly prohibited unless you explicitly grant temporary permission for customer support troubleshooting.'
               ].map((point, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#1e293b' }}>
                   <CheckCircle2 size={16} style={{ color: '#16a34a', flexShrink: 0 }} />
@@ -101,38 +100,41 @@ export default function PrivacyPolicyPage() {
 
         {/* Section 3 */}
         <section style={styles.section}>
-          <h2 style={styles.sectionHeading}>3. How Your Data Is Stored & Handled</h2>
+          <h2 style={styles.sectionHeading}>3. How Your Data Is Stored & Segregated</h2>
           <p style={styles.paragraph}>
-            <strong>Zero External Database Retention:</strong> Your guest lists, seating assignments, vendor contracts, budget expenses, and event itineraries reside directly in your own Google Drive spreadsheet (in standard Google Sheets / XLSX format).
+            <strong>1. Personal Event & Inventory Content (Stored in Your Google Drive):</strong> Your guest lists, RSVP responses, dietary notes, seating assignments, vendor contracts, budget expenses, and Sheet2Vault asset records live inside your personal Google Sheet in your Google Drive. Sheet2Suite reads and writes to your sheet in real time via the Google APIs on your behalf.
           </p>
           <p style={styles.paragraph}>
-            <strong>Local Browser Storage:</strong> For offline resilience, lightning-fast rendering, and active workspace preferences (such as selected color themes, time formats, or active tab), Sheet2Suite utilizes client-side <code>localStorage</code> within your personal web browser. This data never leaves your device.
+            <strong>2. Platform Entitlement & Routing Records (Stored in Google Cloud Firestore):</strong> We store only the account mapping record linking your email address and Etsy Order ID to your Google Spreadsheet ID, plus AES-256-GCM encrypted OAuth tokens if you enable background sync for shared vendor timelines, song requests, or guest photo upload portals.
           </p>
           <p style={styles.paragraph}>
-            <strong>Temporary File Buffering:</strong> When uploading vendor PDF contracts or place card graphics, files are streamed directly into your designated Google Drive folder. No files are retained on Sheet2Suite temporary application servers.
+            <strong>3. Local Browser Storage:</strong> For fast rendering and workspace preferences (such as color mode, editorial theme, and active tab), Sheet2Suite uses client-side <code>localStorage</code> and <code>HttpOnly</code> signed session cookies in your browser.
+          </p>
+          <p style={styles.paragraph}>
+            <strong>4. Guest Photo & Document Uploads:</strong> When you or your guests upload photos or vendor PDFs via a shared upload portal, files are streamed directly into your designated Google Drive folder. We record only non-content file metadata (file name, Drive link, and uploader name) so you can review uploads inside your dashboard.
           </p>
         </section>
 
         {/* Section 4 */}
         <section style={styles.section}>
-          <h2 style={styles.sectionHeading}>4. Sharing & Third Parties</h2>
+          <h2 style={styles.sectionHeading}>4. Sharing, Co-Planners & Tokenized Portals</h2>
           <p style={styles.paragraph}>
-            We never sell, rent, monetize, or trade your personal information, wedding details, or contact registries to any third parties, advertisers, or data brokers under any circumstances.
+            We never sell, rent, monetize, or trade your personal information to third parties, advertisers, or data brokers under any circumstances.
           </p>
           <p style={styles.paragraph}>
-            If you choose to use our tokenized Vendor Share Portals or RSVP collection links, you generate cryptographically signed, read-only or scoped tokens that grant limited access exclusively to the specific parameters you authorize (such as day-of timeline or DJ music playlist).
+            If you choose to invite a co-planner or generate tokenized Vendor Share Portals, Guest Song Request links, or Guest Photo Upload links, Sheet2Suite issues cryptographically signed (HMAC-SHA256) tokens scoped strictly to the permissions you select. You may revoke individual links or all shared links instantaneously from your workspace settings.
           </p>
         </section>
 
         {/* Section 5 */}
         <section style={styles.section}>
-          <h2 style={styles.sectionHeading}>5. User Rights, Data Deletion & Revocation</h2>
+          <h2 style={styles.sectionHeading}>5. Your Privacy Rights, Self-Service Erasure & Revocation (GDPR / CCPA / PIPEDA)</h2>
           <p style={styles.paragraph}>
-            Because all primary data is stored inside your Google Drive, you retain unconditional control and ownership of your files at all times:
+            Regardless of whether you reside in Canada (PIPEDA), the European Economic Area / UK (GDPR), California (CCPA/CPRA), or elsewhere, we provide full transparency and control over both your Google Drive files and your Sheet2Suite account metadata:
           </p>
           <ul style={styles.list}>
             <li style={styles.listItem}>
-              <strong>Revoking Application Access:</strong> You can disconnect Sheet2Suite&apos;s access at any moment via the in-app Settings dialog or by visiting your Google Security settings at{' '}
+              <strong>Revoking Google OAuth Access:</strong> You can disconnect Sheet2Suite&apos;s access at any moment via the in-app Settings dialog or directly through Google Security settings at{' '}
               <a
                 href="https://myaccount.google.com/permissions"
                 target="_blank"
@@ -143,10 +145,13 @@ export default function PrivacyPolicyPage() {
               </a>.
             </li>
             <li style={styles.listItem}>
-              <strong>Deleting Your Data:</strong> Deleting your Google Sheet or the <code>My Drive / Sheet2Suite / Sheet2Vow</code> folder in Google Drive permanently destroys your wedding records. Clearing your browser cache or clicking &quot;Disconnect Workspace&quot; purges all local session keys.
+              <strong>Self-Service Deletion of Sheet2Suite Server Metadata:</strong> Workspace owners can permanently purge their workspace registration and stored encrypted OAuth tokens from our Cloud Firestore database at any time via <code>DELETE /api/workspaces</code> (or by requesting immediate deletion via Settings / Support), while leaving their personal Google Sheet intact in Google Drive.
             </li>
             <li style={styles.listItem}>
-              <strong>Data Portability:</strong> You can export, download, or copy your Google Sheet at any second into Microsoft Excel (.xlsx), Apple Numbers, or CSV format without relying on Sheet2Suite.
+              <strong>Deleting Your Spreadsheet Content:</strong> Deleting your Google Sheet or the <code>My Drive / Sheet2Suite</code> folder in your Google Drive permanently destroys your event or inventory records.
+            </li>
+            <li style={styles.listItem}>
+              <strong>Data Portability:</strong> Because your data lives in a standard Google Sheet in your own Drive, you can export or download it at any time as Microsoft Excel (<code>.xlsx</code>), CSV, or PDF without relying on Sheet2Suite.
             </li>
           </ul>
         </section>
@@ -155,15 +160,15 @@ export default function PrivacyPolicyPage() {
         <section style={styles.section}>
           <h2 style={styles.sectionHeading}>6. Security Measures</h2>
           <p style={styles.paragraph}>
-            We apply defense-in-depth security best practices to protect your session, including HTTPS transport encryption, Content Security Policies (CSP), sanitized spreadsheet inputs against formula injection, signed JWT session cookies with <code>HttpOnly</code> and <code>SameSite</code> flags, and strict origin validation on cross-window communication.
+            We apply defense-in-depth safeguards including HTTPS/TLS encryption in transit, AES-256-GCM encryption at rest for stored OAuth tokens, HMAC-SHA256 signed <code>HttpOnly</code> session cookies, Content Security Policy (CSP) headers, strict origin allowlisting on cross-window OAuth handshakes, and automated formula-injection sanitization (<code>CellGuard</code>) on all spreadsheet inputs.
           </p>
         </section>
 
         {/* Section 7 */}
         <section style={styles.section}>
-          <h2 style={styles.sectionHeading}>7. Contact Us</h2>
+          <h2 style={styles.sectionHeading}>7. Contact Us & Data Protection Inquiries</h2>
           <p style={styles.paragraph}>
-            If you have questions, privacy inquiries, or security vulnerability disclosures regarding this Privacy Policy or Sheet2Suite data practices, please contact us at:
+            If you have privacy questions, Data Subject Access Requests (DSAR), erasure requests, or security disclosures, please contact us at:
           </p>
           <div style={styles.contactCard}>
             <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem' }}>Sheet2Suite Legal & Privacy Team</div>

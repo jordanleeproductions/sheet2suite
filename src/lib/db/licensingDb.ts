@@ -142,6 +142,11 @@ export const LocalLicensingDb = {
     );
 
     if (existingIndex >= 0) {
+      const existingOwner = (workspaces[existingIndex].userEmail || '').trim().toLowerCase();
+      const incomingOwner = (record.userEmail || '').trim().toLowerCase();
+      if (existingOwner && incomingOwner && existingOwner !== incomingOwner && !(record as any).allowOwnerOverride) {
+        throw new Error('OWNERSHIP_CONFLICT: This spreadsheet is already registered to another workspace owner.');
+      }
       const updated: WorkspaceRecord = {
         ...workspaces[existingIndex],
         ...record,
@@ -174,6 +179,14 @@ export const LocalLicensingDb = {
       existingWorkspace = await this.getWorkspaceBySpreadsheetIdAsync(record.spreadsheetId);
     }
 
+    if (existingWorkspace) {
+      const existingOwner = (existingWorkspace.userEmail || '').trim().toLowerCase();
+      const incomingOwner = (record.userEmail || '').trim().toLowerCase();
+      if (existingOwner && incomingOwner && existingOwner !== incomingOwner && !(record as any).allowOwnerOverride) {
+        throw new Error('OWNERSHIP_CONFLICT: This spreadsheet is already registered to another workspace owner.');
+      }
+    }
+
     const workspaceId = record.workspaceId || existingWorkspace?.workspaceId || `ws_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const workspaceRecord: WorkspaceRecord = {
       workspaceId,
@@ -198,6 +211,41 @@ export const LocalLicensingDb = {
     return workspaceRecord;
   },
 
+  // 2c. Self-service GDPR/CCPA & Google API Policy workspace metadata & token erasure ([LEGAL-1])
+  async deleteWorkspaceForOwnerAsync(
+    spreadsheetId: string,
+    callerEmail: string,
+    isAdmin: boolean = false
+  ): Promise<{ deleted: boolean; error?: string }> {
+    const cleanSheetId = (spreadsheetId || '').trim();
+    const cleanCaller = (callerEmail || '').trim().toLowerCase();
+    if (!cleanSheetId) {
+      return { deleted: false, error: 'spreadsheetId is required.' };
+    }
+
+    const existing = await this.getWorkspaceBySpreadsheetIdAsync(cleanSheetId);
+    if (!existing) {
+      return { deleted: false, error: 'Workspace not found.' };
+    }
+
+    const ownerEmail = (existing.userEmail || '').trim().toLowerCase();
+    if (!isAdmin && (!cleanCaller || ownerEmail !== cleanCaller)) {
+      return {
+        deleted: false,
+        error: 'Forbidden: Only the primary workspace owner can delete this workspace registration.',
+      };
+    }
+
+    await LocalFirestore.deleteDocAsync('workspaces', existing.workspaceId || cleanSheetId);
+    await LocalFirestore.deleteDocAsync('workspaces', cleanSheetId);
+    await LocalFirestore.deleteDocAsync('auth_tokens', cleanSheetId);
+    if (ownerEmail) {
+      await LocalFirestore.deleteDocAsync('auth_tokens', ownerEmail);
+    }
+
+    return { deleted: true };
+  },
+
   // 3. License verification helper
   getLicenseByKey(licenseKey: string): Sheet2SuiteLicense | null {
     const doc = LocalFirestore.getDoc<LicenseDocument>('licenses', licenseKey);
@@ -219,7 +267,12 @@ export const LocalLicensingDb = {
         sheet2home: sku === 'sheet2suite_bundle',
         sheet2finance: sku === 'sheet2suite_bundle',
       },
-      status: (doc.status === 'revoked' ? 'revoked' : doc.status === 'expired' ? 'expired' : 'active') as any,
+      status: (doc.status || 'active') as any,
+      singleUse: doc.singleUse,
+      usedAt: doc.usedAt,
+      usedBy: doc.usedBy,
+      notes: doc.notes,
+      entitledProducts: doc.entitledProducts,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     };
@@ -300,6 +353,10 @@ export const LocalLicensingDb = {
       licenseTier: license.licenseTier || existing?.licenseTier || (isBundle ? 'pro' : 'standard'),
       entitledProducts: license.entitledProducts || existing?.entitledProducts || (isBundle ? ['SHEET2VOW', 'SHEET2FINANCE', 'SHEET2HOME'] : ['SHEET2VOW']),
       maxWorkspaces: license.maxWorkspaces !== undefined ? Number(license.maxWorkspaces) : (existing?.maxWorkspaces ?? 2),
+      singleUse: license.singleUse !== undefined ? Boolean(license.singleUse) : (existing?.singleUse ?? false),
+      usedAt: license.usedAt !== undefined ? license.usedAt : existing?.usedAt,
+      usedBy: license.usedBy !== undefined ? license.usedBy : existing?.usedBy,
+      notes: license.notes !== undefined ? license.notes : existing?.notes,
       createdAt: existing?.createdAt || license.createdAt || now,
       updatedAt: now,
     };

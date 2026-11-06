@@ -8,6 +8,7 @@ import { isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
 import { setSignedUserEmailCookies } from '@/lib/auth/userSession';
 import { verifyShareToken } from '@/lib/share/token';
 import { isShareTokenRevokedAsync } from '@/lib/share/revocation';
+import { isValidAppOrigin, escapeHtmlText } from '@/lib/auth/allowedOrigins';
 
 function getOAuth2Client(redirectUri: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
@@ -15,28 +16,6 @@ function getOAuth2Client(redirectUri: string) {
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
-/**
- * Validates that a target origin belongs to an authorized Sheet2Suite domain or local development.
- */
-function isValidAppOrigin(originStr?: string | null): boolean {
-  if (!originStr) return false;
-  try {
-    const url = new URL(originStr);
-    const host = url.hostname.toLowerCase();
-    return (
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host === 'sheet2suite.com' ||
-      host.endsWith('.sheet2suite.com') ||
-      host.endsWith('.web.app') ||
-      host.endsWith('.firebaseapp.com') ||
-      host.endsWith('.run.app') ||
-      host.endsWith('.hosted.app')
-    );
-  } catch {
-    return false;
-  }
-}
 
 /**
  * GET /api/auth/google/callback
@@ -316,6 +295,10 @@ export async function GET(req: NextRequest) {
 
             // Automatically backfill workspace registration into Cloud Firestore
             try {
+              const allLic = await LocalLicensingDb.getAllLicensesAsync();
+              const hasActiveLic = allLic.some(
+                (l) => (l.status === 'active' || l.status === 'used') && (l.purchaserEmail || '').trim().toLowerCase() === userEmail.trim().toLowerCase()
+              );
               await LocalLicensingDb.saveWorkspaceAsync({
                 userEmail,
                 spreadsheetId: foundFile.id,
@@ -323,7 +306,7 @@ export async function GET(req: NextRequest) {
                 driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
                 webViewLink: webViewLink || `https://docs.google.com/spreadsheets/d/${foundFile.id}/edit`,
                 productName: 'Sheet2Vow',
-                orderVerified: true,
+                orderVerified: hasActiveLic,
               });
             } catch (backfillErr) {
               console.warn('[OAuth Callback] Could not backfill auto-discovered workspace to database:', backfillErr);
@@ -627,7 +610,7 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     console.error('OAuth Callback Error:', err);
     const errResp = new NextResponse(
-      `<html><body><h3>Authentication failed: ${err.message}</h3><script>setTimeout(() => window.close(), 3000);</script></body></html>`,
+      `<html><body><h3>Authentication failed: ${escapeHtmlText(err?.message || "Unexpected error")}</h3><script>setTimeout(() => window.close(), 3000);</script></body></html>`,
       { headers: { 'Content-Type': 'text/html' } }
     );
     errResp.cookies.set(OAUTH_NONCE_COOKIE, '', { maxAge: 0, path: '/' });

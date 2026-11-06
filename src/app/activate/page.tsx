@@ -15,6 +15,7 @@ import InfoDisclosure from '@/components/InfoDisclosure';
 import StepOrderVerification from '@/components/activate/StepOrderVerification';
 import { ProductSetupPluginRenderer } from '@/lib/core/activation/pluginRegistry';
 import { SUITE_PRODUCTS, VerifiedOrder } from '@/lib/core/activation/types';
+import { isValidAppOrigin } from '@/lib/auth/allowedOrigins';
 
 export default function ActivationPage() {
   const router = useRouter();
@@ -88,20 +89,13 @@ export default function ActivationPage() {
       const handleAuthMessage = (event: MessageEvent) => {
         // Security: Validate origin matches current domain, local development, or official sheet2suite domains [SEC-2]
         const origin = event.origin || '';
-        const isAllowedOrigin = 
-          origin === window.location.origin ||
-          origin.endsWith('sheet2suite.com') ||
-          origin.endsWith('.web.app') ||
-          origin.endsWith('.firebaseapp.com') ||
-          origin.includes('localhost') ||
-          origin.includes('127.0.0.1');
-        if (!isAllowedOrigin) return;
+        if (!isValidAppOrigin(origin, window.location.origin)) return;
 
         if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
           const { user, accessToken } = event.data;
           if (user?.email) {
             setGoogleEmail(user.email);
-            setEmail(user.email);
+            setEmail((prev) => prev || user.email);
             setIsGoogleConnected(true);
             localStorage.setItem('s2v_google_email', user.email);
 
@@ -216,6 +210,8 @@ export default function ActivationPage() {
           currency: productConfig.currency,
           partner1: productConfig.partner1,
           partner2: productConfig.partner2,
+          orderId: verifiedOrder?.orderId || orderId,
+          purchaserEmail: verifiedOrder?.email || email,
         }),
       });
 
@@ -253,7 +249,8 @@ export default function ActivationPage() {
           productCode: targetProductCode,
           productName: finalProductName,
           vaultConfig: productConfig.vaultConfig || productConfig,
-          orderId: orderId || 'VERIFIED-ORDER',
+          orderId: verifiedOrder?.orderId || orderId,
+          purchaserEmail: verifiedOrder?.email || email,
           orderVerified: true,
         }),
       });

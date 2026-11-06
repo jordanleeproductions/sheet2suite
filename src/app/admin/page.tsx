@@ -35,6 +35,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { WorkspaceRecord } from '@/lib/db/licensingDb';
+import { isValidAppOrigin } from '@/lib/auth/allowedOrigins';
 import { Sheet2SuiteLicense } from '@/lib/sheets/types';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import { OfficialGoogleButton } from '@/components/OfficialGoogleButton';
@@ -44,6 +45,7 @@ import AdminTrackerTab from '@/components/admin/AdminTrackerTab';
 import AdminTemplatesTab from '@/components/admin/AdminTemplatesTab';
 import AdminValidatorTab from '@/components/admin/AdminValidatorTab';
 import AdminReleaseNotesTab from '@/components/admin/AdminReleaseNotesTab';
+import AdminGenerateKeyModal from '@/components/admin/AdminGenerateKeyModal';
 
 export default function AdminDatabasePage() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
@@ -52,6 +54,7 @@ export default function AdminDatabasePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [rawJsonRecord, setRawJsonRecord] = useState<any | null>(null);
+  const [showGenerateKeyModal, setShowGenerateKeyModal] = useState<boolean>(false);
 
   // Authentication & Security State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -98,15 +101,7 @@ export default function AdminDatabasePage() {
 
         const handleAuthMessage = (event: MessageEvent) => {
           const origin = event.origin || '';
-          const isAllowedOrigin =
-            origin === window.location.origin ||
-            origin.endsWith('sheet2suite.com') ||
-            origin.endsWith('.web.app') ||
-            origin.endsWith('.firebaseapp.com') ||
-            origin.includes('localhost') ||
-            origin.includes('127.0.0.1');
-
-          if (!isAllowedOrigin) return;
+          if (!isValidAppOrigin(origin, window.location.origin)) return;
 
           if (event.data?.type === 'ADMIN_AUTH_SUCCESS') {
             window.removeEventListener('message', handleAuthMessage);
@@ -1094,6 +1089,30 @@ export default function AdminDatabasePage() {
 
           {/* Action Buttons */}
           <div className="admin-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowGenerateKeyModal(true)}
+              style={{
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                color: 'var(--color-primary)',
+                border: '1.5px solid rgba(99, 102, 241, 0.35)',
+                borderRadius: '8px',
+                padding: '0.55rem 0.85rem',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-technical-mono, monospace)',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.45rem',
+                minHeight: '40px',
+                transition: 'all 0.15s ease',
+              }}
+              title="Generate dev or VIP special access license key"
+            >
+              <Sparkles size={14} />
+              <span>GENERATE KEY</span>
+            </button>
             <button
               onClick={handleAdminLogout}
               style={{
@@ -2228,6 +2247,7 @@ export default function AdminDatabasePage() {
             onNavigateToValidator={handleNavigateToValidator}
             onOpenEditRecord={handleOpenEdit}
             onOpenJsonRecord={(record) => setRawJsonRecord(record)}
+            onOpenGenerateModal={() => setShowGenerateKeyModal(true)}
 
           />
         )}
@@ -2838,6 +2858,16 @@ export default function AdminDatabasePage() {
           )}
         </div>
       </SlideOverDrawer>
+
+      {/* -------------------------------------------------------------
+          ADMIN GENERATE LICENSE KEY MODAL
+          ------------------------------------------------------------- */}
+      <AdminGenerateKeyModal
+        isOpen={showGenerateKeyModal}
+        onClose={() => setShowGenerateKeyModal(false)}
+        onSuccess={() => fetchRecords()}
+        getAdminHeaders={getAdminHeaders}
+      />
 
       {/* -------------------------------------------------------------
           RAW JSON VIEWER MODAL

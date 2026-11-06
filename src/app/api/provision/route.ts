@@ -3,6 +3,10 @@ import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { DEFAULT_MASTER_SHEET_ID, getGoogleAuth, getGoogleAuthAsync } from '@/lib/sheets/client';
 import { CellGuard } from '@/lib/core/CellGuard';
+import { checkRateLimit } from '@/lib/core/rateLimiter';
+import { LocalLicensingDb } from '@/lib/db/licensingDb';
+import { getVerifiedCookieEmail, resolveGoogleTokenEmail } from '@/lib/auth/userSession';
+import { verifyAdminAuth } from '@/lib/auth/adminAuth';
 import { generateMasterXlsxBuffer } from '@/lib/core/templates/xlsxGenerator';
 import { getMasterSpreadsheetXlsxBuffer } from '@/lib/sheets/masterTemplateExporter';
 import { applyDropdownValidations } from '@/lib/sheets/dropdownValidator';
@@ -56,6 +60,18 @@ async function getOrCreateFolder(drive: any, folderName: string, parentId?: stri
  */
 export async function POST(req: NextRequest) {
   try {
+    // SECURITY [VULN-11]: Rate limit provisioning to prevent Google Service Account Drive export quota exhaustion
+    const rate = checkRateLimit(req, 'provision', 8, 15 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many workspace provisioning requests. Please wait ${rate.retryAfterSeconds}s and try again.`,
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const {
       accessToken,
@@ -66,21 +82,24 @@ export async function POST(req: NextRequest) {
       location,
       currency = 'USD',
       partner1,
-      partner2
+      partner2,
+      orderId,
+      purchaserEmail,
     } = body;
     const initialBudget = Number(budget) || 0;
-    const sanitizedWeddingDate = weddingDate ? String(weddingDate).trim() : '';
-    const sanitizedLocation = location ? String(location).trim() : '';
-    const sanitizedCurrency = currency ? String(currency).trim() : 'CAD';
+    // SECURITY [VULN-11]: Sanitize all user-supplied fields through CellGuard before USER_ENTERED sheet updates
+    const sanitizedWeddingDate = weddingDate ? CellGuard.sanitizeCellValue(String(weddingDate).trim()) : '';
+    const sanitizedLocation = location ? CellGuard.sanitizeCellValue(String(location).trim()) : '';
+    const sanitizedCurrency = currency ? CellGuard.sanitizeCellValue(String(currency).trim()) : 'CAD';
 
     // Use passed token or cookie fallback
     const authHeader = req.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
     const cookieToken = req.cookies.get('s2s_access_token')?.value || req.cookies.get('google_access_token')?.value;
     const refreshToken = req.cookies.get('s2s_refresh_token')?.value;
-    const userEmail = req.cookies.get('s2s_user_email')?.value;
-
+    const verifiedCookieEmail = getVerifiedCookieEmail(req);
     const token = accessToken || bearerToken || cookieToken || process.env.GOOGLE_ACCESS_TOKEN;
+    const userEmail = verifiedCookieEmail || (token ? (await resolveGoogleTokenEmail(token)) || undefined : undefined);
 
     if (!token && !refreshToken && !process.env.GOOGLE_CLIENT_EMAIL) {
       return NextResponse.json(
@@ -90,6 +109,55 @@ export async function POST(req: NextRequest) {
         },
         { status: 401 }
       );
+    }
+
+    // SECURITY [VULN-11]: Verify active license or existing verified workspace before cloning Master Template
+    const isAdmin = verifyAdminAuth(req).authorized;
+    if (!isAdmin) {
+      const candidateEmails = [userEmail, purchaserEmail]
+        .filter(Boolean)
+        .map((e) => String(e).trim().toLowerCase());
+      const cleanOrderId = orderId ? String(orderId).trim().toUpperCase() : '';
+
+      let hasEntitlement = false;
+      if (cleanOrderId) {
+        const lic = await LocalLicensingDb.getLicenseByKeyAsync(cleanOrderId);
+        if (lic && (lic.status === 'active' || lic.status === 'used')) {
+          const bound = (lic.purchaserEmail || '').trim().toLowerCase();
+          if (!bound || candidateEmails.includes(bound)) {
+            hasEntitlement = true;
+          }
+        }
+      }
+
+      if (!hasEntitlement && candidateEmails.length > 0) {
+        const allLicenses = await LocalLicensingDb.getAllLicensesAsync();
+        hasEntitlement = allLicenses.some(
+          (l) =>
+            (l.status === 'active' || l.status === 'used') &&
+            candidateEmails.includes((l.purchaserEmail || '').trim().toLowerCase())
+        );
+
+        if (!hasEntitlement) {
+          for (const em of candidateEmails) {
+            const existingWs = await LocalLicensingDb.getWorkspacesByEmailAsync(em);
+            if (existingWs.some((w) => w.orderVerified !== false)) {
+              hasEntitlement = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!hasEntitlement) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'License verification required: Please verify your Etsy Order ID or license key before provisioning a workspace.',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const auth = (await getGoogleAuthAsync(token, undefined, userEmail, refreshToken)) || getGoogleAuth(token);
@@ -262,8 +330,8 @@ export async function POST(req: NextRequest) {
           if (partner1?.firstName || partner1?.lastName) {
             partnerRows.push([
               'G1',                                    // Guest ID
-              partner1.firstName || 'Partner',         // First Name
-              partner1.lastName || '1',                // Last Name
+              CellGuard.sanitizeCellValue(partner1.firstName || 'Partner'),         // First Name
+              CellGuard.sanitizeCellValue(partner1.lastName || '1'),                // Last Name
               'Wedding Party',                         // Party Group
               'Adult',                                 // Age Category
               'Attending',                             // RSVP Status
@@ -271,8 +339,8 @@ export async function POST(req: NextRequest) {
               '',                                      // Meal Choice
               'Sweetheart Table',                      // Reception Table
               'Row 1 - Center',                        // Ceremony Seating
-              partner1.email || '',                    // Email Address
-              partner1.phone || '',                    // Phone Number
+              CellGuard.sanitizeCellValue(partner1.email || ''),                    // Email Address
+              CellGuard.sanitizeCellValue(partner1.phone || ''),                    // Phone Number
               '',                                      // Mailing Address
               'FALSE'                                  // Thanked
             ]);
@@ -280,8 +348,8 @@ export async function POST(req: NextRequest) {
           if (partner2?.firstName || partner2?.lastName) {
             partnerRows.push([
               `G${partnerRows.length + 1}`,            // Guest ID
-              partner2.firstName || 'Partner',         // First Name
-              partner2.lastName || '2',                // Last Name
+              CellGuard.sanitizeCellValue(partner2.firstName || 'Partner'),         // First Name
+              CellGuard.sanitizeCellValue(partner2.lastName || '2'),                // Last Name
               'Wedding Party',                         // Party Group
               'Adult',                                 // Age Category
               'Attending',                             // RSVP Status
@@ -289,8 +357,8 @@ export async function POST(req: NextRequest) {
               '',                                      // Meal Choice
               'Sweetheart Table',                      // Reception Table
               'Row 1 - Center',                        // Ceremony Seating
-              partner2.email || '',                    // Email Address
-              partner2.phone || '',                    // Phone Number
+              CellGuard.sanitizeCellValue(partner2.email || ''),                    // Email Address
+              CellGuard.sanitizeCellValue(partner2.phone || ''),                    // Phone Number
               '',                                      // Mailing Address
               'FALSE'                                  // Thanked
             ]);
