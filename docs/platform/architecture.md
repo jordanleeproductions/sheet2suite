@@ -123,3 +123,14 @@ When introducing a new product to the platform:
 3. **Register Product Code**: Register product key (e.g. `SHEET2BUILD`) in `src/lib/core/activation/registry.ts`.
 4. **Deploy Template XLSX**: Deposit binary master template or export ID into Google Drive for live duplication.
 5. **Implement Product Canvas**: Create `src/app/[product]/page.tsx` utilizing shared `src/lib/core/` data sync, session, and UI shell primitives.
+
+
+---
+
+## 6. Executive Operations & Cross-Product Telemetry
+
+The Sheet2Suite Admin Portal (`/admin`) provides real-time operational telemetry across all suite applications via `/api/admin/dashboard`:
+- **Unique Platform Accounts:** Deduplicates and monitors total unique Google user accounts across primary workspace owners, invited secondary co-users/partners, and licensed account holders.
+- **Co-User Instance Attachment:** Tracks collaboration adoption rates by distinguishing solo workspaces (single planner) from two-user instances (Owner + Partner) and pro multi-collaborator workspaces (3+ team members).
+- **Multi-Product User Cross-Pollination:** Aggregates active workspace footprints and license entitlements to monitor users operating multiple suite products simultaneously (e.g. `Sheet2Vow` + `Sheet2Vault`).
+- **Relational Sheet Tracker:** Features dedicated product and collaboration filters (`All Collab`, `Co-Users Synced`, `Solo`) to rapidly audit multi-user workspaces.

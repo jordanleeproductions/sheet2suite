@@ -14,11 +14,27 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.0',
+    product: 'suite',
+    title: 'Admin Operations Telemetry & Cross-Product Metrics',
+    date: 'Nov 7, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'feature',
+    highlights: [
+      'Enhanced Executive Operations Pulse to track total unique user accounts, primary owners, and invited co-users.',
+      'Introduced co-user instance attachment metrics detailing solo instances, 2-user partner pairs, and pro multi-collaborator teams.',
+      'Added cross-product adoption intelligence to monitor multi-product users holding access to both Sheet2Vow and preview products (Sheet2Vault).',
+      'Upgraded Sheet Tracker with a dedicated collaboration filter to quickly isolate workspaces with attached co-users.',
+    ],
+    details: 'Provides comprehensive platform intelligence on unique user accounts, co-user instance adoption ratios, and multi-product user footprints.',
+  },
+  {
     version: 'v1.24.0',
     product: 'suite',
     title: 'Developer & Special User License Key Generator',
     date: 'Nov 5, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'feature',
     highlights: [

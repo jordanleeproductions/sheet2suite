@@ -71,6 +71,7 @@ export default function AdminTrackerTab({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [productFilter, setProductFilter] = useState<'ALL' | 'SHEET2VOW' | 'SHEET2VAULT'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'USED' | 'REVOKED' | 'UNBOUND'>('ALL');
+  const [collabFilter, setCollabFilter] = useState<'ALL' | 'WITH_COUSERS' | 'SOLO'>('ALL');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = (text: string, identifier: string) => {
@@ -186,9 +187,21 @@ export default function AdminTrackerTab({
       if (statusFilter === 'REVOKED' && r.licenseStatus === 'active') return false;
       if (statusFilter === 'UNBOUND' && r.hasBoundSheet) return false;
 
+      // 4. Collaboration filter
+      if (collabFilter === 'WITH_COUSERS') {
+        const hasPartner = Boolean(r.partnerEmail?.trim());
+        const hasCoPlanners = Array.isArray(r.coPlanners) && r.coPlanners.some((cp) => cp?.trim());
+        if (!hasPartner && !hasCoPlanners) return false;
+      }
+      if (collabFilter === 'SOLO') {
+        const hasPartner = Boolean(r.partnerEmail?.trim());
+        const hasCoPlanners = Array.isArray(r.coPlanners) && r.coPlanners.some((cp) => cp?.trim());
+        if (hasPartner || hasCoPlanners) return false;
+      }
+
       return true;
     });
-  }, [relationalData, searchTerm, productFilter, statusFilter]);
+  }, [relationalData, searchTerm, productFilter, statusFilter, collabFilter]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -447,6 +460,67 @@ export default function AdminTrackerTab({
               }}
             >
               Unbound
+            </button>
+          </div>
+          {/* Collaboration Filter */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: 'var(--color-bg-subtle)',
+            borderRadius: '20px',
+            padding: '2px',
+            border: '1px solid var(--color-border)',
+          }}>
+            <button
+              type="button"
+              onClick={() => setCollabFilter('ALL')}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '16px',
+                border: 'none',
+                backgroundColor: collabFilter === 'ALL' ? 'var(--color-surface, #ffffff)' : 'transparent',
+                color: collabFilter === 'ALL' ? 'var(--color-text)' : 'var(--color-muted)',
+                boxShadow: collabFilter === 'ALL' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              All Collab
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollabFilter('WITH_COUSERS')}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '16px',
+                border: 'none',
+                backgroundColor: collabFilter === 'WITH_COUSERS' ? 'var(--color-surface, #ffffff)' : 'transparent',
+                color: collabFilter === 'WITH_COUSERS' ? 'var(--color-primary)' : 'var(--color-muted)',
+                boxShadow: collabFilter === 'WITH_COUSERS' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Co-Users Synced
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollabFilter('SOLO')}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '16px',
+                border: 'none',
+                backgroundColor: collabFilter === 'SOLO' ? 'var(--color-surface, #ffffff)' : 'transparent',
+                color: collabFilter === 'SOLO' ? 'var(--color-muted)' : 'var(--color-muted)',
+                boxShadow: collabFilter === 'SOLO' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Solo
             </button>
           </div>
         </div>
