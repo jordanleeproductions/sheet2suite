@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Key, ArrowRight, ShieldCheck, X } from 'lucide-react';
+import { Key, ArrowRight, ShieldCheck, X, ShoppingBag, ExternalLink, Zap } from 'lucide-react';
+import { getEtsyPurchaseUrl, getDemoWorkspaceUrl } from '@/lib/config/storefrontLinks';
 
 interface StepOrderVerificationProps {
   email: string;
@@ -25,6 +26,9 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
   setVerifyError,
   onVerify,
 }) => {
+  const etsyBuyUrl = getEtsyPurchaseUrl('activate_page', 'vow');
+  const demoUrl = getDemoWorkspaceUrl('activate_page');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <form onSubmit={onVerify} className="activation-form-section" style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
@@ -41,15 +45,28 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
         </div>
 
         {verifyError && (
-          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fee2e2', border: '1px solid #ef4444', color: '#b91c1c', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>{verifyError}</span>
-            <button
-              type="button"
-              onClick={() => setVerifyError('')}
-              style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.2rem' }}
-            >
-              <X size={16} />
-            </button>
+          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fee2e2', border: '1px solid #ef4444', color: '#b91c1c', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>{verifyError}</span>
+              <button
+                type="button"
+                onClick={() => setVerifyError('')}
+                style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.2rem' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{ fontSize: '0.75rem' }}>
+              Need a license key?{' '}
+              <a
+                href={etsyBuyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#991b1b', fontWeight: 800, textDecoration: 'underline' }}
+              >
+                Purchase your lifetime Sheet2Vow license on Etsy ↗
+              </a>
+            </div>
           </div>
         )}
 
@@ -74,13 +91,13 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
           <input
             type="text"
             required
-            placeholder="e.g. ETSY-98765432"
+            placeholder="e.g. 3847291847"
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
             style={{ width: '100%', padding: '0.75rem 0.85rem', minHeight: '48px', borderRadius: '8px', border: '1.5px solid var(--color-border, #cbd5e1)', fontSize: '1rem', color: 'var(--color-text)', backgroundColor: 'var(--color-bg)' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.4rem', fontSize: '0.725rem', color: 'var(--color-muted, #64748b)' }}>
-            <span>Find your Order ID (10-digit number) on your Etsy receipt or confirmation email.</span>
+            <span>Find your 9–11 digit Order ID on your Etsy receipt or confirmation email.</span>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <Link href="/support#how-to-find-etsy-order-number" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontWeight: 600 }}>
                 Help Guide ↗
@@ -128,6 +145,76 @@ export const StepOrderVerification: React.FC<StepOrderVerificationProps> = ({
           <span>Instant verification. Works out-of-the-box in Google Sheets & Web Mode.</span>
         </div>
       </form>
+
+      {/* Conversion Card for Prospective Buyers Without an Etsy Order Yet */}
+      <div
+        style={{
+          padding: '1rem 1.15rem',
+          borderRadius: '10px',
+          backgroundColor: 'var(--color-bg-subtle, #f8fafc)',
+          border: '1.5px dashed var(--color-border, #cbd5e1)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.65rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-text, #0f172a)' }}>
+              Don&apos;t have an Etsy Order ID yet?
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-muted, #64748b)', marginTop: '0.15rem' }}>
+              Get lifetime access on Etsy (one-time purchase, zero monthly fees) or test-drive the live demo first.
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+          <a
+            href={etsyBuyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              backgroundColor: '#ea580c',
+              color: '#ffffff',
+              padding: '0.55rem 0.95rem',
+              borderRadius: '7px',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              fontFamily: 'var(--font-mono, monospace)',
+              textDecoration: 'none',
+            }}
+          >
+            <ShoppingBag size={14} />
+            <span>BUY LICENSE ON ETSY</span>
+            <ExternalLink size={13} />
+          </a>
+
+          <Link
+            href={demoUrl}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              backgroundColor: 'var(--color-surface, #ffffff)',
+              color: 'var(--color-text, #0f172a)',
+              border: '1px solid var(--color-border, #cbd5e1)',
+              padding: '0.55rem 0.9rem',
+              borderRadius: '7px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              fontFamily: 'var(--font-mono, monospace)',
+              textDecoration: 'none',
+            }}
+          >
+            <Zap size={14} style={{ color: '#f59e0b' }} />
+            <span>TRY LIVE DEMO</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

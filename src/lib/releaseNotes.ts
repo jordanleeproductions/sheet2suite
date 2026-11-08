@@ -14,11 +14,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.1',
+    product: 'suite',
+    title: 'Seating Deliverables Engine & Order Verification Onboarding',
+    date: 'Nov 7, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'enhancement',
+    highlights: [
+      'Post-Creation Deliverables Suite: Integrated Chef Catering Dossier, Alphabetical Easel Chart, and Canva Place Cards Bulk Create CSV generator into Seating Chart Manager.',
+      'Order Verification & Storefront Onboarding: Streamlined Etsy order number format guidelines and embedded seamless live demo test-drive & direct license purchase options.',
+    ],
+    details: 'Comprehensive day-of event deliverables for couples, catering teams, and stationery designers.',
+  },
+  {
     version: 'v1.25.0',
     product: 'suite',
     title: 'Admin Operations Telemetry & Cross-Product Metrics',
     date: 'Nov 7, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'feature',
     highlights: [
@@ -234,11 +248,27 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.1',
+    product: 'vow',
+    title: 'Event-Day Seating Deliverables: Chef Dossier, Easel Entrance Sign & Canva Studio',
+    date: 'Nov 7, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Chef & Catering Captain Dossier: Table-by-table headcount, entree counts (Beef, Chicken, Fish, Vegan, Veg, Kids), explicit seat allergy alerts, and 1-click clipboard summary.',
+      'Alphabetical Entrance Easel Sign: Elegant A–Z dot leader layout optimized for lobby poster printing (18x24 / 24x36) so guests find their table in seconds without bottlenecking.',
+      'Canva Bulk Create Place Cards CSV: Direct 1-click formatted CSV download with matching table numbers, meal indicators, and step-by-step Canva guide.',
+      'Unified Seating Deliverables Action Bar: Quick-action deliverables strip directly above the reception floor plan.',
+    ],
+    details: 'Everything you need once your seating chart is completed: catering logistics, lobby entrance posters, and custom stationery.',
+  },
+  {
     version: 'v1.19.0',
     product: 'vow',
     title: 'Curated Wedding Styles: Editorial, Botanical & Formal Streamlining',
     date: 'Oct 29, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'enhancement',
     highlights: [

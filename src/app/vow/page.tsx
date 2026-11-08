@@ -30,6 +30,7 @@ import VowMasthead from '@/components/vow/VowMasthead';
 import VowMobileNav from '@/components/vow/VowMobileNav';
 import CommandPalette from '@/components/vow/CommandPalette';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
+import { getEtsyPurchaseUrl } from '@/lib/config/storefrontLinks';
 import Link from 'next/link';
 import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search, ChevronRight } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';

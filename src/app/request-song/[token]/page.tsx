@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { getEtsyPurchaseUrl, getDemoWorkspaceUrl } from '@/lib/config/storefrontLinks';
 import { useParams } from 'next/navigation';
 import { Music, Play, Pause, Search, Heart, CheckCircle2, AlertCircle, RefreshCw, User, MessageSquare, Plus, Disc, Sparkles } from 'lucide-react';
 
@@ -442,9 +443,30 @@ export default function GuestSongRequestPage() {
 
       {/* Footer Branding */}
       <footer style={styles.footer}>
-        <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#6b7280' }}>
-          POWERED BY SHEET2VOW • LIVE DJ SYNC
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#6b7280' }}>
+            POWERED BY SHEET2VOW • LIVE DJ SYNC
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.72rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <a
+              href={getDemoWorkspaceUrl('dj_song_portal')}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#cda250', textDecoration: 'none', fontWeight: 600 }}
+            >
+              Planning a wedding? Try the Sheet2Vow App Demo ↗
+            </a>
+            <span style={{ color: '#475569' }}>•</span>
+            <a
+              href={getEtsyPurchaseUrl('dj_song_portal', 'vow')}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#94a3b8', textDecoration: 'underline' }}
+            >
+              Get on Etsy
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );

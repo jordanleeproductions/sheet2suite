@@ -29,6 +29,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useSheet2Theme } from '@/lib/core/theme/ThemeProvider';
+import { getEtsyPurchaseUrl, getDemoWorkspaceUrl } from '@/lib/config/storefrontLinks';
 
 export default function Sheet2SuiteParentHub() {
   const { styleTheme, theme } = useSheet2Theme();

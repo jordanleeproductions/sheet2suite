@@ -35,6 +35,9 @@ import PageSearchInput from '@/components/PageSearchInput';
 import PageHeaderCard from '@/components/vow/PageHeaderCard';
 import PageMetricStrip from '@/components/vow/PageMetricStrip';
 import { triggerConfetti } from '@/lib/confetti';
+import CateringDossierModal from '@/components/vow/seating/CateringDossierModal';
+import EscortChartModal from '@/components/vow/seating/EscortChartModal';
+import SeatingActionBar from '@/components/vow/seating/SeatingActionBar';
 
 interface SeatingChartManagerProps {
   guests: Guest[];
@@ -274,6 +277,10 @@ export default function SeatingChartManager({
   const [assignSearch, setAssignSearch] = useState<string>('');
   const [isAddingTable, setIsAddingTable] = useState<boolean>(false);
   const [showUnassignedDrawer, setShowUnassignedDrawer] = useState<boolean>(false);
+  // Deliverables Modals (Catering Dossier & Escort / Canva Studio)
+  const [showCateringDossier, setShowCateringDossier] = useState<boolean>(false);
+  const [showEscortModal, setShowEscortModal] = useState<boolean>(false);
+  const [escortModalTab, setEscortModalTab] = useState<'alphabetical' | 'table_roster' | 'canva_studio'>('alphabetical');
   
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -653,6 +660,29 @@ export default function SeatingChartManager({
                 <span>PRINT CARDS</span>
               </button>
             )}
+
+            <button 
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={() => setShowCateringDossier(true)}
+              title="Chef's Kitchen Dossier & Allergen Report"
+            >
+              <Utensils size={14} />
+              <span>CATERING DOSSIER</span>
+            </button>
+
+            <button 
+              type="button"
+              className="s2v-header-btn s2v-header-btn-secondary"
+              onClick={() => {
+                setEscortModalTab('alphabetical');
+                setShowEscortModal(true);
+              }}
+              title="Alphabetical Escort Chart & Canva Place Cards"
+            >
+              <Sparkles size={14} />
+              <span>EASEL & CANVA</span>
+            </button>
 
             <button 
               type="button"
@@ -1900,6 +1930,18 @@ export default function SeatingChartManager({
             ]}
           />
 
+          {/* Post-Creation Deliverables Action Bar */}
+          <SeatingActionBar
+            tables={tables}
+            guests={guests}
+            onOpenCateringDossier={() => setShowCateringDossier(true)}
+            onOpenEscortChart={(tab = 'alphabetical') => {
+              setEscortModalTab(tab);
+              setShowEscortModal(true);
+            }}
+            onOpenPrintStudio={onOpenPrintStudio ? () => onOpenPrintStudio('table_cards') : undefined}
+          />
+
           {/* Main Floorplan Canvas Grid */}
           <div style={styles.floorplanGrid}>
         {filteredTables.map(table => {
@@ -2734,6 +2776,29 @@ export default function SeatingChartManager({
             </div>
           </div>
         </div>
+      )}
+
+      {/* 5. Chef's Kitchen Catering Dossier Modal */}
+      {showCateringDossier && (
+        <CateringDossierModal
+          isOpen={showCateringDossier}
+          onClose={() => setShowCateringDossier(false)}
+          tables={tables}
+          guests={guests}
+          weddingName={partner1Name && partner2Name ? `${partner1Name} & ${partner2Name}` : undefined}
+        />
+      )}
+
+      {/* 6. Alphabetical Escort Chart & Canva Studio Modal */}
+      {showEscortModal && (
+        <EscortChartModal
+          isOpen={showEscortModal}
+          onClose={() => setShowEscortModal(false)}
+          tables={tables}
+          guests={guests}
+          initialTab={escortModalTab}
+          weddingName={partner1Name && partner2Name ? `${partner1Name} & ${partner2Name}` : undefined}
+        />
       )}
 
       {/* Mobile Floating Action Button (FAB) */}
