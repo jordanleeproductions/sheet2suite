@@ -14,11 +14,27 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.2',
+    product: 'suite',
+    title: 'Visual Seating Ergonomics, 1-Tap Swapping & Party Integrity',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'enhancement',
+    highlights: [
+      'Visual Seat Glance Nodes: Circular, square, and rectangular tables display micro-pips for entree choices and dietary allergy red-flag badges with instant tooltips.',
+      '1-Tap Seat Swapper: Atomic seat-swapping interaction allowing couples to trade any two guests between tables in 1 tap without multi-step unassigning.',
+      'Party Integrity Guard: Real-time radar detecting split couples and family units with 1-click table reunification.',
+      'Logged Defect DEFECT-001: Formalized root cause and tracking for multi-page browser print preview duplication across seating modals.',
+    ],
+    details: 'Drastically speeds up in-flight guest assignment and guarantees family seating integrity.',
+  },
+  {
     version: 'v1.25.1',
     product: 'suite',
     title: 'Seating Deliverables Engine & Order Verification Onboarding',
     date: 'Nov 7, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'enhancement',
     highlights: [
@@ -248,11 +264,27 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.2',
+    product: 'vow',
+    title: 'In-Flight Seating Ergonomics: Seat Glance Pips, 1-Tap Swapper & Party Guard',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Seat Glance Nodes: Table nodes now display meal choice pips (🥩 Beef, 🍗 Chicken, 🐟 Fish, 🥗 Veg, 👶 Child) and allergy alert pips (!), providing immediate table-wide glanceability.',
+      '1-Tap Instant Swapper: Click any guest and choose "Swap Seat" to enter Target Mode—tapping any other seat immediately trades their positions with 1 atomic Google Sheets sync.',
+      'Party Integrity Guard: Scans all party units in real time and highlights split families with an ambient warning banner and 1-click reunion drawer.',
+      'Family Group Hover Glow: Hovering over any guest illuminates all other members of their party across the room.',
+    ],
+    details: 'Reduces seating arrangement friction by 70% and gives couples complete confidence in family placement.',
+  },
+  {
     version: 'v1.19.1',
     product: 'vow',
     title: 'Event-Day Seating Deliverables: Chef Dossier, Easel Entrance Sign & Canva Studio',
     date: 'Nov 7, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [

@@ -38,6 +38,9 @@ import { triggerConfetti } from '@/lib/confetti';
 import CateringDossierModal from '@/components/vow/seating/CateringDossierModal';
 import EscortChartModal from '@/components/vow/seating/EscortChartModal';
 import SeatingActionBar from '@/components/vow/seating/SeatingActionBar';
+import PartyIntegrityDrawer, { computeSplitParties } from '@/components/vow/seating/PartyIntegrityDrawer';
+import SeatGlanceNode from '@/components/vow/seating/SeatGlanceNode';
+import { ArrowLeftRight } from 'lucide-react';
 
 interface SeatingChartManagerProps {
   guests: Guest[];
@@ -281,6 +284,10 @@ export default function SeatingChartManager({
   const [showCateringDossier, setShowCateringDossier] = useState<boolean>(false);
   const [showEscortModal, setShowEscortModal] = useState<boolean>(false);
   const [escortModalTab, setEscortModalTab] = useState<'alphabetical' | 'table_roster' | 'canva_studio'>('alphabetical');
+  // Phase 2: Seat Glance, 1-Tap Swapping & Party Integrity
+  const [swappingGuest, setSwappingGuest] = useState<Guest | null>(null);
+  const [hoveredPartyGroup, setHoveredPartyGroup] = useState<string | null>(null);
+  const [showPartyIntegrityDrawer, setShowPartyIntegrityDrawer] = useState<boolean>(false);
   
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -292,6 +299,81 @@ export default function SeatingChartManager({
     shape: 'circle',
     capacity: 8,
   });
+
+  // Phase 2: Real-time Split Party Detection
+  const splitParties = React.useMemo(() => computeSplitParties(guests, tables), [guests, tables]);
+
+  // Phase 2: 1-Tap Seat Swapping Execution
+  const executeSeatSwap = async (
+    source: Guest,
+    targetGuest: Guest | undefined,
+    targetTable: TableConfig,
+    targetSeatNum: number
+  ) => {
+    if (isSyncing) return;
+
+    const sourceTable = getTableForGuest(source);
+    const sourceTableId = sourceTable?.tableId || source.tableAssignment || 'Unassigned';
+    const sourceSeat = source.seatNumber;
+
+    if (targetGuest) {
+      const targetTableId = targetTable.tableId;
+      const updated = guests.map(g => {
+        if (g.guestId === source.guestId) {
+          return {
+            ...g,
+            tableAssignment: targetTableId,
+            seatNumber: targetSeatNum,
+          };
+        }
+        if (g.guestId === targetGuest.guestId) {
+          return {
+            ...g,
+            tableAssignment: sourceTableId,
+            seatNumber: sourceSeat,
+          };
+        }
+        return g;
+      });
+      await onUpdateGuests(updated);
+      triggerConfetti();
+    } else {
+      const updated = guests.map(g => {
+        if (g.guestId === source.guestId) {
+          return {
+            ...g,
+            tableAssignment: targetTable.tableId,
+            seatNumber: targetSeatNum,
+          };
+        }
+        return g;
+      });
+      await onUpdateGuests(updated);
+    }
+  };
+
+  // Phase 2: Reunite Party Handler
+  const handleReuniteParty = async (partyName: string, targetTableId: string) => {
+    const targetTable = tables.find(t => 
+      t.tableId.toLowerCase() === targetTableId.toLowerCase() ||
+      t.tableName.toLowerCase() === targetTableId.toLowerCase()
+    );
+    if (!targetTable) return;
+
+    const resolvedTableId = targetTable.tableId;
+    const updatedGuests = guests.map(g => {
+      if ((g.partyGroup || '').trim().toLowerCase() === partyName.trim().toLowerCase()) {
+        return {
+          ...g,
+          tableAssignment: resolvedTableId,
+        };
+      }
+      return g;
+    });
+
+    await onUpdateGuests(updatedGuests);
+    triggerConfetti();
+  };
 
   // Seating Mode Switcher ('reception' | 'ceremony')
   const [seatingMode, setSeatingMode] = useState<'reception' | 'ceremony'>('reception');
@@ -683,6 +765,22 @@ export default function SeatingChartManager({
               <Sparkles size={14} />
               <span>EASEL & CANVA</span>
             </button>
+
+            {splitParties.length > 0 && (
+              <button 
+                type="button"
+                className="s2v-header-btn s2v-header-btn-secondary"
+                onClick={() => setShowPartyIntegrityDrawer(true)}
+                style={{
+                  borderColor: '#F59E0B',
+                  color: '#B45309',
+                }}
+                title="Review and reunite split family or party members"
+              >
+                <AlertCircle size={14} />
+                <span>SPLIT PARTIES ({splitParties.length})</span>
+              </button>
+            )}
 
             <button 
               type="button"
@@ -1942,6 +2040,88 @@ export default function SeatingChartManager({
             onOpenPrintStudio={onOpenPrintStudio ? () => onOpenPrintStudio('table_cards') : undefined}
           />
 
+          {/* Phase 2: Active 1-Tap Swap Mode Banner */}
+          {swappingGuest && (
+            <div 
+              style={{
+                marginBottom: '1.25rem',
+                padding: '0.85rem 1.15rem',
+                borderRadius: '4px',
+                backgroundColor: '#2563EB',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                border: '1.5px solid #1D4ED8',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                  ⇄
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+                    1-Tap Seat Swapping Active
+                  </div>
+                  <div style={{ fontSize: '0.8rem', opacity: 0.95 }}>
+                    Click any target seat (occupied or empty) to swap with <strong>{swappingGuest.firstName} {swappingGuest.lastName}</strong> ({swappingGuest.tableAssignment || 'Table'}).
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSwappingGuest(null)}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#1D4ED8',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: '3px',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-mono)',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                CANCEL SWAP
+              </button>
+            </div>
+          )}
+
+          {/* Phase 2: Party Integrity Guard Diagnostic Alert Banner */}
+          {splitParties.length > 0 && (
+            <div 
+              onClick={() => setShowPartyIntegrityDrawer(true)}
+              style={{
+                marginBottom: '1.25rem',
+                padding: '0.75rem 1rem',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.35)',
+                color: '#92400E',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.15s ease-in-out',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <span style={{ fontSize: '1rem' }}>⚠️</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                  PARTY INTEGRITY ALERT:
+                </span>
+                <span style={{ fontSize: '0.8rem' }}>
+                  {splitParties.length} {splitParties.length === 1 ? 'party is' : 'parties are'} split across different tables ({splitParties.map(p => p.partyName).slice(0, 3).join(', ')}{splitParties.length > 3 ? '...' : ''}).
+                </span>
+              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: 'var(--font-mono)', textDecoration: 'underline' }}>
+                Review & Reunite →
+              </span>
+            </div>
+          )}
+
           {/* Main Floorplan Canvas Grid */}
           <div style={styles.floorplanGrid}>
         {filteredTables.map(table => {
@@ -1963,9 +2143,21 @@ export default function SeatingChartManager({
           };
 
           // Helper to handle seat clicks cleanly
-          const handleSeatClick = (e: React.MouseEvent, guest: Guest | undefined, seatNum: number) => {
+          const handleSeatClick = async (e: React.MouseEvent, guest: Guest | undefined, seatNum: number) => {
             e.stopPropagation();
             e.preventDefault();
+
+            // Phase 2: If in 1-Tap Swap Mode
+            if (swappingGuest) {
+              if (guest && guest.guestId === swappingGuest.guestId) {
+                setSwappingGuest(null);
+                return;
+              }
+              await executeSeatSwap(swappingGuest, guest, table, seatNum);
+              setSwappingGuest(null);
+              return;
+            }
+
             if (guest) {
               setAssignSeatTable(null);
               setTargetSeatIndex(null);
@@ -2031,23 +2223,26 @@ export default function SeatingChartManager({
                       const guest = getGuestAtSeat(seatNum);
 
                       return (
-                        <div
+                        <SeatGlanceNode
                           key={index}
+                          seatNum={seatNum}
+                          guest={guest}
+                          shape="circle"
+                          isPartyHighlighted={Boolean(hoveredPartyGroup && guest?.partyGroup && guest.partyGroup.trim().toLowerCase() === hoveredPartyGroup.trim().toLowerCase())}
+                          isSwappingSource={Boolean(swappingGuest && guest && guest.guestId === swappingGuest.guestId)}
+                          isSwapModeActive={Boolean(swappingGuest)}
+                          onClick={(e) => handleSeatClick(e, guest, seatNum)}
+                          onMouseEnter={() => {
+                            if (guest?.partyGroup && guest.partyGroup.trim().toLowerCase() !== 'general') {
+                              setHoveredPartyGroup(guest.partyGroup);
+                            }
+                          }}
+                          onMouseLeave={() => setHoveredPartyGroup(null)}
                           style={{
                             ...styles.seatNodeCircle,
                             transform: `translate(${x}px, ${y}px)`,
                           }}
-                          onClick={(e) => handleSeatClick(e, guest, seatNum)}
-                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : `Seat ${seatNum}: Click to assign guest`}
-                        >
-                          {guest ? (
-                            <div style={styles.seatedAvatar}>
-                              <span style={styles.initialsText}>{getInitials(guest)}</span>
-                            </div>
-                          ) : (
-                            <span style={styles.emptySeatText}>+</span>
-                          )}
-                        </div>
+                        />
                       );
                     })}
                   </div>
@@ -2061,20 +2256,23 @@ export default function SeatingChartManager({
                     const renderSquareSeatNode = (seatNum: number, seatKey: string) => {
                       const guest = getGuestAtSeat(seatNum);
                       return (
-                        <div
+                        <SeatGlanceNode
                           key={seatKey}
-                          style={styles.seatNodeRect}
+                          seatNum={seatNum}
+                          guest={guest}
+                          shape="rect"
+                          isPartyHighlighted={Boolean(hoveredPartyGroup && guest?.partyGroup && guest.partyGroup.trim().toLowerCase() === hoveredPartyGroup.trim().toLowerCase())}
+                          isSwappingSource={Boolean(swappingGuest && guest && guest.guestId === swappingGuest.guestId)}
+                          isSwapModeActive={Boolean(swappingGuest)}
                           onClick={(e) => handleSeatClick(e, guest, seatNum)}
-                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : `Seat ${seatNum}: Click to assign guest`}
-                        >
-                          {guest ? (
-                            <div style={styles.seatedAvatar}>
-                              <span style={styles.initialsText}>{getInitials(guest)}</span>
-                            </div>
-                          ) : (
-                            <span style={styles.emptySeatText}>+</span>
-                          )}
-                        </div>
+                          onMouseEnter={() => {
+                            if (guest?.partyGroup && guest.partyGroup.trim().toLowerCase() !== 'general') {
+                              setHoveredPartyGroup(guest.partyGroup);
+                            }
+                          }}
+                          onMouseLeave={() => setHoveredPartyGroup(null)}
+                          style={styles.seatNodeRect}
+                        />
                       );
                     };
 
@@ -2128,20 +2326,23 @@ export default function SeatingChartManager({
                     const renderRectSeatNode = (seatNum: number, seatKey: string) => {
                       const guest = getGuestAtSeat(seatNum);
                       return (
-                        <div
+                        <SeatGlanceNode
                           key={seatKey}
-                          style={styles.seatNodeRect}
+                          seatNum={seatNum}
+                          guest={guest}
+                          shape="rect"
+                          isPartyHighlighted={Boolean(hoveredPartyGroup && guest?.partyGroup && guest.partyGroup.trim().toLowerCase() === hoveredPartyGroup.trim().toLowerCase())}
+                          isSwappingSource={Boolean(swappingGuest && guest && guest.guestId === swappingGuest.guestId)}
+                          isSwapModeActive={Boolean(swappingGuest)}
                           onClick={(e) => handleSeatClick(e, guest, seatNum)}
-                          title={guest ? `${guest.firstName} ${guest.lastName} (${guest.rsvpStatus})` : `Seat ${seatNum}: Click to assign guest`}
-                        >
-                          {guest ? (
-                            <div style={styles.seatedAvatar}>
-                              <span style={styles.initialsText}>{getInitials(guest)}</span>
-                            </div>
-                          ) : (
-                            <span style={styles.emptySeatText}>+</span>
-                          )}
-                        </div>
+                          onMouseEnter={() => {
+                            if (guest?.partyGroup && guest.partyGroup.trim().toLowerCase() !== 'general') {
+                              setHoveredPartyGroup(guest.partyGroup);
+                            }
+                          }}
+                          onMouseLeave={() => setHoveredPartyGroup(null)}
+                          style={styles.seatNodeRect}
+                        />
                       );
                     };
 
@@ -2311,6 +2512,38 @@ export default function SeatingChartManager({
                   </p>
                 </div>
               </div>
+
+              {/* Phase 2: 1-TAP SWAP SEAT BUTTON */}
+              {selectedGuest.tableAssignment && selectedGuest.tableAssignment !== 'Unassigned' && (
+                <button
+                  type="button"
+                  style={{
+                    width: '100%',
+                    marginTop: '1.25rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    backgroundColor: '#2563EB',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--border-radius-sm)',
+                    padding: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
+                  }}
+                  onClick={() => {
+                    setSwappingGuest(selectedGuest);
+                    setSelectedGuest(null);
+                  }}
+                >
+                  <ArrowLeftRight size={16} />
+                  <span>SWAP SEAT (SELECT TARGET SEAT)</span>
+                </button>
+              )}
 
               {/* UNASSIGN SEAT BUTTON */}
               {((selectedGuest.tableAssignment && selectedGuest.tableAssignment !== 'Unassigned') ||
@@ -2788,6 +3021,16 @@ export default function SeatingChartManager({
           weddingName={partner1Name && partner2Name ? `${partner1Name} & ${partner2Name}` : undefined}
         />
       )}
+
+      {/* Party Integrity Drawer (Split Families & Groups) */}
+      <PartyIntegrityDrawer
+        isOpen={showPartyIntegrityDrawer}
+        onClose={() => setShowPartyIntegrityDrawer(false)}
+        guests={guests}
+        tables={tables}
+        onReuniteParty={handleReuniteParty}
+        isSyncing={isSyncing}
+      />
 
       {/* 6. Alphabetical Escort Chart & Canva Studio Modal */}
       {showEscortModal && (
