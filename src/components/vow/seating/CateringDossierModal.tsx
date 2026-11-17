@@ -29,22 +29,31 @@ interface CateringDossierModalProps {
 export function categorizeMeal(meal?: string): { category: string; emoji: string; color: string } {
   const m = (meal || '').trim().toLowerCase();
   if (!m) return { category: 'Not Selected', emoji: '⏳', color: 'var(--color-muted, #64748B)' };
-  if (m.includes('beef') || m.includes('steak') || m.includes('filet') || m.includes('prime rib')) {
+  if (m.includes('beef') || m.includes('steak') || m.includes('filet') || m.includes('prime rib') || m.includes('short rib') || m.includes('sirloin') || m.includes('brisket') || m.includes('wagyu') || m.includes('veal')) {
     return { category: 'Beef / Steak', emoji: '🥩', color: '#DC2626' };
   }
-  if (m.includes('chicken') || m.includes('poultry') || m.includes('fowl')) {
-    return { category: 'Chicken', emoji: '🍗', color: '#D97706' };
+  if (m.includes('pork') || m.includes('ham') || m.includes('bacon') || m.includes('tenderloin') || m.includes('prosciutto')) {
+    return { category: 'Pork', emoji: '🍖', color: '#E11D48' };
   }
-  if (m.includes('fish') || m.includes('salmon') || m.includes('halibut') || m.includes('seafood') || m.includes('tuna') || m.includes('bass')) {
+  if (m.includes('lamb') || m.includes('mutton') || m.includes('shank')) {
+    return { category: 'Lamb', emoji: '🐑', color: '#B45309' };
+  }
+  if (m.includes('chicken') || m.includes('poultry') || m.includes('fowl') || m.includes('turkey') || m.includes('duck') || m.includes('cornish')) {
+    return { category: 'Poultry', emoji: '🍗', color: '#D97706' };
+  }
+  if (m.includes('fish') || m.includes('salmon') || m.includes('halibut') || m.includes('seafood') || m.includes('tuna') || m.includes('bass') || m.includes('cod') || m.includes('trout') || m.includes('lobster') || m.includes('shrimp') || m.includes('crab') || m.includes('scallop')) {
     return { category: 'Fish / Seafood', emoji: '🐟', color: '#0284C7' };
   }
-  if (m.includes('vegan')) {
+  if (m.includes('pasta') || m.includes('risotto') || m.includes('ravioli') || m.includes('gnocchi') || m.includes('lasagna')) {
+    return { category: 'Pasta / Grain', emoji: '🍝', color: '#CA8A04' };
+  }
+  if (m.includes('vegan') || m.includes('plant-based') || m.includes('plant based')) {
     return { category: 'Vegan', emoji: '🌱', color: '#16A34A' };
   }
-  if (m.includes('veg') || m.includes('vegetarian')) {
+  if (m.includes('veg') || m.includes('vegetarian') || m.includes('tofu') || m.includes('mushroom') || m.includes('cauliflower')) {
     return { category: 'Vegetarian', emoji: '🥗', color: '#059669' };
   }
-  if (m.includes('child') || m.includes('kid')) {
+  if (m.includes('child') || m.includes('kid') || m.includes('toddler') || m.includes('nugget')) {
     return { category: 'Kids Meal', emoji: '👶', color: '#9333EA' };
   }
   return { category: meal || 'Custom Option', emoji: '🍽️', color: '#4F46E5' };

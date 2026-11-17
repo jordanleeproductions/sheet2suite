@@ -1,6 +1,6 @@
 # User Feedback & Improvement Backlog: Seating Chart Mobile UX & Visual Ergonomics
 **Logged Date:** 2026-11-17  
-**Status:** Open / Prioritized for Future Phase  
+**Status:** ✅ Resolved & Deployed (`v1.25.3` / `v1.19.3`)  
 **Impact Areas:** Mobile UX, Visual Glanceability, Typography & Responsiveness  
 
 ---

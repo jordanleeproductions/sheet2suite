@@ -110,6 +110,23 @@ export default function PageMetricStrip({
           overflow: hidden;
           text-overflow: ellipsis;
         }
+        .s2v-metric-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.4rem;
+        }
+        .s2v-metric-label {
+          font-family: var(--font-technical-mono, monospace);
+          font-size: 0.62rem;
+          font-weight: 700;
+          color: var(--color-muted, #64748B);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         @media (max-width: 768px) {
           .s2v-page-metric-strip {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -118,6 +135,19 @@ export default function PageMetricStrip({
           }
           .s2v-metric-value {
             font-size: 1.15rem !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .s2v-metric-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.2rem !important;
+          }
+          .s2v-metric-label {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+            line-height: 1.2 !important;
           }
         }
       `}</style>
@@ -134,20 +164,8 @@ export default function PageMetricStrip({
             title={m.tooltip || (typeof m.value === 'string' ? m.value : undefined)}
           >
             {/* Header Row: Label & Status Badge */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-technical-mono, monospace)',
-                  fontSize: '0.62rem',
-                  fontWeight: 700,
-                  color: 'var(--color-muted, #64748B)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
+            <div className="s2v-metric-header">
+              <span className="s2v-metric-label">
                 {m.label}
               </span>
               {m.statusBadge && (

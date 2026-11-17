@@ -2172,19 +2172,19 @@ export default function SeatingChartManager({
           return (
             <div key={table.tableId} style={styles.tableCard}>
               {/* Table Header Controls */}
-              <div style={styles.tableCardHeader}>
-                <div style={styles.tableNameGroup}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--color-border,#e2e8f0)]">
+                <div className="flex items-center gap-2 min-w-0">
                   {table.shape === 'circle' ? (
-                    <Circle size={16} style={{ color: 'var(--color-text, currentColor)' }} />
+                    <Circle size={16} className="shrink-0" style={{ color: 'var(--color-text, currentColor)' }} />
                   ) : table.shape === 'square' ? (
-                    <Square size={16} style={{ color: 'var(--color-text, currentColor)' }} />
+                    <Square size={16} className="shrink-0" style={{ color: 'var(--color-text, currentColor)' }} />
                   ) : (
-                    <Square size={16} style={{ color: 'var(--color-text, currentColor)', transform: 'scaleX(1.3)' }} />
+                    <Square size={16} className="shrink-0" style={{ color: 'var(--color-text, currentColor)', transform: 'scaleX(1.3)' }} />
                   )}
-                  <h3 style={styles.tableName}>{table.tableName}</h3>
+                  <h3 style={styles.tableName} className="truncate">{table.tableName}</h3>
                 </div>
 
-                <div style={styles.tableCardActions}>
+                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
                   <span style={{
                     ...styles.capacityBadge,
                     backgroundColor: isOverCapacity ? '#ef4444' : seatedGuests.length === table.capacity ? '#10b981' : 'var(--color-bg)',
@@ -2193,12 +2193,14 @@ export default function SeatingChartManager({
                   }}>
                     {isOverCapacity ? `⚠️ OVER CAPACITY (${seatedGuests.length}/${table.capacity})` : seatedGuests.length === table.capacity ? `FULL (${seatedGuests.length}/${table.capacity})` : `${seatedGuests.length} / ${table.capacity} Seats`}
                   </span>
-                  <button style={styles.actionIconBtn} onClick={() => startEditTable(table)} title="Edit Table Config">
-                    <Settings2 size={14} />
-                  </button>
-                  <button style={{ ...styles.actionIconBtn, color: '#ef4444' }} onClick={() => setTableToDelete(table)} title="Delete Table">
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button style={styles.actionIconBtn} onClick={() => startEditTable(table)} title="Edit Table Config">
+                      <Settings2 size={14} />
+                    </button>
+                    <button style={{ ...styles.actionIconBtn, color: '#ef4444' }} onClick={() => setTableToDelete(table)} title="Delete Table">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
 

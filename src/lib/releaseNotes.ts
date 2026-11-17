@@ -14,11 +14,28 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.3',
+    product: 'suite',
+    title: 'Mobile UX Polish, Meal Contrast & Uniform Seat Nodes',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Mobile Metric Cards: Fixed label truncation on narrow viewports by stacking header labels and status badges cleanly.',
+      'Mobile Deliverables Grid: Redesigned Event-Day Deliverables into a crisp 2x2 touch grid on mobile with balanced icon spacing.',
+      'Responsive Table Card Headers: Prevented awkward mid-line wrapping on Sweetheart Table titles.',
+      'High-Contrast Meal Pips & Extended Menu: Replaced dark solid pip backgrounds with crisp white pills + colored rings and expanded meal recognition for Pork, Lamb, Poultry (Turkey/Duck), and Pasta.',
+      'Consistent Circular Seat Nodes: Unified all seat nodes to 50% circular silhouettes across round, square, and rectangular tables.',
+    ],
+    details: 'Targeted UX polish pass resolving mobile layout wrapping, pip contrast, and seat shape consistency.',
+  },
+  {
     version: 'v1.25.2',
     product: 'suite',
     title: 'Visual Seating Ergonomics, 1-Tap Swapping & Party Integrity',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'enhancement',
     highlights: [
@@ -264,11 +281,28 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.3',
+    product: 'vow',
+    title: 'Seating Mobile Responsiveness, High-Contrast Meal Pips & Uniform Circles',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Zero Truncation on Mobile Stat Cards: Seated Guests and Unassigned Guests labels now display in full on phone screens.',
+      'Touch-Friendly Deliverables Bar: Redesigned Event-Day Deliverables buttons into a balanced 2x2 mobile grid.',
+      'Clean Sweetheart Table Headers: Table card titles now sit on a dedicated full-width row on mobile.',
+      'Crisp Emoji Pips & Extended Culinary Support: High-contrast white pip badges with colored category rings, now supporting Pork, Lamb, Turkey/Duck, and Pasta.',
+      'Uniform Circular Seats: All guests across round, square, and rectangular tables render as smooth, consistent circles.',
+    ],
+    details: 'Refines mobile layout ergonomics and visual clarity across the Seating Chart Manager.',
+  },
+  {
     version: 'v1.19.2',
     product: 'vow',
     title: 'In-Flight Seating Ergonomics: Seat Glance Pips, 1-Tap Swapper & Party Guard',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [

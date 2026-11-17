@@ -21,7 +21,6 @@ interface SeatGlanceNodeProps {
 export default function SeatGlanceNode({
   guest,
   seatNum,
-  shape = 'circle',
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -59,7 +58,7 @@ export default function SeatGlanceNode({
   // Dynamic Ring & Shadow
   let dynamicBoxShadow = 'var(--box-shadow-subtle, 0 1px 3px rgba(0,0,0,0.08))';
   let dynamicBorderColor = 'var(--color-primary, #0f172a)';
-  let dynamicTransform = style.transform || '';
+  const dynamicTransform = style.transform || '';
 
   if (isSwappingSource) {
     dynamicBoxShadow = '0 0 0 3px #10B981, 0 0 12px rgba(16, 185, 129, 0.45)';
@@ -72,11 +71,11 @@ export default function SeatGlanceNode({
     dynamicBorderColor = '#F59E0B';
   }
 
+  // Enforce uniform circular seat nodes across all table shapes
   const baseNodeStyles: React.CSSProperties = {
     position: 'relative',
     width: '44px',
     height: '44px',
-    borderRadius: shape === 'circle' ? '50%' : '6px',
     backgroundColor: hasGuest ? 'var(--color-surface, #ffffff)' : 'var(--color-bg, #f8fafc)',
     border: `2px solid ${dynamicBorderColor}`,
     display: 'flex',
@@ -87,6 +86,7 @@ export default function SeatGlanceNode({
     boxShadow: dynamicBoxShadow,
     userSelect: 'none',
     ...style,
+    borderRadius: '50%',
     transform: dynamicTransform,
   };
 
@@ -104,7 +104,7 @@ export default function SeatGlanceNode({
           style={{
             width: '100%',
             height: '100%',
-            borderRadius: shape === 'circle' ? '50%' : '4px',
+            borderRadius: '50%',
             backgroundColor: isSwappingSource
               ? '#10B981'
               : isPartyHighlighted
@@ -134,14 +134,14 @@ export default function SeatGlanceNode({
             <span
               style={{
                 position: 'absolute',
-                top: '-5px',
-                right: '-5px',
+                top: '-3px',
+                right: '-3px',
                 width: '15px',
                 height: '15px',
                 borderRadius: '50%',
                 backgroundColor: '#EF4444',
                 color: '#ffffff',
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: 900,
                 display: 'flex',
                 alignItems: 'center',
@@ -156,29 +156,28 @@ export default function SeatGlanceNode({
             </span>
           )}
 
-          {/* Bottom-Right Meal Choice Pip */}
+          {/* Bottom-Right High-Contrast Meal Choice Pip (White surface + colored ring) */}
           {mealInfo && mealInfo.category !== 'Not Selected' && (
             <span
               style={{
                 position: 'absolute',
-                bottom: '-4px',
-                right: '-4px',
-                width: '14px',
-                height: '14px',
+                bottom: '-3px',
+                right: '-3px',
+                width: '17px',
+                height: '17px',
                 borderRadius: '50%',
-                backgroundColor: mealInfo.color,
-                color: '#ffffff',
-                fontSize: '9px',
+                backgroundColor: '#ffffff',
+                border: `1.5px solid ${mealInfo.color}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                border: '1.5px solid #ffffff',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.22)',
                 zIndex: 2,
+                lineHeight: 1,
               }}
               title={`Meal: ${mealInfo.category} (${guest?.mealChoice})`}
             >
-              <span style={{ fontSize: '8px' }}>{mealInfo.emoji}</span>
+              <span style={{ fontSize: '9px', lineHeight: 1 }}>{mealInfo.emoji}</span>
             </span>
           )}
 
@@ -187,8 +186,8 @@ export default function SeatGlanceNode({
             <span
               style={{
                 position: 'absolute',
-                top: '-6px',
-                left: '-6px',
+                top: '-4px',
+                left: '-4px',
                 width: '16px',
                 height: '16px',
                 borderRadius: '50%',
@@ -210,7 +209,7 @@ export default function SeatGlanceNode({
       ) : (
         <span
           style={{
-            fontSize: isSwapModeActive ? '0.75rem' : '1rem',
+            fontSize: isSwapModeActive ? '0.65rem' : '1rem',
             color: isSwapModeActive ? '#3B82F6' : 'var(--color-muted, #94a3b8)',
             fontWeight: 700,
             fontFamily: 'var(--font-mono, monospace)',
