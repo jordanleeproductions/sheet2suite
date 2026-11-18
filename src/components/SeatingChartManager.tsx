@@ -2179,30 +2179,18 @@ export default function SeatingChartManager({
           {splitParties.length > 0 && (
             <div 
               onClick={() => setShowPartyIntegrityDrawer(true)}
-              style={{
-                marginBottom: '1.25rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '4px',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                border: '1px solid rgba(245, 158, 11, 0.35)',
-                color: '#92400E',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                transition: 'all 0.15s ease-in-out',
-              }}
+              className="mb-5 px-4 py-3 rounded-[4px] bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all hover:opacity-90"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <span style={{ fontSize: '1rem' }}>⚠️</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-base">⚠️</span>
+                <span className="text-xs font-extrabold font-mono tracking-wider">
                   PARTY INTEGRITY ALERT:
                 </span>
-                <span style={{ fontSize: '0.8rem' }}>
+                <span className="text-xs sm:text-[13px]">
                   {splitParties.length} {splitParties.length === 1 ? 'party is' : 'parties are'} split across different tables ({splitParties.map(p => p.partyName).slice(0, 3).join(', ')}{splitParties.length > 3 ? '...' : ''}).
                 </span>
               </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: 'var(--font-mono)', textDecoration: 'underline' }}>
+              <span className="text-xs font-extrabold font-mono underline shrink-0">
                 Review & Reunite →
               </span>
             </div>
@@ -3272,7 +3260,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '30px',
     borderRadius: '50%',
     backgroundColor: 'var(--color-primary)',
-    color: '#ffffff',
+    color: 'var(--color-on-primary, #ffffff)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -3499,7 +3487,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     borderRadius: '50%',
     backgroundColor: 'var(--color-primary)',
-    color: '#ffffff',
+    color: 'var(--color-on-primary, #ffffff)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -3710,7 +3698,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.8rem',
     fontWeight: 700,
     backgroundColor: 'var(--color-primary)',
-    color: '#ffffff',
+    color: 'var(--color-on-primary, #ffffff)',
     border: 'none',
     borderRadius: 'var(--border-radius-sm)',
     padding: '0.625rem 1.25rem',

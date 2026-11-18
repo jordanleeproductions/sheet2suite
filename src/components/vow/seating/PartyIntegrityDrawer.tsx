@@ -235,7 +235,7 @@ export default function PartyIntegrityDrawer({
                       type="button"
                       onClick={() => handleReunite(party.partyName, currentTarget)}
                       disabled={isSyncing || !currentTarget}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[3px] text-xs font-bold font-mono tracking-wider bg-[var(--color-primary,#0f172a)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[3px] text-xs font-bold font-mono tracking-wider bg-[var(--color-primary,#0f172a)] text-[var(--color-on-primary,#ffffff)] hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0"
                     >
                       <HeartHandshake size={13} />
                       <span>REUNITE ALL</span>

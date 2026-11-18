@@ -110,7 +110,7 @@ export default function SeatGlanceNode({
               : isPartyHighlighted
               ? '#D97706'
               : 'var(--color-primary, #0f172a)',
-            color: '#ffffff',
+            color: isSwappingSource || isPartyHighlighted ? '#ffffff' : 'var(--color-on-primary, #ffffff)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

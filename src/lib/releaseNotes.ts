@@ -14,11 +14,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.10',
+    product: 'suite',
+    title: 'Seating Chart Dark Mode Contrast & Tailwind Data-Theme Alignment',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Fixed Invisible Seat Initials in Dark Mode: Updated SeatGlanceNode, DayOfUsherView, PartyIntegrityDrawer, and SeatingChartManager buttons to use var(--color-on-primary) instead of hardcoded #ffffff.',
+      'Fixed Party Integrity Alert Banner: Updated amber split-party alert banner for high-contrast dark mode legibility.',
+      'Tailwind v4 [data-theme="dark"] Variant: Added @custom-variant dark in globals.css so all dark: utility classes respond accurately to Sheet2Suite theme switches.',
+    ],
+    details: 'Restores full WCAG AA contrast across all seating nodes, banners, and action buttons in dark mode.',
+  },
+  {
     version: 'v1.25.9',
     product: 'suite',
     title: 'Cloud Firestore Persistence & Admin Record Deletion Fix',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -368,11 +383,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.7',
+    product: 'vow',
+    title: 'Seating Plan Dark Mode Contrast & Seat Initials Fix',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Fixed Seat Node Initials: Guest initials inside circular seat nodes now render in high-contrast dark slate on white circles in dark mode.',
+      'Fixed Party Integrity Banner & Usher Buttons: Updated split-party alert banner and Day-Of Usher Check-In buttons for full dark mode contrast.',
+    ],
+    details: 'Ensures crystal-clear seat legibility and accessible contrast in dark mode.',
+  },
+  {
     version: 'v1.19.6',
     product: 'vow',
     title: 'Stale Spreadsheet Self-Healing & 1-Click Drive Recovery',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [

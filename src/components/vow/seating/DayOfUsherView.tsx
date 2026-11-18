@@ -233,7 +233,7 @@ export default function DayOfUsherView({
             onClick={() => setFilterMode('all')}
             className={`px-3 py-2 sm:py-1.5 rounded-[2px] text-xs font-mono font-bold transition-colors ${
               filterMode === 'all'
-                ? 'bg-[var(--color-primary,#0f172a)] text-white'
+                ? 'bg-[var(--color-primary,#0f172a)] text-[var(--color-on-primary,#ffffff)]'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
             }`}
           >
@@ -351,7 +351,7 @@ export default function DayOfUsherView({
                   className={`w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-[3px] font-mono text-xs font-bold tracking-wider inline-flex items-center justify-center gap-2 transition-all shrink-0 ${
                     isArrived
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
-                      : 'bg-[var(--color-primary,#0f172a)] hover:opacity-90 text-white shadow-xs'
+                      : 'bg-[var(--color-primary,#0f172a)] hover:opacity-90 text-[var(--color-on-primary,#ffffff)] shadow-xs'
                   }`}
                 >
                   {isArrived ? (

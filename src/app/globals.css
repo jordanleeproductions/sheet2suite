@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "./theme.css";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --font-serif: var(--font-editorial-serif, var(--font-newsreader-google, var(--font-serif-google))), 'Newsreader', 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
   --font-mono: var(--font-technical-mono, var(--font-jetbrains-google, var(--font-geist-mono-google))), 'JetBrains Mono', 'Geist Mono', 'Roboto Mono', monospace;
