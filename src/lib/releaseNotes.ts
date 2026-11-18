@@ -14,11 +14,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.6',
+    product: 'suite',
+    title: 'Google Drive Stale Workspace Recovery & Self-Healing Fix',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Forced Drive Auto-Discovery (scanDrive=true): /api/workspaces now scans Google Drive for accessible spreadsheets when recovering from a stale or 404 spreadsheet ID, even when older Firestore workspace records exist.',
+      'Interactive Recovery Banner: Added 1-click "Scan Drive for Sheet" and "Create New Wedding Sheet" buttons directly inside the sync error banner.',
+    ],
+    details: 'Prevents users from getting stuck when an older Firestore spreadsheet pointer is trashed or inaccessible.',
+  },
+  {
     version: 'v1.25.5',
     product: 'suite',
     title: 'Firebase App Hosting OAuth Origin & Session Recovery Fix',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -311,11 +325,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.6',
+    product: 'vow',
+    title: 'Stale Spreadsheet Self-Healing & 1-Click Drive Recovery',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Automatic Drive Re-Scan on 404: Automatically searches Google Drive for an accessible Sheet2Vow spreadsheet if the saved spreadsheet ID is stale or deleted.',
+      'Recovery Actions: Added "SCAN DRIVE FOR SHEET" and "CREATE NEW WEDDING SHEET" buttons to the error banner.',
+    ],
+    details: 'Ensures smooth workspace recovery whenever a Google Sheet is moved, deleted, or created under a previous client.',
+  },
+  {
     version: 'v1.19.5',
     product: 'vow',
     title: 'Google Login & Spreadsheet Auto-Discovery Reliability Fix',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [

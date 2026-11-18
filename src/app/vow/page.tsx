@@ -1230,8 +1230,11 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
 
           if (!replacementId) {
             const userEmail = googleUserEmail || (typeof window !== 'undefined' ? localStorage.getItem('s2v_google_email') || '' : '');
-            const emailQuery = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
-            const wsRes = await fetch(`/api/workspaces${emailQuery}`, {
+            const wsParams = new URLSearchParams();
+            if (userEmail) wsParams.set('email', userEmail);
+            wsParams.set('scanDrive', 'true');
+            if (targetSheetId) wsParams.set('staleId', targetSheetId);
+            const wsRes = await fetch(`/api/workspaces?${wsParams.toString()}`, {
               headers: activeToken ? { 'Authorization': `Bearer ${activeToken}` } : undefined,
             });
             const wsData = await wsRes.json();
@@ -2477,19 +2480,82 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           )}
 
           {syncError && (
-            <div style={{ ...styles.errorBox, marginBottom: '1rem', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                <AlertCircle size={16} />
-                <span>{syncError}</span>
+            <div style={{ ...styles.errorBox, marginBottom: '1rem', flexDirection: 'column', alignItems: 'stretch', gap: '0.65rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                  <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                  <span>{syncError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSyncError(null)}
+                  style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.1rem 0.2rem' }}
+                  title="Dismiss error"
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setSyncError(null)}
-                style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '0.1rem 0.2rem' }}
-                title="Dismiss error"
-              >
-                <X size={16} />
-              </button>
+              {(syncError.toLowerCase().includes('not found') || syncError.toLowerCase().includes('stale')) && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const params = new URLSearchParams({ scanDrive: 'true' });
+                        if (spreadsheetId) params.set('staleId', spreadsheetId);
+                        if (googleUserEmail) params.set('email', googleUserEmail);
+                        const res = await fetch(`/api/workspaces?${params.toString()}`, {
+                          headers: googleToken ? { 'Authorization': `Bearer ${googleToken}` } : undefined,
+                        });
+                        const data = await res.json();
+                        if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0 && data.workspaces[0]?.spreadsheetId) {
+                          const foundId = data.workspaces[0].spreadsheetId;
+                          setSpreadsheetId(foundId);
+                          localStorage.setItem('s2v_spreadsheet_id', foundId);
+                          const currentUrl = new URL(window.location.href);
+                          currentUrl.searchParams.set('spreadsheetId', foundId);
+                          window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+                          setSyncError(null);
+                          fetchWeddingData(googleToken || undefined, foundId);
+                          addToast('Found and reconnected to your Google Sheet!', 'success');
+                        } else {
+                          addToast('No accessible Sheet2Vow spreadsheet found in Google Drive. You can provision a new one below.', 'warning');
+                        }
+                      } catch {
+                        addToast('Failed to scan Google Drive. Please try re-authenticating.', 'warning');
+                      }
+                    }}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '4px',
+                      border: '1px solid currentColor',
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      color: 'currentColor',
+                      fontSize: '0.72rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    SCAN DRIVE FOR SHEET
+                  </button>
+                  <Link
+                    href={`/activate${googleUserEmail ? `?email=${encodeURIComponent(googleUserEmail)}` : ''}`}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '4px',
+                      backgroundColor: '#ffffff',
+                      color: '#991b1b',
+                      fontSize: '0.72rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    CREATE NEW WEDDING SHEET ↗
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 

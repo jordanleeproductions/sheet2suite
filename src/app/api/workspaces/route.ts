@@ -108,15 +108,18 @@ export async function GET(req: NextRequest) {
     }
 
     const effectiveEmail = caller.authenticatedEmail;
-    const records = await LocalLicensingDb.getWorkspacesByEmailAsync(effectiveEmail);
+    const scanDrive = url.searchParams.get('scanDrive') === 'true';
+    const staleId = url.searchParams.get('staleId')?.trim();
+    let records = await LocalLicensingDb.getWorkspacesByEmailAsync(effectiveEmail);
 
     // Auto-Discovery Fallback ([VULN-12] Hardened: only mark orderVerified if user holds an active license
-    // and never overwrite an existing workspace owned by another user)
-    if (records.length === 0) {
+    // or existing verified workspace, and never overwrite an existing workspace owned by another user)
+    if (records.length === 0 || scanDrive) {
       try {
         if (caller.token || caller.refreshToken) {
+          const hasVerifiedWorkspace = records.some((r) => Boolean(r.orderVerified));
           const licenseStatus = await verifyActiveLicenseForUser(effectiveEmail);
-          if (licenseStatus.verified) {
+          if (licenseStatus.verified || hasVerifiedWorkspace) {
             const { getGoogleAuthAsync } = await import('@/lib/sheets/client');
             const { google } = await import('googleapis');
             const auth = await getGoogleAuthAsync(caller.token, undefined, effectiveEmail, caller.refreshToken);
@@ -126,12 +129,13 @@ export async function GET(req: NextRequest) {
               q: "mimeType = 'application/vnd.google-apps.spreadsheet' and (name contains 'Sheet2Vow' or name contains 'Wedding') and trashed = false",
               fields: 'files(id, name, webViewLink, modifiedTime)',
               orderBy: 'modifiedTime desc',
-              pageSize: 5,
+              pageSize: 10,
             });
 
             if (driveSearch.data.files && driveSearch.data.files.length > 0) {
+              const existingIds = new Set(records.map((r) => r.spreadsheetId));
               for (const file of driveSearch.data.files) {
-                if (file.id) {
+                if (file.id && file.id !== staleId) {
                   const existingSheetWs = await LocalLicensingDb.getWorkspaceBySpreadsheetIdAsync(file.id);
                   if (existingSheetWs && existingSheetWs.userEmail?.toLowerCase() !== effectiveEmail) {
                     continue; // Never hijack another user's registered spreadsheet
@@ -143,10 +147,14 @@ export async function GET(req: NextRequest) {
                     driveFolderPath: 'My Drive / Sheet2Suite / Sheet2Vow',
                     webViewLink: file.webViewLink || `https://docs.google.com/spreadsheets/d/${file.id}/edit`,
                     productName: 'Sheet2Vow',
-                    orderId: licenseStatus.matchedOrderId,
+                    orderId: licenseStatus.matchedOrderId || records[0]?.orderId,
                     orderVerified: true,
                   });
-                  records.push(autoRegistered);
+                  if (!existingIds.has(file.id)) {
+                    // Prioritize newly discovered accessible spreadsheet at the front
+                    records.unshift(autoRegistered);
+                    existingIds.add(file.id);
+                  }
                 }
               }
             }
@@ -155,6 +163,10 @@ export async function GET(req: NextRequest) {
       } catch (driveErr) {
         console.warn('[Workspaces GET] Could not perform Drive auto-discovery fallback:', driveErr);
       }
+    }
+
+    if (staleId) {
+      records = records.filter((r) => r.spreadsheetId !== staleId);
     }
 
     return NextResponse.json({
