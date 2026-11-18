@@ -16,6 +16,7 @@ import {
   Grid
 } from 'lucide-react';
 import { Guest, TableConfig } from '@/types/wedding';
+import { printElementInIframe } from '@/lib/print/printIframe';
 
 interface EscortChartModalProps {
   isOpen: boolean;
@@ -207,8 +208,12 @@ export default function EscortChartModal({
     document.body.removeChild(link);
   };
 
+  const printableRef = React.useRef<HTMLDivElement>(null);
+
   const handlePrint = () => {
-    window.print();
+    printElementInIframe(printableRef.current, {
+      title: `${weddingName} - Escort Chart`,
+    });
   };
 
   if (!isOpen) return null;
@@ -250,6 +255,7 @@ export default function EscortChartModal({
       `}</style>
 
       <div
+        ref={printableRef}
         className="escort-modal-printable"
         style={styles.modalCard}
         onClick={(e) => e.stopPropagation()}

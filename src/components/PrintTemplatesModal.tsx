@@ -5,6 +5,7 @@ import { Guest, ScheduleEvent, Vendor, TableConfig } from '@/lib/sheets/types';
 import { Printer, X, Filter, Check, Heart, Calendar, Users, Clock, Phone, Mail, MapPin, Sparkles, Scissors, Music } from 'lucide-react';
 import { formatTimeDisplay, compareScheduleEvents } from '@/components/TimelineManager';
 import { formatCurrency } from '@/lib/currency';
+import { printElementInIframe } from '@/lib/print/printIframe';
 
 export type PrintTemplateType = 'place_cards' | 'table_cards' | 'timeline' | 'vendors' | 'upload_qr_cards' | 'song_request_qr_cards' | 'ceremony_aisle' | 'guest_contact_roster' | 'reception_seating_chart' | 'canva_exporter';
 
@@ -106,7 +107,13 @@ export default function PrintTemplatesModal({
   });
 
   const handlePrint = () => {
-    window.print();
+    const paperEl = document.getElementById('print-studio-paper-content');
+    printElementInIframe(paperEl, {
+      title: `${weddingName || 'Wedding'} - Print Studio`,
+      extraCss: enableBinderPunchMargins
+        ? '#print-studio-paper-content { padding: 0 0 0 25mm !important; }'
+        : undefined,
+    });
   };
 
   // Canva Bulk Create CSV Exporters [PRINT-3]

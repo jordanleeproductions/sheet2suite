@@ -16,6 +16,7 @@ import {
   Info
 } from 'lucide-react';
 import { Guest, TableConfig } from '@/types/wedding';
+import { printElementInIframe } from '@/lib/print/printIframe';
 
 interface CateringDossierModalProps {
   isOpen: boolean;
@@ -194,8 +195,12 @@ export default function CateringDossierModal({
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const printableRef = React.useRef<HTMLDivElement>(null);
+
   const handlePrint = () => {
-    window.print();
+    printElementInIframe(printableRef.current, {
+      title: `${weddingName} - Catering Dossier`,
+    });
   };
 
   if (!isOpen) return null;
@@ -234,6 +239,7 @@ export default function CateringDossierModal({
       `}</style>
 
       <div
+        ref={printableRef}
         className="catering-modal-printable"
         style={styles.modalCard}
         onClick={(e) => e.stopPropagation()}

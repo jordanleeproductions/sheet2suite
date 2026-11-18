@@ -3,7 +3,8 @@
 **Severity:** Medium (Operational print flow degraded; workaround available via CSV export)  
 **Found In:** `EscortChartModal.tsx` (Alphabetical Escort Chart & Table Roster), `PrintTemplatesModal.tsx`  
 **Reported Date:** 2026-11-17  
-**Target Milestone:** Future Print Architecture Refactor Phase  
+**Status:** ✅ Resolved & Deployed (`v1.25.11` / `v1.19.8`)  
+**Resolution:** Isolated hidden-iframe printing via `src/lib/print/printIframe.ts` across `EscortChartModal.tsx`, `CateringDossierModal.tsx`, and `PrintTemplatesModal.tsx`.  
 
 ---
 

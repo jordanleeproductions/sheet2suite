@@ -14,11 +14,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.11',
+    product: 'suite',
+    title: 'Print Engine Refactor: Multi-Page Pagination Fix (DEFECT-001)',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Isolated Hidden-Iframe Print Engine (src/lib/print/printIframe.ts): Clones printable content into an unconstrained root-level iframe before printing, eliminating modal fixed/overflow layout clipping.',
+      'Fixed Multi-Page Duplication: Alphabetical Escort Charts, Table Rosters, Catering Dossiers, and Print Studio templates now paginate sequentially across all pages without repeating Page 1.',
+    ],
+    details: 'Resolves DEFECT-001 across EscortChartModal, CateringDossierModal, and PrintTemplatesModal.',
+  },
+  {
     version: 'v1.25.10',
     product: 'suite',
     title: 'Seating Chart Dark Mode Contrast & Tailwind Data-Theme Alignment',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -383,11 +397,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.8',
+    product: 'vow',
+    title: 'Multi-Page Print Pagination Fix (Escort Chart, Dossier & Print Studio)',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Fixed Multi-Page Print Duplication: Printing Alphabetical Escort Charts, Table Rosters, Catering Dossiers, and Print Studio sheets now flows cleanly across all pages instead of repeating Page 1.',
+      'Light-Mode Ink Guarantee: Printouts always render crisp dark text on white paper even when browsing in Dark Mode.',
+    ],
+    details: 'Refactors modal printing to use an isolated root-level print iframe.',
+  },
+  {
     version: 'v1.19.7',
     product: 'vow',
     title: 'Seating Plan Dark Mode Contrast & Seat Initials Fix',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [
