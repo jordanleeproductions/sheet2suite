@@ -14,11 +14,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.8',
+    product: 'suite',
+    title: 'Admin Portal Dark Mode Contrast & Button Legibility Fix',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Fixed White-on-White Dark Mode Buttons: Replaced hardcoded #ffffff text with var(--color-on-primary) across AdminTrackerTab (GENERATE KEY button & ALL/VOW/VAULT filter pills), AdminDashboardTab, AdminGenerateKeyModal, AdminTemplatesTab, and AdminValidatorTab.',
+      'Fixed Edit Drawer Mode Switcher: Replaced non-existent --color-background-subtle fallback (#F8FAFC) with var(--color-bg) so the Structured Form / Raw JSON Editor switcher stays dark-mode compliant.',
+    ],
+    details: 'Restores full WCAG AA contrast across all interactive buttons and pills in Admin Portal dark mode.',
+  },
+  {
     version: 'v1.25.7',
     product: 'suite',
     title: 'Admin Portal: License Key Revocation & Permanent Deletion',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'enhancement',
     highlights: [

@@ -859,7 +859,7 @@ export default function AdminDashboardTab({
                   fontWeight: 700,
                   cursor: 'pointer',
                   backgroundColor: userRosterFilter === 'all' ? 'var(--color-primary)' : 'transparent',
-                  color: userRosterFilter === 'all' ? '#ffffff' : 'var(--color-muted)',
+                  color: userRosterFilter === 'all' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
                 }}
               >
                 All Users ({totalUniqueUsers})

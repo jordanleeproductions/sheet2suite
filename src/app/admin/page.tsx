@@ -2392,7 +2392,7 @@ export default function AdminDatabasePage() {
           {/* Mode Switcher */}
           <div style={{
             display: 'flex',
-            backgroundColor: 'var(--color-background-subtle, #F8FAFC)',
+            backgroundColor: 'var(--color-bg, #F1F5F9)',
             borderRadius: '8px',
             padding: '3px',
             gap: '3px',

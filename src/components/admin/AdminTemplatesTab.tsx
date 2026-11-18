@@ -141,7 +141,7 @@ export default function AdminTemplatesTab({
               borderRadius: '8px',
               border: 'none',
               backgroundColor: selectedProduct === 'SHEET2VOW' ? 'var(--color-primary)' : 'transparent',
-              color: selectedProduct === 'SHEET2VOW' ? '#ffffff' : 'var(--color-muted)',
+              color: selectedProduct === 'SHEET2VOW' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
               fontSize: '0.8rem',
               fontWeight: 700,
               cursor: 'pointer',
@@ -155,7 +155,7 @@ export default function AdminTemplatesTab({
               padding: '1px 5px',
               borderRadius: '4px',
               backgroundColor: selectedProduct === 'SHEET2VOW' ? 'rgba(255,255,255,0.2)' : 'var(--color-bg-subtle)',
-              color: selectedProduct === 'SHEET2VOW' ? '#ffffff' : 'var(--color-muted)',
+              color: selectedProduct === 'SHEET2VOW' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
             }}>
               10 TABS
             </span>
@@ -172,7 +172,7 @@ export default function AdminTemplatesTab({
               borderRadius: '8px',
               border: 'none',
               backgroundColor: selectedProduct === 'SHEET2VAULT' ? 'var(--color-primary)' : 'transparent',
-              color: selectedProduct === 'SHEET2VAULT' ? '#ffffff' : 'var(--color-muted)',
+              color: selectedProduct === 'SHEET2VAULT' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted)',
               fontSize: '0.8rem',
               fontWeight: 700,
               cursor: 'pointer',
@@ -401,7 +401,7 @@ export default function AdminTemplatesTab({
                       borderRadius: 'var(--border-radius-sm, 6px)',
                       border: 'none',
                       backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
-                      color: isSelected ? '#ffffff' : 'var(--color-text)',
+                      color: isSelected ? 'var(--color-on-primary, #ffffff)' : 'var(--color-text)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
