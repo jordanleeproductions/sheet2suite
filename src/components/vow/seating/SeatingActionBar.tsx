@@ -6,7 +6,9 @@ import {
   FileText, 
   Sparkles, 
   Printer, 
-  Layers
+  Layers,
+  Share2,
+  Check
 } from 'lucide-react';
 import { Guest, TableConfig } from '@/types/wedding';
 
@@ -16,6 +18,9 @@ interface SeatingActionBarProps {
   onOpenCateringDossier: () => void;
   onOpenEscortChart: (tab?: 'alphabetical' | 'table_roster' | 'canva_studio') => void;
   onOpenPrintStudio?: () => void;
+  onGenerateShareLink?: () => Promise<void>;
+  shareLinkCopied?: boolean;
+  isGeneratingShareLink?: boolean;
   className?: string;
 }
 
@@ -25,6 +30,9 @@ export default function SeatingActionBar({
   onOpenCateringDossier,
   onOpenEscortChart,
   onOpenPrintStudio,
+  onGenerateShareLink,
+  shareLinkCopied = false,
+  isGeneratingShareLink = false,
   className = '',
 }: SeatingActionBarProps) {
   // Compute seated guests and allergy counts
@@ -120,7 +128,31 @@ export default function SeatingActionBar({
             <span className="truncate">Canva CSV</span>
           </button>
 
-          {/* 4. Optional Table Tent Print Studio Trigger */}
+          {/* 4. Optional Coordinator / Venue Share Link */}
+          {onGenerateShareLink && (
+            <button
+              type="button"
+              onClick={onGenerateShareLink}
+              disabled={!hasSeatedGuests || isGeneratingShareLink}
+              title="Generate read-only expiring link for your venue coordinator or caterer"
+              className={`inline-flex items-center justify-start sm:justify-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 rounded-[3px] text-[11px] sm:text-[12px] font-semibold tracking-tight sm:tracking-wide border-[0.5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs ${
+                shareLinkCopied
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                  : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text)]'
+              }`}
+            >
+              {shareLinkCopied ? (
+                <Check size={15} className="text-emerald-600 shrink-0" />
+              ) : (
+                <Share2 size={15} className="text-[var(--color-highlight)] shrink-0" />
+              )}
+              <span className="truncate">
+                {isGeneratingShareLink ? 'Creating...' : shareLinkCopied ? 'Link Copied!' : 'Coordinator Link'}
+              </span>
+            </button>
+          )}
+
+          {/* 5. Optional Table Tent Print Studio Trigger */}
           {onOpenPrintStudio && (
             <button
               type="button"

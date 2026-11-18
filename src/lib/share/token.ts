@@ -5,6 +5,7 @@ export type ShareScope =
   | 'photos'
   | 'timeline'
   | 'catering'
+  | 'seating'
   | 'vendor_hub'
   | 'guest_upload'
   | 'guest_song_request'

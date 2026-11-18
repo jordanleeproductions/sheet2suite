@@ -40,6 +40,7 @@ import EscortChartModal from '@/components/vow/seating/EscortChartModal';
 import SeatingActionBar from '@/components/vow/seating/SeatingActionBar';
 import PartyIntegrityDrawer, { computeSplitParties } from '@/components/vow/seating/PartyIntegrityDrawer';
 import SeatGlanceNode from '@/components/vow/seating/SeatGlanceNode';
+import DayOfUsherView from '@/components/vow/seating/DayOfUsherView';
 import { ArrowLeftRight } from 'lucide-react';
 
 interface SeatingChartManagerProps {
@@ -51,6 +52,7 @@ interface SeatingChartManagerProps {
   onOpenPrintStudio?: (template: 'place_cards' | 'table_cards' | 'timeline' | 'vendors') => void;
   partner1Name?: string;
   partner2Name?: string;
+  spreadsheetId?: string;
 }
 
 // Default Table Configurations if none exist (Only sweetheart table)
@@ -154,6 +156,7 @@ export default function SeatingChartManager({
   onOpenPrintStudio,
   partner1Name,
   partner2Name,
+  spreadsheetId,
 }: SeatingChartManagerProps) {
   const p1 = partner1Name?.trim() || 'Partner 1';
   const p2 = partner2Name?.trim() || 'Partner 2';
@@ -376,7 +379,41 @@ export default function SeatingChartManager({
   };
 
   // Seating Mode Switcher ('reception' | 'ceremony')
-  const [seatingMode, setSeatingMode] = useState<'reception' | 'ceremony'>('reception');
+  const [seatingMode, setSeatingMode] = useState<'reception' | 'ceremony' | 'usher'>('reception');
+  const [isGeneratingShareLink, setIsGeneratingShareLink] = useState<boolean>(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState<boolean>(false);
+  const [generatedShareUrl, setGeneratedShareUrl] = useState<string | null>(null);
+
+  const handleGenerateSeatingShareLink = async () => {
+    if (isGeneratingShareLink) return;
+    setIsGeneratingShareLink(true);
+    try {
+      const weddingName = partner1Name && partner2Name ? `${partner1Name} & ${partner2Name}` : 'Our Wedding';
+      const res = await fetch('/api/share/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spreadsheetId: spreadsheetId || 'mock-wedding-sheet-id',
+          scope: 'seating',
+          weddingName,
+          expiresInDays: 30,
+        }),
+      });
+      const result = await res.json();
+      if (result.success && result.shareUrl) {
+        setGeneratedShareUrl(result.shareUrl);
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(result.shareUrl);
+        }
+        setShareLinkCopied(true);
+        setTimeout(() => setShareLinkCopied(false), 3500);
+      }
+    } catch (err) {
+      console.error('Failed to generate seating share link:', err);
+    } finally {
+      setIsGeneratingShareLink(false);
+    }
+  };
 
   // Ceremony Aisle Config State
   const [ceremonyConfig, setCeremonyConfig] = useState(() => ({
@@ -716,18 +753,28 @@ export default function SeatingChartManager({
     <div style={styles.container}>
       {/* 0. Page Header Card [Consistent Monarch UX] */}
       <PageHeaderCard
-        title={seatingMode === 'reception' ? 'Seating & Tables' : 'Ceremony Aisle Seating'}
-        subtitle={seatingMode === 'reception'
-          ? 'Arrange floorplan layouts, configure seat capacities, and view guest assignments.'
-          : 'Configure dual-side aisle seating, account for accepted + pending guests, and assign ceremony seats.'
+        title={
+          seatingMode === 'reception'
+            ? 'Seating & Tables'
+            : seatingMode === 'ceremony'
+            ? 'Ceremony Aisle Seating'
+            : 'Day-Of Usher Check-In'
+        }
+        subtitle={
+          seatingMode === 'reception'
+            ? 'Arrange floorplan layouts, configure seat capacities, and view guest assignments.'
+            : seatingMode === 'ceremony'
+            ? 'Configure dual-side aisle seating, account for accepted + pending guests, and assign ceremony seats.'
+            : 'Fast reception entrance lookup, live guest arrival counter, and offline-resilient check-in.'
         }
         segmentSwitcher={{
           options: [
             { id: 'reception', label: 'RECEPTION TABLES', icon: Utensils, count: tables.length },
             { id: 'ceremony', label: 'CEREMONY AISLE', icon: Sparkles },
+            { id: 'usher', label: 'DAY-OF USHER', icon: UserCheck },
           ],
           activeId: seatingMode,
-          onChange: (id) => setSeatingMode(id as 'reception' | 'ceremony'),
+          onChange: (id) => setSeatingMode(id as 'reception' | 'ceremony' | 'usher'),
         }}
         actions={
           <>
@@ -842,7 +889,13 @@ export default function SeatingChartManager({
       )}
 
       {/* VIEW CONDITIONAL RENDERING: CEREMONY AISLE SEATING VS RECEPTION TABLES */}
-      {seatingMode === 'ceremony' ? (
+      {seatingMode === 'usher' ? (
+        <DayOfUsherView
+          guests={guests}
+          tables={tables}
+          storageKey={`s2v_usher_checkins_${spreadsheetId || 'demo'}`}
+        />
+      ) : seatingMode === 'ceremony' ? (
         <div className="ceremony-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '1rem' }}>
           {/* Ceremony KPI Summary Strip */}
           <PageMetricStrip
@@ -2038,7 +2091,40 @@ export default function SeatingChartManager({
               setShowEscortModal(true);
             }}
             onOpenPrintStudio={onOpenPrintStudio ? () => onOpenPrintStudio('table_cards') : undefined}
+            onGenerateShareLink={handleGenerateSeatingShareLink}
+            shareLinkCopied={shareLinkCopied}
+            isGeneratingShareLink={isGeneratingShareLink}
           />
+
+          {generatedShareUrl && (
+            <div className="mb-4 p-3 rounded-[3px] bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="min-w-0">
+                <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                  Read-Only Coordinator & Caterer Seating Link Ready (30-day expiry):
+                </span>
+                <div className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 truncate mt-0.5">
+                  {generatedShareUrl}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => window.open(generatedShareUrl, '_blank', 'noopener,noreferrer')}
+                  className="px-2.5 py-1 rounded-[3px] bg-emerald-600 text-white font-mono font-bold text-[11px] hover:bg-emerald-700"
+                >
+                  OPEN PORTAL ↗
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGeneratedShareUrl(null)}
+                  className="p-1 text-emerald-700 dark:text-emerald-300 hover:opacity-70"
+                  title="Dismiss"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Phase 2: Active 1-Tap Swap Mode Banner */}
           {swappingGuest && (

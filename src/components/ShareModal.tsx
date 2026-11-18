@@ -44,6 +44,7 @@ export default function ShareModal({
     photos: 'Photographer Shot List',
     timeline: 'Coordinator Itinerary',
     catering: 'Catering & Venue Manager',
+    seating: 'Seating Chart & Table Roster',
     vendor_hub: 'Full Vendor Hub',
     guest_upload: 'Guest Photo & Video Upload Portal',
     guest_song_request: 'Guest Song Request Portal',

@@ -21,7 +21,9 @@ import {
   Printer,
   ChevronDown,
   ChevronUp,
-  UserCheck
+  UserCheck,
+  Users,
+  MapPin
 } from 'lucide-react';
 
 interface CateringSummary {
@@ -32,11 +34,28 @@ interface CateringSummary {
   tableSummary: Array<{ tableName: string; count: number }>;
 }
 
+interface SeatingShareData {
+  tables: Array<{ tableId: string; tableName: string; shape?: string; capacity?: number }>;
+  guests: Array<{
+    guestId: string;
+    firstName: string;
+    lastName: string;
+    partyGroup?: string;
+    rsvpStatus?: string;
+    mealChoice?: string;
+    dietaryRestrictions?: string;
+    tableAssignment?: string;
+    seatNumber?: number;
+    ceremonySeating?: string;
+  }>;
+}
+
 interface ShareResponseData {
   music?: Song[];
   photos?: PhotoShot[];
   schedule?: ScheduleEvent[];
   catering?: CateringSummary;
+  seating?: SeatingShareData;
 }
 
 export default function VendorSharePage() {
@@ -50,7 +69,7 @@ export default function VendorSharePage() {
   const [data, setData] = useState<ShareResponseData>({});
 
   // Active Tab for Hub Mode
-  const [activeTab, setActiveTab] = useState<'timeline' | 'music' | 'photos' | 'catering'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'music' | 'photos' | 'catering' | 'seating'>('timeline');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -88,6 +107,7 @@ export default function VendorSharePage() {
           else if (result.scope === 'photos') setActiveTab('photos');
           else if (result.scope === 'timeline') setActiveTab('timeline');
           else if (result.scope === 'catering') setActiveTab('catering');
+          else if (result.scope === 'seating') setActiveTab('seating');
           else setActiveTab('timeline');
           isFirst = false;
         }
@@ -209,6 +229,7 @@ export default function VendorSharePage() {
             { id: 'music', label: 'MUSIC', icon: Music, count: data.music?.length },
             { id: 'photos', label: 'PHOTOS', icon: Camera, count: data.photos?.length },
             { id: 'catering', label: 'CATERING', icon: Utensils, count: data.catering?.attendingCount },
+            { id: 'seating', label: 'SEATING', icon: Users, count: data.seating?.guests?.length },
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -614,6 +635,150 @@ export default function VendorSharePage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* SEATING & FLOOR PLAN VIEW (COORDINATOR / VENUE PORTAL) */}
+        {(activeTab === 'seating' || scope === 'seating') && data.seating && (
+          <div style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <h2 style={{ ...styles.sectionTitle, color: textColor }}>Seating Chart & Table Roster</h2>
+              <span style={{ fontSize: '0.8rem', color: mutedColor }}>
+                {data.seating.guests.length} Guests • {data.seating.tables.length} Tables
+              </span>
+            </div>
+
+            {/* Search Filter */}
+            <div style={{ position: 'relative', marginBottom: '1rem' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: mutedColor }} />
+              <input
+                type="text"
+                placeholder="Search guest name, party, table, or meal..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.75rem 0.65rem 2.25rem',
+                  borderRadius: '6px',
+                  border: `1px solid ${borderColor}`,
+                  backgroundColor: surfaceColor,
+                  color: textColor,
+                  fontSize: '0.9rem',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            {/* Optional Catering Headcount Quick Summary if included */}
+            {data.catering && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: mutedColor }}>ATTENDING HEADCOUNT</span>
+                  <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#11552D' }}>{data.catering.attendingCount} Guests</span>
+                </div>
+                <div className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: mutedColor }}>DIETARY ALERTS</span>
+                  <span style={{ fontSize: '1.35rem', fontWeight: 800, color: (data.catering.dietaryGuestList?.length || 0) > 0 ? '#D97706' : '#11552D' }}>
+                    {data.catering.dietaryGuestList?.length || 0} Guests
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Table-by-Table Cards */}
+            {(() => {
+              const q = searchTerm.trim().toLowerCase();
+              const seatedGuests = data.seating.guests;
+              const configuredTables = data.seating.tables;
+
+              // Build unified table groups (configured tables + any extra assigned table names)
+              const tableGroups: Array<{ tableId: string; tableName: string; capacity?: number; guests: typeof seatedGuests }> = configuredTables.map(t => ({
+                tableId: t.tableId,
+                tableName: t.tableName,
+                capacity: t.capacity,
+                guests: seatedGuests.filter(g => {
+                  const a = (g.tableAssignment || '').trim().toLowerCase();
+                  return a === t.tableId.toLowerCase() || a === t.tableName.toLowerCase();
+                }),
+              }));
+
+              // Catch any guests assigned to table names not in configuredTables
+              const matchedGuestIds = new Set(tableGroups.flatMap(tg => tg.guests.map(g => g.guestId)));
+              const remainingGuests = seatedGuests.filter(g => !matchedGuestIds.has(g.guestId));
+              const extraMap = new Map<string, typeof seatedGuests>();
+              remainingGuests.forEach(g => {
+                const key = (g.tableAssignment || 'Unassigned').trim() || 'Unassigned';
+                if (!extraMap.has(key)) extraMap.set(key, []);
+                extraMap.get(key)!.push(g);
+              });
+              extraMap.forEach((gList, key) => {
+                tableGroups.push({ tableId: key, tableName: key, guests: gList });
+              });
+
+              const visibleGroups = tableGroups
+                .map(tg => {
+                  if (!q) return tg;
+                  const tableMatches = tg.tableName.toLowerCase().includes(q);
+                  const matchingGuests = tg.guests.filter(g =>
+                    `${g.firstName} ${g.lastName}`.toLowerCase().includes(q) ||
+                    (g.partyGroup || '').toLowerCase().includes(q) ||
+                    (g.mealChoice || '').toLowerCase().includes(q) ||
+                    (g.dietaryRestrictions || '').toLowerCase().includes(q)
+                  );
+                  if (tableMatches) return tg;
+                  if (matchingGuests.length > 0) return { ...tg, guests: matchingGuests };
+                  return null;
+                })
+                .filter((tg): tg is NonNullable<typeof tg> => Boolean(tg));
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                  {visibleGroups.map(tg => (
+                    <div key={tg.tableId} className="print-card" style={{ ...styles.card, backgroundColor: surfaceColor, borderColor }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${borderColor}`, paddingBottom: '0.5rem', marginBottom: '0.6rem' }}>
+                        <h3 style={{ ...styles.itemTitle, color: textColor, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <MapPin size={14} style={{ color: '#11552D' }} />
+                          <span>{tg.tableName}</span>
+                        </h3>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '999px', backgroundColor: bgColor, color: mutedColor, border: `1px solid ${borderColor}` }}>
+                          {tg.guests.length}{tg.capacity ? ` / ${tg.capacity}` : ''}
+                        </span>
+                      </div>
+
+                      {tg.guests.length === 0 ? (
+                        <span style={{ fontSize: '0.8rem', color: mutedColor, fontStyle: 'italic' }}>No guests assigned yet.</span>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                          {tg.guests
+                            .slice()
+                            .sort((a, b) => (a.seatNumber || 999) - (b.seatNumber || 999))
+                            .map(g => (
+                              <div key={g.guestId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.82rem', padding: '0.35rem 0.5rem', borderRadius: '4px', backgroundColor: bgColor }}>
+                                <div>
+                                  <div style={{ fontWeight: 600, color: textColor }}>
+                                    {g.seatNumber ? <span style={{ color: mutedColor, marginRight: '0.35rem', fontSize: '0.72rem' }}>#{g.seatNumber}</span> : null}
+                                    {g.firstName} {g.lastName}
+                                  </div>
+                                  {g.dietaryRestrictions && g.dietaryRestrictions.toLowerCase() !== 'none' && (
+                                    <div style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 700, marginTop: '0.15rem' }}>
+                                      ⚠️ {g.dietaryRestrictions}
+                                    </div>
+                                  )}
+                                </div>
+                                {g.mealChoice && (
+                                  <span style={{ fontSize: '0.7rem', color: mutedColor, backgroundColor: surfaceColor, padding: '0.1rem 0.4rem', borderRadius: '3px', border: `1px solid ${borderColor}`, whiteSpace: 'nowrap' }}>
+                                    {g.mealChoice}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
       </main>

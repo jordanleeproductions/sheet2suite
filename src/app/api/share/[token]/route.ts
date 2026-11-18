@@ -6,7 +6,7 @@ import { mockDatabase, mockWeddingName } from '@/lib/sheets/mockDb';
 import { getGoogleAuthAsync } from '@/lib/sheets/client';
 import { isMockSpreadsheet } from '@/lib/auth/workspaceAuth';
 import { LocalLicensingDb } from '@/lib/db/licensingDb';
-import { musicMapper, photoMapper, scheduleMapper, guestMapper } from '@/lib/sheets/mapper';
+import { musicMapper, photoMapper, scheduleMapper, guestMapper, tableMapper } from '@/lib/sheets/mapper';
 
 export async function GET(
   req: Request,
@@ -89,6 +89,26 @@ export async function GET(
           tableSummary: Object.entries(tableMap).map(([tableName, count]) => ({ tableName, count })),
         };
       }
+      if (scope === 'seating' || scope === 'vendor_hub') {
+        const sanitizedGuests = mockDatabase.guests
+          .filter(g => (g.rsvpStatus || '').toLowerCase() !== 'declined')
+          .map(g => ({
+            guestId: g.guestId,
+            firstName: g.firstName,
+            lastName: g.lastName,
+            partyGroup: g.partyGroup,
+            rsvpStatus: g.rsvpStatus,
+            mealChoice: g.mealChoice,
+            dietaryRestrictions: g.dietaryRestrictions,
+            tableAssignment: g.tableAssignment,
+            seatNumber: g.seatNumber,
+            ceremonySeating: g.ceremonySeating,
+          }));
+        data.seating = {
+          tables: mockDatabase.tables || [],
+          guests: sanitizedGuests,
+        };
+      }
 
       return NextResponse.json({
         success: true,
@@ -136,13 +156,19 @@ export async function GET(
       const photosTitle = findTitle(['PHOTOS', 'Photos', 'Photo Shot List']);
       const scheduleTitle = findTitle(['SCHEDULE', 'Day-Of-Schedule', 'Schedule', 'Day_Of_Schedule', 'Timeline']);
       const guestsTitle = findTitle(['GUESTS', 'Guest List', 'Guests', 'Guest_List']);
+      const hasTablesTab = availableTitles.some(t => ['tables', 'seatingtables', 'tableconfig'].includes(t.toLowerCase().replace(/[\s_\-]+/g, '')));
+      const tablesTitle = hasTablesTab ? findTitle(['TABLES', 'Tables', 'Seating Tables', 'Table Config']) : '';
+
+      const needsGuests = scope === 'catering' || scope === 'seating' || scope === 'vendor_hub';
+      const needsTables = (scope === 'seating' || scope === 'vendor_hub') && Boolean(tablesTitle);
 
       // Define tab ranges depending on scope
       const ranges: string[] = [];
       if (scope === 'music' || scope === 'vendor_hub') ranges.push(`'${musicTitle}'!A1:I1000`);
       if (scope === 'photos' || scope === 'vendor_hub') ranges.push(`'${photosTitle}'!A1:H1000`);
       if (scope === 'timeline' || scope === 'vendor_hub') ranges.push(`'${scheduleTitle}'!A1:F1000`);
-      if (scope === 'catering' || scope === 'vendor_hub') ranges.push(`'${guestsTitle}'!A1:L1000`);
+      if (needsGuests) ranges.push(`'${guestsTitle}'!A1:N1000`);
+      if (needsTables) ranges.push(`'${tablesTitle}'!A1:G200`);
 
       const batchResponse = await sheetsClient.spreadsheets.values.batchGet({
         spreadsheetId,
@@ -170,50 +196,79 @@ export async function GET(
         data.schedule = rows.slice(1).map(r => scheduleMapper.fromRow(headers, r));
       }
 
-      if (scope === 'catering' || scope === 'vendor_hub') {
+      if (needsGuests) {
         const rows = valueRanges[rangeIdx++]?.values || [];
         const headers = rows[0] || ['Guest ID', 'First Name', 'Last Name', 'Party Group', 'Age Category', 'RSVP Status', 'Dietary Restrictions', 'Table Assignment'];
         const guests = rows.slice(1).map(r => guestMapper.fromRow(headers, r));
         const attendingGuests = guests.filter(g => (g.rsvpStatus || '').toLowerCase() === 'attending');
 
-        const dietaryMap: Record<string, number> = {};
-        const dietaryGuestList: Array<{ name: string; restriction: string; mealChoice: string; table: string }> = [];
-        const mealChoiceMap: Record<string, number> = {};
+        if (scope === 'catering' || scope === 'vendor_hub' || scope === 'seating') {
+          const dietaryMap: Record<string, number> = {};
+          const dietaryGuestList: Array<{ name: string; restriction: string; mealChoice: string; table: string }> = [];
+          const mealChoiceMap: Record<string, number> = {};
 
-        attendingGuests.forEach(g => {
-          const name = `${g.firstName} ${g.lastName}`.trim();
-          const meal = g.mealChoice || 'Standard Menu';
-          const table = g.tableAssignment || 'Unassigned';
+          attendingGuests.forEach(g => {
+            const name = `${g.firstName} ${g.lastName}`.trim();
+            const meal = g.mealChoice || 'Standard Menu';
+            const table = g.tableAssignment || 'Unassigned';
 
-          // Group Meal Choice Counts
-          mealChoiceMap[meal] = (mealChoiceMap[meal] || 0) + 1;
+            mealChoiceMap[meal] = (mealChoiceMap[meal] || 0) + 1;
 
-          // Group Dietary Restrictions
-          if (g.dietaryRestrictions && g.dietaryRestrictions.trim() !== '' && g.dietaryRestrictions.trim() !== 'None') {
-            const key = g.dietaryRestrictions.trim();
-            dietaryMap[key] = (dietaryMap[key] || 0) + 1;
-            dietaryGuestList.push({
-              name,
-              restriction: key,
-              mealChoice: meal,
-              table
-            });
+            if (g.dietaryRestrictions && g.dietaryRestrictions.trim() !== '' && g.dietaryRestrictions.trim() !== 'None') {
+              const key = g.dietaryRestrictions.trim();
+              dietaryMap[key] = (dietaryMap[key] || 0) + 1;
+              dietaryGuestList.push({
+                name,
+                restriction: key,
+                mealChoice: meal,
+                table
+              });
+            }
+          });
+
+          const tableMap: Record<string, number> = {};
+          attendingGuests.forEach(g => {
+            const tName = g.tableAssignment || 'Unassigned';
+            tableMap[tName] = (tableMap[tName] || 0) + 1;
+          });
+
+          data.catering = {
+            attendingCount: attendingGuests.length,
+            dietarySummary: Object.entries(dietaryMap).map(([restriction, count]) => ({ restriction, count })),
+            mealChoicesSummary: Object.entries(mealChoiceMap).map(([meal, count]) => ({ meal, count })),
+            dietaryGuestList,
+            tableSummary: Object.entries(tableMap).map(([tableName, count]) => ({ tableName, count })),
+          };
+        }
+
+        if (scope === 'seating' || scope === 'vendor_hub') {
+          let tablesList: any[] = [];
+          if (needsTables) {
+            const tableRows = valueRanges[rangeIdx++]?.values || [];
+            const tableHeaders = tableRows[0] || ['Table ID', 'Table Name', 'Shape', 'Capacity', 'Single Side Seating'];
+            tablesList = tableRows.slice(1).map(r => tableMapper.fromRow(tableHeaders, r)).filter(t => t.tableId);
           }
-        });
 
-        const tableMap: Record<string, number> = {};
-        attendingGuests.forEach(g => {
-          const tName = g.tableAssignment || 'Unassigned';
-          tableMap[tName] = (tableMap[tName] || 0) + 1;
-        });
+          const sanitizedGuests = guests
+            .filter(g => (g.rsvpStatus || '').toLowerCase() !== 'declined')
+            .map(g => ({
+              guestId: g.guestId,
+              firstName: g.firstName,
+              lastName: g.lastName,
+              partyGroup: g.partyGroup,
+              rsvpStatus: g.rsvpStatus,
+              mealChoice: g.mealChoice,
+              dietaryRestrictions: g.dietaryRestrictions,
+              tableAssignment: g.tableAssignment,
+              seatNumber: g.seatNumber,
+              ceremonySeating: g.ceremonySeating,
+            }));
 
-        data.catering = {
-          attendingCount: attendingGuests.length,
-          dietarySummary: Object.entries(dietaryMap).map(([restriction, count]) => ({ restriction, count })),
-          mealChoicesSummary: Object.entries(mealChoiceMap).map(([meal, count]) => ({ meal, count })),
-          dietaryGuestList,
-          tableSummary: Object.entries(tableMap).map(([tableName, count]) => ({ tableName, count })),
-        };
+          data.seating = {
+            tables: tablesList,
+            guests: sanitizedGuests,
+          };
+        }
       }
 
       return NextResponse.json({

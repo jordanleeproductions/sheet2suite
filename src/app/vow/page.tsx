@@ -2696,6 +2696,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                   isSyncing={isSyncing}
                   partner1Name={partner1Name || googleUserName}
                   partner2Name={partner2Name}
+                  spreadsheetId={spreadsheetId || undefined}
                 />
               )}
 

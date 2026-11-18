@@ -14,11 +14,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.4',
+    product: 'suite',
+    title: 'Day-Of Usher Check-In & Tokenized Coordinator Seating Portal',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'feature',
+    highlights: [
+      'Live Day-Of Usher Check-In Mode: Mobile-first reception door lookup with instant guest filtering, seat destination tags, and offline-resilient arrival check-ins.',
+      'Tokenized Coordinator Seating Share Link: Extended /api/share/[token] and /share/[token] with a dedicated read-only seating scope (data.seating) without exposing private contact details.',
+      '1-Click Coordinator Link Generator: Generate and copy an expiring 30-day venue/catering coordinator portal link directly from the Seating Deliverables bar.',
+    ],
+    details: 'Completes Phase 3 of the Seating Chart UX roadmap for day-of execution and external vendor collaboration.',
+  },
+  {
     version: 'v1.25.3',
     product: 'suite',
     title: 'Mobile UX Polish, Meal Contrast & Uniform Seat Nodes',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -281,11 +296,26 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.4',
+    product: 'vow',
+    title: 'Day-Of Usher Check-In Mode & Venue Coordinator Share Portal',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'feature',
+    highlights: [
+      'Day-Of Usher Mode: Added a dedicated "DAY-OF USHER" view in Seating & Tables with instant search, All/Pending/Arrived filters, live arrival counter, and offline-resilient localStorage persistence.',
+      'Coordinator Share Link: 1-click button in the Deliverables bar mints an expiring read-only seating & catering roster link for your venue coordinator or banquet captain.',
+      'Read-Only Seating Portal (/share/[token]): External coordinators can search guests, view table rosters, seat numbers, meal choices, and dietary alerts with zero Google login.',
+    ],
+    details: 'Turns your seating chart into a live reception check-in tool and read-only vendor portal.',
+  },
+  {
     version: 'v1.19.3',
     product: 'vow',
     title: 'Seating Mobile Responsiveness, High-Contrast Meal Pips & Uniform Circles',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [
