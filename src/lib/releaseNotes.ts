@@ -14,11 +14,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.9',
+    product: 'suite',
+    title: 'Cloud Firestore Persistence & Admin Record Deletion Fix',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Fixed Silent Edit Failures: Configured ignoreUndefinedProperties and added recursive undefined stripping in setDocAsync so Firestore writes never fail silently on optional empty fields.',
+      'Fixed Mixed-Case & Field-Matched Deletions: Updated deleteDocAsync to batch-delete both normalized and original-case document IDs as well as matching workspaceId, spreadsheetId, licenseKey, and orderId queries.',
+      'Eliminated Stale Local Cache Resurrection: Updated getDocsAsync to return Cloud Firestore results directly even when a collection has 0 remaining documents.',
+    ],
+    details: 'Guarantees that Admin Portal edits and deletions commit permanently to Cloud Firestore without reverting.',
+  },
+  {
     version: 'v1.25.8',
     product: 'suite',
     title: 'Admin Portal Dark Mode Contrast & Button Legibility Fix',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [

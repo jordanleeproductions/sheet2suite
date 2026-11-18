@@ -93,6 +93,22 @@ function ensureCollectionDir(collectionName: string): string {
 // Initialize Firebase Admin SDK if in cloud environment or service account exists
 let firestoreInstance: Firestore | null = null;
 
+function stripUndefined<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefined(item)) as unknown as T;
+  }
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    const cleaned: Record<string, any> = {};
+    for (const [k, v] of Object.entries(value as Record<string, any>)) {
+      if (v !== undefined) {
+        cleaned[k] = stripUndefined(v);
+      }
+    }
+    return cleaned as T;
+  }
+  return value;
+}
+
 export function getCloudFirestore(): Firestore | null {
   if (firestoreInstance) return firestoreInstance;
 
@@ -100,6 +116,11 @@ export function getCloudFirestore(): Firestore | null {
     const activeApps = getApps();
     if (activeApps.length > 0) {
       firestoreInstance = getFirestore(activeApps[0]);
+      try {
+        firestoreInstance.settings({ ignoreUndefinedProperties: true });
+      } catch {
+        // settings() may only be called once before any Firestore operations
+      }
       return firestoreInstance;
     }
 
@@ -168,6 +189,11 @@ export function getCloudFirestore(): Firestore | null {
 
       const app = initializeApp(appOptions);
       firestoreInstance = getFirestore(app);
+      try {
+        firestoreInstance.settings({ ignoreUndefinedProperties: true });
+      } catch {
+        // settings() may only be called once
+      }
       return firestoreInstance;
     }
   } catch (err: any) {
@@ -248,7 +274,12 @@ export const LocalFirestore = {
     const cloudDb = getCloudFirestore();
     if (cloudDb) {
       try {
-        const docRef = await cloudDb.collection(collectionName).doc(docId.toLowerCase().trim()).get();
+        const rawId = docId.trim();
+        const lowerId = rawId.toLowerCase();
+        let docRef = await cloudDb.collection(collectionName).doc(lowerId).get();
+        if (!docRef.exists && rawId !== lowerId) {
+          docRef = await cloudDb.collection(collectionName).doc(rawId).get();
+        }
         if (docRef.exists) {
           const rawData = docRef.data() as any;
           return (collectionName === 'auth_tokens' ? decryptAuthTokenDocFields(rawData) : rawData) as T;
@@ -307,18 +338,26 @@ export const LocalFirestore = {
    */
   async setDocAsync<T = any>(collectionName: string, docId: string, data: T): Promise<T> {
     const preparedData = collectionName === 'auth_tokens' ? encryptAuthTokenDocFields(data as any) : data;
-    const docWithId = { id: docId, updatedAt: new Date().toISOString(), ...preparedData };
+    const docWithId = stripUndefined({ id: docId, updatedAt: new Date().toISOString(), ...preparedData });
 
     const cloudDb = getCloudFirestore();
     if (cloudDb) {
-      try {
-        await cloudDb
-          .collection(collectionName)
-          .doc(docId.toLowerCase().trim())
-          .set(docWithId, { merge: true });
-      } catch (err: any) {
-        console.warn(`[Cloud Firestore] Error setting ${collectionName}/${docId}:`, err?.message);
+      const rawId = docId.trim();
+      const lowerId = rawId.toLowerCase();
+      let targetDocId = lowerId;
+
+      // Preserve existing mixed-case / uppercase Firestore document ID if one already exists
+      if (rawId !== lowerId) {
+        const rawSnap = await cloudDb.collection(collectionName).doc(rawId).get();
+        if (rawSnap.exists) {
+          targetDocId = rawId;
+        }
       }
+
+      await cloudDb
+        .collection(collectionName)
+        .doc(targetDocId)
+        .set(docWithId, { merge: true });
     }
 
     return this.setDoc<T>(collectionName, docId, data);
@@ -434,7 +473,7 @@ export const LocalFirestore = {
         snap.forEach((doc: any) => {
           results.push(doc.data() as T);
         });
-        if (results.length > 0) return results;
+        return results;
       } catch (err: any) {
         console.warn(`[Cloud Firestore] Query error for ${collectionName}:`, err?.message);
       }
@@ -521,27 +560,43 @@ export const LocalFirestore = {
    * Async document deletion for Cloud Firestore with local storage deletion
    */
   async deleteDocAsync(collectionName: string, docId: string): Promise<boolean> {
-    const targetNorm = docId.toLowerCase().trim();
+    const rawId = docId.trim();
+    const targetNorm = rawId.toLowerCase();
     let hasDeleted = false;
 
     const cloudDb = getCloudFirestore();
     if (cloudDb) {
-      try {
-        await cloudDb.collection(collectionName).doc(targetNorm).delete();
-        hasDeleted = true;
+      const batch = cloudDb.batch();
+      const refsToDelete = new Map<string, FirebaseFirestore.DocumentReference>();
 
-        if (collectionName === 'workspaces') {
-          const qSheet = await cloudDb.collection('workspaces').where('spreadsheetId', '==', docId.trim()).get();
-          if (!qSheet.empty) {
-            const batch = cloudDb.batch();
-            qSheet.forEach((d) => batch.delete(d.ref));
-            await batch.commit();
-            hasDeleted = true;
-          }
-        }
-      } catch (err: any) {
-        console.warn(`[Cloud Firestore] Error deleting ${collectionName}/${docId}:`, err?.message);
+      // 1. Delete both normalized lowercase doc ID and original-case doc ID
+      refsToDelete.set(targetNorm, cloudDb.collection(collectionName).doc(targetNorm));
+      if (rawId !== targetNorm) {
+        refsToDelete.set(rawId, cloudDb.collection(collectionName).doc(rawId));
       }
+
+      // 2. Also query matching field identifiers in case the Firestore doc ID differs (e.g., auto-ID or legacy format)
+      if (collectionName === 'workspaces') {
+        const [qSheet, qWs] = await Promise.all([
+          cloudDb.collection('workspaces').where('spreadsheetId', '==', rawId).get(),
+          cloudDb.collection('workspaces').where('workspaceId', '==', rawId).get(),
+        ]);
+        qSheet.forEach((d) => refsToDelete.set(d.id, d.ref));
+        qWs.forEach((d) => refsToDelete.set(d.id, d.ref));
+      } else if (collectionName === 'licenses') {
+        const [qKeyRaw, qKeyUpper, qOrder] = await Promise.all([
+          cloudDb.collection('licenses').where('licenseKey', '==', rawId).get(),
+          cloudDb.collection('licenses').where('licenseKey', '==', rawId.toUpperCase()).get(),
+          cloudDb.collection('licenses').where('orderId', '==', rawId).get(),
+        ]);
+        qKeyRaw.forEach((d) => refsToDelete.set(d.id, d.ref));
+        qKeyUpper.forEach((d) => refsToDelete.set(d.id, d.ref));
+        qOrder.forEach((d) => refsToDelete.set(d.id, d.ref));
+      }
+
+      refsToDelete.forEach((ref) => batch.delete(ref));
+      await batch.commit();
+      hasDeleted = true;
     }
 
     const localDeleted = this.deleteDoc(collectionName, docId);
