@@ -21,6 +21,8 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkles,
+  Trash2,
+  Ban,
 } from 'lucide-react';
 import { WorkspaceRecord } from '@/lib/db/licensingDb';
 import { Sheet2SuiteLicense } from '@/lib/sheets/types';
@@ -58,6 +60,8 @@ interface AdminTrackerTabProps {
   onNavigateToValidator: (sheetId: string, productCode?: string) => void;
   onOpenEditRecord: (record: any, type: 'workspace' | 'license') => void;
   onOpenJsonRecord: (record: any) => void;
+  onDeleteRecord?: (target: { id: string; type: 'workspace' | 'license'; name?: string }) => void;
+  onRevokeLicense?: (licenseKey: string) => void;
 }
 
 export default function AdminTrackerTab({
@@ -67,6 +71,8 @@ export default function AdminTrackerTab({
   onOpenEditRecord,
   onOpenJsonRecord,
   onOpenGenerateModal,
+  onDeleteRecord,
+  onRevokeLicense,
 }: AdminTrackerTabProps) {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [productFilter, setProductFilter] = useState<'ALL' | 'SHEET2VOW' | 'SHEET2VAULT'>('ALL');
@@ -886,6 +892,64 @@ export default function AdminTrackerTab({
                         >
                           <Code size={13} />
                         </button>
+
+                        {onRevokeLicense && item.licenseKey && !item.licenseKey.startsWith('DIRECT-WS-') && item.licenseStatus !== 'revoked' && (
+                          <button
+                            type="button"
+                            onClick={() => onRevokeLicense(item.licenseKey)}
+                            title="Revoke / Terminate license key (keeps record as revoked)"
+                            style={{
+                              padding: '0.35rem',
+                              borderRadius: 'var(--border-radius-sm, 6px)',
+                              border: '1px solid #F59E0B',
+                              backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                              color: '#B45309',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Ban size={13} />
+                          </button>
+                        )}
+
+                        {onDeleteRecord && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const isDirectWs = item.licenseKey.startsWith('DIRECT-WS-') || item.orderId === 'DIRECT-PROVISION';
+                              if (!isDirectWs && item.licenseKey) {
+                                onDeleteRecord({
+                                  id: item.licenseKey,
+                                  type: 'license',
+                                  name: `${item.licenseKey} (${item.purchaserEmail})`,
+                                });
+                              } else if (item.workspace) {
+                                const wsId = item.workspace.workspaceId || item.workspace.spreadsheetId;
+                                onDeleteRecord({
+                                  id: wsId,
+                                  type: 'workspace',
+                                  name: `${item.spreadsheetName || wsId} (${item.purchaserEmail})`,
+                                });
+                              }
+                            }}
+                            title={item.licenseKey.startsWith('DIRECT-WS-') ? 'Permanently delete workspace record' : 'Permanently delete license key from Firebase'}
+                            style={{
+                              padding: '0.35rem',
+                              borderRadius: 'var(--border-radius-sm, 6px)',
+                              border: '1px solid #EF4444',
+                              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                              color: '#DC2626',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

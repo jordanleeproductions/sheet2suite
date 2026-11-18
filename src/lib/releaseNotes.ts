@@ -14,11 +14,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.7',
+    product: 'suite',
+    title: 'Admin Portal: License Key Revocation & Permanent Deletion',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'enhancement',
+    highlights: [
+      'Revoke / Terminate License Key: Added a 1-click Ban/Revoke button on active license rows in the Admin License & Sheet Tracker.',
+      'Permanent Deletion: Added a Delete button (with confirmation modal) on License & Sheet Tracker rows to permanently remove stale license keys or orphaned workspace records from Cloud Firestore.',
+    ],
+    details: 'Empowers administrators to clean up duplicate or stale license records directly from the Admin Tracker UI.',
+  },
+  {
     version: 'v1.25.6',
     product: 'suite',
     title: 'Google Drive Stale Workspace Recovery & Self-Healing Fix',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [

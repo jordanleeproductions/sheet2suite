@@ -584,6 +584,38 @@ export default function AdminDatabasePage() {
     }
   };
 
+  const handleRevokeLicense = async (licenseKey: string) => {
+    const existing = licenses.find((l) => l.licenseKey === licenseKey);
+    if (!existing) return;
+    try {
+      const res = await fetch('/api/admin/db', {
+        method: 'PUT',
+        headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          type: 'license',
+          record: {
+            ...existing,
+            status: 'revoked',
+          },
+        }),
+      });
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        setAuthError('Admin session expired. Please re-enter your admin secret key.');
+        return;
+      }
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMsg(`Revoked/terminated license key: ${licenseKey}`);
+        fetchRecords();
+      } else {
+        setErrorMsg(data.error || 'Failed to revoke license key.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to revoke license key.');
+    }
+  };
+
   const handleResetAllTestSession = async () => {
     try {
       const res = await fetch('/api/admin/db?all=true', {
@@ -2248,7 +2280,8 @@ export default function AdminDatabasePage() {
             onOpenEditRecord={handleOpenEdit}
             onOpenJsonRecord={(record) => setRawJsonRecord(record)}
             onOpenGenerateModal={() => setShowGenerateKeyModal(true)}
-
+            onDeleteRecord={(target) => setRecordToDelete(target)}
+            onRevokeLicense={handleRevokeLicense}
           />
         )}
 
