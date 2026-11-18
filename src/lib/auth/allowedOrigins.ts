@@ -12,6 +12,7 @@ const ALLOWED_FIREBASE_HOSTS = new Set([
   'sheet2suite.firebaseapp.com',
   'sheet2suite-7036e.web.app',
   'sheet2suite-7036e.firebaseapp.com',
+  'sheet2suite--sheet2suite-7036e.us-east4.hosted.app',
 ]);
 
 export function isValidAppOrigin(originStr?: string | null, currentWindowOrigin?: string | null): boolean {

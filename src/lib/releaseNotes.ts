@@ -14,11 +14,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.5',
+    product: 'suite',
+    title: 'Firebase App Hosting OAuth Origin & Session Recovery Fix',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Authorized Production Host: Added the explicit Firebase App Hosting hostname (sheet2suite--sheet2suite-7036e.us-east4.hosted.app) to ALLOWED_FIREBASE_HOSTS so OAuth callback postMessage reaches the opener window.',
+      'Unified Client/Server Origin Validation: Replaced ad-hoc origin checks in Sheet2Vow with isValidAppOrigin.',
+      'Popup-Close Session Recovery: Added automatic /api/workspaces fallback when the Google OAuth popup closes so workspaces connect seamlessly even if browser COOP severs window.opener.',
+    ],
+    details: 'Resolves login stall on /vow when accessing Sheet2Vow via the Firebase App Hosting URL.',
+  },
+  {
     version: 'v1.25.4',
     product: 'suite',
     title: 'Day-Of Usher Check-In & Tokenized Coordinator Seating Portal',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'feature',
     highlights: [
@@ -296,11 +311,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.5',
+    product: 'vow',
+    title: 'Google Login & Spreadsheet Auto-Discovery Reliability Fix',
+    date: 'Nov 17, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Fixed Google Login Redirect Stalling: Authorized the Firebase App Hosting origin for OAuth popup communication.',
+      'Automatic Workspace Recovery: Added /api/workspaces fallback when the OAuth popup closes and ensured HTTP-only session cookies bind on fallback workspace discovery.',
+    ],
+    details: 'Ensures users transition immediately from login into their connected wedding spreadsheet.',
+  },
+  {
     version: 'v1.19.4',
     product: 'vow',
     title: 'Day-Of Usher Check-In Mode & Venue Coordinator Share Portal',
     date: 'Nov 17, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'feature',
     highlights: [

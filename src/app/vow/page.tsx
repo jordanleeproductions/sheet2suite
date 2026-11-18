@@ -31,6 +31,7 @@ import VowMobileNav from '@/components/vow/VowMobileNav';
 import CommandPalette from '@/components/vow/CommandPalette';
 import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import { getEtsyPurchaseUrl } from '@/lib/config/storefrontLinks';
+import { isValidAppOrigin } from '@/lib/auth/allowedOrigins';
 import Link from 'next/link';
 import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search, ChevronRight } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
@@ -130,19 +131,14 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
 
+        let authHandled = false;
         const handleAuthMessage = (event: MessageEvent) => {
           // Security: Validate origin matches current domain, local development, or official sheet2suite domains [SEC-2]
           const origin = event.origin || '';
-          const isAllowedOrigin = 
-            origin === window.location.origin ||
-            origin.endsWith('sheet2suite.com') ||
-            origin.endsWith('.web.app') ||
-            origin.endsWith('.firebaseapp.com') ||
-            origin.includes('localhost') ||
-            origin.includes('127.0.0.1');
-          if (!isAllowedOrigin) return;
+          if (!isValidAppOrigin(origin, window.location.origin)) return;
 
           if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+            authHandled = true;
             const { user, accessToken, provision } = event.data;
             window.removeEventListener('message', handleAuthMessage);
             setIsAuthenticating(false);
@@ -239,6 +235,17 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                     setIsMockMode(false);
                     setIsOnboarded(true);
                     invalidateSessionCheckCache();
+                    if (accessToken) {
+                      fetch('/api/auth/register-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          spreadsheetId: fallbackSheetId,
+                          userEmail: user?.email,
+                          accessToken,
+                        }),
+                      }).catch((e) => console.warn('[OAuth] Could not register token:', e));
+                    }
                     addToast(`Welcome ${user?.name ? user.name : 'back'}! Connecting to workspace...`, 'success');
                     fetchWeddingData(accessToken, fallbackSheetId);
                   } else {
@@ -261,6 +268,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                 });
             }
           } else if (event.data?.type === 'GOOGLE_AUTH_ERROR') {
+            authHandled = true;
             window.removeEventListener('message', handleAuthMessage);
             setIsAuthenticating(false);
             addToast(event.data.error || 'Google Authentication Failed', 'warning');
@@ -275,11 +283,38 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
           `width=${width},height=${height},top=${top},left=${left}`
         );
 
-        // Fallback timeout checker if user closes popup without authenticating
-        const checkClosedInterval = setInterval(() => {
+        // Fallback timeout checker if user closes popup or postMessage is blocked by browser COOP
+        const checkClosedInterval = setInterval(async () => {
           if (authWindow?.closed) {
             clearInterval(checkClosedInterval);
-            setIsAuthenticating(false);
+            if (!authHandled) {
+              window.removeEventListener('message', handleAuthMessage);
+              try {
+                const wsRes = await fetch('/api/workspaces');
+                const wsData = await wsRes.json();
+                if (wsData.success && Array.isArray(wsData.workspaces) && wsData.workspaces.length > 0 && wsData.workspaces[0]?.spreadsheetId) {
+                  const recoveredId = wsData.workspaces[0].spreadsheetId;
+                  setSpreadsheetId(recoveredId);
+                  setIsMockMode(false);
+                  setIsOnboarded(true);
+                  if (wsData.userEmail) {
+                    setGoogleUserEmail(wsData.userEmail);
+                    localStorage.setItem('s2v_google_email', wsData.userEmail);
+                  }
+                  localStorage.setItem('s2v_spreadsheet_id', recoveredId);
+                  localStorage.setItem('s2v_is_onboarded', 'true');
+                  try {
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('spreadsheetId', recoveredId);
+                    window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+                  } catch (_) {}
+                  invalidateSessionCheckCache();
+                  fetchWeddingData(undefined, recoveredId);
+                  addToast('Connected to your wedding workspace!', 'success');
+                }
+              } catch (_) {}
+              setIsAuthenticating(false);
+            }
           }
         }, 1000);
       } else {
@@ -337,14 +372,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         const handleReauthMessage = (event: MessageEvent) => {
           // Security: Validate origin matches current domain, local development, or official sheet2suite domains [SEC-2]
           const origin = event.origin || '';
-          const isAllowedOrigin = 
-            origin === window.location.origin ||
-            origin.endsWith('sheet2suite.com') ||
-            origin.endsWith('.web.app') ||
-            origin.endsWith('.firebaseapp.com') ||
-            origin.includes('localhost') ||
-            origin.includes('127.0.0.1');
-          if (!isAllowedOrigin) return;
+          if (!isValidAppOrigin(origin, window.location.origin)) return;
 
           if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
             const { user, accessToken } = event.data;
