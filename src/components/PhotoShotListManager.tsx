@@ -44,6 +44,9 @@ import { triggerConfetti } from '@/lib/confetti';
 import SlideOverDrawer from '@/components/vow/SlideOverDrawer';
 import { DrawerSection, DrawerField, DrawerRow, PriorityPills } from '@/components/vow/MonarchForm';
 
+// Feature Flag: Guestbook & Guest Photo Upload Portal disabled for initial launch; re-enable in a future release
+const ENABLE_GUESTBOOK_FEATURE = false;
+
 const PHOTO_PRIORITY_OPTIONS = [
   { label: 'Must Have', value: 'Must Have', color: '#c53030' },
   { label: 'Nice To Have', value: 'Nice To Have', color: '#dd6b20' },
@@ -839,19 +842,23 @@ export default function PhotoShotListManager({
 
       {/* Standardized Header Card with Integrated View Switcher */}
       <PageHeaderCard
-        title={activeView === 'shotlist' ? "Photo Shot List" : "Guestbook & Photos"}
-        subtitle={activeView === 'shotlist' ? "Manage required photography moments, VIP group poses, and shot progress for your photographer." : "Heartfelt messages, guest candid photo uploads, and shared digital memories."}
-        badge={activeView === 'shotlist' ? `${photos.length} Shots` : `${guestUploads.length} Messages`}
-        segmentSwitcher={{
-          activeKey: activeView,
-          onChange: (key) => setActiveView(key as 'shotlist' | 'guestbook'),
-          segments: [
-            { key: 'shotlist', label: 'SHOT LIST', icon: <Camera size={14} /> },
-            { key: 'guestbook', label: 'GUESTBOOK', icon: <MessageSquare size={14} /> },
-          ],
-        }}
+        title={ENABLE_GUESTBOOK_FEATURE && activeView === 'guestbook' ? "Guestbook & Photos" : "Photo Shot List"}
+        subtitle={ENABLE_GUESTBOOK_FEATURE && activeView === 'guestbook' ? "Heartfelt messages, guest candid photo uploads, and shared digital memories." : "Manage required photography moments, VIP group poses, and shot progress for your photographer."}
+        badge={ENABLE_GUESTBOOK_FEATURE && activeView === 'guestbook' ? `${guestUploads.length} Messages` : `${photos.length} Shots`}
+        segmentSwitcher={
+          ENABLE_GUESTBOOK_FEATURE
+            ? {
+                activeKey: activeView,
+                onChange: (key) => setActiveView(key as 'shotlist' | 'guestbook'),
+                segments: [
+                  { key: 'shotlist', label: 'SHOT LIST', icon: <Camera size={14} /> },
+                  { key: 'guestbook', label: 'GUESTBOOK', icon: <MessageSquare size={14} /> },
+                ],
+              }
+            : undefined
+        }
         actionButtons={
-          activeView === 'shotlist' ? (
+          !ENABLE_GUESTBOOK_FEATURE || activeView === 'shotlist' ? (
             <>
               <button 
                 type="button"
@@ -1119,7 +1126,7 @@ export default function PhotoShotListManager({
       )}
 
       {/* GUESTBOOK & PHOTO NOTES VIEW */}
-      {activeView === 'guestbook' && (
+      {ENABLE_GUESTBOOK_FEATURE && activeView === 'guestbook' && (
         <>
           {/* Monarch-Style Hero Metric Strip */}
           <PageMetricStrip

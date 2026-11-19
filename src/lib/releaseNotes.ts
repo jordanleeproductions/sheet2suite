@@ -15,11 +15,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.15',
+    product: 'suite',
+    title: 'Photos Module Launch Scoping: Guestbook Feature Flag',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Gated Guestbook tab behind ENABLE_GUESTBOOK_FEATURE = false in PhotoShotListManager for initial launch while preserving implementation for future reintroduction.',
+    ],
+    details: 'Internal launch scoping update.',
+  },
+  {
     version: 'v1.25.14',
     product: 'suite',
     title: 'Release Notes Modal Portal Stacking & Public Changelog Curation',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     audience: 'internal',
@@ -440,11 +454,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.12',
+    product: 'vow',
+    title: 'Photos Module Launch Scoping: Guestbook Feature Flag',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Disabled Guestbook tab on the Photos page behind ENABLE_GUESTBOOK_FEATURE = false for initial launch.',
+    ],
+    details: 'Internal launch scoping update.',
+  },
+  {
     version: 'v1.19.11',
     product: 'vow',
     title: 'Release Notes Modal Stacking & Public Changelog Curation',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     audience: 'internal',
