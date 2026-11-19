@@ -10,15 +10,31 @@ export interface ReleaseNoteItem {
   highlights: string[];
   details?: string;
   category?: 'major' | 'feature' | 'enhancement' | 'fix';
+  audience?: 'public' | 'internal';
 }
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
+  {
+    version: 'v1.25.14',
+    product: 'suite',
+    title: 'Release Notes Modal Portal Stacking & Public Changelog Curation',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Fixed Header Overlap: Rendered ReleaseNotesViewer via React createPortal(document.body) at zIndex 99999 so the dialog always sits cleanly above the top masthead and sidebar.',
+      'Public Release Notes Curation: Added audience filtering (getPublicLatestReleaseNote) so public users only see the single latest customer-facing feature release without internal technical patches.',
+    ],
+    details: 'Keeps internal engineering notes inside the Admin Portal while giving customers a clean, focused What’s New modal.',
+  },
   {
     version: 'v1.25.13',
     product: 'suite',
     title: 'Party Integrity Drawer Overflow & Button Alignment Fix',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -424,11 +440,26 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.11',
+    product: 'vow',
+    title: 'Release Notes Modal Stacking & Public Changelog Curation',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Fixed Release Notes dialog stacking above the top header via React Portal.',
+      'Curated public What’s New modal to display only the latest customer-facing release highlights.',
+    ],
+    details: 'Internal technical polish recorded for Admin Portal audit.',
+  },
+  {
     version: 'v1.19.10',
     product: 'vow',
     title: 'Party Integrity Guard Drawer Layout Fix',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [
@@ -510,17 +541,19 @@ export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
     version: 'v1.19.4',
     product: 'vow',
-    title: 'Day-Of Usher Check-In Mode & Venue Coordinator Share Portal',
-    date: 'Nov 17, 2026',
-    badge: 'Update',
+    title: 'Event-Day Seating Deliverables, 1-Tap Swapping & Usher Check-In',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
     badgeColor: '#059669',
     category: 'feature',
+    audience: 'public',
     highlights: [
-      'Day-Of Usher Mode: Added a dedicated "DAY-OF USHER" view in Seating & Tables with instant search, All/Pending/Arrived filters, live arrival counter, and offline-resilient localStorage persistence.',
-      'Coordinator Share Link: 1-click button in the Deliverables bar mints an expiring read-only seating & catering roster link for your venue coordinator or banquet captain.',
-      'Read-Only Seating Portal (/share/[token]): External coordinators can search guests, view table rosters, seat numbers, meal choices, and dietary alerts with zero Google login.',
+      'Event-Day Deliverables: Generate a kitchen-ready Catering Dossier with entree counts & allergy alerts, an Alphabetical Entrance Easel Sign (A–Z), and a 1-click Canva Place Cards CSV.',
+      'Visual Seat Glance & 1-Tap Swapping: See meal icons and allergy alerts directly on every table seat, and swap any two guests between tables in a single tap.',
+      'Party Integrity Guard: Automatically detects if couples or families are split across tables and lets you reunite them at the same table in one click.',
+      'Day-Of Usher Check-In & Coordinator Link: Check guests in at the reception doors with a live arrival counter, and share a read-only seating & catering link with your venue coordinator.',
     ],
-    details: 'Turns your seating chart into a live reception check-in tool and read-only vendor portal.',
+    details: 'Everything you need to arrange tables effortlessly and hand off a polished seating plan on your wedding day.',
   },
   {
     version: 'v1.19.3',
@@ -706,6 +739,18 @@ export function getReleaseNotesByProduct(product: SuiteProductId | 'all' = 'vow'
     return ALL_RELEASE_NOTES;
   }
   return PRODUCT_RELEASE_NOTES[product] || [];
+}
+
+/**
+ * Returns only the single latest customer-facing release note for public users,
+ * filtering out internal/technical maintenance patches (which remain visible in Admin Portal).
+ */
+export function getPublicLatestReleaseNote(product: SuiteProductId = 'vow'): ReleaseNoteItem | null {
+  const allNotes = PRODUCT_RELEASE_NOTES[product] || [];
+  const publicNotes = allNotes.filter(
+    (item) => item.audience !== 'internal' && (item.audience === 'public' || item.category !== 'fix')
+  );
+  return publicNotes[0] || allNotes[0] || null;
 }
 
 // Default export for backward compatibility in /vow components

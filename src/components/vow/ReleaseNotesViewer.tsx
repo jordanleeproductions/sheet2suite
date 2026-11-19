@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, X, CheckCircle2, Layers, ShieldCheck, Zap, Calendar, Tag } from 'lucide-react';
-import { getReleaseNotesByProduct, ReleaseNoteItem } from '@/lib/releaseNotes';
+import { getPublicLatestReleaseNote, ReleaseNoteItem } from '@/lib/releaseNotes';
 import { SuiteProductId, getProductBuildInfo } from '@/lib/buildInfo';
 
 export interface ReleaseNotesViewerProps {
@@ -54,8 +55,7 @@ export default function ReleaseNotesViewer({
 }: ReleaseNotesViewerProps) {
   const productInfo = getProductBuildInfo(product);
   const displayVersion = currentVersion || productInfo.version;
-  const releaseNotes: ReleaseNoteItem[] = getReleaseNotesByProduct(product);
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'major' | 'feature' | 'enhancement' | 'fix'>('all');
+  const latestNote: ReleaseNoteItem | null = getPublicLatestReleaseNote(product);
 
   useEffect(() => {
     if (isOpen) {
@@ -76,12 +76,9 @@ export default function ReleaseNotesViewer({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  const filteredNotes = releaseNotes.filter((item: ReleaseNoteItem) => {
-    if (selectedCategory === 'all') return true;
-    return item.category === selectedCategory;
-  });
+  const visibleNotes = latestNote ? [latestNote] : [];
 
   const getCategoryIcon = (category?: ReleaseNoteItem['category']) => {
     switch (category) {
@@ -113,7 +110,7 @@ export default function ReleaseNotesViewer({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
@@ -122,7 +119,7 @@ export default function ReleaseNotesViewer({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
+        zIndex: 99999,
         backgroundColor: 'rgba(9, 13, 22, 0.72)',
         backdropFilter: 'blur(6px)',
         display: 'flex',
@@ -239,52 +236,7 @@ export default function ReleaseNotesViewer({
           </button>
         </div>
 
-        {/* Filter Bar */}
-        <div
-          style={{
-            padding: '0.75rem 1.5rem',
-            borderBottom: '1px solid var(--color-border)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            overflowX: 'auto',
-            backgroundColor: 'var(--color-surface)',
-          }}
-        >
-          {(
-            [
-              { id: 'all', label: 'All Releases' },
-              { id: 'major', label: 'Major' },
-              { id: 'feature', label: 'Features' },
-              { id: 'enhancement', label: 'Enhancements' },
-              { id: 'fix', label: 'Fixes' },
-            ] as const
-          ).map((tab) => {
-            const active = selectedCategory === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedCategory(tab.id)}
-                style={{
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '999px',
-                  fontSize: '0.74rem',
-                  fontWeight: active ? 700 : 500,
-                  border: active ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  backgroundColor: active ? 'var(--color-primary)' : 'var(--color-bg-subtle)',
-                  color: active ? 'var(--color-on-primary, #FFFFFF)' : 'var(--color-muted)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Scrollable Release Timeline */}
+        {/* Latest Release Note */}
         <div
           style={{
             padding: '1.25rem 1.5rem',
@@ -294,8 +246,8 @@ export default function ReleaseNotesViewer({
             gap: '1rem',
           }}
         >
-          {filteredNotes.map((note: ReleaseNoteItem, idx: number) => {
-            const isLatest = idx === 0 && selectedCategory === 'all';
+          {visibleNotes.map((note: ReleaseNoteItem) => {
+            const isLatest = true;
             return (
               <div
                 key={note.version}
@@ -480,4 +432,6 @@ export default function ReleaseNotesViewer({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
