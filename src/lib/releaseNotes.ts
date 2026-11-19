@@ -14,11 +14,24 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.13',
+    product: 'suite',
+    title: 'Party Integrity Drawer Overflow & Button Alignment Fix',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Fixed REUNITE ALL Button Bleed: Added min-w-0 w-full truncate to the table selector dropdown and overflow-x-hidden to the Party Integrity Guard drawer so long table names never push buttons outside the card.',
+    ],
+    details: 'Eliminates horizontal scrolling and clipping inside the Party Integrity Guard drawer on desktop.',
+  },
+  {
     version: 'v1.25.12',
     product: 'suite',
     title: 'Tailwind v4 Cascade Fix & Seating Desktop UX Polish',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -411,11 +424,24 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.10',
+    product: 'vow',
+    title: 'Party Integrity Guard Drawer Layout Fix',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Fixed REUNITE ALL Button Overflow: Constrained table selector dropdown width inside the Party Integrity Guard drawer so all cards and buttons fit cleanly without horizontal bleeding.',
+    ],
+    details: 'Ensures crisp card containment inside the split-party resolution drawer.',
+  },
+  {
     version: 'v1.19.9',
     product: 'vow',
     title: 'Seating Desktop Spacing, Toolbar Alignment & Alert Banner Polish',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [

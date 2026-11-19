@@ -148,7 +148,7 @@ export default function PartyIntegrityDrawer({
         </div>
 
         {/* Drawer Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-4">
           {splitParties.length === 0 ? (
             <div className="py-12 px-4 text-center border border-dashed border-[var(--color-border,#e2e8f0)] rounded-[3px] bg-[var(--color-bg,#f8fafc)]">
               <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
@@ -169,7 +169,7 @@ export default function PartyIntegrityDrawer({
               return (
                 <div 
                   key={party.partyName}
-                  className="p-4 rounded-[3px] border border-[var(--color-border,#e2e8f0)] bg-[var(--color-surface)] shadow-xs transition-all hover:border-[var(--color-highlight,#4f46e5)]/40"
+                  className="p-4 rounded-[3px] border border-[var(--color-border,#e2e8f0)] bg-[var(--color-surface)] shadow-xs transition-all hover:border-[var(--color-highlight,#4f46e5)]/40 min-w-0 w-full overflow-hidden"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2.5">
                     <div>
@@ -208,12 +208,12 @@ export default function PartyIntegrityDrawer({
                   </div>
 
                   {/* 1-Click Reunite Action Bar */}
-                  <div className="pt-2 border-t border-[var(--color-border,#e2e8f0)]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <div className="pt-2 border-t border-[var(--color-border,#e2e8f0)]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 min-w-0 w-full">
                     <select
                       value={currentTarget}
                       onChange={(e) => setSelectedTables(prev => ({ ...prev, [party.partyName]: e.target.value }))}
                       disabled={isSyncing}
-                      className="flex-1 text-xs px-2.5 py-1.5 rounded-[3px] border border-[var(--color-border,#cbd5e1)] bg-[var(--color-bg,#ffffff)] text-[var(--color-text)] font-mono"
+                      className="flex-1 min-w-0 w-full truncate text-xs px-2.5 py-2 rounded-[3px] border border-[var(--color-border,#cbd5e1)] bg-[var(--color-bg,#ffffff)] text-[var(--color-text)] font-mono"
                     >
                       {tables.map(t => {
                         const seatedCount = guests.filter(g => 
@@ -225,7 +225,7 @@ export default function PartyIntegrityDrawer({
 
                         return (
                           <option key={t.tableId} value={t.tableId}>
-                            Seat at {t.tableName} ({openSeats} open seats)
+                            {t.tableName} ({openSeats} open)
                           </option>
                         );
                       })}
@@ -235,7 +235,7 @@ export default function PartyIntegrityDrawer({
                       type="button"
                       onClick={() => handleReunite(party.partyName, currentTarget)}
                       disabled={isSyncing || !currentTarget}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[3px] text-xs font-bold font-mono tracking-wider bg-[var(--color-primary,#0f172a)] text-[var(--color-on-primary,#ffffff)] hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[3px] text-xs font-bold font-mono tracking-wider bg-[var(--color-primary,#0f172a)] text-[var(--color-on-primary,#ffffff)] hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0 whitespace-nowrap"
                     >
                       <HeartHandshake size={13} />
                       <span>REUNITE ALL</span>
