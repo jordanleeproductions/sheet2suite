@@ -635,8 +635,8 @@ export default function MusicManager({
           height: compact ? '34px' : '42px',
           minWidth: compact ? '34px' : '42px',
           borderRadius: '50%',
-          backgroundColor: isPlaying ? 'var(--color-primary, #0F172A)' : hasPreview ? 'rgba(15, 23, 42, 0.06)' : 'rgba(15, 23, 42, 0.03)',
-          color: isPlaying ? '#ffffff' : hasPreview ? 'var(--color-primary, #0F172A)' : 'var(--color-muted, #94a3b8)',
+          backgroundColor: isPlaying ? 'var(--color-primary, #0F172A)' : hasPreview ? 'var(--color-bg-subtle, rgba(15, 23, 42, 0.06))' : 'transparent',
+          color: isPlaying ? 'var(--color-on-primary, #ffffff)' : hasPreview ? 'var(--color-primary, #0F172A)' : 'var(--color-muted, #94a3b8)',
           border: isPlaying ? 'none' : '1px solid var(--color-border, #e2e8f0)',
           cursor: hasPreview ? 'pointer' : 'default',
           transition: 'all 0.15s ease',
@@ -922,7 +922,7 @@ export default function MusicManager({
           transform: translateX(-50%);
           width: calc(100% - 2rem);
           max-width: 720px;
-          background-color: rgba(255, 255, 255, 0.94);
+          background-color: var(--color-surface, rgba(255, 255, 255, 0.96));
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border: 1px solid var(--color-border, #e2e8f0);
@@ -1124,7 +1124,7 @@ export default function MusicManager({
             onClick={() => setLayoutMode('cards')}
             style={{
               backgroundColor: layoutMode === 'cards' ? 'var(--color-primary, #0F172A)' : 'transparent',
-              color: layoutMode === 'cards' ? '#ffffff' : 'var(--color-muted, #64748b)',
+              color: layoutMode === 'cards' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #64748b)',
             }}
             title="Card Grid View"
           >
@@ -1136,7 +1136,7 @@ export default function MusicManager({
             onClick={() => setLayoutMode('playlist')}
             style={{
               backgroundColor: layoutMode === 'playlist' ? 'var(--color-primary, #0F172A)' : 'transparent',
-              color: layoutMode === 'playlist' ? '#ffffff' : 'var(--color-muted, #64748b)',
+              color: layoutMode === 'playlist' ? 'var(--color-on-primary, #ffffff)' : 'var(--color-muted, #64748b)',
             }}
             title="Compact Playlist Table View"
           >
@@ -1574,7 +1574,7 @@ export default function MusicManager({
                 borderRadius: '6px',
                 border: 'none',
                 backgroundColor: 'var(--color-primary, #0f172a)',
-                color: '#ffffff',
+                color: 'var(--color-on-primary, #ffffff)',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -1595,7 +1595,7 @@ export default function MusicManager({
             height: '38px',
             borderRadius: '50%',
             backgroundColor: 'var(--color-primary, #0f172a)',
-            color: '#ffffff',
+            color: 'var(--color-on-primary, #ffffff)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1628,7 +1628,7 @@ export default function MusicManager({
                 width: '100%',
                 height: '6px',
                 borderRadius: '3px',
-                backgroundColor: 'rgba(15, 23, 42, 0.08)',
+                backgroundColor: 'var(--color-border, rgba(15, 23, 42, 0.12))',
                 cursor: 'pointer',
                 position: 'relative',
                 overflow: 'hidden',
@@ -1659,7 +1659,7 @@ export default function MusicManager({
                 borderRadius: '50%',
                 border: 'none',
                 backgroundColor: 'var(--color-primary, #0f172a)',
-                color: '#ffffff',
+                color: 'var(--color-on-primary, #ffffff)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1865,7 +1865,7 @@ export default function MusicManager({
                       borderRadius: '8px',
                       border: 'none',
                       backgroundColor: isDisabled ? 'var(--color-muted, #94a3b8)' : 'var(--color-primary, #0F172A)',
-                      color: '#ffffff',
+                      color: isDisabled ? '#ffffff' : 'var(--color-on-primary, #ffffff)',
                       fontSize: '0.875rem',
                       fontWeight: 600,
                       cursor: isDisabled ? 'not-allowed' : 'pointer',

@@ -15,11 +15,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.16',
+    product: 'suite',
+    title: 'Music Mini-Player & Controls Dark Mode Contrast Fix',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Fixed Docked Audio Mini-Player Dark Mode Background: Updated .music-docked-player from hardcoded rgba(255,255,255,0.94) to var(--color-surface).',
+      'Fixed White-on-White Music Controls: Replaced hardcoded #ffffff text on var(--color-primary) buttons, vinyl disc icon, layout switcher, and pause button with var(--color-on-primary).',
+    ],
+    details: 'Internal dark-mode contrast fix across MusicManager.',
+  },
+  {
     version: 'v1.25.15',
     product: 'suite',
     title: 'Photos Module Launch Scoping: Guestbook Feature Flag',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     audience: 'internal',
@@ -454,11 +469,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.13',
+    product: 'vow',
+    title: 'Music Mini-Player & Controls Dark Mode Contrast Fix',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Fixed docked audio mini-player background and dark mode button/icon contrast across the Music page.',
+    ],
+    details: 'Internal dark-mode contrast polish.',
+  },
+  {
     version: 'v1.19.12',
     product: 'vow',
     title: 'Photos Module Launch Scoping: Guestbook Feature Flag',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     audience: 'internal',
