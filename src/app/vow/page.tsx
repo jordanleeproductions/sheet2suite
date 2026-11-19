@@ -1683,6 +1683,9 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
         marginRight: isDesktopSidebarActive ? '0' : 'auto',
         width: isDesktopSidebarActive ? `calc(100% - ${sidebarWidthPx}px)` : '100%',
         maxWidth: isDesktopSidebarActive ? '100%' : '1680px',
+        minWidth: 0,
+        boxSizing: 'border-box',
+        overflowX: 'clip',
         transition: 'margin-left 0.15s ease-out, width 0.15s ease-out'
       }}
     >
@@ -3361,6 +3364,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
   tabContent: {
     animation: 'fadeIn 0.3s ease-in-out',
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   errorBox: {
     display: 'flex',

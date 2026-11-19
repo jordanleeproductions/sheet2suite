@@ -900,7 +900,7 @@ export default function KanbanBoard({
   };
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="kanban-board-root">
       {/* 0. Page Header Card [Consistent Monarch UX] */}
       <PageHeaderCard
         title="Tasks & Checklist"
@@ -1188,6 +1188,9 @@ export default function KanbanBoard({
                   outline: 'none',
                   transition: 'var(--transition-smooth)',
                   minHeight: '34px',
+                  maxWidth: '210px',
+                  minWidth: 0,
+                  textOverflow: 'ellipsis',
                 }}
                 className="kanban-category-select"
                 title="Filter tasks by category"
@@ -1236,6 +1239,9 @@ export default function KanbanBoard({
                   outline: 'none',
                   transition: 'var(--transition-smooth)',
                   minHeight: '34px',
+                  maxWidth: '210px',
+                  minWidth: 0,
+                  textOverflow: 'ellipsis',
                 }}
                 className="kanban-assignee-select"
                 title="Filter tasks by assigned person"
@@ -2021,12 +2027,14 @@ export default function KanbanBoard({
                           </button>
 
                           {/* Right side: Assignee Avatar + Desktop Quick Controls */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, maxWidth: '100%', flexShrink: 1 }}>
                             <div 
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.35rem',
+                                minWidth: 0,
+                                flexShrink: 1,
                               }}
                               title={`Assigned to ${avatar.name}`}
                             >
@@ -2155,6 +2163,13 @@ export default function KanbanBoard({
 
       {/* CSS details to ensure columns, header, Jira mobile elements, and modals switch properly across screen sizes */}
       <style>{`
+        .kanban-board-root {
+          container-type: inline-size;
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
         .kanban-filter-sort-bar {
           display: flex;
           align-items: center;
@@ -2167,12 +2182,44 @@ export default function KanbanBoard({
           border-radius: var(--border-radius-md);
           padding: 0.75rem 1rem;
           box-shadow: var(--box-shadow-subtle);
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
         }
         .kanban-filters-group {
           display: flex;
           align-items: center;
           gap: 0.75rem;
           flex-wrap: wrap;
+          min-width: 0;
+          max-width: 100%;
+        }
+        @container (max-width: 1080px) {
+          .kanban-column {
+            padding: 0.8rem !important;
+          }
+          .kanban-task-card {
+            padding: 0.75rem !important;
+          }
+          .kanban-assignee-text-desktop {
+            max-width: 72px !important;
+          }
+        }
+        @container (max-width: 920px) {
+          .kanban-assignee-text-desktop {
+            display: none !important;
+          }
+        }
+        @container (max-width: 780px) {
+          .kanban-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+        }
+        @container (max-width: 520px) {
+          .kanban-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+          }
         }
         .kanban-column-bottom-add-btn:hover {
           background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.04)) !important;
@@ -2522,6 +2569,10 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   header: {
     display: 'flex',
@@ -2549,6 +2600,9 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '0.35rem',
     marginRight: '0.25rem',
+    flexWrap: 'wrap',
+    minWidth: 0,
+    maxWidth: '100%',
   },
   sortLabel: {
     fontFamily: 'var(--font-mono)',
@@ -2611,9 +2665,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   boardGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '1.25rem',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 'clamp(0.75rem, 1.25vw, 1.25rem)',
     marginTop: '0.5rem',
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   column: {
     flexDirection: 'column',
@@ -2622,11 +2680,15 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1rem',
     border: '1px solid var(--color-muted)',
     minHeight: '400px',
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   columnHeader: {
     marginBottom: '1rem',
     borderBottom: '1px solid var(--color-muted)',
     paddingBottom: '0.5rem',
+    minWidth: 0,
   },
   columnTitle: {
     fontFamily: 'var(--font-serif)',
@@ -2635,6 +2697,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
   },
   columnCount: {
     fontFamily: 'var(--font-mono)',
@@ -2643,6 +2707,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-primary)',
     padding: '0.125rem 0.5rem',
     borderRadius: '10px',
+    flexShrink: 0,
   },
   taskList: {
     display: 'flex',
@@ -2650,6 +2715,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.75rem',
     overflowY: 'auto',
     flex: 1,
+    minWidth: 0,
   },
   taskCard: {
     backgroundColor: 'var(--color-surface, #ffffff)',
@@ -2661,11 +2727,17 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '0.5rem',
     transition: 'var(--transition-smooth)',
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
   },
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.35rem',
+    minWidth: 0,
   },
   categoryBadge: {
     fontFamily: 'var(--font-mono)',
@@ -2675,6 +2747,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-primary)',
     padding: '0.125rem 0.375rem',
     borderRadius: 'var(--border-radius-sm)',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   priorityBadge: {
     fontFamily: 'var(--font-mono)',
@@ -2701,6 +2777,9 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.4rem',
+    minWidth: 0,
   },
   metaRow: {
     display: 'flex',
@@ -2721,6 +2800,7 @@ const styles: Record<string, React.CSSProperties> = {
   quickMoves: {
     display: 'flex',
     gap: '0.25rem',
+    flexShrink: 0,
   },
   cardActionBtn: {
     background: 'none',

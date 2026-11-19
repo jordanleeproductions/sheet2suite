@@ -15,11 +15,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.17',
+    product: 'suite',
+    title: 'Tasks Kanban Desktop Responsive Fit & Overflow Fix',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Dynamic Kanban Column Sizing: Replaced repeat(3, 1fr) with repeat(3, minmax(0, 1fr)), added container-query responsive column flow (3 -> 2 -> 1 columns), and constrained card headers, footers, badges, and filter dropdowns with min-width: 0 and flex-wrap.',
+      'Viewport Overflow Containment: Added overflow-x: clip and min-width: 0 on the main Sheet2Vow app viewport container so desktop content fits dynamically across all screen sizes and display ratios without triggering horizontal scrollbars.',
+    ],
+    details: 'Internal responsive layout fix for the Tasks Kanban page on desktop.',
+  },
+  {
     version: 'v1.25.16',
     product: 'suite',
     title: 'Music Mini-Player & Controls Dark Mode Contrast Fix',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     audience: 'internal',
@@ -469,11 +484,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.14',
+    product: 'vow',
+    title: 'Tasks Kanban Desktop Responsive Fit & Overflow Fix',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    audience: 'internal',
+    highlights: [
+      'Dynamically constrained Kanban columns, cards, and filter controls using minmax(0, 1fr) and CSS container queries so the Tasks board fits cleanly across all desktop screen sizes and aspect ratios without horizontal scrolling.',
+    ],
+    details: 'Internal desktop responsiveness polish for KanbanBoard.',
+  },
+  {
     version: 'v1.19.13',
     product: 'vow',
     title: 'Music Mini-Player & Controls Dark Mode Contrast Fix',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     audience: 'internal',
