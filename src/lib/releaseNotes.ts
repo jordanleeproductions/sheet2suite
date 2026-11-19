@@ -14,11 +14,25 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.12',
+    product: 'suite',
+    title: 'Tailwind v4 Cascade Fix & Seating Desktop UX Polish',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'fix',
+    highlights: [
+      'Fixed Tailwind v4 Padding/Margin Reset Override: Moved the global * { margin: 0; padding: 0; } reset inside @layer base in globals.css so Tailwind spacing utilities (p-*, px-*, py-*, m-*) are no longer zeroed out.',
+      'Polished Seating Desktop Cards: Aligned Event-Day Deliverables buttons into a crisp single-row desktop toolbar with balanced padding and pill-shaped allergen badges, and refined the Party Integrity Alert banner.',
+    ],
+    details: 'Restores intended padding, margins, and alignment across all Tailwind-styled components.',
+  },
+  {
     version: 'v1.25.11',
     product: 'suite',
     title: 'Print Engine Refactor: Multi-Page Pagination Fix (DEFECT-001)',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     highlights: [
@@ -397,11 +411,26 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.9',
+    product: 'vow',
+    title: 'Seating Desktop Spacing, Toolbar Alignment & Alert Banner Polish',
+    date: 'Nov 18, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'fix',
+    highlights: [
+      'Restored Button & Card Padding: Fixed global CSS cascade reset overriding Tailwind padding/margin utilities.',
+      'Polished Event-Day Deliverables Toolbar: Balanced desktop alignment, crisp button spacing, and pill-shaped allergen badge.',
+      'Refined Party Integrity Alert Banner: Clean single-row alignment with button-styled "Review & Reunite →" action.',
+    ],
+    details: 'Delivers a crisp, spacious desktop layout across the Seating & Tables view.',
+  },
+  {
     version: 'v1.19.8',
     product: 'vow',
     title: 'Multi-Page Print Pagination Fix (Escort Chart, Dossier & Print Studio)',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     highlights: [

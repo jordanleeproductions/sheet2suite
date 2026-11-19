@@ -2179,18 +2179,18 @@ export default function SeatingChartManager({
           {splitParties.length > 0 && (
             <div 
               onClick={() => setShowPartyIntegrityDrawer(true)}
-              className="mb-5 px-4 py-3 rounded-[4px] bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all hover:opacity-90"
+              className="mb-5 px-4 py-3 rounded-[4px] bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all hover:opacity-95 shadow-2xs"
             >
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="text-base">⚠️</span>
-                <span className="text-xs font-extrabold font-mono tracking-wider">
-                  PARTY INTEGRITY ALERT:
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <span className="text-base shrink-0">⚠️</span>
+                <span className="text-[11px] font-extrabold font-mono tracking-wider uppercase shrink-0">
+                  Party Integrity Alert:
                 </span>
-                <span className="text-xs sm:text-[13px]">
+                <span className="text-xs sm:text-[13px] truncate">
                   {splitParties.length} {splitParties.length === 1 ? 'party is' : 'parties are'} split across different tables ({splitParties.map(p => p.partyName).slice(0, 3).join(', ')}{splitParties.length > 3 ? '...' : ''}).
                 </span>
               </div>
-              <span className="text-xs font-extrabold font-mono underline shrink-0">
+              <span className="inline-flex items-center justify-center px-3 py-1 rounded-[3px] text-xs font-extrabold font-mono border border-amber-400/60 dark:border-amber-600/60 bg-amber-100/80 dark:bg-amber-900/40 shrink-0 self-start sm:self-center">
                 Review & Reunite →
               </span>
             </div>

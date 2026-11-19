@@ -28,11 +28,13 @@
   --color-ceremonial-gold-muted: #FEF9C3;
 }
 
-/* Global Resets */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Global Resets (placed inside @layer base so Tailwind @layer utilities p-*, m-* are not overridden) */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 body {
