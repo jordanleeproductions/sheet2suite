@@ -41,6 +41,7 @@ export default function ActivationPage() {
   const [provisionError, setProvisionError] = useState<string>('');
   const [lastProductConfig, setLastProductConfig] = useState<any | null>(null);
   const [detectedWorkspace, setDetectedWorkspace] = useState<any | null>(null);
+  const [detectedWorkspacesCount, setDetectedWorkspacesCount] = useState<number>(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -49,6 +50,7 @@ export default function ActivationPage() {
       const orderParam = params.get('orderId') || params.get('order') || params.get('license');
       const productParam = params.get('product');
       const sheetParam = params.get('spreadsheetId') || params.get('sheetId');
+      const isNewLicenseMode = params.get('mode') === 'new';
 
       if (sheetParam) {
         router.push(`/vow?spreadsheetId=${encodeURIComponent(sheetParam)}`);
@@ -70,9 +72,9 @@ export default function ActivationPage() {
       if (savedToken) setGoogleToken(savedToken);
       if (savedFolder) setDriveFolder(savedFolder);
 
-      // Check if user already has an active or co-planned workspace
+      // Check if user already has an active or co-planned workspace (skipped when explicitly adding a new license via ?mode=new)
       const lookupEmail = emailParam || savedEmail;
-      if (lookupEmail && savedToken) {
+      if (!isNewLicenseMode && lookupEmail && savedToken) {
         fetch(`/api/workspaces?email=${encodeURIComponent(lookupEmail)}`, {
           headers: { 'Authorization': `Bearer ${savedToken}` },
         })
@@ -80,6 +82,7 @@ export default function ActivationPage() {
           .then(data => {
             if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
               setDetectedWorkspace(data.workspaces[0]);
+              setDetectedWorkspacesCount(data.workspaces.length);
             }
           })
           .catch(() => {});
@@ -99,16 +102,19 @@ export default function ActivationPage() {
             setIsGoogleConnected(true);
             localStorage.setItem('s2v_google_email', user.email);
 
-            fetch(`/api/workspaces?email=${encodeURIComponent(user.email)}`, {
-              headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined,
-            })
-              .then(res => res.json())
-              .then(data => {
-                if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
-                  setDetectedWorkspace(data.workspaces[0]);
-                }
+            if (!isNewLicenseMode) {
+              fetch(`/api/workspaces?email=${encodeURIComponent(user.email)}`, {
+                headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : undefined,
               })
-              .catch(() => {});
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success && Array.isArray(data.workspaces) && data.workspaces.length > 0) {
+                    setDetectedWorkspace(data.workspaces[0]);
+                    setDetectedWorkspacesCount(data.workspaces.length);
+                  }
+                })
+                .catch(() => {});
+            }
           }
           if (user?.name) {
             localStorage.setItem('s2v_google_name', user.name);
@@ -395,10 +401,11 @@ export default function ActivationPage() {
               <Sparkles size={22} style={{ color: '#059669', flexShrink: 0 }} />
               <div>
                 <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#065f46' }}>
-                  💍 Workspace / Partner Access Detected!
+                  💍 {detectedWorkspacesCount > 1 ? `${detectedWorkspacesCount} Workspaces Detected!` : 'Existing Workspace Detected!'}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#047857' }}>
-                  You have collaborator access to <strong>{detectedWorkspace.spreadsheetName || 'Wedding Database'}</strong>. No Etsy order verification required!
+                  You already have access to <strong>{detectedWorkspace.spreadsheetName || 'Wedding Database'}</strong>
+                  {detectedWorkspacesCount > 1 ? ` (and ${detectedWorkspacesCount - 1} other workspace${detectedWorkspacesCount - 1 === 1 ? '' : 's'})` : ''}. Enter your workspace directly, or activate a new Etsy order below.
                 </div>
               </div>
             </div>

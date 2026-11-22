@@ -33,7 +33,7 @@ import { invalidateSessionCheckCache } from '@/lib/core/sessionCheck';
 import { getEtsyPurchaseUrl } from '@/lib/config/storefrontLinks';
 import { isValidAppOrigin } from '@/lib/auth/allowedOrigins';
 import Link from 'next/link';
-import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search, ChevronRight } from 'lucide-react';
+import { RefreshCw, HardDrive, Heart, Home, Sparkles, AlertCircle, FileSpreadsheet, Settings, Check, CheckCircle2, Key, X, Lock, Share2, Sliders, Printer, Zap, ArrowRight, ArrowLeft, PanelLeftClose, PanelLeftOpen, LayoutDashboard, Utensils, Grid, Armchair, Camera, Users, DollarSign, Calendar, Briefcase, ListTodo, Music, ExternalLink, Search, ChevronRight, ChevronsUpDown, Plus } from 'lucide-react';
 import { ALL_DEFAULT_TASKS } from '@/lib/sheets/mockDb';
 import { TASK_PRESETS } from '@/lib/presets/taskPresets';
 import { getColorPresets } from '@/lib/themePresets';
@@ -471,6 +471,7 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const workspaceMenuRef = useRef<HTMLDivElement>(null);
 
   // Global Cmd+K / Ctrl+K listener for Command Palette
   useEffect(() => {
@@ -607,9 +608,17 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
   const [showCustomTaskChecklist, setShowCustomTaskChecklist] = useState<boolean>(false);
 
   // Workspace Switcher & Re-entry Lifecycle States [LIFE-1, LIFE-2, LIFE-3, LIFE-4]
-  const [workspaces, setWorkspaces] = useState<{ id: string; name: string; date?: string; folder?: string; isMock?: boolean; isDemo?: boolean }[]>([
-    { id: 'mock-sheet-id-vow-12345', name: "Alex & Sam's Wedding", date: '2026-09-20', folder: 'My Drive/Wedding Planning', isMock: true, isDemo: true }
-  ]);
+  const [workspaces, setWorkspaces] = useState<{
+    id: string;
+    name: string;
+    date?: string;
+    folder?: string;
+    role?: 'Owner' | 'Co-Planner';
+    orderId?: string;
+    webViewLink?: string;
+    isMock?: boolean;
+    isDemo?: boolean;
+  }[]>([]);
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState<boolean>(false);
   const [onboardTab, setOnboardTab] = useState<'new' | 'reconnect' | 'demo'>('new');
   const [reconnectMethod, setReconnectMethod] = useState<'scan' | 'order' | 'url'>('scan');
@@ -1117,20 +1126,128 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
     }
   }, [enabledModules, activeTab]);
 
-  // Close profile dropdown on click outside
+  // Close profile & workspace dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
       }
+      if (workspaceMenuRef.current && !workspaceMenuRef.current.contains(event.target as Node)) {
+        setShowWorkspaceMenu(false);
+      }
     };
-    if (showProfileMenu) {
+    if (showProfileMenu || showWorkspaceMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showProfileMenu]);
+  }, [showProfileMenu, showWorkspaceMenu]);
+
+  // Hydrate all owned & co-planned Sheet2Vow workspaces for the Multi-Workspace Switcher
+  useEffect(() => {
+    if (!isOnboarded || isMockMode) return;
+    let isCancelled = false;
+
+    const hydrateWorkspaces = async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (googleToken) {
+          headers['Authorization'] = `Bearer ${googleToken}`;
+        }
+        const query = googleUserEmail ? `?email=${encodeURIComponent(googleUserEmail)}` : '';
+        const res = await fetch(`/api/workspaces${query}`, { headers });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isCancelled || !data.success || !Array.isArray(data.workspaces)) return;
+
+        const effectiveEmail = (data.userEmail || googleUserEmail || '').trim().toLowerCase();
+        const seen = new Set<string>();
+        const mapped: {
+          id: string;
+          name: string;
+          folder?: string;
+          role?: 'Owner' | 'Co-Planner';
+          orderId?: string;
+          webViewLink?: string;
+        }[] = [];
+
+        for (const ws of data.workspaces) {
+          const id = ws?.spreadsheetId;
+          if (!id || seen.has(id)) continue;
+          const productName = String(ws.productName || 'Sheet2Vow').toLowerCase();
+          if (productName.includes('vault')) continue;
+          seen.add(id);
+
+          const rawName = String(ws.spreadsheetName || 'Wedding Workspace');
+          const cleanName = rawName
+            .replace(/^Sheet2Vow\s*[-–—:]\s*/i, '')
+            .replace(/\s+Database$/i, '')
+            .replace(/\s+Workspace$/i, '')
+            .trim() || 'Our Wedding';
+
+          const ownerEmail = String(ws.userEmail || '').trim().toLowerCase();
+          const role: 'Owner' | 'Co-Planner' =
+            !effectiveEmail || !ownerEmail || ownerEmail === effectiveEmail ? 'Owner' : 'Co-Planner';
+
+          mapped.push({
+            id,
+            name: cleanName,
+            folder: ws.driveFolderPath || 'My Drive / Sheet2Suite / Sheet2Vow',
+            role,
+            orderId: ws.orderId,
+            webViewLink: ws.webViewLink,
+          });
+        }
+
+        if (mapped.length > 0) {
+          setWorkspaces(mapped);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('s2v_workspaces', JSON.stringify(mapped));
+            } catch (_) {}
+          }
+        }
+      } catch (err) {
+        console.warn('[Workspaces] Could not hydrate workspace list:', err);
+      }
+    };
+
+    hydrateWorkspaces();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOnboarded, isMockMode, googleToken, googleUserEmail]);
+
+  // Instant Workspace Switcher handler (updates URL, localStorage, and hydrates Google Sheet in place)
+  const handleSwitchWorkspace = (target: { id: string; name: string; folder?: string }) => {
+    setShowWorkspaceMenu(false);
+    setShowProfileMenu(false);
+    if (!target.id || target.id === spreadsheetId) return;
+
+    setSpreadsheetId(target.id);
+    setWeddingName(target.name);
+    if (target.folder) {
+      setDriveFolder(target.folder);
+    }
+    setSyncError(null);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('s2v_spreadsheet_id', target.id);
+      localStorage.setItem('s2v_wedding_name', target.name);
+      if (target.folder) {
+        localStorage.setItem('s2v_drive_folder', target.folder);
+      }
+      try {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('spreadsheetId', target.id);
+        window.history.replaceState(window.history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+      } catch (_) {}
+    }
+
+    addToast(`Switched to ${target.name}`, 'info');
+    fetchWeddingData(undefined, target.id);
+  };
 
   // Apply style theme and color mode when they change
   useEffect(() => {
@@ -1750,37 +1867,223 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                 fontFamily: 'var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
               }}
             >
-              <button
-                type="button"
-                onClick={() => setActiveTab('home')}
-                title="Go to Overview"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '3px 8px',
-                  margin: 0,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  color: 'var(--color-muted, #64748B)',
-                  fontWeight: 500,
-                  fontSize: '0.9rem',
-                  borderRadius: '4px',
-                  transition: 'color 0.15s ease, background-color 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--color-primary, #0F172A)';
-                  e.currentTarget.style.backgroundColor = 'var(--color-surface-hover, rgba(0,0,0,0.04))';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--color-muted, #64748B)';
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                <Heart size={14} style={{ color: 'var(--color-accent, #6366F1)' }} />
-                <span>{weddingName || 'Our Wedding'}</span>
-              </button>
+              {!isMockMode && workspaces.length > 1 ? (
+                <div ref={workspaceMenuRef} style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowWorkspaceMenu((prev) => !prev)}
+                    title="Switch Wedding Workspace"
+                    aria-expanded={showWorkspaceMenu}
+                    aria-haspopup="listbox"
+                    style={{
+                      background: showWorkspaceMenu ? 'var(--color-bg-subtle, rgba(15, 23, 42, 0.06))' : 'none',
+                      border: '1px solid var(--color-border, #E2E8F0)',
+                      padding: '4px 9px',
+                      margin: 0,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      color: 'var(--color-text, #0F172A)',
+                      fontWeight: 600,
+                      fontSize: '0.88rem',
+                      borderRadius: '6px',
+                      transition: 'color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
+                    }}
+                  >
+                    <Heart size={14} style={{ color: 'var(--color-accent, #6366F1)', flexShrink: 0 }} />
+                    <span style={{ maxWidth: '210px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {weddingName || 'Our Wedding'}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        padding: '1px 5px',
+                        borderRadius: '999px',
+                        backgroundColor: 'var(--color-bg-subtle, #F1F5F9)',
+                        color: 'var(--color-muted, #64748B)',
+                      }}
+                    >
+                      {workspaces.length}
+                    </span>
+                    <ChevronsUpDown size={13} style={{ color: 'var(--color-muted, #64748B)', flexShrink: 0 }} />
+                  </button>
+
+                  {showWorkspaceMenu && (
+                    <div
+                      role="listbox"
+                      aria-label="Available Workspaces"
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        marginTop: '0.45rem',
+                        backgroundColor: 'var(--color-surface, #ffffff)',
+                        border: '1px solid var(--color-border, #e2e8f0)',
+                        borderRadius: '10px',
+                        padding: '0.5rem',
+                        width: '285px',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        boxShadow: '0 12px 28px -6px rgba(0, 0, 0, 0.18), 0 4px 10px -2px rgba(0, 0, 0, 0.08)',
+                        zIndex: 1000,
+                        animation: 'fadeIn 0.14s ease-out',
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: '0.3rem 0.5rem 0.45rem',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.64rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.06em',
+                          color: 'var(--color-muted, #64748B)',
+                          borderBottom: '1px solid var(--color-border, #e2e8f0)',
+                          marginBottom: '0.35rem',
+                        }}
+                      >
+                        YOUR WORKSPACES ({workspaces.length})
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: '240px', overflowY: 'auto' }}>
+                        {workspaces.map((ws) => {
+                          const isCurrent = ws.id === spreadsheetId;
+                          return (
+                            <button
+                              key={ws.id}
+                              type="button"
+                              role="option"
+                              aria-selected={isCurrent}
+                              onClick={() => handleSwitchWorkspace(ws)}
+                              style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '0.5rem',
+                                padding: '0.5rem 0.6rem',
+                                borderRadius: '7px',
+                                border: isCurrent
+                                  ? '1px solid var(--color-primary, #0F172A)'
+                                  : '1px solid transparent',
+                                backgroundColor: isCurrent
+                                  ? 'var(--color-bg-subtle, rgba(15, 23, 42, 0.06))'
+                                  : 'transparent',
+                                color: 'var(--color-text, #0F172A)',
+                                cursor: isCurrent ? 'default' : 'pointer',
+                                transition: 'background-color 0.12s ease',
+                              }}
+                            >
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontSize: '0.82rem',
+                                    fontWeight: isCurrent ? 700 : 600,
+                                    color: 'var(--color-text, #0F172A)',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  {ws.name}
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.35rem',
+                                    marginTop: '2px',
+                                    fontFamily: 'var(--font-mono)',
+                                    fontSize: '0.62rem',
+                                    color: 'var(--color-muted, #64748B)',
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      padding: '1px 5px',
+                                      borderRadius: '4px',
+                                      backgroundColor:
+                                        ws.role === 'Co-Planner'
+                                          ? 'rgba(99, 102, 241, 0.14)'
+                                          : 'rgba(16, 185, 129, 0.14)',
+                                      color: ws.role === 'Co-Planner' ? '#6366f1' : '#059669',
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {(ws.role || 'Owner').toUpperCase()}
+                                  </span>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {ws.id.slice(0, 10)}…
+                                  </span>
+                                </div>
+                              </div>
+                              {isCurrent && (
+                                <Check size={15} style={{ color: 'var(--color-primary, #0F172A)', flexShrink: 0 }} />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ marginTop: '0.4rem', paddingTop: '0.4rem', borderTop: '1px solid var(--color-border, #e2e8f0)' }}>
+                        <Link
+                          href={`/activate?mode=new${googleUserEmail ? `&email=${encodeURIComponent(googleUserEmail)}` : ''}`}
+                          onClick={() => setShowWorkspaceMenu(false)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '6px',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: 'var(--color-primary, #0F172A)',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <Plus size={13} />
+                          <span>ACTIVATE ANOTHER LICENSE</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('home')}
+                  title="Go to Overview"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '3px 8px',
+                    margin: 0,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    color: 'var(--color-muted, #64748B)',
+                    fontWeight: 500,
+                    fontSize: '0.9rem',
+                    borderRadius: '4px',
+                    transition: 'color 0.15s ease, background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--color-primary, #0F172A)';
+                    e.currentTarget.style.backgroundColor = 'var(--color-surface-hover, rgba(0,0,0,0.04))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--color-muted, #64748B)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <Heart size={14} style={{ color: 'var(--color-accent, #6366F1)' }} />
+                  <span>{weddingName || 'Our Wedding'}</span>
+                </button>
+              )}
 
               <ChevronRight size={14} style={{ color: 'var(--color-border-subtle, #94A3B8)', flexShrink: 0 }} />
 
@@ -2110,6 +2413,85 @@ export default function Sheet2VowDashboard({ initialTab }: { initialTab?: string
                         📁 {driveFolder || 'My Drive / Sheet2Suite / Sheet2Vow'}
                       </div>
                     </div>
+
+                    {/* Multi-Workspace Switcher inside Profile Popover (Desktop & Mobile) */}
+                    {!isMockMode && (
+                      <div style={{ marginTop: '0.35rem', paddingTop: '0.55rem', borderTop: '1px solid var(--color-border, #e2e8f0)' }}>
+                        {workspaces.length > 1 && (
+                          <>
+                            <span style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>
+                              SWITCH WORKSPACE ({workspaces.length}):
+                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '150px', overflowY: 'auto', marginBottom: '0.45rem' }}>
+                              {workspaces.map((ws) => {
+                                const isCurrent = ws.id === spreadsheetId;
+                                return (
+                                  <button
+                                    key={ws.id}
+                                    type="button"
+                                    onClick={() => handleSwitchWorkspace(ws)}
+                                    style={{
+                                      width: '100%',
+                                      textAlign: 'left',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      gap: '0.4rem',
+                                      padding: '0.4rem 0.55rem',
+                                      borderRadius: '6px',
+                                      border: isCurrent
+                                        ? '1px solid var(--color-primary, #0F172A)'
+                                        : '1px solid var(--color-border, #e2e8f0)',
+                                      backgroundColor: isCurrent
+                                        ? 'var(--color-bg-subtle, #f1f5f9)'
+                                        : 'transparent',
+                                      color: 'var(--color-text)',
+                                      cursor: isCurrent ? 'default' : 'pointer',
+                                      fontSize: '0.75rem',
+                                      fontWeight: isCurrent ? 700 : 500,
+                                    }}
+                                  >
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {ws.name}
+                                    </span>
+                                    {isCurrent ? (
+                                      <Check size={13} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                                    ) : (
+                                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--color-muted)', flexShrink: 0 }}>
+                                        {(ws.role || 'Owner').toUpperCase()}
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+
+                        <Link
+                          href={`/activate?mode=new${googleUserEmail ? `&email=${encodeURIComponent(googleUserEmail)}` : ''}`}
+                          onClick={() => setShowProfileMenu(false)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.35rem',
+                            padding: '0.45rem 0.65rem',
+                            borderRadius: '6px',
+                            border: '1px dashed var(--color-border, #cbd5e1)',
+                            backgroundColor: 'transparent',
+                            color: 'var(--color-primary)',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <Plus size={13} />
+                          <span>ACTIVATE ANOTHER LICENSE</span>
+                        </Link>
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-border, #f1f5f9)' }}>

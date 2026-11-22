@@ -15,11 +15,26 @@ export interface ReleaseNoteItem {
 
 export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.25.18',
+    product: 'suite',
+    title: 'Multi-Workspace Switcher & Second-License Activation Flow',
+    date: 'Nov 21, 2026',
+    badge: 'Latest',
+    badgeColor: '#4F46E5',
+    category: 'enhancement',
+    audience: 'internal',
+    highlights: [
+      'Desktop & Mobile Workspace Switcher: Added live /api/workspaces hydration and instant in-place switching in the Sheet2Vow top header breadcrumb and profile menu when a user owns or co-plans multiple workspaces.',
+      'Streamlined Second-License Activation: Added ?mode=new support on /activate and direct "+ Activate Another License" actions so returning customers can activate additional Etsy orders without friction.',
+    ],
+    details: 'Seamless multi-workspace switching and additional license onboarding across Sheet2Vow.',
+  },
+  {
     version: 'v1.25.17',
     product: 'suite',
     title: 'Tasks Kanban Desktop Responsive Fit & Overflow Fix',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#4F46E5',
     category: 'fix',
     audience: 'internal',
@@ -484,11 +499,25 @@ export const SUITE_RELEASE_NOTES: ReleaseNoteItem[] = [
 
 export const VOW_RELEASE_NOTES: ReleaseNoteItem[] = [
   {
+    version: 'v1.19.15',
+    product: 'vow',
+    title: 'Multi-Workspace Switcher & Second-License Activation Flow',
+    date: 'Nov 21, 2026',
+    badge: 'Latest',
+    badgeColor: '#059669',
+    category: 'enhancement',
+    audience: 'internal',
+    highlights: [
+      'Added instant Multi-Workspace Switching in the top breadcrumb (desktop) and profile menu (desktop & mobile) for users with multiple licenses or co-planned weddings, plus a direct "+ Activate Another License" flow.',
+    ],
+    details: 'Enables seamless switching between multiple Sheet2Vow workspaces without reloading or re-authenticating.',
+  },
+  {
     version: 'v1.19.14',
     product: 'vow',
     title: 'Tasks Kanban Desktop Responsive Fit & Overflow Fix',
     date: 'Nov 18, 2026',
-    badge: 'Latest',
+    badge: 'Update',
     badgeColor: '#059669',
     category: 'fix',
     audience: 'internal',
